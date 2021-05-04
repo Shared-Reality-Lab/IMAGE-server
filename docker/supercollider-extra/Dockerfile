@@ -1,10 +1,12 @@
 FROM supercollider:alpine
 ARG VERSION=Version-3.11.1
 
-# Install sc3-plugins
-
 USER root
 
+# Wanted by MP3
+RUN apk add --no-cache vorbis-tools curl
+
+# Install sc3-plugins
 WORKDIR /temp
 RUN git clone --depth=1 --shallow-submodules --recursive --branch $VERSION https://github.com/supercollider/sc3-plugins.git && \
     cd sc3-plugins && \
@@ -17,8 +19,18 @@ USER sclang
 WORKDIR /tmp/sc
 
 COPY quarks_install.scd /tmp/sc/quarks_install.scd
-
 RUN sclang quarks_install.scd
 RUN rm quarks_install.scd
-    
+
+# Remove graphics dependencies of ATK-SC3
+# https://github.com/ambisonictoolkit/atk-sc3/issues/100
+RUN rm -rf ~/.local/share/SuperCollider/downloaded-quarks/PointView \
+    ~/.local/share/SuperCollider/downloaded-quarks/wslib/wslib-classes/GUI \
+    ~/.local/share/SuperCollider/downloaded-quarks/wslib/wslib-classes/Main\ Features/Interpolation/extPen-splineCurve.sc \
+    ~/.local/share/SuperCollider/downloaded-quarks/wslib/wslib-classes/Main\ Features/SVGFile/
+
+COPY atk_install.scd /tmp/sc/atk_install.scd
+RUN sclang atk_install.scd
+RUN rm atk_install.scd
+
 ENTRYPOINT ["/run/entrypoint"]
