@@ -14,7 +14,7 @@ WORKDIR temp
 RUN git clone --branch $VERSION --recursive --depth=1 --shallow-submodules https://github.com/supercollider/supercollider.git && \
     cd supercollider && \
     cmake -DCMAKE_BUILD_TYPE="Release" -DBUILD_TESTING=OFF -DENABLE_TESTSUITE=OFF -DSUPERNOVA=OFF -DNATIVE=OFF -DNO_X11=ON -DSC_EL=OFF -DSC_VIM=OFF -DSC_QT=OFF -DSC_HIDAPI=OFF -DSC_IDE=OFF -DSC_ED=OFF -DINSTALL_HELP=OFF && \
-    make && \
+    make -j $(nproc) && \
     make install && \
     rm -rf /temp
 

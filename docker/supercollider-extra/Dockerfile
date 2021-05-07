@@ -11,7 +11,7 @@ WORKDIR /temp
 RUN git clone --depth=1 --shallow-submodules --recursive --branch $VERSION https://github.com/supercollider/sc3-plugins.git && \
     cd sc3-plugins && \
     cmake -DCMAKE_BUILD_TYPE="Release" -DSUPERNOVA=OFF -DLADSPA=ON && \
-    make && \
+    make -j $(nproc) && \
     make install && \
     rm -rf /temp
 
