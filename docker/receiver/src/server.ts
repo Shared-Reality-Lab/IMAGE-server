@@ -57,5 +57,5 @@ app.post("/atp/render", (req, res) => {
 
 app.listen(port, () => {
     // tslint:disable-next-line:no-console
-    console.log(`Started server at http://localhost:${port}`);
+    console.log(`Started server on port ${port}`);
 });
