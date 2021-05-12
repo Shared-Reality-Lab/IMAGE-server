@@ -14,8 +14,8 @@ app.post("/atp/render", (req, res) => {
     if (ajv.validate("https://bach.cim.mcgill.ca/atp/query.schema.json", req.body)) {
         res.json(
             {
-                "request_uuid": "5901107e-6ca4-4361-96e4-b295512f7dd9",
-                "timestamp": 1618590997,
+                "request_uuid": req.body.request_uuid,
+                "timestamp": Math.round(Date.now() / 1000),
                 "renderings": [
                   {
                     "metadata": {
