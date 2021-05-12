@@ -60,7 +60,7 @@ app.post("/atp/render", (req, res) => {
               }
         );
     } else {
-        res.status(400).send("oops!");
+        res.status(400).send(ajv.errors);
     }
 });
 
