@@ -1,0 +1,75 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://bach.cim.mcgill.ca/atp/query.schema.json",
+    "title": "Image Query",
+    "description": "Query for renderings of an image with certain constraints.",
+    "type": "object",
+    "properties": {
+        "request_uuid": {
+            "description": "UUID v4 identifying the request.",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+        },
+        "timestamp": {
+            "description": "Time the request was generated in Unix time.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "URL": {
+            "description": "URL of the page the request was generated from.",
+            "type": "string",
+            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
+        },
+        "language": {
+            "description": "Language requested by the user as ISO 639-1.",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2
+        },
+        "mono_sound": {
+            "description": "",
+            "type": "boolean"
+        },
+        "stereo_headphones": {
+            "description": "",
+            "type": "boolean"
+        },
+        "vibration_phone": {
+            "description": "",
+            "type": "boolean"
+        },
+        "vibration_smartwatch": {
+            "description": "",
+            "type": "boolean"
+        },
+        "braille_reader": {
+            "description": "",
+            "type": "boolean"
+        },
+        "2d_explorer": {
+            "description": "",
+            "type": "boolean"
+        },
+        "renderers": {
+            "description": "Renderers specifically requested by the user.",
+            "type": "array",
+            "items": {
+                "description": "Identifier of renderers.",
+                "type": "string"
+            },
+            "uniqueItems": true
+        }
+    },
+    "required": [
+        "request_uuid",
+        "language",
+        "timestamp",
+        "URL",
+        "mono_sound",
+        "stereo_headphones",
+        "vibration_phone",
+        "vibration_smartwatch",
+        "braille_reader",
+        "2d_explorer"
+    ]
+}
