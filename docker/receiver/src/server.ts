@@ -1,6 +1,8 @@
 import express from "express";
 import Ajv from "ajv/dist/2020";
+
 import querySchemaJSON from "./query.schema.json";
+import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
 
 const app = express();
 const port = 8080;
@@ -11,6 +13,24 @@ const ajv = new Ajv({
 app.use(express.json());
 
 app.post("/atp/render", (req, res) => {
+    docker.listContainers().then(containers => {
+        getPreprocessorServices(containers).then(resp => {
+            // tslint:disable-next-line:no-console
+            console.log(resp);
+        }).catch(e => {
+            // tslint:disable-next-line:no-console
+            console.error(e);
+        });
+
+        getHandlerServices(containers).then(resp => {
+            // tslint:disable-next-line:no-console
+            console.log(resp);
+        }).catch(e => {
+            // tslint:disable-next-line:no-console
+            console.error(e);
+        });
+    });
+
     if (ajv.validate("https://bach.cim.mcgill.ca/atp/query.schema.json", req.body)) {
         res.json(
             {
