@@ -15,6 +15,15 @@
             "type": "integer",
             "minimum": 0
         },
+        "image": {
+            "description": "Data URL of the base 64 image being handled.",
+            "type": "string",
+            "pattern": "^data:image/[^;]+;base64,[a-zA-Z0-9+/=]+$"
+        },
+        "context": {
+            "description": "Serialized XML of the image node and possibly related nodes.",
+            "type": "string"
+        },
         "URL": {
             "description": "URL of the page the request was generated from.",
             "type": "string",
@@ -56,6 +65,8 @@
         "request_uuid",
         "language",
         "timestamp",
+        "image",
+        "context",
         "URL",
         "mono_sound",
         "stereo_headphones",
