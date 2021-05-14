@@ -34,14 +34,6 @@
             "description": "",
             "type": "boolean"
         },
-        "vibration_phone": {
-            "description": "",
-            "type": "boolean"
-        },
-        "vibration_smartwatch": {
-            "description": "",
-            "type": "boolean"
-        },
         "braille_reader": {
             "description": "",
             "type": "boolean"
@@ -67,8 +59,6 @@
         "URL",
         "mono_sound",
         "stereo_headphones",
-        "vibration_phone",
-        "vibration_smartwatch",
         "braille_reader",
         "2d_explorer"
     ]
