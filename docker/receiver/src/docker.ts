@@ -17,11 +17,7 @@ export function getPreprocessorServices(containers: Docker.ContainerInfo[]) {
 
 export function getHandlerServices(containers: Docker.ContainerInfo[]) {
     const activeHandlers = containers.filter(container => {
-        return (container.State === "running") && (container.Labels[_HANDLER_LABEL_]);
+        return (container.State === "running") && (container.Labels[_HANDLER_LABEL_]) && (container.Labels[_HANDLER_LABEL_] === "enable");
     });
-    return activeHandlers.sort((first, second) => {
-        const firstNum = Number(first.Labels[_HANDLER_LABEL_]);
-        const secondNum = Number(second.Labels[_HANDLER_LABEL_]);
-        return firstNum - secondNum;
-    }).map(container => { return container.Labels["com.docker.compose.service"]; });
+    return activeHandlers.map(container => { return container.Labels["com.docker.compose.service"]; });
 }
