@@ -62,7 +62,7 @@ def segment_tts():
                 totalWav = np.append(totalWav, wav)
             else:
                 totalWav = wav
-            durations.append((len(wav) * 1000) // fs)
+            durations.append(len(wav))
 
         logger.debug("Done performing TTS")
 
