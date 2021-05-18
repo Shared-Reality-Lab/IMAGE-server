@@ -1,3 +1,4 @@
+import logging
 import torch
 import time
 from espnet_model_zoo.downloader import ModelDownloader
@@ -6,6 +7,11 @@ from parallel_wavegan.utils import download_pretrained_model
 from parallel_wavegan.utils import load_model
 
 device = "cpu"
+fs = 22050
+
+logging.basicConfig(format="%(asctime)s %(message)s")
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 def tts(text, tag = "kan-bayashi/ljspeech_conformer_fastspeech2", vocoder_tag = "ljspeech_parallel_wavegan.v1"):
     d = ModelDownloader()
@@ -29,5 +35,6 @@ def tts(text, tag = "kan-bayashi/ljspeech_conformer_fastspeech2", vocoder_tag = 
         start = time.time()
         wav, c, *_ = text2speech(text)
         wav = vocoder.inference(c)
-    #rtf = (time.time() - start) / (len(wav) / fs)
-    return wav.view(-1).cpu().numpy(), text2speech.fs
+    rtf = (time.time() - start) / (len(wav) / fs)
+    logger.info(f"RTF: {rtf}")
+    return wav.view(-1).cpu().numpy()
