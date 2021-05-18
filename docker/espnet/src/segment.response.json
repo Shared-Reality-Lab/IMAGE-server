@@ -14,7 +14,7 @@
             "description": "Duration of each segment in the audio file.",
             "type": "array",
             "items": {
-                "description": "Duraton of the segment in milliseconds",
+                "description": "Duration of the segment in samples.",
                 "type": "integer",
                 "minimum": 0
             }
