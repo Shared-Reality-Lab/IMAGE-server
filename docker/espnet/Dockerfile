@@ -6,15 +6,16 @@ RUN pip install espnet==0.9.7
 RUN pip install parallel_wavegan==0.4.8
 RUN pip install espnet_model_zoo
 RUN pip install Flask gunicorn
+RUN pip install jsonschema
 
 WORKDIR /run/tts
-COPY predownload.py .
+COPY src/predownload.py .
 RUN python predownload.py
 
-COPY *.py ./
+COPY src/* ./
 ENV TORCH_DEVICE="cpu"
 EXPOSE 80
 
-COPY entrypoint .
+COPY src/entrypoint .
 RUN chmod +x entrypoint
 ENTRYPOINT ["/run/tts/entrypoint"]
