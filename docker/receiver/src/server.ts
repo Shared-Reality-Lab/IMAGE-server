@@ -97,6 +97,8 @@ app.post("/atp/render", (req, res) => {
                   }
             );
         }).catch(e => {
+            // tslint:disable-next-line:no-console
+            console.error(e);
             res.status(500).send(e.name + ": " + e.message);
         });
     } else {

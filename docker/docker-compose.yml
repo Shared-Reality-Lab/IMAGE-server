@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+    receiver:
+        build:
+            context: ./receiver
+            dockerfile: Dockerfile
+        image: "receiver:latest"
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+    supercollider:
+        build:
+            context: ./supercollider-extra
+            dockerfile: Dockerfile
+        image: "supercollider-extra:3.11.1"
