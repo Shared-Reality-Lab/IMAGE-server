@@ -10,15 +10,43 @@ const ajv = new Ajv({
     "schemas": [querySchemaJSON]
 });
 
+const PREPROCESSOR_TIME_MS = 15000;
+
 app.use(express.json());
 
 app.post("/atp/render", (req, res) => {
     if (ajv.validate("https://bach.cim.mcgill.ca/atp/query.schema.json", req.body)) {
         // get list of preprocessors and handlers
-        docker.listContainers().then(containers => {
+        docker.listContainers().then(async (containers) => {
             const preprocessors = getPreprocessorServices(containers);
             const handlers = getHandlerServices(containers);
+
             // TODO do things with these services
+            // Preprocessors run in order
+            const data = req.body;
+            for (const preprocessor of preprocessors) {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => {
+                    controller.abort();
+                }, PREPROCESSOR_TIME_MS);
+
+                await fetch(`http://${preprocessor}/atp/preprocessor`, {
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "signal": controller.signal
+                }).then(resp => {
+                    return resp.json();
+                }).then(json => {
+                    data.preprocessors[preprocessor] = json;
+                }).catch(err => {
+                    // Try to continue...
+                    // tslint:disable-next-line:no-console
+                    console.error(err);
+                });
+            }
+
             // in docker, the service names are resolved and balanced automatically
         }).then(() => {
             res.json(
