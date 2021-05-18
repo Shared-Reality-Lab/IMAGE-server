@@ -5,6 +5,13 @@ RUN pip install --upgrade pip
 RUN pip install espnet==0.9.7
 RUN pip install parallel_wavegan==0.4.8
 RUN pip install espnet_model_zoo
+RUN pip install Flask
 
 WORKDIR /run/tts
-COPY tts.py .
+COPY predownload.py .
+RUN python predownload.py
+
+COPY *.py ./
+
+ENV TORCH_DEVICE="cpu"
+EXPOSE 80
