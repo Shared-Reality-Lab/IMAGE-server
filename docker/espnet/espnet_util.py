@@ -3,10 +3,10 @@ import torch
 import time
 from espnet_model_zoo.downloader import ModelDownloader
 from espnet2.bin.tts_inference import Text2Speech
+from os import environ
 from parallel_wavegan.utils import download_pretrained_model
 from parallel_wavegan.utils import load_model
 
-device = "cpu"
 fs = 22050
 
 logging.basicConfig(format="%(asctime)s %(message)s")
@@ -15,6 +15,7 @@ logger.setLevel(logging.INFO)
 
 def tts(text, tag = "kan-bayashi/ljspeech_conformer_fastspeech2", vocoder_tag = "ljspeech_parallel_wavegan.v1"):
     d = ModelDownloader()
+    device = environ["TORCH_DEVICE"]
     text2speech = Text2Speech(
             **d.download_and_unpack(tag),
             device=device,
