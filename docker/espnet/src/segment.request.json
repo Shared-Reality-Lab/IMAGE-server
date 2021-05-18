@@ -1,0 +1,20 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://bach.cim.mcgill.ca/atp/tts/segment.request.json",
+    "title": "TTS Segment Request",
+    "description": "Request for a timestamped TTS audio from an array of segments.",
+    "type": "object",
+    "properties": {
+        "segments": {
+            "description": "",
+            "type": "array",
+            "items": {
+              "description": "Strings to pass through TTS.",
+              "type": "string"
+            }
+        }
+    },
+    "required": [
+      "segments"
+    ]
+}

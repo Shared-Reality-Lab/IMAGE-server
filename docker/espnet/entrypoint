@@ -1,3 +1,0 @@
-#!/bin/bash
-
-gunicorn app:app -b 0.0.0.0:80 --access-logfile /var/log/access.log --error-logfile /var/log/error.log

@@ -1,0 +1,27 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://bach.cim.mcgill.ca/atp/tts/segment.response.json",
+    "title": "TTS Segment Response",
+    "description": "Response of timestamped audio segments.",
+    "type": "object",
+    "properties": {
+        "audio": {
+            "description": "Data URL of the base64 wave file returned.",
+            "type": "string",
+            "pattern": "^data:audio/wave;base64,[a-zA-Z0-9+/=]+$"
+        },
+        "durations": {
+            "description": "Duration of each segment in the audio file.",
+            "type": "array",
+            "items": {
+                "description": "Duraton of the segment in milliseconds",
+                "type": "integer",
+                "minimum": 0
+            }
+        }
+    },
+    "required": [
+      "audio",
+      "durations"
+    ]
+}
