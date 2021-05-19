@@ -32,4 +32,11 @@ services:
             dockerfile: Dockerfile
         image: "hello-preprocessor:latest"
         labels:
-          ca.mcgill.cim.bach.atp.preprocessor: 1
+            ca.mcgill.cim.bach.atp.preprocessor: 1
+    hello-handler:
+        build:
+            context: ./hello-handler
+            dockerfile: Dockerfile
+        image: "hello-handler:latest"
+        labels:
+            ca.mcgill.cim.bach.atp.handler: enable
