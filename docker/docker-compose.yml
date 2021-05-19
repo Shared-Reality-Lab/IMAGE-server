@@ -13,3 +13,8 @@ services:
             context: ./supercollider-extra
             dockerfile: Dockerfile
         image: "supercollider-extra:3.11.1"
+    espnet-tts:
+        build:
+            context: ./espnet
+            dockerfile: Dockerfile
+        image: "espnet-tts:latest"
