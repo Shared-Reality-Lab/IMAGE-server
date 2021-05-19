@@ -4,7 +4,7 @@ import jsonschema
 import logging
 import numpy as np
 import soundfile as sf
-from espnet_util import tts, fs
+from espnet_util import tts, tts_segments, fs
 from flask import Flask, Response, request
 from io import BytesIO
 from jsonschema import validate
@@ -56,8 +56,8 @@ def segment_tts():
     try:
         totalWav = None
         durations = []
-        for segment in data["segments"]:
-            wav = tts(segment)
+        wavs = tts_segments(data["segments"])
+        for wav in wavs:
             if totalWav is not None:
                 totalWav = np.append(totalWav, wav)
             else:
