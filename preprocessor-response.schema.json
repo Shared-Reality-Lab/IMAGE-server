@@ -24,7 +24,7 @@
             "description": "The well-defined data produced by the preprocessor.",
             "type": "object",
             "properties": {
-                "data_schema": { "$ref": "https://bach.cim.mcgill.ca/atp/response.schema.json#/definitions/rendering/properties/data_schema" }
+                "data_schema": { "$ref": "https://bach.cim.mcgill.ca/atp/response.schema.json#/definitions/data_schema" }
             }
         }
     },

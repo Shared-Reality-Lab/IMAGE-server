@@ -5,6 +5,11 @@
     "type": "object",
     "description": "Response of renderings of an image given certain conditions.",
     "definitions": {
+        "data_schema": {
+            "description": "A URL that resolves to the JSON schema for the data property.",
+            "type": "string",
+            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
+        },
         "metadata": {
             "description": "Metadata describing the handler that created a rendering.",
             "type": "object",
@@ -29,7 +34,7 @@
             "description": "A rendering returned by the server.",
             "type": "object",
             "properties": {
-                "type_id": { "$ref": "query.schema.json#/definitions/renderer" },
+                "type_id": { "$ref": "request.schema.json#/definitions/renderer" },
                 "confidence": {
                     "description": "Estimated percent confidence in the correctness of the rendering.",
                     "type": "number",
@@ -42,11 +47,7 @@
                     "maxLength": 300
                 },
                 "metadata": { "$ref": "#/definitions/metadata" },
-                "data_schema": {
-                    "description": "A URL that resolves to the JSON schema for the data property.",
-                    "type": "string",
-                    "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
-                },
+                "data_schema": { "$ref": "#/definitions/data_schema" },
                 "data": {
                     "description": "Rendering data as specified in the schema for this rendering type.",
                     "type": "object"
@@ -70,7 +71,7 @@
             "description": "The renderings returned by the server along with additional information.",
             "type": "array",
             "items": { "$ref": "#/definitions/rendering" }
-        },
+        }
     },
     "required": [
         "request_uuid",
