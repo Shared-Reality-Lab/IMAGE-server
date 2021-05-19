@@ -1,6 +1,6 @@
 FROM schemas:latest AS schemas
 
-FROM node:lts-alpine
+FROM node:alpine
 
 WORKDIR /usr/src/app
 # Apparently splittig this up is good for layers
