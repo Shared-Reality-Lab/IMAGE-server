@@ -2,6 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://bach.cim.mcgill.ca/atp/tts/segment.request.json",
     "title": "TTS Segment Request",
+    "type": "object",
     "description": "Request for a timestamped TTS audio from an array of segments.",
     "type": "object",
     "properties": {
