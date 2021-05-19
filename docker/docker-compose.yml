@@ -26,3 +26,10 @@ services:
                     devices:
                     - driver: nvidia
                       capabilities: ["gpu", "utility", "compute"]
+    hello-preprocessor:
+        build:
+            context: ./hello-preprocessor
+            dockerfile: Dockerfile
+        image: "hello-preprocessor:latest"
+        labels:
+          ca.mcgill.cim.bach.atp.preprocessor: 1
