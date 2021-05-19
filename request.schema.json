@@ -1,0 +1,83 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://bach.cim.mcgill.ca/atp/request.schema.json",
+    "title": "Image Request",
+    "description": "Request for renderings of an image given certain conditions.",
+    "definitions": {
+        "capability": {
+            "description": "A reverse domain name identifier indicating a usable method of rendering. Each capability should be well-defined and published to permit easy reuse.",
+            "type": "string",
+            "pattern": "^[A-Za-z]{2,6}(\\.((?!-)[A-Za-z0-9-]+(?<!-)))+$"
+        },
+        "renderer": {
+            "description": "A reverse domain name identifier indicating a rendering data format sent from the server to the client",
+            "type": "string",
+            "pattern": "^[A-Za-z]{2,6}(\\.((?!-)[A-Za-z0-9-]+(?<!-)))+$"
+        }
+    },
+    "properties": {
+        "request_uuid": {
+            "description": "UUID v4 identifying the request.",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+        },
+        "timestamp": {
+            "description": "Time the request was generated in Unix time.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "image": {
+            "description": "Data URL of the base 64 image being handled.",
+            "type": "string",
+            "pattern": "^data:image/[^;]+;base64,[a-zA-Z0-9+/=]+$"
+        },
+        "context": {
+            "description": "Serialized XML of the image node and possibly related nodes.",
+            "type": "string"
+        },
+        "URL": {
+            "description": "URL of the page the request was generated from.",
+            "type": "string",
+            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
+        },
+        "language": {
+            "description": "Language requested by the user as ISO 639-1.",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2
+        },
+        "capabilities": {
+            "description": "The capabilities available to handlers based on the user, hardware, and software.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/capability"
+            },
+            "uniqueItems": true
+        },
+        "renderers": {
+            "description": "Renderers supported by the client.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/renderer"
+            },
+            "uniqueItems": true
+        },
+        "preprocessors": {
+            "description": "Additional data added by preprocessors AFTER the request is sent. Preprocessor data are indexed via a reverse domain name identifier",
+            "type": "object",
+            "propertyNames": {
+                "pattern": "^[A-Za-z]{2,6}(\\.((?!-)[A-Za-z0-9-]+(?<!-)))+$"
+            }
+        }
+    },
+    "required": [
+        "request_uuid",
+        "language",
+        "timestamp",
+        "image",
+        "context",
+        "URL",
+        "capabilities",
+        "renderers"
+    ]
+}
