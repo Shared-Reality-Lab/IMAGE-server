@@ -1,0 +1,4 @@
+[submodule "docker/schemas"]
+	path = docker/schemas
+	url = git@github.com:Shared-Reality-Lab/auditory-haptic-graphics-server.git
+	branch = schemas
