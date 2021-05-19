@@ -1,7 +1,7 @@
 import express from "express";
 import Ajv from "ajv/dist/2020";
 
-import querySchemaJSON from "./query.schema.json";
+import querySchemaJSON from "/usr/local/share/schemas/request.schema.json";
 import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
 
 const app = express();
