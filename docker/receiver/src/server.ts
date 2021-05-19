@@ -1,7 +1,7 @@
 import express from "express";
 import Ajv from "ajv/dist/2020";
 
-import querySchemaJSON from "./query.schema.json";
+import querySchemaJSON from "./request.schema.json";
 import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
 
 const app = express();
@@ -15,7 +15,7 @@ const PREPROCESSOR_TIME_MS = 15000;
 app.use(express.json());
 
 app.post("/atp/render", (req, res) => {
-    if (ajv.validate("https://bach.cim.mcgill.ca/atp/query.schema.json", req.body)) {
+    if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
             const preprocessors = getPreprocessorServices(containers);
