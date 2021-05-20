@@ -95,7 +95,7 @@ app.post("/atp/render", (req, res) => {
 
             return Promise.all(promises);
         }).then(results => {
-            let renderings = results.reduce((a, b) => a.concat(b));
+            let renderings = results.reduce((a, b) => a.concat(b), []);
             renderings.push(
                   {
                     "type_id": "ca.mcgill.cim.bach.atp.OldExample",
