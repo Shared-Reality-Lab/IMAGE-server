@@ -6,7 +6,7 @@ import preprocessorResponseSchemaJSON from "./schemas/preprocessor-response.sche
 import responseSchemaJSON from "./schemas/response.schema.json";
 
 const app = express();
-const port = 80;
+const port = 8080;
 const ajv = new Ajv({
     "schemas": [querySchemaJSON, responseSchemaJSON, preprocessorResponseSchemaJSON]
 });

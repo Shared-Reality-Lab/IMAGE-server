@@ -33,6 +33,7 @@ services:
         image: "hello-preprocessor:latest"
         labels:
             ca.mcgill.cim.bach.atp.preprocessor: 1
+            ca.mcgill.cim.bach.atp.port: 8080
     hello-handler:
         build:
             context: ./hello-handler
