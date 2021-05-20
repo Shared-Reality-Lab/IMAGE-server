@@ -1,3 +1,5 @@
+FROM schemas:latest AS schemas
+
 FROM pytorch/pytorch:1.8.1-cuda11.1-cudnn8-runtime
 
 RUN apt-get update && apt-get install -y libsndfile1 build-essential && rm -rf /var/lib/apt/lists/*
@@ -13,6 +15,7 @@ COPY src/predownload.py .
 RUN python predownload.py
 
 COPY src/* ./
+COPY --from=schemas /schemas/services/tts/* ./
 ENV TORCH_DEVICE="cpu"
 EXPOSE 80
 
