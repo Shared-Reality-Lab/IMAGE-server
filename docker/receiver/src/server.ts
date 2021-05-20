@@ -1,4 +1,5 @@
 import express from "express";
+import fetch from "node-fetch";
 import Ajv from "ajv/dist/2020";
 
 import querySchemaJSON from "./request.schema.json";
@@ -24,6 +25,9 @@ app.post("/atp/render", (req, res) => {
             // TODO do things with these services
             // Preprocessors run in order
             const data = req.body;
+            if (data["preprocessors"] === undefined) {
+                data["preprocessors"] = {};
+            }
             for (const preprocessor of preprocessors) {
                 const controller = new AbortController();
                 const timeout = setTimeout(() => {
@@ -35,13 +39,20 @@ app.post("/atp/render", (req, res) => {
                     "headers": {
                         "Content-Type": "application/json"
                     },
+                    "body": JSON.stringify(data),
                     "signal": controller.signal
                 }).then(resp => {
-                    return resp.json();
+                    if (resp.ok) {
+                        return resp.json();
+                    } else {
+                        throw resp.json();
+                    }
                 }).then(json => {
-                    data.preprocessors[preprocessor] = json;
+                    data["preprocessors"][json["name"]] = json["data"];
                 }).catch(err => {
                     // Try to continue...
+                    // tslint:disable-next-line:no-console
+                    console.error("Error occured on fetch");
                     // tslint:disable-next-line:no-console
                     console.error(err);
                 });
