@@ -1,0 +1,43 @@
+version: "3"
+
+services:
+    receiver:
+        build:
+            context: ./receiver
+            dockerfile: Dockerfile
+        image: "receiver:latest"
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+    supercollider:
+        build:
+            context: ./supercollider-extra
+            dockerfile: Dockerfile
+        image: "supercollider-extra:3.11.1"
+    espnet-tts:
+        build:
+            context: ./espnet
+            dockerfile: Dockerfile
+        image: "espnet-tts:latest"
+        environment:
+            - TORCH_DEVICE=cuda
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                    - driver: nvidia
+                      capabilities: ["gpu", "utility", "compute"]
+    hello-preprocessor:
+        build:
+            context: ./hello-preprocessor
+            dockerfile: Dockerfile
+        image: "hello-preprocessor:latest"
+        labels:
+            ca.mcgill.cim.bach.atp.preprocessor: 1
+            ca.mcgill.cim.bach.atp.port: 8080
+    hello-handler:
+        build:
+            context: ./hello-handler
+            dockerfile: Dockerfile
+        image: "hello-handler:latest"
+        labels:
+            ca.mcgill.cim.bach.atp.handler: enable

@@ -1,6 +1,0 @@
-version: "3"
-
-services:
-  espnet:
-    image: espnet:latest
-    command: /bin/bash -c "tail -f /var/log/access.log /var/log/error.log"
