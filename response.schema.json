@@ -10,7 +10,7 @@
         "renderings": {
             "description": "The renderings returned by the server along with additional information.",
             "type": "array",
-            "items": { "$ref": "#/definitions/rendering" }
+            "items": { "$ref": "definitions.json#/definitions/rendering" }
         }
     },
     "required": [
