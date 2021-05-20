@@ -1,0 +1,10 @@
+flask
+numpy
+scipy
+opencv-python
+pillow
+matplotlib
+jsonpickle
+requests
+torch
+torchvision
