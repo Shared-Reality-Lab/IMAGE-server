@@ -61,7 +61,7 @@ def home():
         timestamp = time.time()
         name = "ca.mcgill.cim.bach.atp.first.preprocessor"
         print(content["URL"],time)
-        url  ="http://www.cim.mcgill.ca/~jeffbl/mimic/images/2015-10-21@10-52-53.jpg"
+        url  = content["URL"]
         resource = urllib.request.urlopen(url)
         with open("test.jpg", "wb") as f:
             f.write(resource.read())
