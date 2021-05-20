@@ -5,12 +5,13 @@ import Ajv from "ajv/dist/2020";
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
 import responseSchemaJSON from "./schemas/response.schema.json";
+import definitionsJSON from "./schemas/definitions.json";
 import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
 
 const app = express();
 const port = 8080;
 const ajv = new Ajv({
-    "schemas": [querySchemaJSON, responseSchemaJSON, handlerResponseSchemaJSON]
+    "schemas": [definitionsJSON, querySchemaJSON, responseSchemaJSON, handlerResponseSchemaJSON]
 });
 
 const PREPROCESSOR_TIME_MS = 15000;

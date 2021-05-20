@@ -3,12 +3,12 @@ import Ajv from "ajv/dist/2020";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import preprocessorResponseSchemaJSON from "./schemas/preprocessor-response.schema.json";
-import responseSchemaJSON from "./schemas/response.schema.json";
+import definitionsJSON from "./schemas/definitions.json";
 
 const app = express();
 const port = 8080;
 const ajv = new Ajv({
-    "schemas": [querySchemaJSON, responseSchemaJSON, preprocessorResponseSchemaJSON]
+    "schemas": [querySchemaJSON, definitionsJSON, preprocessorResponseSchemaJSON]
 });
 
 app.use(express.json());
