@@ -36,7 +36,7 @@ app.post("/atp/render", (req, res) => {
                     controller.abort();
                 }, PREPROCESSOR_TIME_MS);
 
-                await fetch(`http://${preprocessor}/atp/preprocessor`, {
+                await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/atp/preprocessor`, {
                     "method": "POST",
                     "headers": {
                         "Content-Type": "application/json"
@@ -63,7 +63,7 @@ app.post("/atp/render", (req, res) => {
 
             // Handlers
             const promises = handlers.map(handler => {
-                return fetch(`http://${handler}/atp/handler`, {
+                return fetch(`http://${handler[0]}:${handler[1]}/atp/handler`, {
                     "method": "POST",
                     "headers": {
                         "Content-Type": "application/json"
