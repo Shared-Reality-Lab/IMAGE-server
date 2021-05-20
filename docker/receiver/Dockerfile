@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-COPY --from=schemas /schemas/request.schema.json src/
+COPY --from=schemas /schemas src/schemas
 RUN npm run build
 
 ENV NODE_ENV=production
