@@ -1,0 +1,21 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://bach.cim.mcgill.ca/atp/response.schema.json",
+    "title": "Rendering Response",
+    "type": "object",
+    "description": "Response of renderings of an image given certain conditions.",
+    "properties": {
+        "request_uuid": { "$ref": "definitions.json#/definitions/request_uuid" },
+        "timestamp": { "$ref": "definitions.json#/definitions/timestamp" },
+        "renderings": {
+            "description": "The renderings returned by the server along with additional information.",
+            "type": "array",
+            "items": { "$ref": "definitions.json#/definitions/rendering" }
+        }
+    },
+    "required": [
+        "request_uuid",
+        "timestamp",
+        "renderings"
+    ]
+}
