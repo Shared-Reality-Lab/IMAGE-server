@@ -1,4 +1,5 @@
 
+from typing import no_type_check
 from flask import Flask, jsonify, request
 import urllib
 import json
@@ -10,6 +11,10 @@ from torch.autograd import Variable
 from torchvision import transforms as T
 import torchvision
 import jsonschema
+import numpy as np
+from io import BytesIO
+import base64
+import cv2
 
 app = Flask(__name__)
 model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True) 
@@ -34,9 +39,9 @@ def readImage():
     if request.method == 'POST':
         pred = []
         data = []
-        with open('../schemas/preprocessor-response.schema.json') as jsonfile:
+        with open('./schemas/preprocessor-response.schema.json') as jsonfile:
             schema = json.load(jsonfile)
-        with open('../schemas/definitions.json') as jsonfile:
+        with open('./schemas/definitions.json') as jsonfile:
             definitionSchema = json.load(jsonfile)
         schema_store={
             schema['$id'] : schema,
@@ -48,9 +53,11 @@ def readImage():
         request_uuid = content["request_uuid"]
         timestamp = time.time()
         name = "ca.mcgill.cim.bach.atp.objectDetection.preprocessor"
-        url  =content["URL"]
-        resource = urllib.request.urlopen(url)
-        im = Image.open(requests.get(url, stream=True).raw)
+        url  =content["image"]
+        image_b64 = url.split(",")[1]
+        binary = base64.b64decode(image_b64)
+        image = np.asarray(bytearray(binary), dtype="uint8")
+        im = cv2.imdecode(image, cv2.IMREAD_COLOR)
         boxes, pred_cls = get_prediction(im, 0.5)
         for i in range(len(pred_cls)):
             dictionary = {"name:":str(pred_cls[i]),"box_points:":str(boxes[i])}
