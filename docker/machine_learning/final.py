@@ -40,9 +40,9 @@ def readImage():
     if request.method == 'POST':
         pred = []
         data = []
-        with open('../schemas/preprocessor-response.schema.json') as jsonfile:
+        with open('./schemas/preprocessor-response.schema.json') as jsonfile:
             schema = json.load(jsonfile)
-        with open('../schemas/definitions.json') as jsonfile:
+        with open('./schemas/definitions.json') as jsonfile:
             definitionSchema = json.load(jsonfile)
         schema_store={
             schema['$id'] : schema,
