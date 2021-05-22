@@ -1,6 +1,7 @@
 
 from typing import no_type_check
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
+from flask_api import status
 import urllib
 import json
 from PIL import Image
@@ -39,9 +40,9 @@ def readImage():
     if request.method == 'POST':
         pred = []
         data = []
-        with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+        with open('../schemas/preprocessor-response.schema.json') as jsonfile:
             schema = json.load(jsonfile)
-        with open('./schemas/definitions.json') as jsonfile:
+        with open('../schemas/definitions.json') as jsonfile:
             definitionSchema = json.load(jsonfile)
         schema_store={
             schema['$id'] : schema,
@@ -67,7 +68,7 @@ def readImage():
         try:
             jsonschema.Draft7Validator(response, resolver=resolver)
         except jsonschema.exceptions.ValidationError as e:
-            print(e.message)
+            return "Invalid JSON format",status.HTTP_400_BAD_REQUEST
         return response
     return "<h1>Get Request found. Try to send a POST request to get a response</h1>"
 
