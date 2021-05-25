@@ -32,9 +32,9 @@ def readImage():
     if request.method == 'POST':
         pred = []
         data = []
-        with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+        with open('../schemas/preprocessor-response.schema.json') as jsonfile:
             schema = json.load(jsonfile)
-        with open('./schemas/definitions.json') as jsonfile:
+        with open('../schemas/definitions.json') as jsonfile:
             definitionSchema = json.load(jsonfile)
         schema_store={
             schema['$id'] : schema,
@@ -60,7 +60,7 @@ def readImage():
         try:
             jsonschema.Draft7Validator(response, resolver=resolver)
         except jsonschema.exceptions.ValidationError as e:
-            return "Invalid JSON format",status.HTTP_400_BAD_REQUEST
+            return "Invalid JSON format",status.HTTP_500_BAD_REQUEST
         return response
     return "<h1>Get Request found. Try to send a POST request to get a response</h1>"
 
@@ -68,4 +68,4 @@ def readImage():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=5000, debug = True)
+    app.run(host='0.0.0.0',port=5000)
