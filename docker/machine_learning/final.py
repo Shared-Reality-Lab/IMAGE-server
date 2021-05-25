@@ -2,8 +2,6 @@ from flask import Flask, jsonify, request
 from flask_api import status
 import json
 import  time
-from torch.utils.data import DataLoader
-from torch.autograd import Variable
 from torchvision import transforms as T
 import torchvision
 import jsonschema
