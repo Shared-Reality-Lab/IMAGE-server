@@ -1,0 +1,8 @@
+flask==1.1.2
+numpy==1.20.1
+opencv-python==4.3.0.38
+pillow==8.2.0
+requests==2.25.1
+torch==1.8.1
+torchvision==0.9.1
+jsonschema==3.2.0
