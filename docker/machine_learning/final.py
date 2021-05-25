@@ -1,11 +1,6 @@
-
-from typing import no_type_check
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request
 from flask_api import status
-import urllib
 import json
-from PIL import Image
-import requests
 import  time
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
@@ -13,7 +8,6 @@ from torchvision import transforms as T
 import torchvision
 import jsonschema
 import numpy as np
-from io import BytesIO
 import base64
 import cv2
 
