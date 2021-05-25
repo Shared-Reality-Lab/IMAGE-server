@@ -20,7 +20,7 @@ async function extractDimensions(dataUrl: string) {
 
 function generateRendering(width: number, height: number): object {
     return {
-        "type_id": "ca.mcgill.cim.bach.atp.renderer.HelloWorld",
+        "type_id": "ca.mcgill.cim.bach.atp.renderer.Text",
         "confidence": 100,
         "description": "An example rendering that conveys no useful information.",
         "metadata": {
