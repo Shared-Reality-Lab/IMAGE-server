@@ -63,7 +63,7 @@ def readImage():
             dictionary = {"ID":i,"type":str(pred_cls[i]),"dimensions":str(boxes[i]),"confidence":str(score[i])}
             pred.append(dictionary)
         things = {"objects":pred}
-        response = jsonify({"request_uuid":request_uuid,"timestamp":timestamp,"name":name,"data":things})
+        response = jsonify({"request_uuid":request_uuid,"timestamp":timestamp,"name":name,"objects":things})
         try:
             jsonschema.Draft7Validator(response, resolver=resolver)
         except jsonschema.exceptions.ValidationError as e:
