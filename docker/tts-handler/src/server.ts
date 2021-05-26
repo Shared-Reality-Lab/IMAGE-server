@@ -1,6 +1,9 @@
 import express from "express";
 import Ajv from "ajv/dist/2020";
 import fetch from "node-fetch";
+import { v4 as uuidv4 } from "uuid";
+import fs from "fs";
+import osc from "osc";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
@@ -15,6 +18,7 @@ const ajv = new Ajv({
 
 const app = express();
 const port = 80;
+const scPort = 57120;
 
 app.use(express.json());
 
@@ -58,23 +62,52 @@ app.post("/atp/handler", async (req, res) => {
                     const err = await resp.json();
                     throw err;
                 }
-            }).then(data => {
+            }).then((data: any) => {
                 if (ajv.validate("https://bach.cim.mcgill.ca/atp/tts/segment.response.json", data)) {
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const durations = data["durations"];
-                    const dataURI = data["audio"];
-                    renderings.push({
-                        "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
-                        // TODO Base this on the confidence values from the model when available
-                        "confidence": 70,
-                        "description": "An audio description of the elements in the image.",
-                        "data": {
-                            "audio": dataURI
-                        }
-                    });
+                    const durations = data["durations"] as number[];
+                    const dataURI = data["audio"] as string;
+
+                    return fetch(dataURI);
                 } else {
                     throw ajv.errors;
                 }
+            }).then(resp => {
+                return resp.arrayBuffer();
+            }).then(buf => {
+                const inFile = "/tmp/sc-store/tts-handler-" + Math.round(Date.now()) + ".wav";
+                fs.writeFileSync(inFile, Buffer.from(buf));
+                const outFile = "/tmp/sc-store/tts-handler-" + uuidv4() + ".wav";
+
+                const oscPort = new osc.UDPPort({
+                    "remoteAddress": "supercollider",
+                    "remotePort": scPort,
+                    "localAddress": "0.0.0.0"
+                });
+                const promise = new Promise((resolve, reject) => {
+                    try {
+                        oscPort.on("message", (oscMsg) => {
+                            oscPort.close();
+                            resolve(oscMsg);
+                        });
+                        oscPort.on("ready", () => {
+                            oscPort.send({
+                                "address": "/render",
+                                "args": [
+                                    { "type": "s", "value": inFile },
+                                    { "type": "s", "value": outFile }
+                                ]
+                            });
+                        });
+                        oscPort.open();
+                    } catch (e) {
+                        oscPort.close();
+                        reject(e);
+                    }
+                });
+                return promise;
+            }).then(done => {
+                console.log(done);
             }).catch(err => {
                 console.error(err);
             });
