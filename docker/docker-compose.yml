@@ -41,3 +41,11 @@ services:
         image: "hello-handler:latest"
         labels:
             ca.mcgill.cim.bach.atp.handler: enable
+    ml-preprocessor:
+        build:
+            context: ./machine_learning
+            dockerfile: Dockerfile
+        image: "ml-preprocessor:latest"
+        labels:
+            ca.mcgill.cim.bach.atp.preprocessor: 1
+            ca.mcgill.cim.bach.atp.port: 5000
