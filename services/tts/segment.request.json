@@ -17,7 +17,7 @@
         "speed_control_alpha": {
             "description": "A parameter controlling the speed of a synthesized voice. 1 is normal, lower values are faster, and higher values are slower.",
             "type": "number",
-            "minimumExclusive": 0,
+            "exclusiveMinimum": 0,
             "default": 1
         }
     },
