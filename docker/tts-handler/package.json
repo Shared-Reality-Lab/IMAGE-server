@@ -4,6 +4,7 @@
   "description": "Basic handler that returns TTS audio.",
   "main": "dist/server.js",
   "scripts": {
+    "prebuild": "eslint src --ext .ts",
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node ."
