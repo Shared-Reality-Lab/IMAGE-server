@@ -41,7 +41,7 @@ def readImage():
             definitionSchema['$id'] : definitionSchema
         }
         resolver = jsonschema.RefResolver.from_schema(schema, store=schema_store)
-        
+
         content = request.get_json()
         request_uuid = content["request_uuid"]
         timestamp = time.time()
@@ -53,7 +53,7 @@ def readImage():
         im = cv2.imdecode(image, cv2.IMREAD_COLOR)
         boxes, pred_cls = get_prediction(im, 0.5)
         for i in range(len(pred_cls)):
-            dictionary = {"name:":str(pred_cls[i]),"box_points:":str(boxes[i])}
+            dictionary = {"name":str(pred_cls[i]),"box_points":str(boxes[i])}
             pred.append(dictionary)
         things = {"objects":pred}
         response = jsonify({"request_uuid":request_uuid,"timestamp":timestamp,"name":name,"data":things})

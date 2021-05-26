@@ -22,7 +22,7 @@ with open("segment.response.json", "r") as f:
 
 app = Flask(__name__)
 
-@app.route("/service/default-tts", methods=["POST"])
+@app.route("/service/tts/simple", methods=["POST"])
 def perform_tts():
     data = request.get_json()
     if data is None or "text" not in data:
@@ -41,7 +41,7 @@ def perform_tts():
         logger.error(e)
         return { "error": "An error occurred while performing text-to-speech" }, 500
 
-@app.route("/service/segment-tts", methods=["POST"])
+@app.route("/service/tts/segments", methods=["POST"])
 def segment_tts():
     data = request.get_json()
 
