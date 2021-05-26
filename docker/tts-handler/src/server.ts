@@ -1,5 +1,6 @@
 import express from "express";
 import Ajv from "ajv/dist/2020";
+import fetch from "node-fetch";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
@@ -15,10 +16,60 @@ const port = 80;
 
 app.use(express.json());
 
-app.post("/atp/handler", (req, res) => {
+app.post("/atp/handler", async (req, res) => {
     if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
-        // TODO generate the actual response
-        const response = {};
+        const renderings: Record<string, unknown>[] = [];
+        // Check for the preprocessor we need
+        if (req.body["preprocessors"]["ca.mcgill.cim.bach.atp.objectDetection.preprocessor"]) {
+            const ttsStrings = ["In this picture there is:"];
+            try {
+                const objectData = req.body["preprocessors"]["ca.mcgill.cim.bach.atp.objectDetection.preprocessor"]["data"]["objects"];
+                for (const object of objectData) {
+                    ttsStrings.push(object["name"]);
+                }
+            } catch (e) {
+                console.error(e);
+                ttsStrings.push("an error");
+            }
+
+            await fetch("http://espnet-tts/service/tts/segment-tts", {
+                "method": "POST",
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": JSON.stringify({
+                    "segments": ttsStrings
+                })
+            }).then(async resp => {
+                if (resp.ok) {
+                    return resp.json();
+                } else {
+                    const err = await resp.json();
+                    throw err;
+                }
+            }).then(data => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const durations = data["durations"];
+                const dataURI = data["audio"];
+                renderings.push({
+                    "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
+                    // TODO Base this on the confidence values from the model when available
+                    "confidence": "70",
+                    "description": "An audio description of the elements in the image.",
+                    "data": {
+                        "audio": dataURI
+                    }
+                });
+            }).catch(err => {
+                console.error(err);
+            });
+        }
+
+        const response = {
+            "request_uuid": req.body["request_uuid"],
+            "timestamp": Math.round(Date.now() / 1000),
+            "renderings": renderings
+        };
         if (ajv.validate("https://bach.cim.mcgill.ca/atp/handler-response.schema.json", response)) {
             res.json(response);
         } else {
