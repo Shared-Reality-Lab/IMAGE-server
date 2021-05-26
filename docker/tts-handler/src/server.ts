@@ -5,10 +5,12 @@ import fetch from "node-fetch";
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
+import ttsRequestJSON from "./schemas/services/tts/segment.request.json";
+import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
 
 // Load necessary schema files for our purposes so we can validate JSON.
 const ajv = new Ajv({
-    "schemas": [querySchemaJSON, definitionsJSON, handlerResponseSchemaJSON]
+    "schemas": [querySchemaJSON, definitionsJSON, handlerResponseSchemaJSON, ttsRequestJSON, ttsResponseJSON]
 });
 
 const app = express();
@@ -32,6 +34,15 @@ app.post("/atp/handler", async (req, res) => {
                 ttsStrings.push("an error");
             }
 
+            const ttsRequest = {
+                "segments": ttsStrings
+            };
+
+            if (!ajv.validate("https://bach.cim.mcgill.ca/atp/tts/segment.request.json", ttsRequest)) {
+                console.warn("Failed to validate TTS!");
+                console.warn(ajv.errors);
+            }
+
             await fetch("http://espnet-tts/service/tts/segments", {
                 "method": "POST",
                 "headers": {
@@ -48,18 +59,22 @@ app.post("/atp/handler", async (req, res) => {
                     throw err;
                 }
             }).then(data => {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const durations = data["durations"];
-                const dataURI = data["audio"];
-                renderings.push({
-                    "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
-                    // TODO Base this on the confidence values from the model when available
-                    "confidence": 70,
-                    "description": "An audio description of the elements in the image.",
-                    "data": {
-                        "audio": dataURI
-                    }
-                });
+                if (ajv.validate("https://bach.cim.mcgill.ca/atp/tts/segment.response.json", data)) {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    const durations = data["durations"];
+                    const dataURI = data["audio"];
+                    renderings.push({
+                        "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
+                        // TODO Base this on the confidence values from the model when available
+                        "confidence": 70,
+                        "description": "An audio description of the elements in the image.",
+                        "data": {
+                            "audio": dataURI
+                        }
+                    });
+                } else {
+                    throw ajv.errors;
+                }
             }).catch(err => {
                 console.error(err);
             });
