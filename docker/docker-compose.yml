@@ -13,6 +13,8 @@ services:
             context: ./supercollider-extra
             dockerfile: Dockerfile
         image: "supercollider-extra:3.11.1"
+        volumes:
+            - sc-store:/tmp/sc-store
     espnet-tts:
         build:
             context: ./espnet
@@ -56,3 +58,8 @@ services:
         image: "tts-handler:latest"
         labels:
             ca.mcgill.cim.bach.atp.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+
+volumes:
+    sc-store:
