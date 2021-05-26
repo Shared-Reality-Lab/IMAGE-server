@@ -10,9 +10,10 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
     supercollider:
         build:
-            context: ./supercollider-extra
+            context: ./supercollider-images/supercollider-service
             dockerfile: Dockerfile
-        image: "supercollider-extra:3.11.1"
+        image: "supercollider-service:latest"
+        command: sclang -D ./example.scd
         volumes:
             - sc-store:/tmp/sc-store
     espnet-tts:
@@ -20,14 +21,14 @@ services:
             context: ./espnet
             dockerfile: Dockerfile
         image: "espnet-tts:latest"
-        environment:
-            - TORCH_DEVICE=cuda
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                    - driver: nvidia
-                      capabilities: ["gpu", "utility", "compute"]
+          #environment:
+          #    - TORCH_DEVICE=cuda
+          #deploy:
+          #    resources:
+          #        reservations:
+          #            devices:
+          #            - driver: nvidia
+          #              capabilities: ["gpu", "utility", "compute"]
     hello-preprocessor:
         build:
             context: ./hello-preprocessor
