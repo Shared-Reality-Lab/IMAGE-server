@@ -49,3 +49,8 @@ services:
         labels:
             ca.mcgill.cim.bach.atp.preprocessor: 1
             ca.mcgill.cim.bach.atp.port: 5000
+    tts-handler:
+        build:
+            context: ./tts-handler
+            dockerfile: Dockerfile
+        image: "tts-handler:latest"
