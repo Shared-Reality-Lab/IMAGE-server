@@ -78,6 +78,10 @@ OSCdef.newMatching(\renderer1, {|msg, time, addr, recvPort|
 	~minimalTest.(inputFile:  msg[1].asString, outputFile:  msg[2].asString );
 }, '/render', nil);
 
+OSCdef.newMatching(\pingpong, {|msg, time, addr, recvPort|
+    "Pong".postln;
+    addr.sendMsg(\pong);
+}, '/ping', nil);
 
 /*
 ~path = "/Users/floriangrond/Documents/PROJECTS/2021-ATP/Rendering/";
