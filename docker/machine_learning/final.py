@@ -25,16 +25,16 @@ def get_prediction(img, threshold):
     pred_t = [pred_score.index(x) for x in pred_score if x>threshold][-1]
     pred_boxes = pred_boxes[:pred_t+1]
     pred_class = pred_class[:pred_t+1]
-    return pred_boxes, pred_class
+    return pred_boxes, pred_class,pred_score
 
 @app.route("/atp/preprocessor/",methods = ['POST','GET'])
 def readImage():
     if request.method == 'POST':
         pred = []
         data = []
-        with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+        with open('../schemas/preprocessor-response.schema.json') as jsonfile:
             schema = json.load(jsonfile)
-        with open('./schemas/definitions.json') as jsonfile:
+        with open('../schemas/definitions.json') as jsonfile:
             definitionSchema = json.load(jsonfile)
         schema_store={
             schema['$id'] : schema,
@@ -51,9 +51,16 @@ def readImage():
         binary = base64.b64decode(image_b64)
         image = np.asarray(bytearray(binary), dtype="uint8")
         im = cv2.imdecode(image, cv2.IMREAD_COLOR)
-        boxes, pred_cls = get_prediction(im, 0.5)
+        boxes, pred_cls, score = get_prediction(im, 0.5)
+        for i in range(len(boxes)):
+            xmin = int(boxes[i][0][0])
+            ymin = int(boxes[i][0][1])
+            xmax = int(boxes[i][1][0])
+            ymax = int(boxes[i][1][1])
+            boxes[i][0] = (xmin,ymin)
+            boxes[i][1] = (xmax,ymax)
         for i in range(len(pred_cls)):
-            dictionary = {"name:":str(pred_cls[i]),"box_points:":str(boxes[i])}
+            dictionary = {"ID":i,"type":str(pred_cls[i]),"dimensions":str(boxes[i]),"confidence":str(score[i])}
             pred.append(dictionary)
         things = {"objects":pred}
         response = jsonify({"request_uuid":request_uuid,"timestamp":timestamp,"name":name,"data":things})
@@ -68,4 +75,4 @@ def readImage():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=5000)
+    app.run(host='0.0.0.0',port=5000,debug=True)
