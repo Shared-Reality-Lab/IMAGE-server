@@ -23,7 +23,7 @@ app.post("/atp/handler", async (req, res) => {
         if (req.body["preprocessors"]["ca.mcgill.cim.bach.atp.objectDetection.preprocessor"]) {
             const ttsStrings = ["In this picture there is:"];
             try {
-                const objectData = req.body["preprocessors"]["ca.mcgill.cim.bach.atp.objectDetection.preprocessor"]["data"]["objects"];
+                const objectData = req.body["preprocessors"]["ca.mcgill.cim.bach.atp.objectDetection.preprocessor"]["objects"];
                 for (const object of objectData) {
                     ttsStrings.push(object["name"]);
                 }
@@ -32,7 +32,7 @@ app.post("/atp/handler", async (req, res) => {
                 ttsStrings.push("an error");
             }
 
-            await fetch("http://espnet-tts/service/tts/segment-tts", {
+            await fetch("http://espnet-tts/service/tts/segments", {
                 "method": "POST",
                 "headers": {
                     "Content-Type": "application/json"
@@ -54,7 +54,7 @@ app.post("/atp/handler", async (req, res) => {
                 renderings.push({
                     "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
                     // TODO Base this on the confidence values from the model when available
-                    "confidence": "70",
+                    "confidence": 70,
                     "description": "An audio description of the elements in the image.",
                     "data": {
                         "audio": dataURI

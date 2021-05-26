@@ -54,3 +54,5 @@ services:
             context: ./tts-handler
             dockerfile: Dockerfile
         image: "tts-handler:latest"
+        labels:
+            ca.mcgill.cim.bach.atp.handler: enable
