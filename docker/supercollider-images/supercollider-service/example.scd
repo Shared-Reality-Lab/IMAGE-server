@@ -76,6 +76,7 @@ SynthDef(\playBuf, {arg buffer;
 
 OSCdef.newMatching(\renderer1, {|msg, time, addr, recvPort|
 	~minimalTest.(inputFile:  msg[1].asString, outputFile:  msg[2].asString );
+    addr.sendMsg(\status);
 }, '/render', nil);
 
 OSCdef.newMatching(\pingpong, {|msg, time, addr, recvPort|
