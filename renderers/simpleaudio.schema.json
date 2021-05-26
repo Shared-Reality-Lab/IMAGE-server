@@ -1,0 +1,26 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://bach.cim.mcgill.ca/atp/renderers/text.schema.json",
+    "title": "Simple Audio Renderer",
+    "type": "object",
+    "description": "Data for the noninteractive audio renderer ca.mcgill.cim.bach.atp.renderer.SimpleAudio.",
+    "oneOf": [{
+        "properties": {
+            "audio": {
+                "description": "HTTP(S) URL to an audio file.",
+                "type": "string",
+                "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
+            }
+        },
+        "required": [ "audio" ]
+    }, {
+        "properties": {
+            "audio": {
+                "description": "Data URI of an encoded audio file.",
+                "type": "string",
+                "pattern": "^data:audio/[^;]+;base64,[a-zA-Z0-9+/=]+$"
+            }
+        },
+        "required": [ "audio" ]
+    }]
+}
