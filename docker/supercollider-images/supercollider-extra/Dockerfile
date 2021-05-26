@@ -1,4 +1,4 @@
-FROM supercollider:alpine
+FROM supercollider:alpine-latest
 ARG VERSION=Version-3.11.1
 
 USER root
