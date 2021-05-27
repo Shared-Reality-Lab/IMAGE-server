@@ -7,7 +7,8 @@ WORKDIR /usr/src/app
 # Docker images are onions
 COPY package*.json ./
 RUN npm ci
-COPY . .
+COPY *.json ./
+COPY src ./src
 COPY --from=schemas /schemas src/schemas
 RUN npm run build
 
