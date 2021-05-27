@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from flask_api import status
 import json
 import  time
@@ -8,6 +8,7 @@ import jsonschema
 import numpy as np
 import base64
 import cv2
+import logging
 
 app = Flask(__name__)
 model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True) 
@@ -31,7 +32,6 @@ def get_prediction(img, threshold):
 def readImage():
     if request.method == 'POST':
         pred = []
-        data = []
         with open('./schemas/preprocessor-response.schema.json') as jsonfile:
             schema = json.load(jsonfile)
         with open('./schemas/definitions.json') as jsonfile:
@@ -64,11 +64,13 @@ def readImage():
             dictionary = {"ID":i,"type":str(pred_cls[i]),"dimensions":dimen,"confidence":np.float64(score[i]*100)}
             pred.append(dictionary)
         things = {"objects":pred}
-        response = jsonify({"request_uuid":request_uuid,"timestamp":timestamp,"name":name,"objects":things})
+        response = {"request_uuid":request_uuid,"timestamp":int(timestamp),"name":name,"data":things}
         try:
-            jsonschema.Draft7Validator(response, resolver=resolver)
+            validator = jsonschema.Draft4Validator(schema, resolver=resolver)
+            validator.validate(response)
         except jsonschema.exceptions.ValidationError as e:
-            return "Invalid JSON format",status.HTTP_500_BAD_REQUEST
+            logging.error("Invalid Preprocessor JSON")
+            return jsonify("Invalid Preprocessor JSON format"),500
         return response
     return "<h1>Get Request found. Try to send a POST request to get a response</h1>"
 
@@ -76,4 +78,4 @@ def readImage():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=5000)
+    app.run(host='0.0.0.0',port=5000,debug = True)
