@@ -2,7 +2,7 @@
 
 ~minimalTest =
 
-{|inputFile, outputFile|
+{|inputFile, outputFile, addr|
 // define our score
 
 	inputFile.postln;
@@ -68,15 +68,15 @@ SynthDef(\playBuf, {arg buffer;
     sampleRate: 48000,
 	headerFormat: "WAV",
 	sampleFormat: "int16",
-    options: ServerOptions.new.numOutputBusChannels_(2)
+    options: ServerOptions.new.numOutputBusChannels_(2),
+    action: { addr.sendMsg(\status); }
 );
 
 };
 
 
 OSCdef.newMatching(\renderer1, {|msg, time, addr, recvPort|
-	~minimalTest.(inputFile:  msg[1].asString, outputFile:  msg[2].asString );
-    addr.sendMsg(\status);
+	~minimalTest.(inputFile:  msg[1].asString, outputFile:  msg[2].asString, addr: addr);
 }, '/render', nil);
 
 OSCdef.newMatching(\pingpong, {|msg, time, addr, recvPort|
