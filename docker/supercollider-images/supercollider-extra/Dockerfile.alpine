@@ -1,17 +1,16 @@
-FROM supercollider:latest
+FROM supercollider:alpine-latest-debug
 ARG VERSION=Version-3.11.1
 
 USER root
 
 # Wanted by MP3
-RUN dnf install -q -y lame vorbis-tools unzip which && \
-    rm -rf /var/cache/dnf
+RUN apk add --no-cache vorbis-tools curl
 
 # Install sc3-plugins
 WORKDIR /temp
 RUN git clone --depth=1 --shallow-submodules --recursive --branch $VERSION https://github.com/supercollider/sc3-plugins.git && \
     cd sc3-plugins && \
-    cmake -DCMAKE_BUILD_TYPE="Release" -DSUPERNOVA=OFF -DLADSPA=ON && \
+    cmake -DCMAKE_BUILD_TYPE="Debug" -DSUPERNOVA=OFF -DLADSPA=ON && \
     make -j $(nproc) && \
     make install && \
     rm -rf /temp
