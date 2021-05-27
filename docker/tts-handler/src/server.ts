@@ -26,12 +26,12 @@ app.post("/atp/handler", async (req, res) => {
     if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
         const renderings: Record<string, unknown>[] = [];
         // Check for the preprocessor we need
-        if (req.body["preprocessors"]["ca.mcgill.cim.bach.atp.objectDetection.preprocessor"]) {
+        if (req.body["preprocessors"]["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]) {
             const ttsStrings = ["In this picture there is:"];
             try {
-                const objectData = req.body["preprocessors"]["ca.mcgill.cim.bach.atp.objectDetection.preprocessor"]["objects"];
+                const objectData = req.body["preprocessors"]["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]["objects"];
                 for (const object of objectData) {
-                    ttsStrings.push(object["name"]);
+                    ttsStrings.push(object["type"]);
                 }
             } catch (e) {
                 console.error(e);
