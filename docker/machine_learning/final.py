@@ -14,98 +14,28 @@ app = Flask(__name__)
 model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
 model.eval()
 
+# The N/A jare just used to inrease the size of the array. Since I am
+# running a pretrained model right now, the output array size is fixed for
+# the model. Hence the label array(pred_class) has to match the output prediction(pred)
+# array and hence the NA are used to make the size of both arrays same.
+# This would change in future as i will not used a pretrained model and
+# make a custom model. The N/A would not exist and the model would be custom made.
+
+
 COCO_INSTANCE_CATEGORY_NAMES = [
-    '__background__',
-    'person',
-    'bicycle',
-    'car',
-    'motorcycle',
-    'airplane',
-    'bus',
-    'train',
-    'truck',
-    'boat',
-    'traffic light',
-    'fire hydrant',
-    'N/A',
-    'stop sign',
-    'parking meter',
-    'bench',
-    'bird',
-    'cat',
-    'dog',
-    'horse',
-    'sheep',
-    'cow',
-    'elephant',
-    'bear',
-    'zebra',
-    'giraffe',
-    'N/A',
-    'backpack',
-    'umbrella',
-    'N/A',
-    'N/A',
-    'handbag',
-    'tie',
-    'suitcase',
-    'frisbee',
-    'skis',
-    'snowboard',
-    'sports ball',
-    'kite',
-    'baseball bat',
-    'baseball glove',
-    'skateboard',
-    'surfboard',
-    'tennis racket',
-    'bottle',
-    'N/A',
-    'wine glass',
-    'cup',
-    'fork',
-    'knife',
-    'spoon',
-    'bowl',
-    'banana',
-    'apple',
-    'sandwich',
-    'orange',
-    'broccoli',
-    'carrot',
-    'hot dog',
-    'pizza',
-    'donut',
-    'cake',
-    'chair',
-    'couch',
-    'potted plant',
-    'bed',
-    'N/A',
-    'dining table',
-    'N/A',
-    'N/A',
-    'toilet',
-    'N/A',
-    'tv',
-    'laptop',
-    'mouse',
-    'remote',
-    'keyboard',
-    'cell phone',
-    'microwave',
-    'oven',
-    'toaster',
-    'sink',
-    'refrigerator',
-    'N/A',
-    'book',
-    'clock',
-    'vase',
-    'scissors',
-    'teddy bear',
-    'hair drier',
-    'toothbrush']
+    '__background__', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+    'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'N/A', 'stop sign',
+    'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
+    'elephant', 'bear', 'zebra', 'giraffe', 'N/A', 'backpack', 'umbrella', 'N/A', 'N/A',
+    'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
+    'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+    'bottle', 'N/A', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
+    'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza',
+    'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'N/A', 'dining table',
+    'N/A', 'N/A', 'toilet', 'N/A', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone',
+    'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A', 'book',
+    'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
+]
 
 
 def get_prediction(img, threshold):
@@ -123,7 +53,7 @@ def get_prediction(img, threshold):
     return pred_boxes, pred_class, pred_score
 
 
-@app.route("/atp/preprocessor/", methods=['POST', 'GET'])
+@app.route("/atp/preprocessor", methods=['POST', 'GET'])
 def readImage():
     if request.method == 'POST':
         pred = []
@@ -159,7 +89,7 @@ def readImage():
         for i in range(len(pred_cls)):
             dictionary = {
                 "ID": i, "type": str(pred_cls[i]), "dimensions": dimen, "confidence": np.float64(score[i] * 100)
-                }
+            }
             pred.append(dictionary)
         things = {"objects": pred}
         response = {
@@ -168,10 +98,10 @@ def readImage():
             "name": name,
             "data": things}
         try:
-            validator = jsonschema.Draft4Validator(schema, resolver=resolver)
+            validator = jsonschema.Draft7Validator(schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as e:
-            logging.error("Invalid Preprocessor JSON")
+            logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 500
         return response
     return "<h1>Get Request found. Try to send a POST request to get a response</h1>"
