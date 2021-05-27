@@ -2,7 +2,7 @@ import express from "express";
 import Ajv from "ajv/dist/2020";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
-import fs from "fs";
+import fs from "fs/promises";
 import osc from "osc";
 
 import querySchemaJSON from "./schemas/request.schema.json";
@@ -74,21 +74,24 @@ app.post("/atp/handler", async (req, res) => {
                 }
             }).then(resp => {
                 return resp.arrayBuffer();
-            }).then(buf => {
+            }).then(async (buf) => {
                 const inFile = "/tmp/sc-store/tts-handler-" + Math.round(Date.now()) + ".wav";
-                fs.writeFileSync(inFile, Buffer.from(buf));
+                await fs.writeFile(inFile, Buffer.from(buf));
                 const outFile = "/tmp/sc-store/tts-handler-" + uuidv4() + ".wav";
+                await fs.writeFile(outFile, "", { mode: 0o666 });
 
                 const oscPort = new osc.UDPPort({
                     "remoteAddress": "supercollider",
                     "remotePort": scPort,
                     "localAddress": "0.0.0.0"
                 });
-                const promise = new Promise((resolve, reject) => {
+                console.log("Sending message...");
+                return new Promise<string>((resolve, reject) => {
                     try {
                         oscPort.on("message", (oscMsg) => {
+                            console.log(oscMsg);
                             oscPort.close();
-                            resolve(oscMsg);
+                            resolve(outFile);
                         });
                         oscPort.on("ready", () => {
                             oscPort.send({
@@ -101,13 +104,24 @@ app.post("/atp/handler", async (req, res) => {
                         });
                         oscPort.open();
                     } catch (e) {
+                        console.error(e);
                         oscPort.close();
                         reject(e);
                     }
                 });
-                return promise;
-            }).then(done => {
-                console.log(done);
+            }).then(outFile => {
+                console.log("Received response! Reading file..");
+                return fs.readFile(outFile);
+            }).then(buffer => {
+                const dataURL = "data:audio/wave;base64," + buffer.toString("base64");
+                renderings.push({
+                    "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
+                    "confidence": 70,
+                    "description": "An audio description of the elements in the image.",
+                    "data": {
+                        "audio": dataURL,
+                    }
+                });
             }).catch(err => {
                 console.error(err);
             });
