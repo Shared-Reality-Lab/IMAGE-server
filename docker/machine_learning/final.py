@@ -45,7 +45,7 @@ def readImage():
         content = request.get_json()
         request_uuid = content["request_uuid"]
         timestamp = time.time()
-        name = "ca.mcgill.cim.bach.atp.objectDetection.preprocessor"
+        name = "ca.mcgill.bach.atp.preprocessor.objectDetection"
         url  =content["image"]
         image_b64 = url.split(",")[1]
         binary = base64.b64decode(image_b64)
@@ -59,8 +59,9 @@ def readImage():
             ymax = int(boxes[i][1][1])
             boxes[i][0] = (xmin,ymin)
             boxes[i][1] = (xmax,ymax)
+            dimen = [xmin,ymin,xmax,ymax]
         for i in range(len(pred_cls)):
-            dictionary = {"ID":i,"type":str(pred_cls[i]),"dimensions":str(boxes[i]),"confidence":str(score[i])}
+            dictionary = {"ID":i,"type":str(pred_cls[i]),"dimensions":dimen,"confidence":np.float64(score[i]*100)}
             pred.append(dictionary)
         things = {"objects":pred}
         response = jsonify({"request_uuid":request_uuid,"timestamp":timestamp,"name":name,"objects":things})
