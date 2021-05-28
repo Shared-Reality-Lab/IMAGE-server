@@ -26,6 +26,7 @@ app.post("/atp/handler", async (req, res) => {
     if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
         const renderings: Record<string, unknown>[] = [];
         // Check for the preprocessor we need
+        let inFile: string, outFile: string;
         if (req.body["preprocessors"]["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]) {
             const ttsStrings = ["In this picture there is:"];
             try {
@@ -75,9 +76,9 @@ app.post("/atp/handler", async (req, res) => {
             }).then(resp => {
                 return resp.arrayBuffer();
             }).then(async (buf) => {
-                const inFile = "/tmp/sc-store/tts-handler-" + Math.round(Date.now()) + ".wav";
+                inFile = "/tmp/sc-store/tts-handler-" + Math.round(Date.now()) + ".wav";
                 await fs.writeFile(inFile, Buffer.from(buf));
-                const outFile = "/tmp/sc-store/tts-handler-" + uuidv4() + ".wav";
+                outFile = "/tmp/sc-store/tts-handler-" + uuidv4() + ".wav";
                 await fs.writeFile(outFile, "", { mode: 0o666 });
 
                 const oscPort = new osc.UDPPort({
@@ -109,9 +110,9 @@ app.post("/atp/handler", async (req, res) => {
                         reject(e);
                     }
                 });
-            }).then(outFile => {
+            }).then(out => {
                 console.log("Received response! Reading file..");
-                return fs.readFile(outFile);
+                return fs.readFile(out);
             }).then(buffer => {
                 const dataURL = "data:audio/wave;base64," + buffer.toString("base64");
                 renderings.push({
@@ -124,6 +125,23 @@ app.post("/atp/handler", async (req, res) => {
                 });
             }).catch(err => {
                 console.error(err);
+            }).finally(() => {
+                // Delete the created files (if they exist).
+                if (inFile !== undefined) {
+                    fs.access(inFile).then(() => {
+                        // it exists
+                        return fs.unlink(inFile);
+                    }).catch(() => {
+                        // didn't exist
+                    });
+                }
+                if (outFile !== undefined) {
+                    fs.access(outFile).then(() => {
+                        return fs.unlink(outFile);
+                    }).catch(() => {
+                        // didn't exist
+                    });
+                }
             });
         }
 
