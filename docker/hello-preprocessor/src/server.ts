@@ -11,7 +11,7 @@ const ajv = new Ajv({
     "schemas": [querySchemaJSON, definitionsJSON, preprocessorResponseSchemaJSON]
 });
 
-app.use(express.json());
+app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/atp/preprocessor", (req, res) => {
     if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
