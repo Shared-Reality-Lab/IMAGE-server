@@ -50,11 +50,11 @@ services:
             - ./config/express-common.env
         labels:
             ca.mcgill.cim.bach.atp.handler: enable
-    ml-preprocessor:
+    object-detection:
         build:
-            context: ./machine_learning
+            context: ./object-detection
             dockerfile: Dockerfile
-        image: "ml-preprocessor:latest"
+        image: "object-detection:latest"
         labels:
             ca.mcgill.cim.bach.atp.preprocessor: 1
             ca.mcgill.cim.bach.atp.port: 5000
