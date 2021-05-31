@@ -6,13 +6,18 @@ services:
             context: ./receiver
             dockerfile: Dockerfile
         image: "receiver:latest"
+        env_file:
+            - ./config/express-common.env
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
     supercollider:
         build:
-            context: ./supercollider-extra
+            context: ./supercollider-images/supercollider-service
             dockerfile: Dockerfile
-        image: "supercollider-extra:3.11.1"
+        image: "supercollider-service:latest"
+        command: sclang -D ./example.scd
+        volumes:
+            - sc-store:/tmp/sc-store
     espnet-tts:
         build:
             context: ./espnet
@@ -31,6 +36,8 @@ services:
             context: ./hello-preprocessor
             dockerfile: Dockerfile
         image: "hello-preprocessor:latest"
+        env_file:
+            - ./config/express-common.env
         labels:
             ca.mcgill.cim.bach.atp.preprocessor: 1
             ca.mcgill.cim.bach.atp.port: 8080
@@ -39,6 +46,8 @@ services:
             context: ./hello-handler
             dockerfile: Dockerfile
         image: "hello-handler:latest"
+        env_file:
+            - ./config/express-common.env
         labels:
             ca.mcgill.cim.bach.atp.handler: enable
     ml-preprocessor:
@@ -54,5 +63,12 @@ services:
             context: ./tts-handler
             dockerfile: Dockerfile
         image: "tts-handler:latest"
+        env_file:
+            - ./config/express-common.env
         labels:
             ca.mcgill.cim.bach.atp.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+
+volumes:
+    sc-store:

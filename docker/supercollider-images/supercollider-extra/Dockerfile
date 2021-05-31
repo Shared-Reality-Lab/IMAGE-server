@@ -1,10 +1,11 @@
-FROM supercollider:alpine
+FROM supercollider:latest
 ARG VERSION=Version-3.11.1
 
 USER root
 
 # Wanted by MP3
-RUN apk add --no-cache vorbis-tools curl
+RUN dnf install -q -y lame vorbis-tools unzip which && \
+    rm -rf /var/cache/dnf
 
 # Install sc3-plugins
 WORKDIR /temp
