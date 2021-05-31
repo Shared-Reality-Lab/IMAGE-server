@@ -32,7 +32,7 @@ function generateRendering(width: number, height: number): object {
     };
 }
 
-app.use(express.json());
+app.use(express.json({ limit: process.env.MAX_BODY }));
 
 app.post("/atp/handler", async (req, res) => {
     if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {

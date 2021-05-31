@@ -4,20 +4,20 @@ services:
     # Supercollider on Fedora 34
     supercollider:
         build:
-            context: ./supercollider
+            context: ./supercollider-images/supercollider
             dockerfile: Dockerfile
         image: "supercollider:latest"
     
     # Supercollider on Alpine Linux (smaller image)
     supercollider-alpine:
         build:
-            context: ./supercollider-alpine
+            context: ./supercollider-images/supercollider-alpine
             dockerfile: Dockerfile
         image: "supercollider:alpine"
     
     # Supercollider on Alpine with extra UGens and Quarks
     supercollider-extra:
         build:
-            context: ./supercollider-extra
+            context: ./supercollider-images/supercollider-extra
             dockerfile: Dockerfile
         image: "supercollider-extra:3.11.1"

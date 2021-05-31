@@ -16,7 +16,7 @@ const ajv = new Ajv({
 
 const PREPROCESSOR_TIME_MS = 15000;
 
-app.use(express.json());
+app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/atp/render", (req, res) => {
     if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
