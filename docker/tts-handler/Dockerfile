@@ -1,6 +1,9 @@
 FROM schemas:latest AS schemas
 
 FROM node:alpine
+
+RUN addgroup -g 4322 storage && addgroup node storage
+
 WORKDIR /usr/src/app
 
 COPY *.js* ./

@@ -79,7 +79,8 @@ app.post("/atp/handler", async (req, res) => {
                 inFile = "/tmp/sc-store/tts-handler-" + Math.round(Date.now()) + ".wav";
                 await fs.writeFile(inFile, Buffer.from(buf));
                 outFile = "/tmp/sc-store/tts-handler-" + uuidv4() + ".wav";
-                await fs.writeFile(outFile, "", { mode: 0o666 });
+                await fs.writeFile(outFile, "");
+                await fs.chmod(outFile, 0o664);
 
                 const oscPort = new osc.UDPPort({
                     "remoteAddress": "supercollider",
