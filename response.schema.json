@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://bach.cim.mcgill.ca/atp/response.schema.json",
-    "title": "Rendering Response",
+    "title": "IMAGE Response",
     "type": "object",
     "description": "Response of renderings of an image given certain conditions.",
     "properties": {
