@@ -1,11 +1,11 @@
 version: "3"
 
 services:
-    receiver:
+    orchestrator:
         build:
-            context: ./receiver
+            context: ./orchestrator
             dockerfile: Dockerfile
-        image: "receiver:latest"
+        image: "orchestrator:latest"
         env_file:
             - ./config/express-common.env
         volumes:
