@@ -12,7 +12,7 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
     supercollider:
         build:
-            context: ./supercollider-images/supercollider-service
+            context: ./services/supercollider-images/supercollider-service
             dockerfile: Dockerfile
         image: "supercollider-service:latest"
         command: sclang -D ./example.scd
@@ -20,7 +20,7 @@ services:
             - sc-store:/tmp/sc-store
     espnet-tts:
         build:
-            context: ./espnet
+            context: ./services/espnet
             dockerfile: Dockerfile
         image: "espnet-tts:latest"
         environment:
@@ -33,7 +33,7 @@ services:
                       capabilities: ["gpu", "utility", "compute"]
     hello-preprocessor:
         build:
-            context: ./hello-preprocessor
+            context: ./preprocessors/hello-preprocessor
             dockerfile: Dockerfile
         image: "hello-preprocessor:latest"
         env_file:
@@ -43,7 +43,7 @@ services:
             ca.mcgill.cim.bach.atp.port: 8080
     hello-handler:
         build:
-            context: ./hello-handler
+            context: ./handlers/hello-handler
             dockerfile: Dockerfile
         image: "hello-handler:latest"
         env_file:
@@ -52,7 +52,7 @@ services:
             ca.mcgill.cim.bach.atp.handler: enable
     object-detection:
         build:
-            context: ./object-detection
+            context: ./preprocessors/object-detection
             dockerfile: Dockerfile
         image: "object-detection:latest"
         labels:
@@ -60,7 +60,7 @@ services:
             ca.mcgill.cim.bach.atp.port: 5000
     tts-handler:
         build:
-            context: ./tts-handler
+            context: ./handlers/tts-handler
             dockerfile: Dockerfile
         image: "tts-handler:latest"
         env_file:
