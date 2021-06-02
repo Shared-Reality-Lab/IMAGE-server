@@ -115,7 +115,7 @@ app.post("/atp/handler", async (req, res) => {
                 console.log("Received response! Reading file..");
                 return fs.readFile(out);
             }).then(buffer => {
-                const dataURL = "data:audio/wave;base64," + buffer.toString("base64");
+                const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
                 renderings.push({
                     "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
                     "confidence": 70,
