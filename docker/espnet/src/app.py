@@ -36,7 +36,7 @@ def perform_tts():
         sf.write(f, wav, fs, format="WAV")
         f.seek(0)
         wrapper = FileWrapper(f)
-        return Response(wrapper, mimetype="audio/wave", direct_passthrough=True)
+        return Response(wrapper, mimetype="audio/wav", direct_passthrough=True)
     except Exception as e:
         logger.error(e)
         return { "error": "An error occurred while performing text-to-speech" }, 500
@@ -72,7 +72,7 @@ def segment_tts():
         logger.debug("Encoded")
 
         response = {
-            "audio": "data:audio/wave;base64," + encoded,
+            "audio": "data:audio/wav;base64," + encoded,
             "durations": durations
         }
 
