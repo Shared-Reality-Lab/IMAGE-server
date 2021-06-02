@@ -9,7 +9,7 @@
         "audio": {
             "description": "Data URL of the base64 wave file returned.",
             "type": "string",
-            "pattern": "^data:audio/wave;base64,[a-zA-Z0-9+/=]+$"
+            "pattern": "^data:audio/wav;base64,[a-zA-Z0-9+/=]+$"
         },
         "durations": {
             "description": "Duration of each segment in the audio file.",
