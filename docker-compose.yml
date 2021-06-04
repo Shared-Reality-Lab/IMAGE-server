@@ -58,11 +58,11 @@ services:
         labels:
             ca.mcgill.cim.bach.atp.preprocessor: 1
             ca.mcgill.cim.bach.atp.port: 5000
-    tts-handler:
+    hello-tts-handler:
         build:
-            context: ./handlers/tts-handler
+            context: ./handlers/hello-tts-handler
             dockerfile: Dockerfile
-        image: "tts-handler:latest"
+        image: "hello-tts-handler:latest"
         env_file:
             - ./config/express-common.env
         labels:
