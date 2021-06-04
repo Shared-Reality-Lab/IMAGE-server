@@ -20,7 +20,7 @@ services:
             - sc-store:/tmp/sc-store
     espnet-tts:
         build:
-            context: ./services/espnet
+            context: ./services/espnet-tts
             dockerfile: Dockerfile
         image: "espnet-tts:latest"
         environment:
