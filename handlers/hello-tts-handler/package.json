@@ -1,5 +1,5 @@
 {
-  "name": "tts-handler",
+  "name": "hello-tts-handler",
   "version": "0.0.1",
   "description": "Basic handler that returns TTS audio.",
   "main": "dist/server.js",

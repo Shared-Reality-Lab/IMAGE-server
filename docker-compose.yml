@@ -1,18 +1,18 @@
 version: "3"
 
 services:
-    receiver:
+    orchestrator:
         build:
-            context: ./receiver
+            context: ./orchestrator
             dockerfile: Dockerfile
-        image: "receiver:latest"
+        image: "orchestrator:latest"
         env_file:
             - ./config/express-common.env
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
     supercollider:
         build:
-            context: ./supercollider-images/supercollider-service
+            context: ./services/supercollider-images/supercollider-service
             dockerfile: Dockerfile
         image: "supercollider-service:latest"
         command: sclang -D ./example.scd
@@ -20,7 +20,7 @@ services:
             - sc-store:/tmp/sc-store
     espnet-tts:
         build:
-            context: ./espnet
+            context: ./services/espnet-tts
             dockerfile: Dockerfile
         image: "espnet-tts:latest"
         environment:
@@ -33,7 +33,7 @@ services:
                       capabilities: ["gpu", "utility", "compute"]
     hello-preprocessor:
         build:
-            context: ./hello-preprocessor
+            context: ./preprocessors/hello-preprocessor
             dockerfile: Dockerfile
         image: "hello-preprocessor:latest"
         env_file:
@@ -43,26 +43,26 @@ services:
             ca.mcgill.cim.bach.atp.port: 8080
     hello-handler:
         build:
-            context: ./hello-handler
+            context: ./handlers/hello-handler
             dockerfile: Dockerfile
         image: "hello-handler:latest"
         env_file:
             - ./config/express-common.env
         labels:
             ca.mcgill.cim.bach.atp.handler: enable
-    ml-preprocessor:
+    object-detection:
         build:
-            context: ./machine_learning
+            context: ./preprocessors/object-detection
             dockerfile: Dockerfile
-        image: "ml-preprocessor:latest"
+        image: "object-detection:latest"
         labels:
             ca.mcgill.cim.bach.atp.preprocessor: 1
             ca.mcgill.cim.bach.atp.port: 5000
-    tts-handler:
+    hello-tts-handler:
         build:
-            context: ./tts-handler
+            context: ./handlers/hello-tts-handler
             dockerfile: Dockerfile
-        image: "tts-handler:latest"
+        image: "hello-tts-handler:latest"
         env_file:
             - ./config/express-common.env
         labels:

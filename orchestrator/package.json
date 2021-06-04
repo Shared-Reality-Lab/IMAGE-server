@@ -1,5 +1,5 @@
 {
-  "name": "receiver",
+  "name": "orchestrator",
   "version": "0.0.1",
   "description": "Entry point for request handling",
   "main": "dist/server.js",
