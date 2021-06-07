@@ -5,12 +5,7 @@
     "type": "object",
     "description": "Response of timestamped audio segments.",
     "type": "object",
-    "properties": {
-        "audio": {
-            "description": "Data URL of the base64 wave file returned.",
-            "type": "string",
-            "pattern": "^data:audio/wav;base64,[a-zA-Z0-9+/=]+$"
-        },
+    "definitions": {
         "durations": {
             "description": "Duration of each segment in the audio file.",
             "type": "array",
@@ -19,6 +14,16 @@
                 "type": "integer",
                 "minimum": 0
             }
+        }
+    },
+    "properties": {
+        "audio": {
+            "description": "Data URL of the base64 wave file returned.",
+            "type": "string",
+            "pattern": "^data:audio/wav;base64,[a-zA-Z0-9+/=]+$"
+        },
+        "durations": {
+            "$ref": "#/definitions/durations"
         }
     },
     "required": [
