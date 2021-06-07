@@ -37,9 +37,10 @@
         }
     },
     "required": [
-        "request_uuid",
-        "timestamp",
-        "name",
-        "data"
+        "audioTemplate",
+        "ordering",
+        "objects",
+        "ttsFileName",
+        "durations"
     ]
 }
