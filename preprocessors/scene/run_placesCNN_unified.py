@@ -158,13 +158,16 @@ def scenePredictor():
     timestamp = time.time()
     request_uuid = content["request_uuid"]
     name = "ca.mcgill.cim.bach.atp.preprocessor.sceneRecognition"
+    data={
+        "type": type,
+        "categories": pred,
+        "attributes":attributes
+        }
     response = {
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": name,
-        "type": type,
-        "categories": pred,
-        "attributes": attributes
+        "data":data
     }
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
