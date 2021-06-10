@@ -140,10 +140,13 @@ def scenePredictor():
     probs = probs.numpy()
     idx = idx.numpy()
     io_image = np.mean(labels_IO[idx[:10]])
+    #randomly selected thresholding parameter which was created by the owners of this model. 
+    # On testing it was concluded that 0.5 works the best for indoor outdoor segregation
     if io_image < 0.5:
         type = "indoor"
     else:
         type = "outdoor"
+    #taking the first five predictions 
     for i in range(0, 5):
         dictionary = {"name": classes[idx[i]],
                       "confidence": int(probs[i] * 100)}
