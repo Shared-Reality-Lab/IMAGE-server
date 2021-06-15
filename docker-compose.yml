@@ -56,6 +56,14 @@ services:
             dockerfile: Dockerfile
         image: "object-detection:latest"
         labels:
+            ca.mcgill.cim.bach.atp.preprocessor: 2
+            ca.mcgill.cim.bach.atp.port: 5000
+    scene-detection:
+        build:
+            context: ./preprocessors/scene
+            dockerfile: Dockerfile
+        image: "scene-detection:latest"
+        labels:
             ca.mcgill.cim.bach.atp.preprocessor: 1
             ca.mcgill.cim.bach.atp.port: 5000
     hello-tts-handler:
