@@ -116,7 +116,10 @@ weight_softmax[weight_softmax < 0] = 0
 def scenePredictor():
     pred = []
     attributes = []
-    with open('./schemas/scene-detection.schema.json') as jsonfile:
+    with open('./schemas/preprocessors/scene-detection.schema.json') as jsonfile:
+        data_schema = json.load(jsonfile)
+    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+ paths)
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
         definitionSchema = json.load(jsonfile)
@@ -163,6 +166,12 @@ def scenePredictor():
         "categories": pred,
         "attributes":attributes
         }
+    try:
+        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+        validator.validate(data)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
     response = {
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
