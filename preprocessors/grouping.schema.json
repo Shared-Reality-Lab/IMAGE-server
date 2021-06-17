@@ -1,0 +1,32 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/grouping.schema.json",
+    "type": "object",
+    "title": "Grouping Data",
+    "description": "Grouped data for objects",
+    "properties": {
+        
+                "grouped":{
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "ungrouped":{
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    }
+                }
+            },
+            "required": [ "grouped", "ungrouped" ]
+         
+        }
+       
+    
