@@ -8,11 +8,10 @@ import handlerResponseJSON from "./schemas/handler-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 import ttsRequestJSON from "./schemas/services/tts/segment.request.json";
 import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
-import objectDetectionJSON from "./schemas/preprocessors/object-detection.schema.json";
 import descriptionJSON from "./schemas/services/supercollider/tts-description.schema.json";
 
 const ajv = new Ajv({
-    "schemas": [querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, ttsResponseJSON, objectDetectionJSON, descriptionJSON]
+    "schemas": [querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, descriptionJSON]
 });
 
 const app = express();
@@ -31,7 +30,7 @@ app.post("/atp/handler", async (req, res) => {
     // Check for the preprocessor data we need
     const preprocessors = req.body["preprocessors"];
     if (!(
-        preprocessors["ca.mcgill.cim.bach.atp.preprocessor.sceneDetection"]
+        preprocessors["ca.mcgill.cim.bach.atp.preprocessor.sceneRecognition"]
         && preprocessors["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]
         // && preprocessors["ca.mcgill.cim.bach.atp.preprocessor.grouping
     )) {
@@ -52,7 +51,7 @@ app.post("/atp/handler", async (req, res) => {
     }
 
     // Form TTS segments
-    const sceneData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.sceneDetection"];
+    const sceneData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.sceneRecognition"];
     let ttsIntro;
     if (sceneData["categories"].length > 0) {
         ttsIntro = `This picture of a ${sceneData["categories"][0]["name"]} contains`;
@@ -121,7 +120,8 @@ app.post("/atp/handler", async (req, res) => {
         durIdx += 1;
     }
 
-    res.json(scData);
+    console.log(scData);
+    res.status(501);
 });
 
 app.listen(port, () => {
