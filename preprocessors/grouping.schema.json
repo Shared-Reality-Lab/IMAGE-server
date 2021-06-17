@@ -16,7 +16,7 @@
             }
         },
         "ungrouped": {
-            "description": "An array of indices of objects which are unique and are not repeated in image"
+            "description": "An array of indices of objects which are unique and are not repeated in image",
             "type": "array",
             "items": {
                 "type": "array",
