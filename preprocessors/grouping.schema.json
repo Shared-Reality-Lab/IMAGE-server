@@ -5,28 +5,26 @@
     "title": "Grouping Data",
     "description": "Grouped data for objects",
     "properties": {
-        
-                "grouped":{
-                    "type": "array",
+
+        "grouped": {
+            "type": "array",
                     "items": {
                         "type": "array",
                         "items": {
                             "type": "number"
                         }
                     }
-                },
-                "ungrouped":{
-                    "type": "array",
+        },
+        "ungrouped": {
+            "type": "array",
                     "items": {
                         "type": "array",
                         "items": {
                             "type": "number"
                         }
                     }
-                }
-            },
-            "required": [ "grouped", "ungrouped" ]
-         
         }
-       
-    
+    },
+    "required": ["grouped", "ungrouped"]
+
+}
