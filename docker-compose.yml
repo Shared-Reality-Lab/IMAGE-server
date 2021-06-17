@@ -77,6 +77,17 @@ services:
             ca.mcgill.cim.bach.atp.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+    generic-tts-handler:
+        build:
+            context: ./handlers/generic-tts-handler
+            dockerfile: Dockerfile
+        image: "generic-tts-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.cim.bach.atp.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
 
 volumes:
     sc-store:
