@@ -13,8 +13,7 @@
                 "items": {
                     "type": "object",
                     "properties":{
-                        "ID": {"type":"integer"},
-                        "size":{"type":"number"}
+                        "IDs": {"type":"integer"},
                     }
                 }
             }
