@@ -6,7 +6,7 @@
     "description": "Grouped data for objects",
     "properties": {
         "grouped": {
-            "description": "An array of indices of objects having same type",
+            "description": "An array of indices of objects having a similar property with other objects",
             "type": "array",
             "items": {
                 "type": "array",
@@ -20,7 +20,7 @@
             }
         },
         "ungrouped": {
-            "description": "An array of indices of objects which are unique and are not repeated in image",
+            "description": "An array of indices of objects which do not have a common property with any other object",
             "type": "array",
             "items": {
                 "type": "number"
