@@ -1,6 +1,8 @@
 import express from "express";
 import Ajv from "ajv/dist/2020";
 import fetch from "node-fetch";
+import fs from "fs/promises";
+import { v4 as uuidv4 } from "uuid";
 
 // JSON imports
 import querySchemaJSON from "./schemas/request.schema.json";
@@ -17,6 +19,7 @@ const ajv = new Ajv({
 const app = express();
 const port = 80;
 const scPort = 57120;
+const filePrefix = "/tmp/sc-store/generic-tts-handler-";
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
@@ -121,7 +124,80 @@ app.post("/atp/handler", async (req, res) => {
     }
 
     console.log(scData);
-    res.status(501);
+
+    // Save files and handle process
+    let inFile, outFile, jsonFile;
+    const renderings: Record<string, unknown>[] = [];
+    await fetch(ttsResponse["audio"]).then(resp => {
+        return resp.arrayBuffer();
+    }).then(async (buf) => {
+        inFile = filePrefix + Math.round(Date.now()) + ".wav";
+        await fs.writeFile(inFile, Buffer.from(buf));
+        scData["ttsFileName"] = inFile;
+        jsonFile = filePrefix + Math.round(Date.now()) + ".json";
+        await fs.writeFile(jsonFile, JSON.stringify(scData));
+        outFile = filePrefix + uuidv4() + ".wav";
+        await fs.write(outFile, "");
+        await fs.chmod(outFile, 0o664);
+
+        // Form OSC message
+        const oscPort = new osc.UDPPort({
+            "remoteAddress": "supercollider",
+            "remotePort": scPort,
+            "localAddress": "0.0.0.0"
+        });
+        return new Promise<string>((resolve, reject) => {
+            try {
+                oscPort.on("message", (oscMsg) => {
+                    console.log(oscMsg);
+                    oscPort.close();
+                    resolve(outFile);
+                });
+                oscPort.on("ready", () => {
+                    oscPort.send({
+                        // TODO update this once the function is ready
+                        "address": "/render/genericTTS",
+                        "args": [
+                            { "type": "s", "value": jsonFile },
+                            { "type": "s", "value": outFile }
+                        ]
+                    });
+                });
+                oscPort.open();
+            } catch (e) {
+                console.error(e);
+                oscPort.close();
+                reject(e);
+            }
+        });
+    }).then(out => {
+        // Read response audio
+        return fs.readFile(out);
+    }).then(buffer => {
+        // TODO detect mime type from file since we will eventually use a compressed format
+        const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
+        renderings.push({
+            "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
+            "confidence": 50,   // TODO determine confidence from preprocessor data
+            "description": "An audio description of elements in the iamge with non-speech effects.",
+            "data": {
+                "audio": dataURL
+            }
+        });
+    }).catch(err => {
+        console.error(err);
+    }).finally(() => {
+        // Delete our files if they exist on the disk
+        if (inFile !== undefined) {
+            fs.access(inFile).then(() => { return fs.unlink(inFile); }).catch(() => {});
+        }
+        if (jsonFile !== undefined) {
+            fs.access(jsonFile).then(() => { return fs.unlink(jsonFile); }).catch(() => {});
+        }
+        if (outFile !== undefined) {
+            fs.access(outFile).then(() => { return fs.unlink(jsonFile); }).catch(() => {});
+        }
+    });
 });
 
 app.listen(port, () => {
