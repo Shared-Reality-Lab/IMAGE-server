@@ -14,7 +14,7 @@
                     "type": "object",
                     "properties":{
                         "ID": {"type":"integer"},
-                        "distance":{"type":"number"}
+                        "size":{"type":"number"}
                     }
                 }
             }
