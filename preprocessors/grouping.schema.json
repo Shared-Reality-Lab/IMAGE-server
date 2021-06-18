@@ -11,7 +11,11 @@
             "items": {
                 "type": "array",
                 "items": {
-                    "type": "number"
+                    "type": "object",
+                    "properties":{
+                        "ID": {"type":"integer"},
+                        "distance":{"type":"number"}
+                    }
                 }
             }
         },
@@ -19,10 +23,7 @@
             "description": "An array of indices of objects which are unique and are not repeated in image",
             "type": "array",
             "items": {
-                "type": "array",
-                "items": {
-                    "type": "number"
-                }
+                "type": "number"
             }
         }
     },
