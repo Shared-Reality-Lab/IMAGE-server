@@ -6,7 +6,7 @@
     "description": "Grouped data for objects",
     "properties": {
         "grouped": {
-            "description": "An array of indices of objects having a similar property with other objects",
+            "description": "This section would be responsible for grouping objects having similar features. The object element will include the ID of objects having similar properties",
             "type": "array",
             "items": {
                 "type": "array",
@@ -19,7 +19,7 @@
             }
         },
         "ungrouped": {
-            "description": "An array of indices of objects which do not have a common property with any other object",
+            "description": "A list of IDs that do not share any common features with other objects",
             "type": "array",
             "items": {
                 "type": "number"
