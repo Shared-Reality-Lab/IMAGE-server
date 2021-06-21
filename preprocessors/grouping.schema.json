@@ -1,0 +1,34 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/grouping.schema.json",
+    "type": "object",
+    "title": "Grouping Data",
+    "description": "Grouped data for objects",
+    "properties": {
+        "grouped": {
+            "description": "This section would be responsible for grouping objects having similar features. The object element will include the ID of objects having similar properties",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "IDs": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    }
+                },
+            "required": [ "IDs" ]
+        }
+    },
+        "ungrouped": {
+            "description": "A list of IDs that do not share any common features with other objects",
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        }
+    },
+    "required": ["grouped", "ungrouped"]
+}
