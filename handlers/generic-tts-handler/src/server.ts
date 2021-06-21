@@ -2,6 +2,7 @@ import express from "express";
 import Ajv from "ajv/dist/2020";
 import fetch from "node-fetch";
 import fs from "fs/promises";
+import osc from "osc";
 import { v4 as uuidv4 } from "uuid";
 
 // JSON imports
@@ -22,6 +23,15 @@ const scPort = 57120;
 const filePrefix = "/tmp/sc-store/generic-tts-handler-";
 
 app.use(express.json({limit: process.env.MAX_BODY}));
+
+function calcConfidence(objects: Record<string, unknown>[]): number {
+    let confidence = objects.reduce((acc, cur) => {
+        acc += cur["confidence"] as number;
+        return acc;
+    }, 0);
+    confidence /= objects.length;
+    return confidence;
+}
 
 app.post("/atp/handler", async (req, res) => {
     // Check for good data
@@ -89,7 +99,7 @@ app.post("/atp/handler", async (req, res) => {
     }
 
     const durations = ttsResponse["durations"];
-    const joining: Record<string, any> = {};
+    const joining: Record<string, unknown> = {};
     const intro = {
         "offset": 0,
         "duration": durations[0]
@@ -126,7 +136,7 @@ app.post("/atp/handler", async (req, res) => {
     console.log(scData);
 
     // Save files and handle process
-    let inFile, outFile, jsonFile;
+    let inFile: string, outFile: string, jsonFile: string;
     const renderings: Record<string, unknown>[] = [];
     await fetch(ttsResponse["audio"]).then(resp => {
         return resp.arrayBuffer();
@@ -137,7 +147,7 @@ app.post("/atp/handler", async (req, res) => {
         jsonFile = filePrefix + Math.round(Date.now()) + ".json";
         await fs.writeFile(jsonFile, JSON.stringify(scData));
         outFile = filePrefix + uuidv4() + ".wav";
-        await fs.write(outFile, "");
+        await fs.writeFile(outFile, "");
         await fs.chmod(outFile, 0o664);
 
         // Form OSC message
@@ -178,7 +188,7 @@ app.post("/atp/handler", async (req, res) => {
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
         renderings.push({
             "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
-            "confidence": 50,   // TODO determine confidence from preprocessor data
+            "confidence": calcConfidence(objectData["objects"]),
             "description": "An audio description of elements in the iamge with non-speech effects.",
             "data": {
                 "audio": dataURL
@@ -189,13 +199,13 @@ app.post("/atp/handler", async (req, res) => {
     }).finally(() => {
         // Delete our files if they exist on the disk
         if (inFile !== undefined) {
-            fs.access(inFile).then(() => { return fs.unlink(inFile); }).catch(() => {});
+            fs.access(inFile).then(() => { return fs.unlink(inFile); }).catch(() => { /* noop */ });
         }
         if (jsonFile !== undefined) {
-            fs.access(jsonFile).then(() => { return fs.unlink(jsonFile); }).catch(() => {});
+            fs.access(jsonFile).then(() => { return fs.unlink(jsonFile); }).catch(() => { /* noop */ });
         }
         if (outFile !== undefined) {
-            fs.access(outFile).then(() => { return fs.unlink(jsonFile); }).catch(() => {});
+            fs.access(outFile).then(() => { return fs.unlink(jsonFile); }).catch(() => { /* noop */ });
         }
     });
 });
