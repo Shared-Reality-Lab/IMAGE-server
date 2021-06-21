@@ -9,15 +9,19 @@
             "description": "This section would be responsible for grouping objects having similar features. The object element will include the ID of objects having similar properties",
             "type": "array",
             "items": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties":{
-                        "IDs": {"type":"integer"}
+                "type": "object",
+                "properties": {
+                    "IDs": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "minimum": 0
+                        }
                     }
-                }
-            }
-        },
+                },
+            "required": [ "IDs" ]
+        }
+    },
         "ungrouped": {
             "description": "A list of IDs that do not share any common features with other objects",
             "type": "array",
