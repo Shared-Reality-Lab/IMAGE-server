@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
-    "prebuild": "eslint src --ext .ts && (cd src/schemas && npx json2ts -i '**/*.json' -o ../types/)",
+    "prebuild": "eslint src --ext .ts",
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node ."
