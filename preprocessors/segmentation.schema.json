@@ -1,0 +1,35 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/grouping.schema.json",
+    "type": "object",
+    "title": "Segmentation Data",
+    "description": "Pixel coordinates for segments in an imahe",
+    "properties": {
+        "image": {
+            "type": "object",
+            "description": "The height and width of the input image"
+            "properties": {
+                "width": { "type": "number" },
+                "height": { "type": "number" }
+            }
+        },
+        "segments":{
+            "type": "object",
+            "description":"Pixel coordinates of different segments in an image, normalised between 0 and 1"
+            "properties":{
+                "type":"string",
+                "coord":{
+                    "type":"array",
+                    "items": {
+                        "type":"array",
+                        "items":{
+                            "type":"number"
+                        }
+                    }
+                }
+            },
+            "required": ["coord","type"]
+        }
+    },
+    "required": ["segment"]
+}
