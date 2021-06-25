@@ -3,7 +3,7 @@
     "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/grouping.schema.json",
     "type": "object",
     "title": "Segmentation Data",
-    "description": "Pixel coordinates for segments in an image",
+    "description": "JSON contaiing pixel coordinates of different segments in an image",
     "properties": {
         "segments":{
             "type":"array",
