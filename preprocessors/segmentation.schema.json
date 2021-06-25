@@ -7,6 +7,7 @@
     "properties": {
         "segments":{
             "type":"array",
+            "description":"Contains a collection of different types of segments and their associated pixel values in an image",
             "items":{
             "type": "object",
             "description":"Pixel coordinates of different segments in an image, normalised between 0 and 1",
