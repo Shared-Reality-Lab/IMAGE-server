@@ -18,9 +18,13 @@
                     "items": {
                         "type":"array",
                         "items":{
-                            "type":"number"
+                            "type":"number",
+                            "minimum": 0,
+                            "maximum": 1
                         }
-                    }
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
                 }
             }
             
