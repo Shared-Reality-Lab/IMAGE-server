@@ -25,125 +25,128 @@ app.use(express.json({limit: process.env.MAX_BODY}));
 app.post("/atp/handler", async (req, res) => {
     if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
         const renderings: Record<string, unknown>[] = [];
-        // Check for the preprocessor we need
-        let inFile: string, outFile: string;
-        if (req.body["preprocessors"]["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]) {
-            const ttsStrings = ["In this picture there is:"];
-            try {
-                const objectData = req.body["preprocessors"]["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]["objects"];
-                for (const object of objectData) {
-                    ttsStrings.push(object["type"]);
+        // Check for the renderer we need
+        if (req.body["renderers"].includes("ca.mcgill.cim.bach.atp.renderer.SimpleAudio")) {
+            // Check for the preprocessor we need
+            let inFile: string, outFile: string;
+            if (req.body["preprocessors"]["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]) {
+                const ttsStrings = ["In this picture there is:"];
+                try {
+                    const objectData = req.body["preprocessors"]["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]["objects"];
+                    for (const object of objectData) {
+                        ttsStrings.push(object["type"]);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    ttsStrings.push("an error");
                 }
-            } catch (e) {
-                console.error(e);
-                ttsStrings.push("an error");
-            }
 
-            const ttsRequest = {
-                "segments": ttsStrings
-            };
-
-            if (!ajv.validate("https://bach.cim.mcgill.ca/atp/tts/segment.request.json", ttsRequest)) {
-                console.warn("Failed to validate TTS!");
-                console.warn(ajv.errors);
-            }
-
-            await fetch("http://espnet-tts/service/tts/segments", {
-                "method": "POST",
-                "headers": {
-                    "Content-Type": "application/json"
-                },
-                "body": JSON.stringify({
+                const ttsRequest = {
                     "segments": ttsStrings
-                })
-            }).then(async resp => {
-                if (resp.ok) {
-                    return resp.json();
-                } else {
-                    const err = await resp.json();
-                    throw err;
-                }
-            }).then((data: any) => {
-                if (ajv.validate("https://bach.cim.mcgill.ca/atp/tts/segment.response.json", data)) {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const durations = data["durations"] as number[];
-                    const dataURI = data["audio"] as string;
+                };
 
-                    return fetch(dataURI);
-                } else {
-                    throw ajv.errors;
+                if (!ajv.validate("https://bach.cim.mcgill.ca/atp/tts/segment.request.json", ttsRequest)) {
+                    console.warn("Failed to validate TTS!");
+                    console.warn(ajv.errors);
                 }
-            }).then(resp => {
-                return resp.arrayBuffer();
-            }).then(async (buf) => {
-                inFile = "/tmp/sc-store/tts-handler-" + Math.round(Date.now()) + ".wav";
-                await fs.writeFile(inFile, Buffer.from(buf));
-                outFile = "/tmp/sc-store/tts-handler-" + uuidv4() + ".wav";
-                await fs.writeFile(outFile, "");
-                await fs.chmod(outFile, 0o664);
 
-                const oscPort = new osc.UDPPort({
-                    "remoteAddress": "supercollider",
-                    "remotePort": scPort,
-                    "localAddress": "0.0.0.0"
-                });
-                console.log("Sending message...");
-                return new Promise<string>((resolve, reject) => {
-                    try {
-                        oscPort.on("message", (oscMsg) => {
-                            console.log(oscMsg);
-                            oscPort.close();
-                            resolve(outFile);
-                        });
-                        oscPort.on("ready", () => {
-                            oscPort.send({
-                                "address": "/render",
-                                "args": [
-                                    { "type": "s", "value": inFile },
-                                    { "type": "s", "value": outFile }
-                                ]
+                await fetch("http://espnet-tts/service/tts/segments", {
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "body": JSON.stringify({
+                        "segments": ttsStrings
+                    })
+                }).then(async resp => {
+                    if (resp.ok) {
+                        return resp.json();
+                    } else {
+                        const err = await resp.json();
+                        throw err;
+                    }
+                }).then((data: any) => {
+                    if (ajv.validate("https://bach.cim.mcgill.ca/atp/tts/segment.response.json", data)) {
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                        const durations = data["durations"] as number[];
+                        const dataURI = data["audio"] as string;
+
+                        return fetch(dataURI);
+                    } else {
+                        throw ajv.errors;
+                    }
+                }).then(resp => {
+                    return resp.arrayBuffer();
+                }).then(async (buf) => {
+                    inFile = "/tmp/sc-store/tts-handler-" + Math.round(Date.now()) + ".wav";
+                    await fs.writeFile(inFile, Buffer.from(buf));
+                    outFile = "/tmp/sc-store/tts-handler-" + uuidv4() + ".wav";
+                    await fs.writeFile(outFile, "");
+                    await fs.chmod(outFile, 0o664);
+
+                    const oscPort = new osc.UDPPort({
+                        "remoteAddress": "supercollider",
+                        "remotePort": scPort,
+                        "localAddress": "0.0.0.0"
+                    });
+                    console.log("Sending message...");
+                    return new Promise<string>((resolve, reject) => {
+                        try {
+                            oscPort.on("message", (oscMsg) => {
+                                console.log(oscMsg);
+                                oscPort.close();
+                                resolve(outFile);
                             });
+                            oscPort.on("ready", () => {
+                                oscPort.send({
+                                    "address": "/render",
+                                    "args": [
+                                        { "type": "s", "value": inFile },
+                                        { "type": "s", "value": outFile }
+                                    ]
+                                });
+                            });
+                            oscPort.open();
+                        } catch (e) {
+                            console.error(e);
+                            oscPort.close();
+                            reject(e);
+                        }
+                    });
+                }).then(out => {
+                    console.log("Received response! Reading file..");
+                    return fs.readFile(out);
+                }).then(buffer => {
+                    const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
+                    renderings.push({
+                        "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
+                        "confidence": 70,
+                        "description": "An audio description of the elements in the image.",
+                        "data": {
+                            "audio": dataURL,
+                        }
+                    });
+                }).catch(err => {
+                    console.error(err);
+                }).finally(() => {
+                    // Delete the created files (if they exist).
+                    if (inFile !== undefined) {
+                        fs.access(inFile).then(() => {
+                            // it exists
+                            return fs.unlink(inFile);
+                        }).catch(() => {
+                            // didn't exist
                         });
-                        oscPort.open();
-                    } catch (e) {
-                        console.error(e);
-                        oscPort.close();
-                        reject(e);
+                    }
+                    if (outFile !== undefined) {
+                        fs.access(outFile).then(() => {
+                            return fs.unlink(outFile);
+                        }).catch(() => {
+                            // didn't exist
+                        });
                     }
                 });
-            }).then(out => {
-                console.log("Received response! Reading file..");
-                return fs.readFile(out);
-            }).then(buffer => {
-                const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
-                renderings.push({
-                    "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
-                    "confidence": 70,
-                    "description": "An audio description of the elements in the image.",
-                    "data": {
-                        "audio": dataURL,
-                    }
-                });
-            }).catch(err => {
-                console.error(err);
-            }).finally(() => {
-                // Delete the created files (if they exist).
-                if (inFile !== undefined) {
-                    fs.access(inFile).then(() => {
-                        // it exists
-                        return fs.unlink(inFile);
-                    }).catch(() => {
-                        // didn't exist
-                    });
-                }
-                if (outFile !== undefined) {
-                    fs.access(outFile).then(() => {
-                        return fs.unlink(outFile);
-                    }).catch(() => {
-                        // didn't exist
-                    });
-                }
-            });
+            }
         }
 
         const response = {
