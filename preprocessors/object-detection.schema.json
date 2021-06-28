@@ -40,6 +40,12 @@
                     "minItems": 2,
                     "maxItems": 2
                 },
+                "area": {
+                    "description": "The area of the image that is filled by the object. Currently, this is the area of the bounding box.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                },
                 "confidence": {
                     "description": "Confidence in the correctness of this object's data as a percentage.",
                     "type": "number",
