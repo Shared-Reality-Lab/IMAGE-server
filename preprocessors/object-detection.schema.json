@@ -17,13 +17,13 @@
                     "type": "string"
                 },
                 "dimensions": {
-                    "description": "The ulx, uly, lrx, and lry in pixels.",
+                    "description": "The ulx, uly, lrx, and lry normalized from 0 to 1.",
                     "type": "array",
                     "items": [
-                        { "type": "number", "minimum": 0 },
-                        { "type": "number", "minimum": 0 },
-                        { "type": "number", "minimum": 0 },
-                        { "type": "number", "minimum": 0 }
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 }
                     ],
                     "additionalItems": false,
                     "minItems": 4,
