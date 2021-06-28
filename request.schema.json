@@ -12,6 +12,15 @@
             "type": "string",
             "pattern": "^data:image/[^;]+;base64,[a-zA-Z0-9+/=]+$"
         },
+        "dimensions": {
+            "description": "The width and height of the image as requested in pixels.",
+            "type": "array",
+            "items": [
+                { "type": "integer", "exclusiveMinimum": 0 },
+                { "type": "integer", "exclusiveMinimum": 0 }
+            ],
+            "additionalItems": false
+        },
         "context": {
             "description": "Serialized XML of the image node and possibly related nodes.",
             "type": "string"
@@ -56,6 +65,7 @@
         "language",
         "timestamp",
         "image",
+        "dimensions",
         "context",
         "URL",
         "capabilities",
