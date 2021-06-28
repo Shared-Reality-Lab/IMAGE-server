@@ -58,6 +58,14 @@ services:
         labels:
             ca.mcgill.cim.bach.atp.preprocessor: 2
             ca.mcgill.cim.bach.atp.port: 5000
+    object-grouping:
+        build:
+            context: ./preprocessors/grouping
+            dockerfile: Dockerfile
+        image: "object-grouping:latest"
+        labels:
+            ca.mcgill.cim.bach.atp.preprocessor: 3
+            ca.mcgill.cim.bach.atp.port: 5000
     scene-detection:
         build:
             context: ./preprocessors/scene
