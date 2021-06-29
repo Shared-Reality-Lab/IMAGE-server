@@ -24,7 +24,7 @@
         "imageSource": {
             "description": "The URL of the image, if one was available.",
             "type": "string",
-            "pattern": "^data:image/[^;]+;base64,[a-zA-Z0-9+/=]+$"
+            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
         },
         "context": {
             "description": "Serialized XML of the image node and possibly related nodes.",
