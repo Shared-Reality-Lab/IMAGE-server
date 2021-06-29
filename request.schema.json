@@ -21,6 +21,11 @@
             ],
             "additionalItems": false
         },
+        "imageSource": {
+            "description": "The URL of the image, if one was available.",
+            "type": "string",
+            "pattern": "^data:image/[^;]+;base64,[a-zA-Z0-9+/=]+$"
+        },
         "context": {
             "description": "Serialized XML of the image node and possibly related nodes.",
             "type": "string"
