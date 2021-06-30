@@ -112,7 +112,7 @@ weight_softmax = params[-2].data.numpy()
 weight_softmax[weight_softmax < 0] = 0
 
 
-@app.route("/atp/preprocessor", methods=['POST', 'GET'])
+@app.route("/preprocessor", methods=['POST', 'GET'])
 def scenePredictor():
     pred = []
     attributes = []

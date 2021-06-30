@@ -15,7 +15,7 @@ def calculate_diagonal(x1,y1,x2,y2):
     return diag
 
 
-@app.route("/atp/preprocessor", methods=['POST', 'GET'])
+@app.route("/preprocessor", methods=['POST', 'GET'])
 def readImage():
     if request.method == 'POST':
         object_type = []

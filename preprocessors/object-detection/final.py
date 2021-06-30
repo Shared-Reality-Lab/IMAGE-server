@@ -53,7 +53,7 @@ def get_prediction(img, threshold):
     return pred_boxes, pred_class, pred_score
 
 
-@app.route("/atp/preprocessor", methods=['POST', 'GET'])
+@app.route("/preprocessor", methods=['POST', 'GET'])
 def readImage():
     if request.method == 'POST':
         pred = []
