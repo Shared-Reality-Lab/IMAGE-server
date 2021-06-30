@@ -21,13 +21,13 @@
                             "type":"number",
                             "minimum": 0,
                             "maximum": 1
-                        }
-                    },
+                        },
                     "minItems": 2,
                     "maxItems": 2
+                    },
                 },
                 "centroid":{
-                    "type":"aray",
+                    "type":"array",
                     "items":{
                         "type":"number",
                         "minimum": 0,
@@ -35,15 +35,15 @@
                     }
                 },
                 "area":{
-                    "type":number,
+                    "type":"number",
                     "minimum": 0,
                     "maximum": 1
                 }
             }
-            
-            },
-            "required": ["coord","nameOfSegment"]
+        },
+            "required": ["coord","nameOfSegment","centroid","area"]
         }
     },
     "required": ["segments"]
 }
+
