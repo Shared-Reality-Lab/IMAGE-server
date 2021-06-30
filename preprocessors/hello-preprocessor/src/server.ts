@@ -13,7 +13,7 @@ const ajv = new Ajv({
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
-app.post("/atp/preprocessor", (req, res) => {
+app.post("/preprocessor", (req, res) => {
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         // tslint:disable-next-line:no-console
         console.debug("Request validated");

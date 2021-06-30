@@ -22,7 +22,7 @@ const scPort = 57120;
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
-app.post("/atp/handler", async (req, res) => {
+app.post("/handler", async (req, res) => {
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         const renderings: Record<string, unknown>[] = [];
         // Check for the renderer we need
@@ -45,7 +45,7 @@ app.post("/atp/handler", async (req, res) => {
                     "segments": ttsStrings
                 };
 
-                if (!ajv.validate("https://image.a11y.mcgill.ca/tts/segment.request.json", ttsRequest)) {
+                if (!ajv.validate("https://image.a11y.mcgill.ca/services/tts/segment.request.json", ttsRequest)) {
                     console.warn("Failed to validate TTS!");
                     console.warn(ajv.errors);
                 }
@@ -66,7 +66,7 @@ app.post("/atp/handler", async (req, res) => {
                         throw err;
                     }
                 }).then((data: any) => {
-                    if (ajv.validate("https://image.a11y.mcgill.ca/tts/segment.response.json", data)) {
+                    if (ajv.validate("https://image.a11y.mcgill.ca/services/tts/segment.response.json", data)) {
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const durations = data["durations"] as number[];
                         const dataURI = data["audio"] as string;

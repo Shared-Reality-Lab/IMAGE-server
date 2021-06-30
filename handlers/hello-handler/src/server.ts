@@ -34,7 +34,7 @@ function generateRendering(width: number, height: number): object {
 
 app.use(express.json({ limit: process.env.MAX_BODY }));
 
-app.post("/atp/handler", async (req, res) => {
+app.post("/handler", async (req, res) => {
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         // tslint:disable-next-line:no-console
         console.log("Request validated");
