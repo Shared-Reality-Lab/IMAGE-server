@@ -15,11 +15,12 @@
         "dimensions": {
             "description": "The width and height of the image as requested in pixels.",
             "type": "array",
-            "items": [
+            "prefixItems": [
                 { "type": "integer", "exclusiveMinimum": 0 },
                 { "type": "integer", "exclusiveMinimum": 0 }
             ],
-            "additionalItems": false
+            "items": false,
+            "minItems": 2
         },
         "context": {
             "description": "Serialized XML of the image node and possibly related nodes.",

@@ -19,26 +19,24 @@
                 "dimensions": {
                     "description": "The ulx, uly, lrx, and lry normalized from 0 to 1.",
                     "type": "array",
-                    "items": [
+                    "prefixItems": [
                         { "type": "number", "minimum": 0, "maximum": 1 },
                         { "type": "number", "minimum": 0, "maximum": 1 },
                         { "type": "number", "minimum": 0, "maximum": 1 },
                         { "type": "number", "minimum": 0, "maximum": 1 }
                     ],
-                    "additionalItems": false,
-                    "minItems": 4,
-                    "maxItems": 4
+                    "items": false,
+                    "minItems": 4
                 },
                 "centroid": {
                     "description": "The centroid of the object in normalized coordinates. Currently, this is the geometric center of the bounding box.",
                     "type": "array",
-                    "items": [
+                    "prefixItems": [
                         { "type": "number", "minimum": 0, "maximum": 1 },
                         { "type": "number", "minimum": 0, "maximum": 1 }
                     ],
-                    "additionalItems": false,
-                    "minItems": 2,
-                    "maxItems": 2
+                    "items": false,
+                    "minItems": 2
                 },
                 "area": {
                     "description": "The area of the image that is filled by the object. Currently, this is the area of the bounding box.",
