@@ -42,7 +42,7 @@
                     "maxItems": 2
                 },
                 "area":{
-                    "description":"Total area occupied by the segment in a gien image. the area is normalised between 0 and 1",
+                    "description":"Total area occupied by the segment in a given image. the area is normalised between 0 and 1",
                     "type":"number",
                     "minimum": 0,
                     "maximum": 1
