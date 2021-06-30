@@ -159,7 +159,7 @@ def scenePredictor():
         attributes.append(labels_attribute[idx_a[i]])
     timestamp = time.time()
     request_uuid = content["request_uuid"]
-    name = "ca.mcgill.cim.bach.atp.preprocessor.sceneRecognition"
+    name = "ca.mcgill.a11y.image.preprocessor.sceneRecognition"
     data={
         "type": type,
         "categories": pred,

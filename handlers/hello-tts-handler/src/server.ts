@@ -23,16 +23,16 @@ const scPort = 57120;
 app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/atp/handler", async (req, res) => {
-    if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
+    if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         const renderings: Record<string, unknown>[] = [];
         // Check for the renderer we need
-        if (req.body["renderers"].includes("ca.mcgill.cim.bach.atp.renderer.SimpleAudio")) {
+        if (req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SimpleAudio")) {
             // Check for the preprocessor we need
             let inFile: string, outFile: string;
-            if (req.body["preprocessors"]["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]) {
+            if (req.body["preprocessors"]["ca.mcgill.a11y.image.preprocessor.objectDetection"]) {
                 const ttsStrings = ["In this picture there is:"];
                 try {
-                    const objectData = req.body["preprocessors"]["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]["objects"];
+                    const objectData = req.body["preprocessors"]["ca.mcgill.a11y.image.preprocessor.objectDetection"]["objects"];
                     for (const object of objectData) {
                         ttsStrings.push(object["type"]);
                     }
@@ -45,7 +45,7 @@ app.post("/atp/handler", async (req, res) => {
                     "segments": ttsStrings
                 };
 
-                if (!ajv.validate("https://bach.cim.mcgill.ca/atp/tts/segment.request.json", ttsRequest)) {
+                if (!ajv.validate("https://image.a11y.mcgill.ca/tts/segment.request.json", ttsRequest)) {
                     console.warn("Failed to validate TTS!");
                     console.warn(ajv.errors);
                 }
@@ -66,7 +66,7 @@ app.post("/atp/handler", async (req, res) => {
                         throw err;
                     }
                 }).then((data: any) => {
-                    if (ajv.validate("https://bach.cim.mcgill.ca/atp/tts/segment.response.json", data)) {
+                    if (ajv.validate("https://image.a11y.mcgill.ca/tts/segment.response.json", data)) {
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const durations = data["durations"] as number[];
                         const dataURI = data["audio"] as string;
@@ -119,7 +119,7 @@ app.post("/atp/handler", async (req, res) => {
                 }).then(buffer => {
                     const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
                     renderings.push({
-                        "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
+                        "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
                         "confidence": 70,
                         "description": "An audio description of the elements in the image.",
                         "data": {
@@ -154,7 +154,7 @@ app.post("/atp/handler", async (req, res) => {
             "timestamp": Math.round(Date.now() / 1000),
             "renderings": renderings
         };
-        if (ajv.validate("https://bach.cim.mcgill.ca/atp/handler-response.schema.json", response)) {
+        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
             res.json(response);
         } else {
             console.error("Failed to generate a valid response!");

@@ -71,7 +71,7 @@ def readImage():
         content = request.get_json()
         request_uuid = content["request_uuid"]
         timestamp = time.time()
-        name = "ca.mcgill.cim.bach.atp.preprocessor.objectDetection"
+        name = "ca.mcgill.a11y.image.preprocessor.objectDetection"
         url = content["image"]
         image_b64 = url.split(",")[1]
         binary = base64.b64decode(image_b64)
