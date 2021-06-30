@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/object-detection.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/object-detection.schema.json",
     "type": "object",
     "title": "Object Detection Data",
     "description": "Detected objects and related information.",

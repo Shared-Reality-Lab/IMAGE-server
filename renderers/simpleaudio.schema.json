@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://bach.cim.mcgill.ca/atp/renderers/simpleaudio.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json",
     "title": "Simple Audio Renderer",
     "type": "object",
     "description": "Data for the noninteractive audio renderer ca.mcgill.cim.bach.atp.renderer.SimpleAudio.",

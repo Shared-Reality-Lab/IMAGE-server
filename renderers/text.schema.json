@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://bach.cim.mcgill.ca/atp/renderers/text.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/renderers/text.schema.json",
     "title": "Plain Text Renderer",
     "type": "object",
     "description": "Data for the plain text renderer ca.mcgill.cim.bach.atp.renderer.Text.",
