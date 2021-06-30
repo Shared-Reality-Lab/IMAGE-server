@@ -1,9 +1,9 @@
 import Docker from "dockerode";
 
 export const docker = new Docker();
-const _PREPROCESSOR_LABEL_ = "ca.mcgill.cim.bach.atp.preprocessor";
-const _HANDLER_LABEL_ = "ca.mcgill.cim.bach.atp.handler";
-const _PORT_LABEL_ = "ca.mcgill.cim.bach.atp.port";
+const _PREPROCESSOR_LABEL_ = "ca.mcgill.a11y.image.preprocessor";
+const _HANDLER_LABEL_ = "ca.mcgill.a11y.image.handler";
+const _PORT_LABEL_ = "ca.mcgill.a11y.image.port";
 
 export function getPreprocessorServices(containers: Docker.ContainerInfo[]) {
     const activePreprocessors = containers.filter(container => {

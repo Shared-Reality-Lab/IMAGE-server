@@ -19,7 +19,7 @@ const PREPROCESSOR_TIME_MS = 15000;
 app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/atp/render", (req, res) => {
-    if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
+    if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
             const preprocessors = getPreprocessorServices(containers);
@@ -80,7 +80,7 @@ app.post("/atp/render", (req, res) => {
                         throw result;
                     }
                 }).then(json => {
-                    if (ajv.validate("https://bach.cim.mcgill.ca/atp/handler-response.schema.json", json)) {
+                    if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
                         return json["renderings"];
                     } else {
                         // tslint:disable-next-line:no-console
@@ -102,7 +102,7 @@ app.post("/atp/render", (req, res) => {
                 "timestamp": Math.round(Date.now() / 1000),
                 "renderings": renderings
             }
-            if (ajv.validate("https://bach.cim.mcgill.ca/atp/response.schema.json", response)) {
+            if (ajv.validate("https://image.a11y.mcgill.ca/response.schema.json", response)) {
                 // tslint:disable-next-line:no-console
                 console.debug("Valid response generated.");
                 res.json(response);
