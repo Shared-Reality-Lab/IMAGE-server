@@ -1,19 +1,23 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/grouping.schema.json",
+    "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/segmentation.schema.json",
     "type": "object",
     "title": "Segmentation Data",
-    "description": "JSON contaiing pixel coordinates of different segments in an image",
+    "description": "JSON containing pixel coordinates of different segments in an image",
     "properties": {
         "segments":{
             "type":"array",
-            "description":"Contains a collection of different types of segments and their associated pixel values in an image",
+            "description":"Divides the entire image into different segments where each segment indicates a noteworthy region or structure. For example a park image would be divided into sections that contain grass, sections that contain trees etc.",
             "items":{
             "type": "object",
-            "description":"Pixel coordinates of borders of different segments in an image, normalised between 0 and 1",
+            "description":"Contains information about each individual segment in an image. Information such as area, centre of segment etc are included in this section",
             "properties": {
-                "nameOfSegment":{ "type": "string" },
+                "nameOfSegment":{
+                    "description":"This section contains the name of the segment",
+                    "type": "string"
+                },
                 "coord":{
+                    "description":"This section contains the normalised coordinates for each segment. A maximum of 101 coordinate values are passed in the json to limit the size of json",
                     "type":"array",
                     "items": {
                         "type":"array",
@@ -27,23 +31,28 @@
                     },
                 },
                 "centroid":{
+                    "description":"This section contains the centroid for a segment. It represents the centre value of the entire segment. The centroid coordinates are normalised between 0 and 1",
                     "type":"array",
                     "items":{
                         "type":"number",
                         "minimum": 0,
                         "maximum": 1
-                    }
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
                 },
                 "area":{
+                    "description":"Total area occupied by the segment in a gien image. the area is normalised between 0 and 1",
                     "type":"number",
                     "minimum": 0,
                     "maximum": 1
                 }
-            }
-        },
+            },
             "required": ["coord","nameOfSegment","centroid","area"]
+        }
         }
     },
     "required": ["segments"]
 }
+
 
