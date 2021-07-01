@@ -1,5 +1,6 @@
-(
-~loadJSON = { |path|
+var loadJSON, loadSound, renderGeneric;
+"Generic Object Description".postln;
+loadJSON = { |path|
     var res = nil;
     if(File.exists(path),
         {
@@ -15,7 +16,7 @@
     res
 };
 
-~loadSound = { |path|
+loadSound = { |path|
     var res = nil;
     if(File.exists(path),
         {
@@ -28,7 +29,7 @@
     res
 };
 
-~renderGeneric = { |json, ttsData, outPath, addr|
+renderGeneric = { |json, ttsData, outPath, addr|
     var score, timing, serv;
     timing = 0;
     serv = Server(
@@ -160,11 +161,11 @@
 
 OSCdef.newMatching(\genericObject, { |msg, time, addr, recvPort|
     var json, ttsData;
-    json = ~loadJSON.(msg.at(1).asString);
-    ttsData = ~loadSound.(msg.at(2).asString);
+    json = loadJSON.(msg.at(1).asString);
+    ttsData = loadSound.(msg.at(2).asString);
     if(json.notNil && ttsData.notNil,
         {
-            ~renderGeneric.(
+            renderGeneric.(
                 json: json,
                 ttsData: ttsData,
                 outPath: msg.at(3).asString,
@@ -174,9 +175,3 @@ OSCdef.newMatching(\genericObject, { |msg, time, addr, recvPort|
         { addr.sendMsg(\status, \fail); }
     );
 }, '/render/genericObject', nil);
-)
-
-(
-m = NetAddr("127.0.0.1", 57120);
-m.sendMsg("/render/genericObject", "/home/juliette/Documents/ATP Misc/demo2/generic-tts-handler-1625056971430.json", "/home/juliette/Documents/ATP Misc/demo2/generic-tts-handler-1625056971429.wav", "/home/OSCTEST.wav");
-)
