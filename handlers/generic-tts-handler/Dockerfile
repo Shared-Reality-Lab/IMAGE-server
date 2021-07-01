@@ -9,6 +9,7 @@ WORKDIR /usr/src/app
 COPY *.js* ./
 RUN npm ci
 COPY src ./src
+COPY types ./types
 COPY --from=schemas /schemas src/schemas
 RUN npm run build
 
