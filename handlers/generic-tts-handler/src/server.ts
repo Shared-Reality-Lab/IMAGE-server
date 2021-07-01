@@ -98,7 +98,7 @@ app.post("/atp/handler", async (req, res) => {
         return;
     }
 
-    const durations = ttsResponse["durations"];
+    const durations = (ttsResponse as Record<string, unknown>)["durations"] as number[];
     const joining: Record<string, unknown> = {};
     const intro = {
         "offset": 0,
@@ -138,7 +138,8 @@ app.post("/atp/handler", async (req, res) => {
     // Save files and handle process
     let inFile: string, outFile: string, jsonFile: string;
     const renderings: Record<string, unknown>[] = [];
-    await fetch(ttsResponse["audio"]).then(resp => {
+    const dataURI = (ttsResponse as Record<string, unknown>)["audio"] as string;
+    await fetch(dataURI).then(resp => {
         return resp.arrayBuffer();
     }).then(async (buf) => {
         inFile = filePrefix + Math.round(Date.now()) + ".wav";
