@@ -38,14 +38,20 @@ app.post("/atp/handler", async (req, res) => {
     if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
         // tslint:disable-next-line:no-console
         console.log("Request validated");
-        const dims = await extractDimensions(req.body.image);
-        const rendering = generateRendering(dims[0], dims[1]);
+        // Check for text rendering support
+        const renderers = req.body.renderers as string[];
+        let rendering = [];
+        if (renderers.includes("ca.mcgill.cim.bach.atp.renderer.Text")) {
+            const dims = await extractDimensions(req.body.image);
+            rendering.push(generateRendering(dims[0], dims[1]));
+        } else {
+            // tslint:disable-next-line:no-console
+            console.warn("Text renderer not supported by the client!");
+        }
         const response = {
             "request_uuid": req.body.request_uuid,
             "timestamp": Math.round(Date.now() / 1000),
-            "renderings": [
-                rendering
-            ]
+            "renderings": rendering
         };
         if (ajv.validate("https://bach.cim.mcgill.ca/atp/handler-response.schema.json", response)) {
             // tslint:disable-next-line:no-console

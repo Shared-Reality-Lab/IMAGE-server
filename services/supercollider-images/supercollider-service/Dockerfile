@@ -11,6 +11,6 @@ RUN chown sclang:storage /tmp/sc-store
 RUN chmod 2774 /tmp/sc-store
 
 WORKDIR /tmp/sc
-COPY --chown=sclang:audio example.scd ./
+COPY --chown=sclang:audio *.scd ./
 
 USER sclang
