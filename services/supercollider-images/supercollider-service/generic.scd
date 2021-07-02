@@ -95,10 +95,13 @@ renderGeneric = { |json, ttsData, outPath, addr|
     // Iterate over objects (currently unsorted)
     json.at("objects").do({ |item, i|
         var audio, xCent;
+        ("Object no. "++i).postln;
+        item.postln;
         // Play and before last item
         if(i + 1 == json.at("objects").size,
             {
                 var and;
+                "Adding and...".postln;
                 and = json.at("audioTemplate")
                 .at("joining")
                 .at("and");
@@ -119,21 +122,37 @@ renderGeneric = { |json, ttsData, outPath, addr|
                 score.add([timing, s.freeMsg]);
             }
         );
-        audio = item.at("offset");
+        audio = item.at("audio");
+        audio.postln;
         score.add([
             timing,
             (b = Buffer(serv)).allocReadMsg(ttsData.path, audio.at("offset"), audio.at("duration"))
         ]);
-        xCent = item.at("centroid").at(0).asFloat;
-        score.add([
-            timing,
-            (s = Synth.basicNew(\panplayer, serv)).newMsg(
-                args: [
-                    'bufnum', b.bufnum,
-                    'pos', xCent
-                ]
-            )
-        ]);
+        if(item.at("centroid").notNil,
+            {
+                xCent = item.at("centroid").at(0).asFloat;
+                score.add([
+                    timing,
+                    (s = Synth.basicNew(\panplayer, serv)).newMsg(
+                        args: [
+                            'bufnum', b.bufnum,
+                            'pos', xCent
+                        ]
+                    )
+                ]);
+            },
+            {
+                "No centroid...".postln;
+                score.add([
+                    timing,
+                    (s = Synth.basicNew(\player, serv)).newMsg(
+                        args: [
+                            'bufnum', b.bufnum,
+                        ]
+                    )
+                ]);
+            }
+        );
         timing = timing + (audio.at("duration").asInteger / ttsData.sampleRate);
         score.add([timing, b.freeMsg]);
         score.add([timing, s.freeMsg]);
@@ -143,6 +162,8 @@ renderGeneric = { |json, ttsData, outPath, addr|
     score.recordNRT(
         nil,
         outPath,
+        headerFormat: "WAV",
+        sampleFormat: "int16",
         options: serv.options,
         action: {
             // Check for successful write (file exists)
@@ -160,15 +181,25 @@ renderGeneric = { |json, ttsData, outPath, addr|
 };
 
 OSCdef.newMatching(\genericObject, { |msg, time, addr, recvPort|
-    var json, ttsData;
+    var json = nil, ttsData = nil;
+    "Received a message...".postln;
     json = loadJSON.(msg.at(1).asString);
-    ttsData = loadSound.(msg.at(2).asString);
+    json.postln;
+    if(json.notNil,
+        {
+            if(json.at("ttsFileName").notNil,
+                {
+                    ttsData = loadSound.(json.at("ttsFileName").asString);
+                }
+            );
+        }
+    );
     if(json.notNil && ttsData.notNil,
         {
             renderGeneric.(
                 json: json,
                 ttsData: ttsData,
-                outPath: msg.at(3).asString,
+                outPath: msg.at(2).asString,
                 addr: addr
             );
         },
