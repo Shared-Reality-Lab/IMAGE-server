@@ -62,6 +62,23 @@ app.post("/atp/handler", async (req, res) => {
         return;
     }
 
+    if (!req.body["renderers"].includes("ca.mcgill.cim.bach.atp.renderer.SimpleAudio")) {
+        console.warn("Simple audio renderer not supported.");
+        const response = {
+            "request_uuid": req.body["request_uuid"],
+            "timestamp": Math.round(Date.now() / 1000),
+            "renderings": []
+        };
+        if (ajv.validate("https://bach.cim.mcgill.ca/atp/handler-response.schema.json", response)) {
+            res.json(response);
+        } else {
+            console.error("Failed to generate a valid empty response!");
+            console.error(ajv.errors);
+            res.status(500).json(ajv.errors);
+        }
+        return;
+    }
+
     // Form TTS segments
     const sceneData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.sceneRecognition"];
     let ttsIntro;
