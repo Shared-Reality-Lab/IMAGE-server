@@ -97,7 +97,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
         var audio, xCent;
         // ("Object no. "++i).postln;
         // Play and before last item
-        if(i + 1 == json.at("objects").size,
+        if((i + 1 == json.at("objects").size) && (json.at("objects").size > 1),
             {
                 var and;
                 and = json.at("audioTemplate")
