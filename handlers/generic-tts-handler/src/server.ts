@@ -43,9 +43,8 @@ app.post("/atp/handler", async (req, res) => {
     // Check for the preprocessor data we need
     const preprocessors = req.body["preprocessors"];
     if (!(
-        preprocessors["ca.mcgill.cim.bach.atp.preprocessor.sceneRecognition"]
-        && preprocessors["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]
-        // && preprocessors["ca.mcgill.cim.bach.atp.preprocessor.grouping
+        preprocessors["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]
+        && preprocessors["ca.mcgill.cim.bach.atp.preprocessor.grouping"]
     )) {
         console.warn("Not enough data to generate a rendering.");
         const response = {
@@ -66,7 +65,7 @@ app.post("/atp/handler", async (req, res) => {
     // Form TTS segments
     const sceneData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.sceneRecognition"];
     let ttsIntro;
-    if (sceneData["categories"].length > 0) {
+    if (sceneData && sceneData["categories"].length > 0) {
         ttsIntro = `This picture of a ${sceneData["categories"][0]["name"]} contains`;
     } else {
         ttsIntro = "This picture contains";
@@ -75,8 +74,20 @@ app.post("/atp/handler", async (req, res) => {
     const staticSegments = [ttsIntro, "with", "and"];
     const segments = Array.from(staticSegments);
     const objectData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"];
+    const groupData = preprocessors["ca.mcill.cim.bach.atp.preprocessor.grouping"];
     for (const object of objectData["objects"]) {
         segments.push(`a ${object["type"]}`);
+    }
+    for (const group of groupData["grouped"]) {
+        const exId = group["IDs"][0];
+        const exObjs = objectData["objects"].fitler((obj: Record<string, unknown>) => {
+            return obj["ID"] == exId;
+        });
+        const sType = (exObjs.length > 0) ? (exObjs[0]["type"]) : "object";
+        // TODO make plural
+        const pType = sType;
+        const num = group["IDs"].length;
+        segments.push(`${num.toString()} ${pType}`);
     }
 
     let ttsResponse;
@@ -92,6 +103,7 @@ app.post("/atp/handler", async (req, res) => {
         }).then(resp => {
             return resp.json();
         });
+        ttsResponse = ttsResponse as Record<string, unknown>;
     } catch (e) {
         console.error(e);
         res.status(500).json({"error": e.message});
@@ -119,6 +131,7 @@ app.post("/atp/handler", async (req, res) => {
             "joining": joining
         },
         "objects": objectData["objects"],
+        "groups": groupData["grouped"],
         "ordering": "leftToRight",
         "ttsFileName": ""
     };
@@ -132,8 +145,14 @@ app.post("/atp/handler", async (req, res) => {
         runningOffset += durations[durIdx];
         durIdx += 1;
     }
-
-    console.log(scData);
+    for (const group of scData["groups"]) {
+        group["offset"] = {
+            "offset": runningOffset,
+            "duration": durations[durIdx]
+        };
+        runningOffset += durations[durIdx];
+        durIdx += 1;
+    }
 
     // Save files and handle process
     let inFile: string, outFile: string, jsonFile: string;
