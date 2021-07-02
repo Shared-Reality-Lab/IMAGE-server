@@ -95,7 +95,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
     // Iterate over objects (currently unsorted)
     json.at("objects").do({ |item, i|
         var audio, xCent;
-        ("Object no. "++i).postln;
+        // ("Object no. "++i).postln;
         // Play and before last item
         if(i + 1 == json.at("objects").size,
             {
@@ -128,6 +128,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
         if(item.at("centroid").notNil,
             {
                 xCent = item.at("centroid").at(0).asFloat;
+                // ("Centroid: "++xCent).postln;
                 score.add([
                     timing,
                     (s = Synth.basicNew(\panplayer, serv)).newMsg(
@@ -139,7 +140,6 @@ renderGeneric = { |json, ttsData, outPath, addr|
                 ]);
             },
             {
-                "No centroid...".postln;
                 score.add([
                     timing,
                     (s = Synth.basicNew(\player, serv)).newMsg(
@@ -179,7 +179,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
 
 OSCdef.newMatching(\genericObject, { |msg, time, addr, recvPort|
     var json = nil, ttsData = nil;
-    "Received a message...".postln;
+    "Received a message at /render/genericObject...".postln;
     json = loadJSON.(msg.at(1).asString);
     json.postln;
     if(json.notNil,
