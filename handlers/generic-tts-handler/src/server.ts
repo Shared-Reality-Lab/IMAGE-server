@@ -200,30 +200,48 @@ app.post("/atp/handler", async (req, res) => {
             "remotePort": scPort,
             "localAddress": "0.0.0.0"
         });
-        return new Promise<string>((resolve, reject) => {
-            try {
-                oscPort.on("message", (oscMsg) => {
-                    console.log(oscMsg);
-                    oscPort.close();
-                    resolve(outFile);
-                });
-                oscPort.on("ready", () => {
-                    oscPort.send({
-                        // TODO update this once the function is ready
-                        "address": "/render/genericObject",
-                        "args": [
-                            { "type": "s", "value": jsonFile },
-                            { "type": "s", "value": outFile }
-                        ]
+        return Promise.race<string>([
+            new Promise<string>((resolve, reject) => {
+                try {
+                    oscPort.on("message", (oscMsg: osc.OscMessage) => {
+                        console.log(oscMsg);
+                        const arg = oscMsg["args"] as osc.Argument[];
+                        if (arg[0] === "done") {
+                            oscPort.close();
+                            resolve(outFile);
+                        }
+                        else if (arg[0] === "fail") {
+                            oscPort.close();
+                            reject(oscMsg);
+                        }
                     });
-                });
-                oscPort.open();
-            } catch (e) {
-                console.error(e);
-                oscPort.close();
-                reject(e);
-            }
-        });
+                    oscPort.on("ready", () => {
+                        oscPort.send({
+                            // TODO update this once the function is ready
+                            "address": "/render/genericObject",
+                            "args": [
+                                { "type": "s", "value": jsonFile },
+                                { "type": "s", "value": outFile }
+                            ]
+                        });
+                    });
+                    oscPort.open();
+                } catch (e) {
+                    console.error(e);
+                    oscPort.close();
+                    reject(e);
+                }
+            }),
+            // Since OSC is unreliable, timeout after 5000
+            new Promise<string>((resolve, reject) => {
+                setTimeout(() => {
+                    try {
+                        oscPort.close();
+                    } catch (_) { /* noop */ }
+                    reject("Timeout");
+                    }, 5000);
+            })
+        ]);
     }).then(out => {
         // Read response audio
         return fs.readFile(out);
