@@ -71,6 +71,7 @@ app.post("/atp/handler", async (req, res) => {
         if (sceneName.includes("/")) {
             sceneName = sceneName.split("/")[0]
         }
+        sceneName = sceneName.replace("_", " ");
         ttsIntro = `This picture of a ${sceneName} contains`;
     } else {
         ttsIntro = "This picture contains";
