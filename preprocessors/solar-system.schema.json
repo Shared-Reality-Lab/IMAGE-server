@@ -1,0 +1,94 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/object-detection.schema.json",
+    "type": "object",
+    "title": "Object and label detection data",
+    "description": "Detected object-label pairs and related information",
+    "definitions": {
+
+        "boundingbox": {
+            "description": "Parameters defining the bounding rectangles for objects and text",
+            "type": "object",
+            
+            "properties": {
+                "coords": {
+                    "description": "The ulx, uly, lrx, and lry normalized from 0 to 1.",
+                    "type": "array",
+                    "items": [
+                        { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+                        { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+                        { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+                        { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+                    ],
+                    "additionalItems": false,
+                    "minItems": 4,
+                    "maxItems": 4
+                },
+                "centroid": {
+                    "description": "The centroid of the object in normalized coordinates. Currently, this is the geometric center of the bounding box.",
+                    "type": "array",
+                    "items": [
+                        { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+                        { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+                    ],
+                    "additionalItems": false,
+                    "minItems": 2,
+                    "maxItems": 2
+                },
+                "area": {
+                    "description": "The area of the image that is filled by the object. Currently, this is the area of the bounding box",
+                    "type": ["number", "null"],
+                    "minimum": 0,
+                    "maximum": 1
+                }
+            },    
+
+            "required": [ "coords", "centroid", "area" ]
+        },
+
+        "object": {
+            "description": "Info about the detected object",
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "description": "A number identifying this object in the set",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The name (label) of object detected",
+                    "type": ["string", "null"]
+                },
+                "object": {
+                    "$ref": "#/definitions/boundingbox"
+                },
+                "text": {
+                    "$ref": "#/definitions/boundingbox"
+                } 
+            },
+            "required": [ "ID", "name", "object", "text" ]
+        }
+    },
+
+    "properties": {
+        "title": {
+            "description": "Title of the image",
+            "type": ["string", "null"]
+        },
+        "dimensions": {
+            "description": "Image dimensions in pixels",
+            "type": "object",
+            "properties": {
+                "h": { "type": "integer" },
+                "w": { "type": "integer" }
+            }
+        },
+        "objects": {
+            "description": "The set of object-label pairs detected in the image",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/object"
+            }
+        }
+    },
+    "required": [ "title", "dimensions", "objects" ]
+}
