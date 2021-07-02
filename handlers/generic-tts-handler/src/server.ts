@@ -74,13 +74,13 @@ app.post("/atp/handler", async (req, res) => {
     const staticSegments = [ttsIntro, "with", "and"];
     const segments = Array.from(staticSegments);
     const objectData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"];
-    const groupData = preprocessors["ca.mcill.cim.bach.atp.preprocessor.grouping"];
+    const groupData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.grouping"];
     for (const object of objectData["objects"]) {
         segments.push(`a ${object["type"]}`);
     }
     for (const group of groupData["grouped"]) {
         const exId = group["IDs"][0];
-        const exObjs = objectData["objects"].fitler((obj: Record<string, unknown>) => {
+        const exObjs = objectData["objects"].filter((obj: Record<string, unknown>) => {
             return obj["ID"] == exId;
         });
         const sType = (exObjs.length > 0) ? (exObjs[0]["type"]) : "object";
@@ -110,6 +110,8 @@ app.post("/atp/handler", async (req, res) => {
         return;
     }
 
+    console.log("We have the TTS!");
+
     const durations = (ttsResponse as Record<string, unknown>)["durations"] as number[];
     const joining: Record<string, unknown> = {};
     const intro = {
@@ -138,7 +140,7 @@ app.post("/atp/handler", async (req, res) => {
 
     let durIdx = staticSegments.length;
     for (const object of scData["objects"]) {
-        object["offset"] = {
+        object["audio"] = {
             "offset": runningOffset,
             "duration": durations[durIdx]
         };
@@ -146,7 +148,7 @@ app.post("/atp/handler", async (req, res) => {
         durIdx += 1;
     }
     for (const group of scData["groups"]) {
-        group["offset"] = {
+        group["audio"] = {
             "offset": runningOffset,
             "duration": durations[durIdx]
         };
@@ -171,6 +173,7 @@ app.post("/atp/handler", async (req, res) => {
         await fs.chmod(outFile, 0o664);
 
         // Form OSC message
+        console.log("Forming OSC...");
         const oscPort = new osc.UDPPort({
             "remoteAddress": "supercollider",
             "remotePort": scPort,
@@ -186,7 +189,7 @@ app.post("/atp/handler", async (req, res) => {
                 oscPort.on("ready", () => {
                     oscPort.send({
                         // TODO update this once the function is ready
-                        "address": "/render/genericTTS",
+                        "address": "/render/genericObject",
                         "args": [
                             { "type": "s", "value": jsonFile },
                             { "type": "s", "value": outFile }
@@ -202,6 +205,7 @@ app.post("/atp/handler", async (req, res) => {
         });
     }).then(out => {
         // Read response audio
+        console.log("We have an outfile!");
         return fs.readFile(out);
     }).then(buffer => {
         // TODO detect mime type from file since we will eventually use a compressed format
@@ -228,6 +232,20 @@ app.post("/atp/handler", async (req, res) => {
             fs.access(outFile).then(() => { return fs.unlink(jsonFile); }).catch(() => { /* noop */ });
         }
     });
+
+    const response = {
+        "request_uuid": req.body["request_uuid"],
+        "timestamp": Math.round(Date.now() / 1000),
+        "renderings": renderings
+    };
+
+    if (ajv.validate("https://bach.cim.mcgill.ca/atp/handler-response.schema.json", response)) {
+        res.json(response);
+    } else {
+        console.error("Failed to generate a valid response.");
+        console.error(ajv.errors);
+        res.status(500).json(ajv.errors);
+    }
 });
 
 app.listen(port, () => {
