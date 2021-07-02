@@ -15,7 +15,7 @@ services:
             context: ./services/supercollider-images/supercollider-service
             dockerfile: Dockerfile
         image: "supercollider-service:latest"
-        command: sclang -D ./example.scd
+        command: sclang -D ./loader.scd
         volumes:
             - sc-store:/tmp/sc-store
     espnet-tts:
