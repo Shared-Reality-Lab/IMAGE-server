@@ -96,34 +96,31 @@ renderGeneric = { |json, ttsData, outPath, addr|
     json.at("objects").do({ |item, i|
         var audio, xCent;
         ("Object no. "++i).postln;
-        item.postln;
         // Play and before last item
         if(i + 1 == json.at("objects").size,
             {
                 var and;
-                "Adding and...".postln;
                 and = json.at("audioTemplate")
                 .at("joining")
                 .at("and");
                 score.add([
                     timing,
-                    (b = Buffer(serv)).allocReadMsg(
+                    (j = Buffer(serv)).allocReadMsg(
                         ttsData.path,
-                        and.at("offset");
+                        and.at("offset"),
                         and.at("duration")
                     )
                 ]);
                 score.add([
                     timing,
-                    (s = Synth.basicNew(\player, serv)).newMsg(args: ['bufnum', b.bufnum])
+                    (k = Synth.basicNew(\player, serv)).newMsg(args: ['bufnum', b.bufnum])
                 ]);
                 timing = timing + (and.at("duration").asInteger / ttsData.sampleRate);
-                score.add([timing, b.freeMsg]);
-                score.add([timing, s.freeMsg]);
+                score.add([timing, j.freeMsg]);
+                score.add([timing, k.freeMsg]);
             }
         );
         audio = item.at("audio");
-        audio.postln;
         score.add([
             timing,
             (b = Buffer(serv)).allocReadMsg(ttsData.path, audio.at("offset"), audio.at("duration"))
@@ -196,12 +193,17 @@ OSCdef.newMatching(\genericObject, { |msg, time, addr, recvPort|
     );
     if(json.notNil && ttsData.notNil,
         {
-            renderGeneric.(
-                json: json,
-                ttsData: ttsData,
-                outPath: msg.at(2).asString,
-                addr: addr
-            );
+            try {
+                renderGeneric.(
+                    json: json,
+                    ttsData: ttsData,
+                    outPath: msg.at(2).asString,
+                    addr: addr
+                );
+            } { |error|
+                addr.sendMsg(\status, \fail);
+                error.throw;
+            }
         },
         { addr.sendMsg(\status, \fail); }
     );
