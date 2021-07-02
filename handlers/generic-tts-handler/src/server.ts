@@ -66,7 +66,12 @@ app.post("/atp/handler", async (req, res) => {
     const sceneData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.sceneRecognition"];
     let ttsIntro;
     if (sceneData && sceneData["categories"].length > 0) {
-        ttsIntro = `This picture of a ${sceneData["categories"][0]["name"]} contains`;
+        let sceneName = sceneData["categories"][0]["name"] as string;
+        // '/' is used to have more specific categories
+        if (sceneName.includes("/")) {
+            sceneName = sceneName.split("/")[0]
+        }
+        ttsIntro = `This picture of a ${sceneName} contains`;
     } else {
         ttsIntro = "This picture contains";
     }
@@ -89,6 +94,8 @@ app.post("/atp/handler", async (req, res) => {
         const num = group["IDs"].length;
         segments.push(`${num.toString()} ${pType}`);
     }
+
+    console.log(segments);
 
     let ttsResponse;
     try {
@@ -213,7 +220,7 @@ app.post("/atp/handler", async (req, res) => {
         renderings.push({
             "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
             "confidence": calcConfidence(objectData["objects"]),
-            "description": "An audio description of elements in the iamge with non-speech effects.",
+            "description": "An audio description of elements in the image with non-speech effects.",
             "data": {
                 "audio": dataURL
             }
