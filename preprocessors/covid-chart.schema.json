@@ -1,0 +1,147 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/object-detection.schema.json",
+    "type": "object",
+    "title": "Chart information",
+    "description": "Peaks and dips data, along with other related information",
+    "definitions": {
+
+        "label": {
+            "description": "Info about the label",
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "description": "A number identifying this label in the set",
+                    "type": "integer"
+                },
+                "text": {
+                    "description": "The name/text of label",
+                    "type": "string"
+                },
+                "coords": {
+                    "description": "The ulx, uly, lrx, and lry normalized from 0 to 1",
+                    "type": "array",
+                    "items": [
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 }
+                    ],
+                    "additionalItems": false,
+                    "minItems": 4,
+                    "maxItems": 4
+                },
+                "centroid": {
+                    "description": "The centroid of the bounding box in normalized coordinates",
+                    "type": "array",
+                    "items": [
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 }
+                    ],
+                    "additionalItems": false,
+                    "minItems": 2,
+                    "maxItems": 2
+                },
+                "area": {
+                    "description": "The area of the image that is filled by the label",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                }
+            },
+            "required": [ "ID", "text", "coords", "centroid", "area" ]
+        }, 
+
+        "peakdip": {
+            "description": "Info about the peak or dip",
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "description": "A number identifying this peak/dip in the set",
+                    "type": "integer"
+                },
+                "month": {
+                    "description": "Month in which the peak/dip occured",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "The Y axis value at the peak/dip",
+                    "type": "number"
+                },
+                "coords": {
+                    "description": "The x, y coordinates of the peak/dip normalized from 0 to 1",
+                    "type": "array",
+                    "items": [
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 }
+                    ],
+                    "additionalItems": false,
+                    "minItems": 2,
+                    "maxItems": 2
+                }
+            },
+            "required": [ "ID", "month", "value", "coords" ]
+        }
+    },
+
+    "properties": {
+        "type": {
+            "description": "Type of chart: Line/Bar/Pie",
+            "type": ["string", "null"]
+        },
+        "dimensions": {
+            "description": "Image dimensions in pixels",
+            "type": "object",
+            "properties": {
+                "h": { "type": "integer" },
+                "w": { "type": "integer" }
+            }
+        },
+        "title": {
+            "description": "Title of the chart",
+            "type": ["string", "null"]
+        },
+        "Y-range": {
+            "description": "Range of values on the Y axis",
+            "type": "object",
+            "properties": {
+                "min": { "type": "string" },
+                "max": { "type": "string" }
+            }
+        },
+        "X-labels": {
+            "description": "Labels on the X-axis",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/label"
+            }
+        },
+        "peaks": {
+            "description": "Info about the detected peaks",
+            "type": "object",
+            "properties": {
+                "count": { "type": "integer" },
+                "info": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/peakdip"
+                    }
+                }
+            }
+        },
+        "dips": {
+            "description": "Info about the detected dips",
+            "type": "object",
+            "properties": {
+                "count": { "type": "integer" },
+                "info": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/peakdip"
+                    }
+                }
+            }
+        }
+    },
+    "required": [ "type", "dimensions", "title", "Y-range", "X-labels", "peaks", "dips" ]
+}
