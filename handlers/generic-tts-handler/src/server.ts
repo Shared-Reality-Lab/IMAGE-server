@@ -117,8 +117,6 @@ app.post("/atp/handler", async (req, res) => {
         return;
     }
 
-    console.log("We have the TTS!");
-
     const durations = (ttsResponse as Record<string, unknown>)["durations"] as number[];
     const joining: Record<string, unknown> = {};
     const intro = {
@@ -162,6 +160,22 @@ app.post("/atp/handler", async (req, res) => {
         runningOffset += durations[durIdx];
         durIdx += 1;
     }
+
+    /** ~~~HACKS BEGIN HERE~~~ */
+    // We need a centroid for objects so...here we go...
+    const width = req.body["dimensions"][0] as number;
+    const height = req.body["dimensions"][1] as number;
+    for (const obj of scData["objects"]) {
+        obj["dimensions"][0] /= width;
+        obj["dimensions"][2] /= width;
+        obj["dimensions"][1] /= height;
+        obj["dimensions"][3] /= height;
+        obj["centroid"] = [
+            (obj["dimensions"][0] + obj["dimensions"][2]) / 2.0,
+            (obj["dimensions"][1] + obj["dimensions"][3]) / 2.0
+        ];
+    }
+    /** ~~~HACKS END HERE~~~ */
 
     // Save files and handle process
     let inFile: string, outFile: string, jsonFile: string;
@@ -212,7 +226,6 @@ app.post("/atp/handler", async (req, res) => {
         });
     }).then(out => {
         // Read response audio
-        console.log("We have an outfile!");
         return fs.readFile(out);
     }).then(buffer => {
         // TODO detect mime type from file since we will eventually use a compressed format
