@@ -288,7 +288,7 @@ app.post("/atp/handler", async (req, res) => {
             fs.access(jsonFile).then(() => { return fs.unlink(jsonFile); }).catch(() => { /* noop */ });
         }
         if (outFile !== undefined) {
-            fs.access(outFile).then(() => { return fs.unlink(jsonFile); }).catch(() => { /* noop */ });
+            fs.access(outFile).then(() => { return fs.unlink(outFile); }).catch(() => { /* noop */ });
         }
     });
 
