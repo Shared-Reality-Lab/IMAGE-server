@@ -4,6 +4,8 @@ import fetch from "node-fetch";
 import fs from "fs/promises";
 import osc from "osc";
 import { v4 as uuidv4 } from "uuid";
+import Articles from "articles";
+import pluralize from "pluralize"
 
 // JSON imports
 import querySchemaJSON from "./schemas/request.schema.json";
@@ -89,7 +91,8 @@ app.post("/atp/handler", async (req, res) => {
             sceneName = sceneName.split("/")[0]
         }
         sceneName = sceneName.replace("_", " ");
-        ttsIntro = `This picture of a ${sceneName} contains`;
+        const articled = Articles.articlize(sceneName);
+        ttsIntro = `This picture of ${articled} contains`;
     } else {
         ttsIntro = "This picture contains";
     }
@@ -99,7 +102,8 @@ app.post("/atp/handler", async (req, res) => {
     const objectData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"];
     const groupData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.grouping"];
     for (const object of objectData["objects"]) {
-        segments.push(`a ${object["type"]}`);
+        const articled = Articles.articlize(object["type"]);
+        segments.push(`${articled}`);
     }
     for (const group of groupData["grouped"]) {
         const exId = group["IDs"][0];
@@ -107,8 +111,7 @@ app.post("/atp/handler", async (req, res) => {
             return obj["ID"] == exId;
         });
         const sType = (exObjs.length > 0) ? (exObjs[0]["type"]) : "object";
-        // TODO make plural
-        const pType = sType;
+        const pType = pluralize(sType);
         const num = group["IDs"].length;
         segments.push(`${num.toString()} ${pType}`);
     }
