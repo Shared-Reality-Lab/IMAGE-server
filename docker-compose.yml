@@ -15,7 +15,7 @@ services:
             context: ./services/supercollider-images/supercollider-service
             dockerfile: Dockerfile
         image: "supercollider-service:latest"
-        command: sclang -D ./example.scd
+        command: sclang -D ./loader.scd
         volumes:
             - sc-store:/tmp/sc-store
     espnet-tts:
@@ -83,6 +83,17 @@ services:
             - ./config/express-common.env
         labels:
             ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+    generic-tts-handler:
+        build:
+            context: ./handlers/generic-tts-handler
+            dockerfile: Dockerfile
+        image: "generic-tts-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.cim.bach.atp.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
 
