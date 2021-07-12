@@ -35,9 +35,9 @@ function calcConfidence(objects: Record<string, unknown>[]): number {
     return confidence;
 }
 
-app.post("/atp/handler", async (req, res) => {
+app.post("/handler", async (req, res) => {
     // Check for good data
-    if (!ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
+    if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
         res.status(400).json(ajv.errors);
         return;
@@ -45,8 +45,8 @@ app.post("/atp/handler", async (req, res) => {
     // Check for the preprocessor data we need
     const preprocessors = req.body["preprocessors"];
     if (!(
-        preprocessors["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]
-        && preprocessors["ca.mcgill.cim.bach.atp.preprocessor.grouping"]
+        preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
+        && preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
     )) {
         console.warn("Not enough data to generate a rendering.");
         const response = {
@@ -54,7 +54,7 @@ app.post("/atp/handler", async (req, res) => {
             "timestamp": Math.round(Date.now() / 1000),
             "renderings": []
         };
-        if (ajv.validate("https://bach.cim.mcgill.ca/atp/handler-response.schema.json", response)) {
+        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
             res.json(response);
         } else {
             console.error("Failed to generate a valid empty response!");
@@ -64,14 +64,14 @@ app.post("/atp/handler", async (req, res) => {
         return;
     }
 
-    if (!req.body["renderers"].includes("ca.mcgill.cim.bach.atp.renderer.SimpleAudio")) {
+    if (!req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SimpleAudio")) {
         console.warn("Simple audio renderer not supported.");
         const response = {
             "request_uuid": req.body["request_uuid"],
             "timestamp": Math.round(Date.now() / 1000),
             "renderings": []
         };
-        if (ajv.validate("https://bach.cim.mcgill.ca/atp/handler-response.schema.json", response)) {
+        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
             res.json(response);
         } else {
             console.error("Failed to generate a valid empty response!");
@@ -82,7 +82,7 @@ app.post("/atp/handler", async (req, res) => {
     }
 
     // Form TTS segments
-    const sceneData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.sceneRecognition"];
+    const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
     let ttsIntro;
     if (sceneData && sceneData["categories"].length > 0) {
         let sceneName = sceneData["categories"][0]["name"] as string;
@@ -99,8 +99,8 @@ app.post("/atp/handler", async (req, res) => {
 
     const staticSegments = [ttsIntro, "with", "and"];
     const segments = Array.from(staticSegments);
-    const objectData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"];
-    const groupData = preprocessors["ca.mcgill.cim.bach.atp.preprocessor.grouping"];
+    const objectData = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
+    const groupData = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
     for (const object of objectData["objects"]) {
         const articled = Articles.articlize(object["type"]);
         segments.push(`${articled}`);
@@ -270,7 +270,7 @@ app.post("/atp/handler", async (req, res) => {
         // TODO detect mime type from file since we will eventually use a compressed format
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
         renderings.push({
-            "type_id": "ca.mcgill.cim.bach.atp.renderer.SimpleAudio",
+            "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
             "confidence": calcConfidence(objectData["objects"]),
             "description": "An audio description of elements in the image with non-speech effects.",
             "data": {
@@ -298,7 +298,7 @@ app.post("/atp/handler", async (req, res) => {
         "renderings": renderings
     };
 
-    if (ajv.validate("https://bach.cim.mcgill.ca/atp/handler-response.schema.json", response)) {
+    if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);
     } else {
         console.error("Failed to generate a valid response.");
