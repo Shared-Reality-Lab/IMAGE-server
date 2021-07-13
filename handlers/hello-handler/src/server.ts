@@ -20,7 +20,7 @@ async function extractDimensions(dataUrl: string) {
 
 function generateRendering(width: number, height: number): object {
     return {
-        "type_id": "ca.mcgill.cim.bach.atp.renderer.Text",
+        "type_id": "ca.mcgill.a11y.image.renderer.Text",
         "confidence": 100,
         "description": "An example rendering that conveys no useful information.",
         "metadata": {
@@ -34,14 +34,14 @@ function generateRendering(width: number, height: number): object {
 
 app.use(express.json({ limit: process.env.MAX_BODY }));
 
-app.post("/atp/handler", async (req, res) => {
-    if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
+app.post("/handler", async (req, res) => {
+    if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         // tslint:disable-next-line:no-console
         console.log("Request validated");
         // Check for text rendering support
         const renderers = req.body.renderers as string[];
         let rendering = [];
-        if (renderers.includes("ca.mcgill.cim.bach.atp.renderer.Text")) {
+        if (renderers.includes("ca.mcgill.a11y.image.renderer.Text")) {
             const dims = await extractDimensions(req.body.image);
             rendering.push(generateRendering(dims[0], dims[1]));
         } else {
@@ -53,7 +53,7 @@ app.post("/atp/handler", async (req, res) => {
             "timestamp": Math.round(Date.now() / 1000),
             "renderings": rendering
         };
-        if (ajv.validate("https://bach.cim.mcgill.ca/atp/handler-response.schema.json", response)) {
+        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
             // tslint:disable-next-line:no-console
             console.log("Valid response generated.");
             res.json(response);

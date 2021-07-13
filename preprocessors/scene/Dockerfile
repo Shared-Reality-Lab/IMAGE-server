@@ -10,13 +10,13 @@ RUN pip3 install --upgrade pip
 
 COPY ./requirements.txt /app/requirements.txt
 
-COPY --from=schemas /schemas app/schemas
-
 RUN mv wideresnet18_places365.pth.tar app/
 
 WORKDIR /app
 
 RUN pip install -r requirements.txt
+
+COPY --from=schemas /schemas /app/schemas
 
 COPY . /app
 
