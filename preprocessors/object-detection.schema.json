@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/object-detection.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/object-detection.schema.json",
     "type": "object",
     "title": "Object Detection Data",
     "description": "Detected objects and related information.",
@@ -28,16 +28,6 @@
                     "items": false,
                     "minItems": 4
                 },
-                "centroid": {
-                    "description": "The centroid of the object in normalized coordinates. Currently, this is the geometric center of the bounding box.",
-                    "type": "array",
-                    "prefixItems": [
-                        { "type": "number", "minimum": 0, "maximum": 1 },
-                        { "type": "number", "minimum": 0, "maximum": 1 }
-                    ],
-                    "items": false,
-                    "minItems": 2
-                },
                 "area": {
                     "description": "The area of the image that is filled by the object. Currently, this is the area of the bounding box.",
                     "type": "number",
@@ -47,13 +37,12 @@
                 "centroid": {
                     "description": "The centroid of the object in normalized coordinates. Currently, this is the geometric center of the bounding box.",
                     "type": "array",
-                    "items": [
+                    "prefixItems": [
                         { "type": "number", "minimum": 0, "maximum": 1 },
                         { "type": "number", "minimum": 0, "maximum": 1 }
                     ],
-                    "additionalItems": false,
-                    "minItems": 2,
-                    "maxItems": 2
+                    "items": false,
+                    "minItems": 2
                 },
                 "area": {
                     "description": "The area of the image that is filled by the object. Currently, this is the area of the bounding box.",

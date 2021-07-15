@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://bach.cim.mcgill.ca/atp/request.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/request.schema.json",
     "title": "IMAGE Request",
     "type": "object",
     "description": "Request for renderings of an image given certain conditions.",

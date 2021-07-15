@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/grouping.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/grouping.schema.json",
     "type": "object",
     "title": "Grouping Data",
     "description": "Grouped data for objects",
