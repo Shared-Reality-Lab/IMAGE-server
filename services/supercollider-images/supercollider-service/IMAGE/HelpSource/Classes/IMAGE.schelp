@@ -22,3 +22,12 @@ argument:: path
 the full path to the sound file
 
 returns:: a SoundFile
+
+METHOD:: loadTTSJSON
+load information for a TTS-based rendering from a JSON file
+
+argument:: path
+the full path to the JSON file
+
+returns:: a Dictionary
+where code::\jsonData:: is a Dictionary of JSON data and code::\soundFile:: is the SoundFile corresponding to the TTS-ed audio
