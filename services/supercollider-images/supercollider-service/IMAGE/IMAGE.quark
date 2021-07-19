@@ -1,0 +1,9 @@
+(
+\name: "IMAGE",
+\summary: "Helper class for tasks related to the IMAGE project.",
+//\license: "",
+\author: "Juliette Regimbal",
+\organization: "Shared Reality Lab, McGill University",
+\country: "Canada",
+\since: "2021"
+)

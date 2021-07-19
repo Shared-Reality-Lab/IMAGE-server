@@ -1,0 +1,24 @@
+CLASS:: IMAGE
+summary:: convenience class for the IMAGE project
+categories:: Convenience
+
+DESCRIPTION::
+Methods to handle common file formats that may be encountered in the IMAGE project, like JSON-formatted data.
+
+CLASSMETHODS::
+
+METHOD:: loadJSON
+loads a JSON file as a dictionary if it exists
+
+argument:: path
+the full path to the JSON file
+
+returns:: a Dictionary
+
+METHOD:: loadSound
+loads information on a sound file if it exists
+
+argument:: path
+the full path to the sound file
+
+returns:: a SoundFile
