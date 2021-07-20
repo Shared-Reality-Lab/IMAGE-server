@@ -13,13 +13,14 @@ IMAGE {
 
         // Ambisonic SynthDefs at orders 1-5
         5.do({|i|
-            var order = i+1;
-            // Binaural decoder for NRT
-            SynthDef((\binauralDecodeNrt++(i+1)).asSymbol, { |in= 0, out=0|
-                var decoded;
-                decoded = HOABinaural.ar4Score(order, In.ar(in, (order+1).pow(2).asInteger ));
-                Out.ar(out, decoded)
-            }).store;
+	         var order = i+1;
+	         SynthDef((\binauralDecodeNrt++(i+1)).asSymbol, { |in= 0, out=0|
+	         var decoded, limited;
+		     decoded = HOABinaural.ar4Score(order, In.ar(in, (order+1).pow(2).asInteger ));
+		     limited = [Limiter.ar(decoded[0], 0.9, 0.001), Limiter.ar(decoded[1], 0.9, 0.001)];
+	         Out.ar(out, limited)
+           }).store;
+           });
 
             // White noise burst
             SynthDef((\noiseBurstHOA++(i+1)).asSymbol, { |theta = 0.0, phi = 0.0, radius = 1.5, out = 2, gain = 1|
