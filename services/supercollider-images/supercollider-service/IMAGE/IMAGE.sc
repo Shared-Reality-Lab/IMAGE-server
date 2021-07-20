@@ -20,7 +20,6 @@ IMAGE {
 		     limited = [Limiter.ar(decoded[0], 0.9, 0.001), Limiter.ar(decoded[1], 0.9, 0.001)];
 	         Out.ar(out, limited)
            }).store;
-           });
 
             // White noise burst
             SynthDef((\noiseBurstHOA++(i+1)).asSymbol, { |theta = 0.0, phi = 0.0, radius = 1.5, out = 2, gain = 1|
