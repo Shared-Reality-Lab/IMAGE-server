@@ -1,34 +1,5 @@
-var loadJSON, loadSound, renderGeneric;
+var renderGeneric;
 "Generic Object Description".postln;
-loadJSON = { |path|
-    var res = nil;
-    if(File.exists(path),
-        {
-            File.use(path, "r", { |f|
-                var jsonData;
-                jsonData = f.readAllString;
-                res = jsonData.parseYAML;
-            });
-            "Read file successfully.".postln;
-        },
-        { "Could not open the file :(".postln; }
-    );
-    res
-};
-
-loadSound = { |path|
-    var res = nil;
-    if(File.exists(path),
-        {
-            SoundFile.use(path, { |f|
-                res = f;
-            });
-        },
-        { "Could not open the file :(".postln; }
-    );
-    res
-};
-
 renderGeneric = { |json, ttsData, outPath, addr|
     var score, timing, serv, objects, groupedObjIds, bonkDur;
     timing = 0;
@@ -256,17 +227,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
 OSCdef.newMatching(\genericObject, { |msg, time, addr, recvPort|
     var json = nil, ttsData = nil;
     "Received a message at /render/genericObject...".postln;
-    json = loadJSON.(msg.at(1).asString);
-    json.postln;
-    if(json.notNil,
-        {
-            if(json.at("ttsFileName").notNil,
-                {
-                    ttsData = loadSound.(json.at("ttsFileName").asString);
-                }
-            );
-        }
-    );
+    # json, ttsData = IMAGE.loadTTSJSON(msg.at(1).asString);
     if(json.notNil && ttsData.notNil,
         {
             try {

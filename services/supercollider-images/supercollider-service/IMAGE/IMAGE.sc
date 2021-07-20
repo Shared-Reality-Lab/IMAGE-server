@@ -119,10 +119,9 @@ IMAGE {
     }
 
     // load and parse a JSON file as a dictionary
-    *loadJSON { |path = nil|
-        var res = nil, realPath = nil;
-        realPath = File.realpath(path);
-        if(File.exists(realPath),
+    *loadJSON { |path|
+        var res = nil;
+        if(File.exists(path.standardizePath),
             {
                 File.use(path, "r", { |f|
                     var jsonData;
@@ -137,7 +136,7 @@ IMAGE {
         ^res
     }
 
-    *loadSound { |path = nil|
+    *loadSound { |path|
         var res = nil;
         if(File.exists(path),
             {
@@ -152,7 +151,7 @@ IMAGE {
         ^res
     }
 
-    *loadTTSJSON { |path = nil|
+    *loadTTSJSON { |path|
         var jsonData, soundFile;
         jsonData = this.loadJSON(path);
         if(jsonData.isNil,

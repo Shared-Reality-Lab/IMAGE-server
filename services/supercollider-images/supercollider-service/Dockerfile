@@ -12,5 +12,7 @@ RUN chmod 2774 /tmp/sc-store
 
 WORKDIR /tmp/sc
 COPY --chown=sclang:audio *.scd ./
+COPY --chown=sclang:audio ./IMAGE ./IMAGE
 
 USER sclang
+RUN printf 'Quarks.install("/tmp/sc/IMAGE");' | sclang
