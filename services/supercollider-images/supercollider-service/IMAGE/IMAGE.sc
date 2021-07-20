@@ -42,6 +42,7 @@ IMAGE {
             }).store;
         });
 
+
         // Buffer Playback
         // Stereo Buffer
         SynthDef(\playBufferStereo,{ |buffNum = 0, start = 0, duration = 1, out = 0, stereoPos = 0.0, gain = 1|
@@ -51,7 +52,7 @@ IMAGE {
             Out.ar(out, Pan2.ar(sig, stereoPos))
         }).store;
 
-        // Ambisonics Buffers
+        // Ambisonics Buffers Playback
         5.do({|i|
             var order = i+1;
             SynthDef((\playBufferHOA++(i+1)).asSymbol, { |buffNum = 0, start = 0, duration = 1, theta = 0.0, phi = 0.0, radius = 1.5, out = 2, gain = 1|
