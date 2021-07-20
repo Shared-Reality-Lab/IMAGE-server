@@ -62,6 +62,29 @@ IMAGE {
             \soundFile, soundFile
         ])
     }
+
+    *newScore { |server, order = 3, busOffset = 2, preload = true|
+        var score, decode = nil;
+        score = Score.new;
+        HOABinaural.loadbinauralIRs4Score2(score, order, 0);
+        // Preload \decoderNRT
+        if(preload, {
+            SynthDef(\decodeNRT, { |out=0|
+                var decoded;
+                decoded = HOABinaural.ar4Score(
+                    order,
+                    In.ar(
+                        busOffset,
+                        (order + 1).pow(2).asInteger
+                    )
+                );
+                Out.ar(out, decoded)
+            }).load(server);
+
+            score.add([0, (decode=Synth.basicNew(\decodeNRT, server)).newMsg]);
+        });
+        ^[score, decode]
+    }
 }
 
 /**

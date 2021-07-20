@@ -31,3 +31,20 @@ the full path to the JSON file
 
 returns:: a Dictionary
 where code::\jsonData:: is a Dictionary of JSON data and code::\soundFile:: is the SoundFile corresponding to the TTS-ed audio
+
+METHOD:: newScore
+creates a new score with binaural IRs loaded and optionally a decoder added
+
+argument:: server
+the server to reference for non-realtime synthesis with the score
+
+argument:: order
+the ambisonic order
+
+argument:: busOffset
+the bus offset that typically corresponds to the number of output channels
+
+argument:: preload
+whether or not to create and add a synth to decode b-format inputs that writes to the buses 0 and 1.
+
+returns:: an Array containing a Score and the decoding Synth or nil
