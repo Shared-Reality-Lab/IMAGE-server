@@ -29,7 +29,6 @@ def visualize_result(img, pred, index=None):
     nameofobj = names[index+1]
     return pred_color, nameofobj
 
-
 def findContour(pred_color,width,height):
   image = pred_color
   dummy = pred_color.copy()
