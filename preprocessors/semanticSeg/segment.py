@@ -57,19 +57,15 @@ def findContour(pred_color,width,height):
   cv2.circle(image, centres[area.index(max_value)], 20, (0, 0, 255), -1)
   centre1 = centres[area.index(max_value)][0]/width
   centre2 = centres[area.index(max_value)][1]/height
-  print("centres are",centre1)
   centre = [centre1,centre2]
   nonzero = cv2.findNonZero(gray_contour)
   divide = len(nonzero)/100
   divide = int(divide)
-  print("Pixels are",len(nonzero))
-  print("divide is",divide)
   for i in range(len(nonzero)):
     if(i%divide!=0):
       gray_contour[nonzero[i][0][1]][nonzero[i][0][0]] = 0
   totArea = totArea/(width*height)
   result = cv2.findNonZero(gray_contour)
-  print("Post reduction Length is:",len(result))
   for i in range(len(result)):
           send.append([float((result[i][0][1])/height), float((result[i][0][0])/width)])
   return send , centre , totArea
