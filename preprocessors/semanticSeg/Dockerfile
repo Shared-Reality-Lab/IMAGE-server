@@ -4,6 +4,7 @@ FROM pytorch/pytorch:1.8.1-cuda10.2-cudnn7-runtime
 RUN apt-get update && apt-get install -y python3-opencv && rm -rf /var/lib/apt/lists/*
 RUN pip3 install --upgrade pip
 RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y git
 
 
 COPY ./requirements.txt /app/requirements.txt
