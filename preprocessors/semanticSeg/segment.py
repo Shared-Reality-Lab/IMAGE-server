@@ -13,6 +13,7 @@ from mit_semseg.utils import colorEncode
 
 app = Flask(__name__)
 
+#assigns different colors to different segments. This helps in determining contour or different segments. Refer Line 136 to see how unique color helps in contour determination
 colors = scipy.io.loadmat('data/color150.mat')['colors']
 names = {}
 with open('data/object150_info.csv') as f:
@@ -20,7 +21,9 @@ with open('data/object150_info.csv') as f:
     next(reader)
     for row in reader:
         names[int(row[0])] = row[5].split(";")[0]
+        
 
+#Removes the remaining segments and only highlights the segment of interest with a particular color.
 def visualize_result(img, pred, index=None):
     if index is not None:
         pred = pred.copy()
@@ -29,7 +32,7 @@ def visualize_result(img, pred, index=None):
     nameofobj = names[index+1]
     return pred_color, nameofobj
 
-
+#takes the colored segment(determined in visualise_reslt function and compressed the segment to 100 pixels
 def findContour(pred_color,width,height):
   image = pred_color
   dummy = pred_color.copy()
