@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y python3-opencv && rm -rf /var/lib/apt/l
 RUN pip3 install --upgrade pip
 RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install -y git
-RUN pip install -r requirements.txt
+RUN pip install -r /app/requirements.txt
 
 COPY --from=schemas /schemas /app/schemas
 WORKDIR /app
