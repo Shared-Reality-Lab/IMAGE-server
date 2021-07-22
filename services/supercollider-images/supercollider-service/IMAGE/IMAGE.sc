@@ -13,12 +13,12 @@ IMAGE {
 
         // Ambisonic SynthDefs at orders 1-5
         5.do({|i|
-	         var order = i+1;
-	         SynthDef((\binauralDecodeNrt++(i+1)).asSymbol, { |in= 0, out=0|
-	         var decoded, limited;
-		     decoded = HOABinaural.ar4Score(order, In.ar(in, (order+1).pow(2).asInteger ));
-		     limited = [Limiter.ar(decoded[0], 0.9, 0.001), Limiter.ar(decoded[1], 0.9, 0.001)];
-	         Out.ar(out, limited)
+             var order = i+1;
+             SynthDef((\binauralDecodeNrt++(i+1)).asSymbol, { |in= 0, out=0|
+             var decoded, limited;
+             decoded = HOABinaural.ar4Score(order, In.ar(in, (order+1).pow(2).asInteger ));
+             limited = [Limiter.ar(decoded[0], 0.9, 0.001), Limiter.ar(decoded[1], 0.9, 0.001)];
+             Out.ar(out, limited)
            }).store;
 
             // White noise burst
@@ -47,7 +47,7 @@ IMAGE {
         // Stereo Buffer
         SynthDef(\playBufferStereo,{ |buffNum = 0, start = 0, duration = 1, out = 0, stereoPos = 0.0, gain = 1|
             var sig;
-            sig = PlayBuf.ar(1, bufnum: buffNum, rate: 1, trigger: 1, startPos: start) *
+            sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *
             EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
             Out.ar(out, Pan2.ar(sig, stereoPos))
         }).store;
@@ -57,7 +57,7 @@ IMAGE {
             var order = i+1;
             SynthDef((\playBufferHOA++(i+1)).asSymbol, { |buffNum = 0, start = 0, duration = 1, theta = 0.0, phi = 0.0, radius = 1.5, out = 2, gain = 1|
                 var sig, encoded;
-                sig = PlayBuf.ar(1, bufnum: buffNum, rate: 1, trigger: 1, startPos: start) *  EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
+                sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *  EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
                 encoded = HoaEncodeDirection.ar(sig, theta, phi, radius, order.asInteger);
                 Out.ar(out, encoded)
             }).store;
@@ -71,7 +71,7 @@ IMAGE {
                 damp = 0.5,
                 out = 2, gain = 1|
                 var sig, encoded;
-                sig = PlayBuf.ar(1, bufnum: buffNum, rate: 1, trigger: 1, startPos: start) *  EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
+                sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *  EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
                 sig = FreeVerb.ar(sig, mix: mix, room: room, damp: damp);
                 encoded = HoaEncodeDirection.ar(sig, theta, phi, radius, order.asInteger);
                 Out.ar(out, encoded)
@@ -87,7 +87,7 @@ IMAGE {
                 radiusStart = 2.5, radiusStop = 0.5,
                 out = 2, gain = 1|
                 var sig, encoded;
-                sig = PlayBuf.ar(1, bufnum: buffNum, rate: 1, trigger: 1, startPos: start) *
+                sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *
                 EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
                 encoded = HoaEncodeDirection.ar(sig, Line.ar(thetaStart, thetaStop, duration),
                     Line.ar(phiStart, phiStop, duration),
@@ -105,7 +105,7 @@ IMAGE {
                 damp = 0.5,
                 out = 2, gain = 1|
                 var sig, encoded;
-                sig = PlayBuf.ar(1, bufnum: buffNum, rate: 1, trigger: 1, startPos: start) *
+                sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *
                 EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
 
                 sig = FreeVerb.ar(sig, mix: 0.33, room: 0.5, damp:0.5);
@@ -172,10 +172,10 @@ IMAGE {
                 Error("Failed to load sound file at %!".format(jsonData.at("ttsFileName"))).throw;
             }
         );
-        ^Dictionary.newFrom([
-            \jsonData, jsonData,
-            \soundFile, soundFile
-        ])
+        ^[
+            jsonData,
+            soundFile
+        ]
     }
 
     *newScore { |order = 3, busOffset = 2|
