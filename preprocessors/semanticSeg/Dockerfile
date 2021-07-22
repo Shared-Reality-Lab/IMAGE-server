@@ -16,8 +16,6 @@ COPY . /app
 
 RUN wget bach.cim.mcgill.ca/atp/models/semanticSegmentation/decoder_epoch_20.pth
 RUN wget bach.cim.mcgill.ca/atp/models/semanticSegmentation/encoder_epoch_20.pth
-RUN mv decoder_epoch_20.pth /app
-RUN mv encoder_epoch_20.pth /app
 
 EXPOSE 5000
 ENV FLASK_APP=segment.py
