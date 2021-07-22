@@ -74,7 +74,7 @@ def findContour(pred_color,width,height):
   return send , centre , totArea
 
 
-@app.route("/atp/preprocessor", methods=['POST', 'GET'])
+@app.route("/preprocessor", methods=['POST', 'GET'])
 def segment():
   dictionary = []
   with open('./schemas/preprocessors/segmentation.schema.json') as jsonfile:
