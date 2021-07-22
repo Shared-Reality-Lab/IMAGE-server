@@ -74,6 +74,14 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
+    semantic-segmentation:
+        build:
+            context: ./preprocessors/semanticSeg
+            dockerfile: ./Dockerfile
+        image: "semantic-segmentation:latest"
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 5000
     hello-tts-handler:
         build:
             context: ./handlers/hello-tts-handler
