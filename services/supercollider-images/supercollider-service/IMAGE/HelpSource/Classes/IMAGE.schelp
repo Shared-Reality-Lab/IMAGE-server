@@ -1,0 +1,79 @@
+CLASS:: IMAGE
+summary:: convenience class for the IMAGE project
+categories:: Convenience
+
+DESCRIPTION::
+This provides utilities for common tasks encountered in the IMAGE project, especially related to ambisonics.
+
+CLASSMETHODS::
+
+METHOD:: loadJSON
+loads a JSON file as a dictionary if it exists
+
+argument:: path
+the full path to the JSON file
+
+returns:: a Dictionary
+
+METHOD:: loadSound
+loads information on a sound file if it exists
+
+argument:: path
+the full path to the sound file
+
+returns:: a SoundFile
+
+METHOD:: loadTTSJSON
+load information for a TTS-based rendering from a JSON file
+
+argument:: path
+the full path to the JSON file
+
+returns:: a Dictionary
+where code::\jsonData:: is a Dictionary of JSON data and code::\soundFile:: is the SoundFile corresponding to the TTS-ed audio
+
+METHOD:: newScore
+creates a new score with binaural IRs loaded
+
+argument:: order
+the ambisonic order
+
+argument:: busOffset
+the bus offset that typically corresponds to the number of output channels
+
+returns:: a Score
+
+METHOD:: storeSynthDefs
+generates several SynthDefs useful for the IMAGE project and stores them so they can be used during NRT
+
+
+discussion::
+This function only needs to be called once. After that, all SynthDefs should be available
+for NRT. Below is a simple example showing how to use it and IMAGE.newScore.
+code::
+(
+var order = 5, score, path;
+
+IMAGE.storeSynthDefs;
+score = IMAGE.newScore(order);
+
+score.add([0, [\s_new, \limiterStereo, 1001, 0, 1, \dur, 0.001]]);
+score.add([0, [\s_new, (\binauralDecodeNrt++order.asSymbol).asSymbol, 1002, 2, 1001, \in, 2]]);
+score.add([0.1, [\s_new, (\noiseBurstHOA++order.asSymbol).asSymbol, -1, 2, 1002, \theta, 0.5pi, \phi, 0.0pi, \radius, 0.4, \out, 2]]);
+score.add([0.5, [\s_new, (\noiseBurstHOA++order.asSymbol).asSymbol, -1, 2, 1002, \theta, 0.0pi, \phi, 0.0pi, \radius, 0.4, \out, 2]]);
+score.add([0.9, [\s_new, (\noiseBurstHOA++order.asSymbol).asSymbol, -1, 2, 1002, \theta, -0.5pi, \phi, 0.0pi, \radius, 0.4, \out, 2]]);
+score.add([2, [0]]);
+
+path = "~/".standardizePath;
+score.saveToFile(path++"score.txt");
+
+score.recordNRT(
+    nil,
+    path++"test.wav",
+    sampleRate: 48000,
+    headerFormat: "WAV",
+    sampleFormat: "int16",
+    options: ServerOptions.new.numOutputBusChannels_(2)
+);
+)
+::
