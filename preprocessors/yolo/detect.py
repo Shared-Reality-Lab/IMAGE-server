@@ -19,7 +19,7 @@ from datasetsChanged import LoadStreams, LoadImages
 from utils.general import check_img_size, check_requirements, check_imshow, colorstr, non_max_suppression, \
     apply_classifier, scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path, save_one_box
 from utils.plots import colors, plot_one_box
-from utils.torch_utils import select_device, load_classifier, time_synchronized
+from utils.torch_utils import select_device, load_classifier
 
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -96,10 +96,8 @@ def run(weights='yolov5s.pt',
             img /= 255.0 
             if img.ndimension() == 3:
                 img = img.unsqueeze(0)
-            t1 = time_synchronized()
             pred = model(img, augment=augment)[0]
             pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
-            t2 = time_synchronized()
             if classify:
                 pred = apply_classifier(pred, modelc, img, im0s)
 
