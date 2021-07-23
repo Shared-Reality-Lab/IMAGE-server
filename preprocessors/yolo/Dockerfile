@@ -8,11 +8,9 @@ RUN pip3 install --upgrade pip
 
 RUN pip install jsonschema==3.2.0
 
-COPY --from=schemas /schemas /app/schemas
-
-WORKDIR /app
-
-COPY . /app
+COPY --from=schemas /schemas /usr/src/app/schemas
+WORKDIR /usr/src/app
+COPY . /usr/src/app
 
 EXPOSE 5000
 
