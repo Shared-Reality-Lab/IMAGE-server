@@ -1,5 +1,5 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$schema": "https://json-schema.org/draft-07/schema",
     "$id": "https://image.a11y.mcgill.ca/preprocessors/object-detection.schema.json",
     "type": "object",
     "title": "Object Detection Data",
@@ -19,14 +19,14 @@
                 "dimensions": {
                     "description": "The ulx, uly, lrx, and lry normalized from 0 to 1.",
                     "type": "array",
-                    "prefixItems": [
+                    "items": [
                         { "type": "number", "minimum": 0, "maximum": 1 },
                         { "type": "number", "minimum": 0, "maximum": 1 },
                         { "type": "number", "minimum": 0, "maximum": 1 },
                         { "type": "number", "minimum": 0, "maximum": 1 }
                     ],
-                    "items": false,
-                    "minItems": 4
+                    "minItems": 4,
+                    "additionalItems": false
                 },
                 "area": {
                     "description": "The area of the image that is filled by the object. Currently, this is the area of the bounding box.",
