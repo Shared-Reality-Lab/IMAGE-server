@@ -53,7 +53,7 @@ def run(weights='yolov5s.pt',
     half &= device.type != 'cpu' 
 
     if request.method == 'POST':
-        with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+        with open('./schemas/preprocessors/object-detection.schema.json') as jsonfile:
             data_schema = json.load(jsonfile)
         with open('./schemas/preprocessor-response.schema.json') as jsonfile:
             schema = json.load(jsonfile)

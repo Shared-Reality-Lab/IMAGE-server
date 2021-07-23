@@ -2,7 +2,7 @@ FROM schemas:latest AS schemas
 
 FROM ultralytics/yolov5:latest
 
-RUN wget bach.cim.mcgill.ca/atp/models/objectDetectionWeights
+RUN wget bach.cim.mcgill.ca/atp/models/objectDetectionWeights/yolov5s.pt
 
 RUN pip3 install --upgrade pip
 
