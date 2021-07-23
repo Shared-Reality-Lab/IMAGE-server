@@ -1,5 +1,5 @@
 import express from "express";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import preprocessorResponseSchemaJSON from "./schemas/preprocessor-response.schema.json";

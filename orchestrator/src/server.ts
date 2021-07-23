@@ -1,6 +1,6 @@
 import express from "express";
 import fetch from "node-fetch";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";

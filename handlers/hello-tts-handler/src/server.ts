@@ -1,5 +1,5 @@
 import express from "express";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
