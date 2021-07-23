@@ -1,5 +1,5 @@
 {
-    "$schema": "https://json-schema.org/draft-07/schema",
+    "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://image.a11y.mcgill.ca/request.schema.json",
     "title": "IMAGE Request",
     "type": "object",
