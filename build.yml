@@ -21,3 +21,8 @@ services:
             context: ./services/supercollider-images/supercollider-extra
             dockerfile: Dockerfile
         image: "supercollider-extra:3.11.1"
+    schemas:
+        build:
+            context: ./schemas
+            dockerfile: Dockerfile
+        image: "schemas:latest"

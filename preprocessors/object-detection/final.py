@@ -53,7 +53,7 @@ def get_prediction(img, threshold):
     return pred_boxes, pred_class, pred_score
 
 
-@app.route("/atp/preprocessor", methods=['POST', 'GET'])
+@app.route("/preprocessor", methods=['POST', 'GET'])
 def readImage():
     if request.method == 'POST':
         pred = []
@@ -71,13 +71,15 @@ def readImage():
         content = request.get_json()
         request_uuid = content["request_uuid"]
         timestamp = time.time()
-        name = "ca.mcgill.cim.bach.atp.preprocessor.objectDetection"
+        name = "ca.mcgill.a11y.image.preprocessor.objectDetection"
         url = content["image"]
         image_b64 = url.split(",")[1]
         binary = base64.b64decode(image_b64)
         image = np.asarray(bytearray(binary), dtype="uint8")
         im = cv2.imdecode(image, cv2.IMREAD_COLOR)
         boxes, pred_cls, score = get_prediction(im, 0.5)
+        if len(boxes) != len(pred_cls):
+            logger.warn("Uh oh mismatch!")
         for i in range(len(boxes)):
             xmin = int(boxes[i][0][0])
             ymin = int(boxes[i][0][1])
@@ -86,7 +88,6 @@ def readImage():
             boxes[i][0] = (xmin, ymin)
             boxes[i][1] = (xmax, ymax)
             dimen = [xmin, ymin, xmax, ymax]
-        for i in range(len(pred_cls)):
             dictionary = {
                 "ID": i, "type": str(pred_cls[i]), "dimensions": dimen, "confidence": np.float64(score[i] * 100)
             }
