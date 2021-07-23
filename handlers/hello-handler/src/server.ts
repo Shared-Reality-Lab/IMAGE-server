@@ -1,6 +1,6 @@
 import express from "express";
 import sharp from "sharp";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
