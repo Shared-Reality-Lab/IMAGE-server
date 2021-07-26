@@ -68,7 +68,6 @@
         "image",
         "dimensions",
         "context",
-        "URL",
         "capabilities",
         "renderers"
     ]
