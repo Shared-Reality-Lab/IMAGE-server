@@ -52,12 +52,18 @@ services:
             ca.mcgill.a11y.image.handler: enable
     object-detection:
         build:
-            context: ./preprocessors/object-detection
+            context: ./preprocessors/yolo
             dockerfile: Dockerfile
         image: "object-detection:latest"
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                    - driver: nvidia
+                      capabilities: ["gpu", "utility", "compute"]
     object-grouping:
         build:
             context: ./preprocessors/grouping
