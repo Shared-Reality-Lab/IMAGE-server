@@ -37,12 +37,12 @@
                 "centroid": {
                     "description": "The centroid of the object in normalized coordinates. Currently, this is the geometric center of the bounding box.",
                     "type": "array",
-                    "prefixItems": [
+                    "items": [
                         { "type": "number", "minimum": 0, "maximum": 1 },
                         { "type": "number", "minimum": 0, "maximum": 1 }
                     ],
-                    "items": false,
-                    "minItems": 2
+                    "minItems": 2,
+                    "additionalItems": false
                 },
                 "area": {
                     "description": "The area of the image that is filled by the object. Currently, this is the area of the bounding box.",
