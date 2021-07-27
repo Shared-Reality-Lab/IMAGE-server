@@ -105,6 +105,16 @@ app.post("/handler", async (req, res) => {
     }
 
     // TODO adjustment of contours
+    // Sort contour points
+    for (let i = 0; i < segments.length; i++) {
+        const ref = segments[i]["coord"][0];
+        const center = segments[i]["centroid"];
+        segments[i]["coord"] = segments[i]["coord"].sort(
+            (a: [number, number], b: [number, number]) => {
+                return utils.getContourRefAngle(center, ref, a) < utils.getContourRefAngle(center, ref, b);
+            }
+        );
+    }
 
     const scData = {
         "segments": segments,
