@@ -25,15 +25,22 @@ renderSegments = { |json, ttsData, outPath, addr|
     // Load segments from file
     segments = json.at("segments");
     segments.do({ |segment, i|
-        var audio, duration;
+        var audio, duration, centroid, theta, phi;
         audio = segment.at("audio");
         duration = (audio.at("duration").asInteger / ttsData.sampleRate);
+        centroid = segment.at("centroid");
 
         // Play segment name from TTS
-        // TODO as HOA
+        # theta, phi = IMAGE.mapCoords(centroid.at(0).asFloat, centroid.at(1).asFloat);
         score.add([
             timing,
-            [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, audio.at("offset").asInteger, \duration, duration]
+            [\s_new, (\playBufferHOA++order.asSymbol).asSymbol, -1, 2, 1001,
+                \buffNum, 210,
+                \start, audio.at("offset").asInteger,
+                \duration, duration,
+                \theta, theta,
+                \phi, phi
+            ]
         ]);
 
         timing = timing + duration;
