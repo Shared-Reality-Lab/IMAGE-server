@@ -1,6 +1,6 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://bach.cim.mcgill.ca/atp/request.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/request.schema.json",
     "title": "IMAGE Request",
     "type": "object",
     "description": "Request for renderings of an image given certain conditions.",
@@ -11,6 +11,16 @@
             "description": "Data URL of the base 64 image being handled.",
             "type": "string",
             "pattern": "^data:image/[^;]+;base64,[a-zA-Z0-9+/=]+$"
+        },
+        "dimensions": {
+            "description": "The width and height of the image as requested in pixels.",
+            "type": "array",
+            "items": [
+                { "type": "integer", "exclusiveMinimum": 0 },
+                { "type": "integer", "exclusiveMinimum": 0 }
+            ],
+            "minItems": 2,
+            "additionalItems": false
         },
         "context": {
             "description": "Serialized XML of the image node and possibly related nodes.",
@@ -56,8 +66,8 @@
         "language",
         "timestamp",
         "image",
+        "dimensions",
         "context",
-        "URL",
         "capabilities",
         "renderers"
     ]

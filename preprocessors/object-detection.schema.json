@@ -1,6 +1,6 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/object-detection.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/object-detection.schema.json",
     "type": "object",
     "title": "Object Detection Data",
     "description": "Detected objects and related information.",
@@ -17,23 +17,44 @@
                     "type": "string"
                 },
                 "dimensions": {
-                    "description": "The ulx, uly, lrx, and lry in pixels.",
+                    "description": "The ulx, uly, lrx, and lry normalized from 0 to 1.",
                     "type": "array",
                     "items": [
-                        { "type": "number", "minimum": 0 },
-                        { "type": "number", "minimum": 0 },
-                        { "type": "number", "minimum": 0 },
-                        { "type": "number", "minimum": 0 }
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 }
                     ],
-                    "additionalItems": false,
                     "minItems": 4,
-                    "maxItems": 4
+                    "additionalItems": false
+                },
+                "area": {
+                    "description": "The area of the image that is filled by the object. Currently, this is the area of the bounding box.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                },
+                "centroid": {
+                    "description": "The centroid of the object in normalized coordinates. Currently, this is the geometric center of the bounding box.",
+                    "type": "array",
+                    "items": [
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 }
+                    ],
+                    "minItems": 2,
+                    "additionalItems": false
+                },
+                "area": {
+                    "description": "The area of the image that is filled by the object. Currently, this is the area of the bounding box.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
                 },
                 "confidence": {
                     "description": "Confidence in the correctness of this object's data as a percentage.",
                     "type": "number",
                     "minimum": 0,
-                    "maximum": 100
+                    "maximum": 1
                 }
             },
             "required": [ "ID", "type", "dimensions", "confidence" ]

@@ -1,6 +1,6 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://bach.cim.mcgill.ca/atp/tts/segment.response.json",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/services/tts/segment.response.json",
     "title": "TTS Segment Response",
     "type": "object",
     "description": "Response of timestamped audio segments.",
