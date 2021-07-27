@@ -34,7 +34,7 @@ renderSegments = { |json, ttsData, outPath, addr|
         # theta, phi = IMAGE.mapCoords(centroid.at(0).asFloat, centroid.at(1).asFloat);
         score.add([
             timing,
-            [\s_new, (\playBufferHOA++order.asSymbol).asSymbol, -1, 2, 1001,
+            [\s_new, (\playBufferHOA++order.asSymbol).asSymbol, 1002, 2, 1001,
                 \buffNum, 210,
                 \start, audio.at("offset").asInteger,
                 \duration, duration,
@@ -49,27 +49,27 @@ renderSegments = { |json, ttsData, outPath, addr|
         // Add segment player
         score.add([
             timing,
-            [\s_new, (\playbuffer4SegmentHOA++order.asSymbol).asSymbol, -1, 2, 1001, \buffNum, tba]
+            [\s_new, (\playbuffer4SegmentHOA++order.asSymbol).asSymbol, 1003, 2, 1001, \buffNum, 210]
         ]);
         score.add([
             timing,
-            [\n_set, -1, \gain, 1.0]
+            [\n_set, 1003, \gain, 1.0]
         ]);
         segment.at("coord").do({ |item, i|
-            var x, y, theta, phi dur = 0.05;
+            var x, y, theta, phi, dur = 0.05;
             x = item.at(0).asFloat;
             y = item.at(1).asFloat;
             # theta, phi = IMAGE.mapCoords(x, y);
             score.add([
                 timing,
-                [\n_set, -1, \theta, theta, \phi, phi]
+                [\n_set, 1003, \theta, theta, \phi, phi]
             ]);
             timing = timing + dur;
         });
         // Free the segment
         score.add([
             timing,
-            [\n_free, -1]
+            [\n_free, 1003]
         ]);
     });
 
