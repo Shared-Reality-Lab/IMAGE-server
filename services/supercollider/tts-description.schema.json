@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://bach.cim.mcgill.ca/services/supercollider/tts-description.schema.json",
     "type": "object",
-    "title": "SuperCollider TTS",
+    "title": "SuperCollider Generic TTS",
     "description": "Communication to SuperCollider to assemble TTS segments with non-speech audio.",
     "definitions": {
         "segmentOffset": {
