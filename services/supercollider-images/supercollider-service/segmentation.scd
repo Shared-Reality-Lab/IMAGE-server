@@ -1,7 +1,7 @@
 var renderSegments;
 "Semantic Segmentation Sonification".postln;
 renderSegments = { |json, ttsData, outPath, addr|
-    var score, timing, order=3, segments;
+    var score, timing, order=5, segments;
     timing = 0;
     score = IMAGE.newScore(order);
 
@@ -63,6 +63,11 @@ renderSegments = { |json, ttsData, outPath, addr|
             ]);
             timing = timing + dur;
         });
+        score.add([
+            timing,
+            [\n_set, 1003, \gain, 0.0]
+        ]);
+        timing = timing + 0.1;
         // Free the segment
         score.add([
             timing,
