@@ -13,7 +13,7 @@
     "ajv": "^8.6.0",
     "articles": "^0.2.2",
     "express": "^4.17.1",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.0.0-beta.9",
     "osc": "^2.4.1",
     "pluralize": "^8.0.0",
     "uuid": "^8.3.2"
