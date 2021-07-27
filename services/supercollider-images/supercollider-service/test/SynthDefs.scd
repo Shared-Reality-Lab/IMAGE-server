@@ -363,3 +363,70 @@ HOABinaural.lastBuffID.postln;
     options: ServerOptions.new.numOutputBusChannels_(2)
 );
 */
+
+
+
+5.do({|i|
+	var order = i+1;
+	SynthDef((\playKlankNoise4SegmentHOA++(i+1)).asSymbol, { |midinote = 60,
+		                                                  theta = 0.0pi, phi = 0.0pi, radius = 2.5,
+		                                                  out = 2, gain = 0, lag = 0.1|
+	var sig, encoded;
+		sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!18, {|i| 1/(i+1) }!18, {|i| 2/(i+1) }!18], BrownNoise.ar(0.007) + Dust.ar(30, 0.5) , midinote.midicps  );
+		encoded = HoaEncodeDirection.ar(sig, theta.lag(lag),
+			                                 phi.lag(lag),
+			                                 radius.lag(lag),
+			                                 order.asInteger);
+		Out.ar(out, encoded * gain.lag(lag))
+}).load(s);
+});
+
+
+
+
+/*
+
+~path = "/Users/floriangrond/Documents/PROJECTS/2021-ATP/Rendering/";
+~order = 5;
+~score = Score.new;
+HOABinaural.loadbinauralIRs4Score2(~score, ~order);
+HOABinaural.lastBuffID.postln;
+
+~score.add([ 0.0, [ 's_new', (\binauralDecodeNrt++~order.asSymbol).asSymbol, 1001, 0, 1, \in, 2] ],);
+
+// load soundfile specific for the segment
+
+// beginning of the segment, launch the synth
+~score.add([ 0.01, [ 's_new', (\playKlankNoise4SegmentHOA++~order.asSymbol).asSymbol, 1002, 2, 1001, \midinote, 59] ],);
+
+// move to the first position
+~score.add([ 0.1, [ 'n_set', 1002, \theta, -0.5pi,  \phi, 0.0pi] ],);
+// fade in
+~score.add([ 0.1, [ 'n_set', 1002, \gain, 0.1] ],);
+// this needs to loop over the outline of the segment
+~score.add([ 0.3, [ 'n_set', 1002, \theta, -0.25pi, \phi, 0.1pi] ],);
+~score.add([ 0.5, [ 'n_set', 1002, \theta, -0.1pi,  \phi, 0.2pi] ],);
+~score.add([ 0.7, [ 'n_set', 1002, \theta,  0.1pi,  \phi, 0.2pi] ],);
+~score.add([ 0.9, [ 'n_set', 1002, \theta,  0.25pi, \phi, 0.1pi] ],);
+~score.add([ 1.1, [ 'n_set', 1002, \theta,  0.5pi,  \phi, 0.0pi] ],);
+// end of segment fade out
+~score.add([ 1.2, [ 'n_set', 1002, \gain, 0.0,] ],);
+// free the synth
+~score.add([ 1.3, [ '/n_free', 1001] ],);
+
+
+~score.add([2.0, [0]] );
+~path = "/Users/floriangrond/Documents/PROJECTS/2021-ATP/Rendering/";
+~score.saveToFile(~path++"score.txt");
+
+~score.recordNRT(
+    "/tmp/trashme",
+	~path++"testscore.wav",
+    sampleRate: 48000,
+	headerFormat: "WAV",
+	sampleFormat: "int16",
+    options: ServerOptions.new.numOutputBusChannels_(2)
+);
+
+
+*/
