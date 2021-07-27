@@ -68,7 +68,7 @@ app.post("/handler", async (req, res) => {
     const segmentText: string[] = [];
     const segments = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"];
     for (const segment of segments) {
-        segmentText.push(segments["nameOfSegment"]);
+        segmentText.push(segment["nameOfSegment"]);
     }
 
     let ttsResponse;
