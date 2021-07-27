@@ -46,7 +46,31 @@ renderSegments = { |json, ttsData, outPath, addr|
         timing = timing + duration;
 
         // Play segment sonification
-        // TODO
+        // Add segment player
+        score.add([
+            timing,
+            [\s_new, (\playbuffer4SegmentHOA++order.asSymbol).asSymbol, -1, 2, 1001, \buffNum, tba]
+        ]);
+        score.add([
+            timing,
+            [\n_set, -1, \gain, 1.0]
+        ]);
+        segment.at("coord").do({ |item, i|
+            var x, y, theta, phi dur = 0.05;
+            x = item.at(0).asFloat;
+            y = item.at(1).asFloat;
+            # theta, phi = IMAGE.mapCoords(x, y);
+            score.add([
+                timing,
+                [\n_set, -1, \theta, theta, \phi, phi]
+            ]);
+            timing = timing + dur;
+        });
+        // Free the segment
+        score.add([
+            timing,
+            [\n_free, -1]
+        ]);
     });
 
     // Add one last noop msg
