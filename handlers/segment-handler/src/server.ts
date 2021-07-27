@@ -73,6 +73,7 @@ app.post("/handler", async (req, res) => {
     }
 
     let ttsResponse;
+    // Get the TTS file for each audio plus snippet info
     try {
         ttsResponse = await fetch("http://espnet-tts/service/tts/segments", {
             "method": "POST",
@@ -92,6 +93,7 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
+    // Add TTS location for name of each segment
     let runningOffset = 0;
     const durations = ttsResponse["durations"] as number[];
     for (let i = 0; i < segments.length; i++) {
@@ -109,12 +111,15 @@ app.post("/handler", async (req, res) => {
         "ttsFileName": "",
     };
 
+    // Put it all together
     let inFile: string, outFile: string, jsonFile: string;
     const renderings: Record<string, unknown>[] = [];
     const dataURI = ttsResponse["audio"] as string;
+    // First turn data URI into a writable binary buffer
     await fetch(dataURI).then(resp => {
         return resp.arrayBuffer();
     }).then(async (buf) => {
+        // Write files for SuperCollider
         inFile = filePrefix + Math.round(Date.now()) + ".wav";
         await fs.writeFile(inFile, Buffer.from(buf));
         scData["ttsFileName"] = inFile;
@@ -131,6 +136,7 @@ app.post("/handler", async (req, res) => {
             "localAddress": "0.0.0.0"
         });
 
+        // Send response and receive reply or timeout
         return Promise.race<string>([
             new Promise<string>((resolve, reject) => {
                 try {
