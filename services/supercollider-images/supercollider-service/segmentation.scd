@@ -17,9 +17,6 @@ renderSegments = { |json, ttsData, outPath, addr|
         [\b_allocRead, 210, ttsData.path, 0, 0]
     ]);
 
-    // Load texture buffers
-    // TODO
-
     "Set up done. Starting segments...".postln;
 
     // Load segments from file
@@ -49,7 +46,7 @@ renderSegments = { |json, ttsData, outPath, addr|
         // Add segment player
         score.add([
             timing,
-            [\s_new, (\playBuffer4SegmentHOA++order.asSymbol).asSymbol, 1003, 2, 1001, \buffNum, 210]
+            [\s_new, (\playKlankNoise4SegmentHOA++order.asSymbol).asSymbol, 1003, 2, 1001, \midinote, 60 + i]
         ]);
         score.add([
             timing,
