@@ -10,12 +10,13 @@ import handlerResponseJSON from "./schemas/handler-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 import ttsRequestJSON from "./schemas/services/tts/segment.request.json";
 import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
+import descriptionJSON from "./schemas/services/supercollider/tts-description.schema.json";
 import segmentJSON from "./schemas/services/supercollider/tts-segment.schema.json";
 
 import * as utils from "./utils";
 
 const ajv = new Ajv({
-    "schemas": [ querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, segmentJSON ]
+    "schemas": [ querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, descriptionJSON, segmentJSON ]
 });
 
 const app = express();
