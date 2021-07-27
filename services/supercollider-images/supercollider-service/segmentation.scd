@@ -33,7 +33,7 @@ renderSegments = { |json, ttsData, outPath, addr|
         // TODO as HOA
         score.add([
             timing,
-            [\s_new, \playBufferStereo, -1, 0, 1, \bufNum, 210, \start, audio.at("offset").asInteger, \duration, duration]
+            [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, audio.at("offset").asInteger, \duration, duration]
         ]);
 
         timing = timing + duration;
@@ -44,6 +44,8 @@ renderSegments = { |json, ttsData, outPath, addr|
 
     // Add one last noop msg
     score.add([timing, [0]]);
+
+    score.saveToFile("/tmp/sc-store/score.txt");
 
     score.recordNRT(
         nil,
