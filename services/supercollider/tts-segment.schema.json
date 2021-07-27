@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://image.a11y.mcgill.ca/services/supercollider/tts-description.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/services/supercollider/tts-segment.schema.json",
     "type": "object",
     "title": "SuperCollider SemSeg",
     "description": "Communication to SuperCollider of semantic segments extracted from the image.",
