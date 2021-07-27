@@ -1,0 +1,75 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/services/supercollider/tts-segment.schema.json",
+    "type": "object",
+    "title": "SuperCollider SemSeg",
+    "description": "Communication to SuperCollider of semantic segments extracted from the image.",
+    "definitions": {
+        "normalizedCoordinates": {
+            "description": "x- and y- coordinates normalized between 0 and 1",
+            "type": "array",
+            "items": [
+                { "type": "number", "minimum": 0, "maximum": 1 },
+                { "type": "number", "minimum": 0, "maximum": 1 }
+            ],
+            "minItems": 2,
+            "additionalItems": false
+        },
+        "segment": {
+            "description": "An individual segment detected with added description information. Based on the definition in https://image.a11y.mcgill.ca/preprocessors/segmentation.schema.json",
+            "type": "object",
+            "properties": {
+                "nameOfSegment": {
+                    "description": "The name of the segment identified.",
+                    "type": "string"
+                },
+                "coord": {
+                    "description": "Normalized coordinates of the outline of the segment.",
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/normalizedCoordinates" }
+                },
+                "centroid": {
+                    "allOf": [
+                        { "$ref": "#/definitions/normalizedCoordinates" },
+                        {
+                            "description": "Normalized centroid of the segment."
+                        }
+                    ]
+                },
+                "area": {
+                    "description": "Total area occupied by the segment with image area normalized to 1.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                }
+            },
+            "required": [ "coord", "nameOfSegment", "centroid", "area" ]
+        }
+    },
+    "properties": {
+        "segments": {
+            "type": "array",
+            "description": "Segments detected and returned in preprocessing.",
+            "items": { 
+                "allOf": [
+                    { "$ref": "#/definitions/segment" },
+                    {
+                        "type": "object",
+                        "description": "TTS reading of segment name information.",
+                        "properties": {
+                            "audio": { "$ref": "./tts-description.schema.json#/definitions/segmentOffset" }
+                        }
+                    }
+                ]
+            }
+        },
+        "ttsFileName": {
+            "description": "Path to the TTS audio file.",
+            "type": "string"
+        }
+    },
+    "required": [
+        "segments",
+        "ttsFileName"
+    ]
+}
