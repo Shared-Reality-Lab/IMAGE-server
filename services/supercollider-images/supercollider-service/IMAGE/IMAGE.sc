@@ -115,6 +115,19 @@ IMAGE {
                     order.asInteger);
                 Out.ar(out, encoded)
             }).store;
+
+            // Play buffer for segmentations
+            SynthDef((\playBuffer4SegmentHOA++(i+1)).asSymbol, { |buffNum = 0, start = 0,
+                theta = 0.0pi, phi = 0.0pi, radius = 2.5,
+                out = 2, gain = 0, lag = 0.1|
+                var sig, encoded;
+                sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start, loop: 1);
+                encoded = HoaEncodeDirection.ar(sig, theta.lag(lag),
+                    phi.lag(lag),
+                    radius.lag(lag),
+                    order.asInteger);
+                Out.ar(out, encoded * gain.lag(lag))
+            }).store;
         });
     }
 
@@ -183,6 +196,13 @@ IMAGE {
         score = Score.new;
         HOABinaural.loadbinauralIRs4Score2(score, order, 0);
         ^score
+    }
+
+    *mapCoords { |x, y|
+        var theta, phi;
+        theta = LinLin.kr(x, 0, 1, -0.5pi, 0.5pi);
+        phi = LinLin.kr(y, 0, 1, -0.5pi, 0.5pi);
+        ^[ theta, phi ]
     }
 }
 
