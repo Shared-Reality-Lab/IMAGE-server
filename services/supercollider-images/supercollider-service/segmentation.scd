@@ -49,7 +49,7 @@ renderSegments = { |json, ttsData, outPath, addr|
         // Add segment player
         score.add([
             timing,
-            [\s_new, (\playbuffer4SegmentHOA++order.asSymbol).asSymbol, 1003, 2, 1001, \buffNum, 210]
+            [\s_new, (\playBuffer4SegmentHOA++order.asSymbol).asSymbol, 1003, 2, 1001, \buffNum, 210]
         ]);
         score.add([
             timing,
