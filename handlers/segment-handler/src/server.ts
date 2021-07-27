@@ -67,7 +67,7 @@ app.post("/handler", async (req, res) => {
     // Going ahead with SimpleAudio
     // Form TTS announcement for each segment
     const segmentText: string[] = [];
-    const segments = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"];
+    const segments = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]["segments"];
     for (const segment of segments) {
         segmentText.push(segment["nameOfSegment"]);
     }
@@ -80,7 +80,7 @@ app.post("/handler", async (req, res) => {
                 "Content-Type": "application/json",
             },
             "body": JSON.stringify({
-                "segments": segments
+                "segments": segmentText
             })
         }).then(resp => {
             return resp.json();
