@@ -197,6 +197,13 @@ IMAGE {
         HOABinaural.loadbinauralIRs4Score2(score, order, 0);
         ^score
     }
+
+    *mapCoords { |x, y|
+        var theta, phi;
+        theta = LinLin.kr(x, 0, 1, -0.5pi, 0.5pi);
+        phi = LinLin.kr(y, 0, 1, -0.5pi, 0.5pi);
+        ^[ theta, phi ]
+    }
 }
 
 /**
