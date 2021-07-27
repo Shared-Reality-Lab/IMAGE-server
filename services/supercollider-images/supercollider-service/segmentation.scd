@@ -1,6 +1,6 @@
-var renderSegment;
+var renderSegments;
 "Semantic Segmentation Sonification".postln;
-renderSegment = { |json, ttsData, outPath, addr|
+renderSegments = { |json, ttsData, outPath, addr|
     var score, timing, order=3, segments;
     timing = 0;
     score = IMAGE.newScore(order);
