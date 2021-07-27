@@ -372,7 +372,7 @@ HOABinaural.lastBuffID.postln;
 		                                                  theta = 0.0pi, phi = 0.0pi, radius = 2.5,
 		                                                  out = 2, gain = 0, lag = 0.1|
 	var sig, encoded;
-		sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!18, {|i| 1/(i+1) }!18, {|i| 2/(i+1) }!18], BrownNoise.ar([0.007] + Dust.ar(30, 0.5) ), midinote.midicps  );
+		sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!18, {|i| 1/(i+1) }!18, {|i| 2/(i+1) }!18], BrownNoise.ar(0.007 + Dust.ar(30, 0.5) ), midinote.midicps  );
 		encoded = HoaEncodeDirection.ar(sig, theta.lag(lag),
 			                                 phi.lag(lag),
 			                                 radius.lag(lag),
