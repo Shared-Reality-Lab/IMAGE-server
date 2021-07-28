@@ -1,7 +1,7 @@
 var renderGeneric;
 "Generic Object Description".postln;
 renderGeneric = { |json, ttsData, outPath, addr|
-    var score, timing, order=3, objects, groupedObjIds;
+    var score, timing, order=5, objects, groupedObjIds;
     timing = 0;
     score = IMAGE.newScore(order);
 
