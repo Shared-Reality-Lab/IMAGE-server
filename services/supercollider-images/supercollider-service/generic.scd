@@ -88,7 +88,8 @@ renderGeneric = { |json, ttsData, outPath, addr|
                             \gain, 0.5,
                             \room, 0.6,
                             \damp, 0.75,
-                            \freq, item.at("centroid").at(1).asFloat.linlin(0.0, 1.0, 57, 45).midicps,
+                            \freq, item.at("centroid").at(1).asFloat.linlin(0.0, 1.0, 2000, 1000),
+                            \resonz, 0.01,
                             \theta, theta,
                             \phi, phi]
                     ]);
