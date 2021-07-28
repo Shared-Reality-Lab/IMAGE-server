@@ -68,6 +68,12 @@ app.post("/handler", async (req, res) => {
     // Form TTS announcement for each segment
     const segmentText: string[] = [];
     const segments = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]["segments"];
+    if (segments.length === 0) {
+        console.warn("No segments were detected, so we can't do anything!");
+        const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+        res.json(response);
+        return;
+    }
     for (const segment of segments) {
         segmentText.push(segment["nameOfSegment"]);
     }
