@@ -60,6 +60,15 @@ renderGeneric = { |json, ttsData, outPath, addr|
             objIds.includes(item.at("ID").asInteger)
         });
 
+        // Sort objects within group left to right.
+        // Later on, other options should be available and checked.
+        objs.sort({ |a, b|
+            var xa, xb;
+            xa = a.at("centroid").at(0).asFloat;
+            xb = b.at("centroid").at(0).asFloat;
+            xa < xb
+        });
+
         // Bonks
         objs.do({ |item|
             if(item.at("centroid").notNil,
