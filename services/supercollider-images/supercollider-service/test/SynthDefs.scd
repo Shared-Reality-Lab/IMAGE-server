@@ -39,7 +39,7 @@ SynthDef(\limiterStereo,{ |level = 0.9, dur = 0.2, in = 0, out = 0|
 	var sig, env, envGen, rev, encoded;
 	env = Env([0, 1, 0], [0.01, 0.1], [5,-5]);
 	envGen =  EnvGen.ar(env, doneAction: 0);
-	sig = Ringz.ar( WhiteNoise.ar(0.1) * envGen, freq, resonz) * AmpComp.kr(freq, 300);
+	sig = Ringz.ar( PinkNoise.ar(0.1) * envGen, freq, resonz) * AmpComp.kr(freq, 300);
 	rev = FreeVerb.ar(sig, mix: mix, room: room, damp:damp);
 	DetectSilence.ar(rev, doneAction:2);
 	encoded = HoaEncodeDirection.ar(rev, theta, phi, radius, order.asInteger);
@@ -77,16 +77,16 @@ HOABinaural.lastBuffID.postln;
 
 
 /*
-~order = 2;
+~order = 5;
 ~score = Score.new;
 HOABinaural.loadbinauralIRs4Score2(~score, ~order);
 HOABinaural.lastBuffID.postln;
 
 ~score.add([ 0.0, [ 's_new', \limiterStereo, 1001, 0, 1, \level, 0.001] ],);
 ~score.add([ 0.0, [ 's_new', (\binauralDecodeNrt++~order.asSymbol).asSymbol, 1002, 2, 1001, \in, 2] ],);
-~score.add([ 0.1, [ 's_new', (\pingHOA++~order.asSymbol).asSymbol, -1, 2, 1002, \freq, 1800, \resonz, 0.01, \theta,  0.5pi, \phi, 0.0pi, \radius, 3,   \mix, 0.3, \room, 0.1, \out, 2, \gain, 0.1 ] ],);
-~score.add([ 0.5, [ 's_new', (\pingHOA++~order.asSymbol).asSymbol, -1, 2, 1002, \freq, 300, \resonz, 0.5, \theta,  0.0pi, \phi, 0.0pi, \radius, 0.7, \mix, 0.3, \room, 0.9, \out, 2, \gain, 0.1 ] ],);
-~score.add([ 0.9, [ 's_new', (\pingHOA++~order.asSymbol).asSymbol, -1, 2, 1002, \freq, 400, \resonz, 0.05, \theta, -0.5pi, \phi, 0.0pi, \radius, 0.3, \mix, 0.3, \room, 0.9, \out, 2, \gain, 0.1 ] ],);
+~score.add([ 0.1, [ 's_new', (\pingHOA++~order.asSymbol).asSymbol, -1, 2, 1002, \freq, 1800, \resonz, 0.01, \theta,  0.5pi, \phi, 0.0pi, \radius, 3,   \mix, 0.3, \room, 0.1, \out, 2, \gain, 0.5 ] ],);
+~score.add([ 0.5, [ 's_new', (\pingHOA++~order.asSymbol).asSymbol, -1, 2, 1002, \freq, 1000, \resonz, 0.02, \theta,  0.0pi, \phi, 0.0pi, \radius, 0. 7, \mix, 0.3, \room, 0.9, \out, 2, \gain, 0.5 ] ],);
+~score.add([ 0.9, [ 's_new', (\pingHOA++~order.asSymbol).asSymbol, -1, 2, 1002, \freq, 2000, \resonz, 0.005, \theta, -0.5pi, \phi, 0.0pi, \radius, 0.3, \mix, 0.3, \room, 0.9, \out, 2, \gain, 0.5 ] ],);
 
 ~score.add([5.0, [0]] );
 ~path = "/Users/floriangrond/Documents/PROJECTS/2021-ATP/Rendering/";
