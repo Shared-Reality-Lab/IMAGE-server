@@ -7,6 +7,18 @@ This provides utilities for common tasks encountered in the IMAGE project, espec
 
 CLASSMETHODS::
 
+METHOD:: mapCoords
+maps normalized x- and y- coordings to theta and phi for ambisonics.
+
+argument:: x
+The normalized x coordinate (between 0 and 1)
+
+argument:: y
+The normalized y coordinate (between 0 and 1)
+
+returns:: [ theta, phi ]
+The angles theta and phi in radians
+
 METHOD:: loadJSON
 loads a JSON file as a dictionary if it exists
 

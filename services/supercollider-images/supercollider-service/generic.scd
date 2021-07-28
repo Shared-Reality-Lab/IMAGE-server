@@ -73,13 +73,16 @@ renderGeneric = { |json, ttsData, outPath, addr|
         objs.do({ |item|
             if(item.at("centroid").notNil,
                 {
-                    var dur = 0.5;
+                    var dur = 0.5, theta, phi;
+                    # theta, phi = IMAGE.mapCoords(
+                        item.at("centroid").at(0).asFloat,
+                        item.at("centroid").at(1).asFloat
+                    );
                     score.add([
                         timing,
                         [\s_new, (\pingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
-                            \theta, LinLin.kr(item.at("centroid").at(0).asFloat, 0, 1, -0.5pi, 0.5pi),
-                            \phi, LinLin.kr(item.at("centroid").at(1).asFloat, 0, 1, -0.5pi, 0.5pi)
-                        ]
+                            \theta, theta,
+                            \phi, phi]
                     ]);
                     timing = timing + dur;
                 },
