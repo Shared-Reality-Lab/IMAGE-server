@@ -109,12 +109,20 @@ app.post("/handler", async (req, res) => {
     for (let i = 0; i < segments.length; i++) {
         const ref = segments[i]["coord"][0];
         const center = segments[i]["centroid"];
-        segments[i]["coord"] = segments[i]["coord"].sort(
+        segments[i]["coord"].sort(
             (a: [number, number], b: [number, number]) => {
                 return utils.getContourRefAngle(center, ref, a) < utils.getContourRefAngle(center, ref, b);
             }
         );
     }
+    // Order contours bottom-to-top to not conflict with rising pitches of sonification
+    // Note: normalized coordinates follow graphics convention!
+    type centroid = [number, number];
+    segments.sort((a: { "centroid": centroid }, b: { "centroid": centroid }) => {
+        return b["centroid"][1] - a["centroid"][1];
+    });
+
+    segments.forEach((s: Record<string, unknown>) => { console.log(s["centroid"]); });
 
     const scData = {
         "segments": segments,
