@@ -22,7 +22,7 @@ renderSegments = { |json, ttsData, outPath, addr|
     // Load segments from file
     segments = json.at("segments");
     segments.do({ |segment, i|
-        var audio, duration, centroid, theta, phi;
+        var audio, duration, centroid, theta, phi, midinote, pingDur=0.01;
         audio = segment.at("audio");
         duration = (audio.at("duration").asInteger / ttsData.sampleRate);
         centroid = segment.at("centroid");
@@ -44,16 +44,18 @@ renderSegments = { |json, ttsData, outPath, addr|
 
         // Play segment sonification
         // Add segment player
+        midinote = centroid.at(1).asFloat.linlin(0.0, 1.0, 57, 45).round;
+        midinote.postln;
         score.add([
             timing,
-            [\s_new, (\playKlankNoise4SegmentHOA++order.asSymbol).asSymbol, 1003, 2, 1001, \midinote, 60 + i]
+            [\s_new, (\playKlankNoise4SegmentHOA++order.asSymbol).asSymbol, 1003, 2, 1001, \midinote, midinote, \lag, pingDur]
         ]);
         score.add([
             timing,
-            [\n_set, 1003, \gain, 1.0]
+            [\n_set, 1003, \gain, 0.1]
         ]);
         segment.at("coord").do({ |item, i|
-            var x, y, theta, phi, dur = 0.05;
+            var x, y, theta, phi;
             x = item.at(0).asFloat;
             y = item.at(1).asFloat;
             # theta, phi = IMAGE.mapCoords(x, y);
@@ -61,7 +63,7 @@ renderSegments = { |json, ttsData, outPath, addr|
                 timing,
                 [\n_set, 1003, \theta, theta, \phi, phi]
             ]);
-            timing = timing + dur;
+            timing = timing + pingDur;
         });
         score.add([
             timing,
