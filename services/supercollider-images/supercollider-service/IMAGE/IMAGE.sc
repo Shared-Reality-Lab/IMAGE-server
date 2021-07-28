@@ -131,14 +131,14 @@ IMAGE {
 
             // Play klank for segmentations
             SynthDef((\playKlankNoise4SegmentHOA++(i+1)).asSymbol, { |midinote = 60,
-		                                                  theta = 0.0pi, phi = 0.0pi, radius = 2.5,
-                out = 2, gain = 0, lag = 0.1|
-                var sig, encoded;
-                sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!18, {|i| 1/(i+1) }!18, {|i| 2/(i+1) }!18], BrownNoise.ar(0.007) + Dust.ar(30, 0.5) , midinote.midicps  );
+                                                                      theta = 0.0pi, phi = 0.0pi, radius = 2.5,
+                                                                      out = 2, gain = 0, lag = 0.1|
+            var sig, encoded;
+                sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!18, {|i| 1/(i+1) }!18, {|i| 2/(i+1) }!18], BrownNoise.ar(0.001) + Dust.ar(50, 0.5) , midinote.midicps  );
                 encoded = HoaEncodeDirection.ar(sig, theta.lag(lag),
-                    phi.lag(lag),
-                    radius.lag(lag),
-                    order.asInteger);
+                                                     phi.lag(lag),
+                                                     radius.lag(lag),
+                                                     order.asInteger);
                 Out.ar(out, encoded * gain.lag(lag))
             }).store;
         });
