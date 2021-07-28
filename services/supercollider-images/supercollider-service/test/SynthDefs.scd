@@ -372,7 +372,7 @@ HOABinaural.lastBuffID.postln;
 		                                                  theta = 0.0pi, phi = 0.0pi, radius = 2.5,
 		                                                  out = 2, gain = 0, lag = 0.1|
 	var sig, encoded;
-		sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!18, {|i| 1/(i+1) }!18, {|i| 2/(i+1) }!18], BrownNoise.ar(0.007) + Dust.ar(30, 0.5) , midinote.midicps  );
+		sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!18, {|i| 1/(i+1) }!18, {|i| 2/(i+1) }!18], BrownNoise.ar(0.001) + Dust.ar(50, 0.5) , midinote.midicps  );
 		encoded = HoaEncodeDirection.ar(sig, theta.lag(lag),
 			                                 phi.lag(lag),
 			                                 radius.lag(lag),
@@ -397,7 +397,7 @@ HOABinaural.lastBuffID.postln;
 // load soundfile specific for the segment
 
 // beginning of the segment, launch the synth
-~score.add([ 0.01, [ 's_new', (\playKlankNoise4SegmentHOA++~order.asSymbol).asSymbol, 1002, 2, 1001, \midinote, 59] ],);
+~score.add([ 0.01, [ 's_new', (\playKlankNoise4SegmentHOA++~order.asSymbol).asSymbol, 1002, 2, 1001, \midinote, 45] ],);
 
 // move to the first position
 ~score.add([ 0.1, [ 'n_set', 1002, \theta, -0.5pi,  \phi, 0.0pi] ],);
