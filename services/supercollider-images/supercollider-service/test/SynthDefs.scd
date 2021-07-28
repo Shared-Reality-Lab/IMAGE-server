@@ -372,7 +372,7 @@ HOABinaural.lastBuffID.postln;
 		                                                  theta = 0.0pi, phi = 0.0pi, radius = 2.5,
 		                                                  out = 2, gain = 0, lag = 0.1|
 	var sig, encoded;
-		sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!18, {|i| 1/(i+1) }!18, {|i| 2/(i+1) }!18], BrownNoise.ar(0.001) + Dust.ar(50, 0.5) , midinote.midicps  );
+		sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!30, {|i| 1/(i+1) }!30, {|i| 2/(i+1) }!30], BrownNoise.ar(0.001) + Dust.ar(50, 0.5) , midinote.midicps  );
 		encoded = HoaEncodeDirection.ar(sig, theta.lag(lag),
 			                                 phi.lag(lag),
 			                                 radius.lag(lag),
@@ -406,8 +406,8 @@ HOABinaural.lastBuffID.postln;
 // this needs to loop over the outline of the segment
 ~score.add([ 0.3, [ 'n_set', 1002, \theta, -0.25pi, \phi, 0.1pi] ],);
 ~score.add([ 0.5, [ 'n_set', 1002, \theta, -0.1pi,  \phi, 0.2pi] ],);
-~score.add([ 0.7, [ 'n_set', 1002, \theta,  0.1pi,  \phi, 0.2pi] ],);
-~score.add([ 0.9, [ 'n_set', 1002, \theta,  0.25pi, \phi, 0.1pi] ],);
+~score.add([ 0.7, [ 'n_set', 1002, \theta,  0.1pi,  \phi, -0.2pi] ],);
+~score.add([ 0.9, [ 'n_set', 1002, \theta,  0.25pi, \phi, -0.1pi] ],);
 ~score.add([ 1.1, [ 'n_set', 1002, \theta,  0.5pi,  \phi, 0.0pi] ],);
 // end of segment fade out
 ~score.add([ 1.2, [ 'n_set', 1002, \gain, 0.0,] ],);
