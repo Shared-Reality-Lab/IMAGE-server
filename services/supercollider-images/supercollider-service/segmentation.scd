@@ -45,7 +45,6 @@ renderSegments = { |json, ttsData, outPath, addr|
         // Play segment sonification
         // Add segment player
         midinote = centroid.at(1).asFloat.linlin(0.0, 1.0, 57, 45).round;
-        midinote.postln;
         score.add([
             timing,
             [\s_new, (\playKlankNoise4SegmentHOA++order.asSymbol).asSymbol, 1003, 2, 1001, \midinote, midinote, \lag, pingDur]

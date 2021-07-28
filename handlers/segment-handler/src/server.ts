@@ -122,8 +122,6 @@ app.post("/handler", async (req, res) => {
         return b["centroid"][1] - a["centroid"][1];
     });
 
-    segments.forEach((s: Record<string, unknown>) => { console.log(s["centroid"]); });
-
     const scData = {
         "segments": segments,
         "ttsFileName": "",
