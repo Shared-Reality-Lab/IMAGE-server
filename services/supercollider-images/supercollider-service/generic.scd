@@ -71,24 +71,32 @@ renderGeneric = { |json, ttsData, outPath, addr|
 
         // Bonks
         objs.do({ |item|
+            var totalDur = 2;
             if(item.at("centroid").notNil,
                 {
-                    var dur = 0.5, theta, phi;
+                    var dur, theta, phi;
+                    //var dur = 0.25, theta, phi;
                     # theta, phi = IMAGE.mapCoords(
                         item.at("centroid").at(0).asFloat,
                         item.at("centroid").at(1).asFloat
                     );
+                    dur = item.at("centroid").at(0).asFloat.linlin(0.0, 1.0, 0.0, totalDur);
+                    dur.postln;
                     score.add([
-                        timing,
+                        (timing + dur),
                         [\s_new, (\pingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
+                            \gain, 0.5,
+                            \room, 0.6,
+                            \damp, 0.75,
+                            \freq, item.at("centroid").at(1).asFloat.linlin(0.0, 1.0, 57, 45).midicps,
                             \theta, theta,
                             \phi, phi]
                     ]);
-                    timing = timing + dur;
                 },
                 { "No centroid on item :(".postln; }
             );
         });
+        timing = timing + 2.25;
     });
     "Grouped Objects".postln;
     groupedObjIds.at(0).postln;
@@ -141,7 +149,8 @@ renderGeneric = { |json, ttsData, outPath, addr|
         timing = timing + dur;
     });
 
-    // Add one last noop msg
+    // Add one last noop msg w/ half second pause
+    timing = timing + 0.5;
     score.add([timing, [0]]);
 
     score.saveToFile("/tmp/sc-store/score.txt");
