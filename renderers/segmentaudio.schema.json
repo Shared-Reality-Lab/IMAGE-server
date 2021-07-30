@@ -1,0 +1,31 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/renderers/segmentaudio.schema.json",
+    "title": "Segment Audio Renderer",
+    "type": "object",
+    "description": "Data for basic audio selection renderer ca.mcgill.a11y.image.renderer.SegmentAudio.",
+    "properties": {
+        "audioFile": { "$ref": "./simpleaudio.json#/definitions/audioFile" },
+        "audioInfo": {
+            "type": "array",
+            "items": {
+                "allOf": [
+                    { "$ref": "https://image.a11y.mcgill.ca/services/supercollider/tts-description.schema.json#/definitions/segmentOffset" },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "description": "A short name assigned to the segment.",
+                                "type": "string",
+                                "maxLength": 300
+                            }
+                        },
+                        "required": [ "name" ]
+                    }
+                ]
+            },
+            "additionalItems": false
+        }
+    },
+    "required": [ "audioFile", "audioInfo" ]
+}
