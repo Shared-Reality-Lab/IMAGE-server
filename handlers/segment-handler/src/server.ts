@@ -159,16 +159,26 @@ app.post("/handler", async (req, res) => {
         });
 
         // Send response and receive reply or timeout
-        return Promise.race<string>([
-            new Promise<string>((resolve, reject) => {
+        return Promise.race<{"name": string, "offset": number, "duration": number}[]>([
+            new Promise<{"name": string, "offset": number, "duration": number}[]>((resolve, reject) => {
                 try {
                     // Handle response from SuperCollider
                     oscPort.on("message", (oscMsg: osc.OscMessage) => {
                         console.log(oscMsg);
                         const arg = oscMsg["args"] as osc.Argument[];
                         if (arg[0] === "done") {
+                            const respArr: {"name": string, "offset": number, "duration": number}[] = [];
+                            if ((arg.length) > 1 && ((arg.length - 1) % 3 == 0)) {
+                                for (let i = 1; i < arg.length; i += 3) {
+                                    respArr.push({
+                                        "name": arg[i] as string,
+                                        "offset": arg[i+1] as number,
+                                        "duration": arg[i+2] as number
+                                    });
+                                }
+                            }
                             oscPort.close();
-                            resolve(outFile);
+                            resolve(respArr);
                         }
                         else if (arg[0] === "fail") {
                             oscPort.close();
@@ -192,7 +202,7 @@ app.post("/handler", async (req, res) => {
                     reject(e);
                 }
             }),
-            new Promise<string>((resolve, reject) => {
+            new Promise<{"name": string, "offset": number, "duration": number}[]>((resolve, reject) => {
                 setTimeout(() => {
                     try {
                         oscPort.close();
@@ -201,9 +211,8 @@ app.post("/handler", async (req, res) => {
                 }, 5000);
             })
         ]);
-    }).then(out => {
-        return fs.readFile(out);
-    }).then(buffer => {
+    }).then(async (segArray) => {
+        const buffer = await fs.readFile(outFile);
         // TODO detect MIME type from file
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
         renderings.push({
@@ -214,6 +223,17 @@ app.post("/handler", async (req, res) => {
                 "audio": dataURL
             }
         });
+        if (segArray.length > 0) {
+            renderings.push({
+                "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
+                "confidence": 50, // TODO magic number
+                "description": "Navigable sonifications of segments detected in the image.",
+                "data": {
+                    "audioFile": dataURL,
+                    "audioInfo": segArray
+                }
+            });
+        }
     }).catch(err => {
         console.error(err);
     }).finally(() => {
