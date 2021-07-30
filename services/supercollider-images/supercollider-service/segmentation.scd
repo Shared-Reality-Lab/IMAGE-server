@@ -30,8 +30,7 @@ renderSegments = { |json, ttsData, outPath, addr|
 
         // Add segment info to array
         segmentInfo = segmentInfo.add(segment.at("nameOfSegment").asString);
-        segmentInfo = segmentInfo.add(audio.at("offset").asInteger);
-        segmentInfo = segmentInfo.add(duration);
+        segmentInfo = segmentInfo.add(timing.asFloat);
 
         // Play segment name from TTS
         # theta, phi = IMAGE.mapCoords(centroid.at(0).asFloat, centroid.at(1).asFloat);
@@ -80,6 +79,7 @@ renderSegments = { |json, ttsData, outPath, addr|
             timing,
             [\n_free, 1003]
         ]);
+        segmentInfo = segmentInfo.add(timing - segmentInfo.at(segmentInfo.size - 1));
     });
 
     // Add one last noop msg
