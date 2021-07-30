@@ -118,7 +118,18 @@ services:
         env_file:
             - ./config/express-common.env
         labels:
-            ca.mcgill.cim.bach.atp.handler: enable
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+    semantic-segmentation-handler:
+        build:
+            context: ./handlers/segment-handler
+            dockerfile: Dockerfile
+        image: "segmentation-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
 
