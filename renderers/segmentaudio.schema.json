@@ -5,7 +5,7 @@
     "type": "object",
     "description": "Data for basic audio selection renderer ca.mcgill.a11y.image.renderer.SegmentAudio.",
     "properties": {
-        "audioFile": { "$ref": "./simpleaudio.json#/definitions/audioFile" },
+        "audioFile": { "$ref": "./simpleaudio.schema.json#/definitions/audioFile" },
         "audioInfo": {
             "type": "array",
             "items": {
