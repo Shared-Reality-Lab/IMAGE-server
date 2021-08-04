@@ -4,7 +4,7 @@ import jsonschema
 import logging
 import numpy as np
 import soundfile as sf
-from espnet_util import tts, tts_segments, fs
+from espnet_util import tts, fs
 from flask import Flask, Response, request
 from io import BytesIO
 from jsonschema import validate
