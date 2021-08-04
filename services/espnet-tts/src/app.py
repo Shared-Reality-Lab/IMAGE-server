@@ -56,7 +56,7 @@ def segment_tts():
     try:
         totalWav = None
         durations = []
-        wavs = tts_segments(data["segments"])
+        wavs = [tts(segment) for segment in data["segments"]]
         for wav in wavs:
             if totalWav is not None:
                 totalWav = np.append(totalWav, wav)
