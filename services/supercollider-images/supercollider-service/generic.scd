@@ -1,7 +1,7 @@
 var renderGeneric;
 "Generic Object Description".postln;
 renderGeneric = { |json, ttsData, outPath, addr|
-    var score, timing, order=3, objects, groupedObjIds;
+    var score, timing, order=5, objects, groupedObjIds;
     timing = 0;
     score = IMAGE.newScore(order);
 
@@ -60,26 +60,45 @@ renderGeneric = { |json, ttsData, outPath, addr|
             objIds.includes(item.at("ID").asInteger)
         });
 
+        // Sort objects within group left to right.
+        // Later on, other options should be available and checked.
+        objs.sort({ |a, b|
+            var xa, xb;
+            xa = a.at("centroid").at(0).asFloat;
+            xb = b.at("centroid").at(0).asFloat;
+            xa < xb
+        });
+
         // Bonks
         objs.do({ |item|
+            var totalDur = 2;
             if(item.at("centroid").notNil,
                 {
-                    var dur = 0.5, theta, phi;
+                    var dur, theta, phi;
+                    //var dur = 0.25, theta, phi;
                     # theta, phi = IMAGE.mapCoords(
                         item.at("centroid").at(0).asFloat,
                         item.at("centroid").at(1).asFloat
                     );
+                    dur = item.at("centroid").at(0).asFloat.linlin(0.0, 1.0, 0.0, totalDur);
+                    dur.postln;
                     score.add([
-                        timing,
+                        (timing + dur),
                         [\s_new, (\pingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
+                            \gain, 0.5,
+                            \room, 0.6,
+                            \damp, 0.5,
+                            \mix, 0.3,
+                            \freq, item.at("centroid").at(1).asFloat.linlin(0.0, 1.0, 2000, 1000),
+                            \resonz, 0.01,
                             \theta, theta,
                             \phi, phi]
                     ]);
-                    timing = timing + dur;
                 },
                 { "No centroid on item :(".postln; }
             );
         });
+        timing = timing + 2.25;
     });
     "Grouped Objects".postln;
     groupedObjIds.at(0).postln;
@@ -132,7 +151,8 @@ renderGeneric = { |json, ttsData, outPath, addr|
         timing = timing + dur;
     });
 
-    // Add one last noop msg
+    // Add one last noop msg w/ half second pause
+    timing = timing + 0.5;
     score.add([timing, [0]]);
 
     score.saveToFile("/tmp/sc-store/score.txt");

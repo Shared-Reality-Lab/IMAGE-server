@@ -90,7 +90,7 @@ app.post("/handler", async (req, res) => {
         if (sceneName.includes("/")) {
             sceneName = sceneName.split("/")[0]
         }
-        sceneName = sceneName.replace("_", " ");
+        sceneName = sceneName.replace("_", " ").trim();
         const articled = Articles.articlize(sceneName);
         ttsIntro = `This picture of ${articled} contains`;
     } else {
@@ -102,7 +102,7 @@ app.post("/handler", async (req, res) => {
     const objectData = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
     const groupData = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
     for (const object of objectData["objects"]) {
-        const articled = Articles.articlize(object["type"]);
+        const articled = Articles.articlize(object["type"].trim());
         segments.push(`${articled}`);
     }
     for (const group of groupData["grouped"]) {
@@ -111,7 +111,7 @@ app.post("/handler", async (req, res) => {
             return obj["ID"] == exId;
         });
         const sType = (exObjs.length > 0) ? (exObjs[0]["type"]) : "object";
-        const pType = pluralize(sType);
+        const pType = pluralize(sType.trim());
         const num = group["IDs"].length;
         segments.push(`${num.toString()} ${pType}`);
     }
@@ -181,22 +181,6 @@ app.post("/handler", async (req, res) => {
         runningOffset += durations[durIdx];
         durIdx += 1;
     }
-
-    /** ~~~HACKS BEGIN HERE~~~ */
-    // We need a centroid for objects so...here we go...
-    const width = req.body["dimensions"][0] as number;
-    const height = req.body["dimensions"][1] as number;
-    for (const obj of scData["objects"]) {
-        obj["dimensions"][0] /= width;
-        obj["dimensions"][2] /= width;
-        obj["dimensions"][1] /= height;
-        obj["dimensions"][3] /= height;
-        obj["centroid"] = [
-            (obj["dimensions"][0] + obj["dimensions"][2]) / 2.0,
-            (obj["dimensions"][1] + obj["dimensions"][3]) / 2.0
-        ];
-    }
-    /** ~~~HACKS END HERE~~~ */
 
     // Save files and handle process
     let inFile: string, outFile: string, jsonFile: string;
