@@ -20,16 +20,16 @@ d = ModelDownloader()
 device = environ["TORCH_DEVICE"]
 logger.info(f"Device: {device}")
 text2speech = Text2Speech(
-        **d.download_and_unpack(tag),
-        device=device,
-        threshold=0.5,
-        minlenratio=0.0,
-        maxlenratio=10.0,
-        use_att_constraint=False,
-        backward_window=1,
-        forward_window=3,
-        # Only for FastSpeech & FastSpeech2
-        speed_control_alpha=1.0,
+    **d.download_and_unpack(tag),
+    device=device,
+    threshold=0.5,
+    minlenratio=0.0,
+    maxlenratio=10.0,
+    use_att_constraint=False,
+    backward_window=1,
+    forward_window=3,
+    # Only for FastSpeech & FastSpeech2
+    speed_control_alpha=1.0,
 )
 text2speech.spc2wav = None
 vocoder = load_model(download_pretrained_model(vocoder_tag)).to(device).eval()

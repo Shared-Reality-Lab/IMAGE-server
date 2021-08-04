@@ -22,13 +22,14 @@ with open("segment.response.json", "r") as f:
 
 app = Flask(__name__)
 
+
 @app.route("/service/tts/simple", methods=["POST"])
 def perform_tts():
     data = request.get_json()
     if data is None or "text" not in data:
-        return { "error": "Missing key \"text\"." }, 400
+        return {"error": "Missing key \"text\"."}, 400
     elif not isinstance(data["text"], str):
-        return { "error": "Key \"text\" must be of type string." }, 400
+        return {"error": "Key \"text\" must be of type string."}, 400
     text = data["text"]
     try:
         wav = tts(text)
@@ -39,7 +40,8 @@ def perform_tts():
         return Response(wrapper, mimetype="audio/wav", direct_passthrough=True)
     except Exception as e:
         logger.error(e)
-        return { "error": "An error occurred while performing text-to-speech" }, 500
+        return {"error": "An error occurred while performing text-to-speech"}, 500
+
 
 @app.route("/service/tts/segments", methods=["POST"])
 def segment_tts():
@@ -50,7 +52,7 @@ def segment_tts():
         validate(instance=data, schema=segment_request)
     except jsonschema.exceptions.ValidationError as e:
         logger.error(e)
-        return { "error": e.message }, 400
+        return {"error": e.message}, 400
 
     # TTS
     try:
@@ -80,4 +82,4 @@ def segment_tts():
         return response
     except Exception as e:
         logger.error(e)
-        return { "error": "An error occurred while performing text-to-speech" }, 500
+        return {"error": "An error occurred while performing text-to-speech"}, 500
