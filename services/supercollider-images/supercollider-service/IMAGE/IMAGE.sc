@@ -34,7 +34,7 @@ IMAGE {
                 var sig, env, envGen, rev, encoded;
                 env = Env([0, 1, 0], [0.01, 0.1], [5,-5]);
                 envGen =  EnvGen.ar(env, doneAction: 0);
-                sig = Ringz.ar( WhiteNoise.ar(0.1) * envGen, freq, resonz) * AmpComp.kr(freq, 300);
+                sig = Ringz.ar( PinkNoise.ar(0.1) * envGen, freq, resonz) * AmpComp.kr(freq, 300);
                 rev = FreeVerb.ar(sig, mix: mix, room: room, damp:damp);
                 DetectSilence.ar(rev, doneAction:2);
                 encoded = HoaEncodeDirection.ar(rev, theta, phi, radius, order.asInteger);
