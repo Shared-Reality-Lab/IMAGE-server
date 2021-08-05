@@ -51,8 +51,10 @@ app.post("/handler", async (req, res) => {
     }
 
     // Check for a usable renderer
-    if (!req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SimpleAudio")) {
-        console.warn("Simple audio renderer not supported.");
+    const hasSimple = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SimpleAudio");
+    const hasSegment = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SegmentAudio");
+    if (!hasSimple && !hasSegment) {
+        console.warn("Simple and segment audio renderers not supported!");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
         if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
             res.json(response);
@@ -64,7 +66,7 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    // Going ahead with SimpleAudio
+    // Going ahead with SimpleAudio and/or SegmentAudio
     // Form TTS announcement for each segment
     const segmentText: string[] = [];
     const segments = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]["segments"];
@@ -215,15 +217,17 @@ app.post("/handler", async (req, res) => {
         const buffer = await fs.readFile(outFile);
         // TODO detect MIME type from file
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
-        renderings.push({
-            "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-            "confidence": 50, // TODO magic number
-            "description": "A sonification of segments detected in the image.",
-            "data": {
-                "audio": dataURL
-            }
-        });
-        if (segArray.length > 0) {
+        if (hasSimple) {
+            renderings.push({
+                "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
+                "confidence": 50, // TODO magic number
+                "description": "A sonification of segments detected in the image.",
+                "data": {
+                    "audio": dataURL
+                }
+            });
+        }
+        if (segArray.length > 0 && hasSegment) {
             renderings.push({
                 "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
                 "confidence": 50, // TODO magic number
