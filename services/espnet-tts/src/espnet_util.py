@@ -10,7 +10,8 @@ from parallel_wavegan.utils import load_model
 
 fs = 22050
 tag = "kan-bayashi/ljspeech_conformer_fastspeech2"
-vocoder_tag = "ljspeech_parallel_wavegan.v1"
+#vocoder_tag = "ljspeech_parallel_wavegan.v3"
+vocoder_tag = "ljspeech_full_band_melgan.v2"
 
 logging.basicConfig(format="%(asctime)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -41,7 +42,11 @@ def tts(text):
     with torch.no_grad():
         start = time.time()
         wav, c, *_ = text2speech(text)
+        t2 = time.time()
         wav = vocoder.inference(c)
-    rtf = (time.time() - start) / (len(wav) / fs)
+        t3 = time.time()
+    rtf = (t3 - start) / (len(wav) / fs)
     logger.info(f"RTF: {rtf}")
+    logger.info(f"Elapsed text2speech: {t2 - start}")
+    logger.info(f"Elapsed vocoder: {t3 - t2}")
     return wav.view(-1).cpu().numpy()
