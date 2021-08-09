@@ -64,9 +64,9 @@ def findContour(pred_color,width,height):
   nonzero = cv2.findNonZero(gray_contour)
   divide = len(nonzero)/100
   divide = int(divide)
-  for i in range(len(nonzero)):
-    if(i%divide!=0):
-      gray_contour[nonzero[i][0][1]][nonzero[i][0][0]] = 0
+#  for i in range(len(nonzero)):
+#    if(i%divide!=0):
+#      gray_contour[nonzero[i][0][1]][nonzero[i][0][0]] = 0
   totArea = totArea/(width*height)
   result = cv2.findNonZero(gray_contour)
   for i in range(len(result)):
@@ -102,7 +102,7 @@ def segment():
   crit = torch.nn.NLLLoss(ignore_index=-1)
   segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)
   segmentation_module.eval()
-  segmentation_module.cuda()
+  #segmentation_module.cuda()
   pil_to_tensor = torchvision.transforms.Compose([
       torchvision.transforms.ToTensor(),
       torchvision.transforms.Normalize(
@@ -122,7 +122,7 @@ def segment():
   img = pil_image    
   img_original = numpy.array(img)
   img_data = pil_to_tensor(img)
-  img_data = img_data.cuda()
+  #img_data = img_data.cuda()
   singleton_batch = {'img_data': img_data[None]}
   output_size = img_data.shape[1:]
   with torch.no_grad():
