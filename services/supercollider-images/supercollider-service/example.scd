@@ -1,6 +1,6 @@
+var minimalTest, score, sndPathScene, bufnumScene, headerFormat, sampleFormat, sampleRate, sceneDuration;
 "MINIMAL TEST IS LOADED".postln;
-
-~minimalTest =
+minimalTest =
 
 {|inputFile, outputFile, addr|
 // define our score
@@ -8,19 +8,19 @@
 	inputFile.postln;
 	outputFile.postln;
 
-~score = Score.new;
+score = Score.new;
 
-~sndPathScene = inputFile.asString;
+sndPathScene = inputFile.asString;
 
-~bufnumScene = Server.default.bufferAllocator.alloc(1);
+bufnumScene = Server.default.bufferAllocator.alloc(1);
 
 
-SoundFile.use( ~sndPathScene,
+SoundFile.use( sndPathScene,
               {arg soundFile;
-                  ~headerFormat = soundFile.headerFormat;
-                  ~sampleFormat = soundFile.sampleFormat;
-                  ~sampleRate = soundFile.sampleRate;
-                  ~sceneDuration = soundFile.duration;
+                  headerFormat = soundFile.headerFormat;
+                  sampleFormat = soundFile.sampleFormat;
+                  sampleRate = soundFile.sampleRate;
+                  sceneDuration = soundFile.duration;
                }
 );
 
@@ -40,7 +40,7 @@ SynthDef(\playBuf, {arg buffer;
     // play TTS file from a buffer
     src = PlayBuf.ar(1, buffer, BufRateScale.kr(buffer));
 	// encode in first oder Ambisonics B-format
-		panned = Pan2.ar(src, Line.ar(-1, 1, ~sceneDuration));
+		panned = Pan2.ar(src, Line.ar(-1, 1, sceneDuration));
     // decode our B-format signal to binaural
     Out.ar(0, panned);
 }).load;
@@ -48,21 +48,21 @@ SynthDef(\playBuf, {arg buffer;
 
 
 
-~score.add([ 0.0, [ 'b_allocRead', ~bufnumScene, ~sndPathScene, 0, 0 ]], );
+score.add([ 0.0, [ 'b_allocRead', bufnumScene, sndPathScene, 0, 0 ]], );
 
 
 // add commands to instantiate synth
-~score.add([ 0.0, [ 's_new', '\playBuf', 1001, 0, 1, 'buffer', ~bufnumScene ] ],);
-~score.add([ ~sceneDuration * 0.5, [ 's_new', '\swoosh', 1002, 0, 1 ] ],);
+score.add([ 0.0, [ 's_new', '\playBuf', 1001, 0, 1, 'buffer', bufnumScene ] ],);
+score.add([ sceneDuration * 0.5, [ 's_new', '\swoosh', 1002, 0, 1 ] ],);
 
-~score.add([ ~sceneDuration + 0.1, [ 'b_free', ~bufnumScene ]]);
+score.add([ sceneDuration + 0.1, [ 'b_free', bufnumScene ]]);
 
 
 // add the needed dummy command to stop NRT
-~score.add([~sceneDuration + 0.2, [0]] );
+score.add([sceneDuration + 0.2, [0]] );
 
-// render our ~score to a sound file
-~score.recordNRT(
+// render our score to a sound file
+score.recordNRT(
     "/tmp/trashme",
     outputFile,
     sampleRate: 48000,
@@ -76,7 +76,7 @@ SynthDef(\playBuf, {arg buffer;
 
 
 OSCdef.newMatching(\renderer1, {|msg, time, addr, recvPort|
-	~minimalTest.(inputFile:  msg[1].asString, outputFile:  msg[2].asString, addr: addr);
+	minimalTest.(inputFile:  msg[1].asString, outputFile:  msg[2].asString, addr: addr);
 }, '/render', nil);
 
 OSCdef.newMatching(\pingpong, {|msg, time, addr, recvPort|
@@ -87,7 +87,7 @@ OSCdef.newMatching(\pingpong, {|msg, time, addr, recvPort|
 /*
 ~path = "/Users/floriangrond/Documents/PROJECTS/2021-ATP/Rendering/";
 
-~minimalTest.(outputFile:  ~path++"swoosh.wav".standardizePath );
+minimalTest.(outputFile:  ~path++"swoosh.wav".standardizePath );
 
 m = NetAddr("127.0.0.1", 57120); // loopback
 

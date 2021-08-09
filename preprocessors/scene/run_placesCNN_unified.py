@@ -112,7 +112,7 @@ weight_softmax = params[-2].data.numpy()
 weight_softmax[weight_softmax < 0] = 0
 
 
-@app.route("/atp/preprocessor", methods=['POST', 'GET'])
+@app.route("/preprocessor", methods=['POST', 'GET'])
 def scenePredictor():
     pred = []
     attributes = []
@@ -159,7 +159,7 @@ def scenePredictor():
         attributes.append(labels_attribute[idx_a[i]])
     timestamp = time.time()
     request_uuid = content["request_uuid"]
-    name = "ca.mcgill.cim.bach.atp.preprocessor.sceneRecognition"
+    name = "ca.mcgill.a11y.image.preprocessor.sceneRecognition"
     data={
         "type": type,
         "categories": pred,

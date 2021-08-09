@@ -1,5 +1,5 @@
 import express from "express";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import preprocessorResponseSchemaJSON from "./schemas/preprocessor-response.schema.json";
@@ -13,19 +13,19 @@ const ajv = new Ajv({
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
-app.post("/atp/preprocessor", (req, res) => {
-    if (ajv.validate("https://bach.cim.mcgill.ca/atp/request.schema.json", req.body)) {
+app.post("/preprocessor", (req, res) => {
+    if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         // tslint:disable-next-line:no-console
         console.debug("Request validated");
         const response = {
             "request_uuid": req.body.request_uuid,
             "timestamp": Math.round(Date.now() / 1000),
-            "name": "ca.mcgill.cim.bach.atp.hello.preprocessor",
+            "name": "ca.mcgill.a11y.image.hello.preprocessor",
             "data": {
                 "message": "Hello, World!"
             }
         };
-        if (ajv.validate("https://bach.cim.mcgill.ca/atp/preprocessor-response.schema.json", response)) {
+        if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", response)) {
             // tslint:disable-next-line:no-console
             console.debug("Valid response generated.");
             res.json(response);

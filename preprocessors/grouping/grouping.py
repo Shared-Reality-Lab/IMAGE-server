@@ -15,13 +15,13 @@ def calculate_diagonal(x1,y1,x2,y2):
     return diag
 
 
-@app.route("/atp/preprocessor", methods=['POST', 'GET'])
+@app.route("/preprocessor", methods=['POST', 'GET'])
 def readImage():
     if request.method == 'POST':
         object_type = []
         dimensions =[]
         ungrouped = []
-        flag=0   
+        flag=0
     with open('./schemas/preprocessors/grouping.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
@@ -36,7 +36,7 @@ def readImage():
             schema, store=schema_store)
     content = request.get_json()
     preprocessor = content["preprocessors"]
-    oDpreprocessor = preprocessor["ca.mcgill.cim.bach.atp.preprocessor.objectDetection"]
+    oDpreprocessor = preprocessor["ca.mcgill.a11y.image.preprocessor.objectDetection"]
     objects = oDpreprocessor["objects"]
     for i in range(len(objects)):
         object_type.append(objects[i]["type"])
@@ -61,13 +61,13 @@ def readImage():
         for j in range(len(group[i])):
             dummy[i].append(group[i][j][0])
         final_group.append({"IDs":dummy[i]})
-    
+
     for i in range(len(check_group)):
         if(check_group[i]==False):
             ungrouped.append(i)
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    name = "ca.mcgill.cim.bach.atp.preprocessor.grouping"
+    name = "ca.mcgill.a11y.image.preprocessor.grouping"
     data = {"grouped":final_group,"ungrouped":ungrouped}
     response = {
     "title": "Grouping Data",

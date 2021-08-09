@@ -15,7 +15,7 @@ services:
             context: ./services/supercollider-images/supercollider-service
             dockerfile: Dockerfile
         image: "supercollider-service:latest"
-        command: sclang -D ./example.scd
+        command: sclang -D ./loader.scd
         volumes:
             - sc-store:/tmp/sc-store
     espnet-tts:
@@ -39,8 +39,8 @@ services:
         env_file:
             - ./config/express-common.env
         labels:
-            ca.mcgill.cim.bach.atp.preprocessor: 1
-            ca.mcgill.cim.bach.atp.port: 8080
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 8080
     hello-handler:
         build:
             context: ./handlers/hello-handler
@@ -49,23 +49,45 @@ services:
         env_file:
             - ./config/express-common.env
         labels:
-            ca.mcgill.cim.bach.atp.handler: enable
+            ca.mcgill.a11y.image.handler: enable
     object-detection:
         build:
-            context: ./preprocessors/object-detection
+            context: ./preprocessors/yolo
             dockerfile: Dockerfile
         image: "object-detection:latest"
         labels:
-            ca.mcgill.cim.bach.atp.preprocessor: 2
-            ca.mcgill.cim.bach.atp.port: 5000
+            ca.mcgill.a11y.image.preprocessor: 2
+            ca.mcgill.a11y.image.port: 5000
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                    - driver: nvidia
+                      capabilities: ["gpu", "utility", "compute"]
+    object-grouping:
+        build:
+            context: ./preprocessors/grouping
+            dockerfile: Dockerfile
+        image: "object-grouping:latest"
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 3
+            ca.mcgill.a11y.image.port: 5000
     scene-detection:
         build:
             context: ./preprocessors/scene
             dockerfile: Dockerfile
         image: "scene-detection:latest"
         labels:
-            ca.mcgill.cim.bach.atp.preprocessor: 1
-            ca.mcgill.cim.bach.atp.port: 5000
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 5000
+    semantic-segmentation:
+        build:
+            context: ./preprocessors/semanticSeg
+            dockerfile: ./Dockerfile
+        image: "semantic-segmentation:latest"
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 5000
     hello-tts-handler:
         build:
             context: ./handlers/hello-tts-handler
@@ -74,7 +96,40 @@ services:
         env_file:
             - ./config/express-common.env
         labels:
-            ca.mcgill.cim.bach.atp.handler: enable
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+    generic-tts-handler:
+        build:
+            context: ./handlers/generic-tts-handler
+            dockerfile: Dockerfile
+        image: "generic-tts-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+    generic-tts-handler:
+        build:
+            context: ./handlers/generic-tts-handler
+            dockerfile: Dockerfile
+        image: "generic-tts-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+    semantic-segmentation-handler:
+        build:
+            context: ./handlers/segment-handler
+            dockerfile: Dockerfile
+        image: "segmentation-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
 
