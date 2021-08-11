@@ -18,6 +18,43 @@ const PREPROCESSOR_TIME_MS = 15000;
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
+async function runPreprocessors(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
+    if (data["preprocessors"] === undefined) {
+        data["preprocessors"] = {};
+    }
+    for (const preprocessor of preprocessors) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => {
+            controller.abort();
+        }, PREPROCESSOR_TIME_MS);
+
+        await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify(data),
+            "signal": controller.signal
+        }).then(async (resp) => {
+            if (resp.ok) {
+                return resp.json();
+            } else {
+                let result = await resp.json();
+                throw result;
+            }
+        }).then(json => {
+            (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+        }).catch(err => {
+            // Try to continue...
+            // tslint:disable-next-line:no-console
+            console.error("Error occured on fetch");
+            // tslint:disable-next-line:no-console
+            console.error(err);
+        });
+    }
+    return data;
+}
+
 app.post("/render", (req, res) => {
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         // get list of preprocessors and handlers
@@ -27,40 +64,8 @@ app.post("/render", (req, res) => {
 
             // TODO do things with these services
             // Preprocessors run in order
-            const data = req.body;
-            if (data["preprocessors"] === undefined) {
-                data["preprocessors"] = {};
-            }
-            for (const preprocessor of preprocessors) {
-                const controller = new AbortController();
-                const timeout = setTimeout(() => {
-                    controller.abort();
-                }, PREPROCESSOR_TIME_MS);
-
-                await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
-                    "method": "POST",
-                    "headers": {
-                        "Content-Type": "application/json"
-                    },
-                    "body": JSON.stringify(data),
-                    "signal": controller.signal
-                }).then(async (resp) => {
-                    if (resp.ok) {
-                        return resp.json();
-                    } else {
-                        let result = await resp.json();
-                        throw result;
-                    }
-                }).then(json => {
-                    data["preprocessors"][json["name"]] = json["data"];
-                }).catch(err => {
-                    // Try to continue...
-                    // tslint:disable-next-line:no-console
-                    console.error("Error occured on fetch");
-                    // tslint:disable-next-line:no-console
-                    console.error(err);
-                });
-            }
+            let data = req.body;
+            data = await runPreprocessors(data, preprocessors);
 
             // Handlers
             const promises = handlers.map(handler => {
@@ -115,6 +120,33 @@ app.post("/render", (req, res) => {
             // tslint:disable-next-line:no-console
             console.error(e);
             res.status(500).send(e.name + ": " + e.message);
+        });
+    } else {
+        res.status(400).send(ajv.errors);
+    }
+});
+
+app.post("/render/preprocess", (req, res) => {
+    if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
+        // get list of preprocessors and handlers
+        docker.listContainers().then(async (containers) => {
+            const preprocessors = getPreprocessorServices(containers);
+            const data = req.body;
+            return runPreprocessors(data, preprocessors);
+        }).then(data => {
+            if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", data)) {
+                // tslint:disable-next-line:no-console
+                console.debug("Valid response generated.");
+                res.json(data);
+            } else {
+                // tslint:disable-next-line:no-console
+                console.debug("Failed to generate a valid response.");
+                res.status(500).send(ajv.errors);
+            }
+        }).catch(e => {
+            // tslint:disable-next-line:no-console
+            console.error(e);
+            res.status(500).send(e.name + ":" + e.message);
         });
     } else {
         res.status(400).send(ajv.errors);
