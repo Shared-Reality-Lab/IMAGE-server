@@ -51,8 +51,10 @@ app.post("/handler", async (req, res) => {
     }
 
     // Check for a usable renderer
-    if (!req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SimpleAudio")) {
-        console.warn("Simple audio renderer not supported.");
+    const hasSimple = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SimpleAudio");
+    const hasSegment = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SegmentAudio");
+    if (!hasSimple && !hasSegment) {
+        console.warn("Simple and segment audio renderers not supported!");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
         if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
             res.json(response);
@@ -64,7 +66,7 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    // Going ahead with SimpleAudio
+    // Going ahead with SimpleAudio and/or SegmentAudio
     // Form TTS announcement for each segment
     const segmentText: string[] = [];
     const segments = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]["segments"];
@@ -159,16 +161,26 @@ app.post("/handler", async (req, res) => {
         });
 
         // Send response and receive reply or timeout
-        return Promise.race<string>([
-            new Promise<string>((resolve, reject) => {
+        return Promise.race<{"name": string, "offset": number, "duration": number}[]>([
+            new Promise<{"name": string, "offset": number, "duration": number}[]>((resolve, reject) => {
                 try {
                     // Handle response from SuperCollider
                     oscPort.on("message", (oscMsg: osc.OscMessage) => {
                         console.log(oscMsg);
                         const arg = oscMsg["args"] as osc.Argument[];
                         if (arg[0] === "done") {
+                            const respArr: {"name": string, "offset": number, "duration": number}[] = [];
+                            if ((arg.length) > 1 && ((arg.length - 1) % 3 == 0)) {
+                                for (let i = 1; i < arg.length; i += 3) {
+                                    respArr.push({
+                                        "name": arg[i] as string,
+                                        "offset": arg[i+1] as number,
+                                        "duration": arg[i+2] as number
+                                    });
+                                }
+                            }
                             oscPort.close();
-                            resolve(outFile);
+                            resolve(respArr);
                         }
                         else if (arg[0] === "fail") {
                             oscPort.close();
@@ -192,7 +204,7 @@ app.post("/handler", async (req, res) => {
                     reject(e);
                 }
             }),
-            new Promise<string>((resolve, reject) => {
+            new Promise<{"name": string, "offset": number, "duration": number}[]>((resolve, reject) => {
                 setTimeout(() => {
                     try {
                         oscPort.close();
@@ -201,19 +213,31 @@ app.post("/handler", async (req, res) => {
                 }, 5000);
             })
         ]);
-    }).then(out => {
-        return fs.readFile(out);
-    }).then(buffer => {
+    }).then(async (segArray) => {
+        const buffer = await fs.readFile(outFile);
         // TODO detect MIME type from file
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
-        renderings.push({
-            "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-            "confidence": 50, // TODO magic number
-            "description": "A sonification of segments detected in the image.",
-            "data": {
-                "audio": dataURL
-            }
-        });
+        if (hasSimple) {
+            renderings.push({
+                "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
+                "confidence": 50, // TODO magic number
+                "description": "A sonification of segments detected in the image.",
+                "data": {
+                    "audio": dataURL
+                }
+            });
+        }
+        if (segArray.length > 0 && hasSegment) {
+            renderings.push({
+                "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
+                "confidence": 50, // TODO magic number
+                "description": "Navigable sonifications of segments detected in the image.",
+                "data": {
+                    "audioFile": dataURL,
+                    "audioInfo": segArray
+                }
+            });
+        }
     }).catch(err => {
         console.error(err);
     }).finally(() => {

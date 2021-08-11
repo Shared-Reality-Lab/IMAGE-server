@@ -1,8 +1,9 @@
 var renderSegments;
 "Semantic Segmentation Sonification".postln;
 renderSegments = { |json, ttsData, outPath, addr|
-    var score, timing, order=5, segments;
+    var score, timing, order=5, segments, segmentInfo;
     timing = 0;
+    segmentInfo = Array.new;
     score = IMAGE.newScore(order);
 
     // Set up b-format decoder
@@ -26,6 +27,10 @@ renderSegments = { |json, ttsData, outPath, addr|
         audio = segment.at("audio");
         duration = (audio.at("duration").asInteger / ttsData.sampleRate);
         centroid = segment.at("centroid");
+
+        // Add segment info to array
+        segmentInfo = segmentInfo.add(segment.at("nameOfSegment").asString);
+        segmentInfo = segmentInfo.add(timing.asFloat);
 
         // Play segment name from TTS
         # theta, phi = IMAGE.mapCoords(centroid.at(0).asFloat, centroid.at(1).asFloat);
@@ -74,6 +79,7 @@ renderSegments = { |json, ttsData, outPath, addr|
             timing,
             [\n_free, 1003]
         ]);
+        segmentInfo = segmentInfo.add(timing - segmentInfo.at(segmentInfo.size - 1));
     });
 
     // Add one last noop msg
@@ -91,7 +97,7 @@ renderSegments = { |json, ttsData, outPath, addr|
         action: {
             // Check for written file
             if(File.exists(outPath),
-                { addr.sendMsg(\status, \done); },
+                { addr.sendMsg(\status, \done, *segmentInfo); },
                 {
                     "Failed to write file in NRT!".postln;
                     addr.sendMsg(\status, \fail);
