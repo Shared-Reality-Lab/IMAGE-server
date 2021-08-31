@@ -1,0 +1,90 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://bach.cim.mcgill.ca/atp/preprocessors/object-detection.schema.json",
+    "type": "object",
+    "title": "Chart information",
+    "description": "Information and datapoints extracted from the given chart",
+    "definitions": {
+
+        "sector": {
+            "description": "Info about each sector in the pie chart",
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "description": "A number identifying this sector in the set",
+                    "type": "integer"
+                },
+                "value(%)": {
+                    "description": "Value in percentage represented by the sector",
+                    "type": "number"
+                },
+                "center": {
+                    "description": "Coordinates of the sector center, normalized from 0 to 1",
+                    "type": "array",
+                    "items": [
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 }
+                    ],
+                    "additionalItems": false,
+                    "minItems": 2,
+                    "maxItems": 2
+                },
+                "arc_coords": {
+                    "description": "Coordinates of the start and end point of the sector arc, normalized from 0 to 1",
+                    "type": "object",
+                    "properties": {
+                        "start": {
+                            "type": "array",
+                            "items": [
+                                { "type": "number", "minimum": 0, "maximum": 1 },
+                                { "type": "number", "minimum": 0, "maximum": 1 }
+                            ],
+                            "additionalItems": false,
+                            "minItems": 2,
+                            "maxItems": 2
+                        },
+                        "end": {
+                            "type": "array",
+                            "items": [
+                                { "type": "number", "minimum": 0, "maximum": 1 },
+                                { "type": "number", "minimum": 0, "maximum": 1 }
+                            ],
+                            "additionalItems": false,
+                            "minItems": 2,
+                            "maxItems": 2
+                        }
+                    },
+                    "required": [ "start", "end" ]
+                }
+            },
+            "required": [ "ID", "value(%)", "center", "arc_coords" ]
+        }
+    },
+
+    "properties": {
+        "type": {
+            "description": "Type of chart: Line/Bar/Pie",
+            "type": ["string", "null"]
+        },
+        "dimensions": {
+            "description": "Image dimensions in pixels",
+            "type": "object",
+            "properties": {
+                "h": { "type": "integer" },
+                "w": { "type": "integer" }
+            }
+        },
+        "title": {
+            "description": "Title of the chart",
+            "type": ["string", "null"]
+        },
+        "sectors": {
+            "description": "Info about the detected bars",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/sector"
+            }
+        }
+    },
+    "required": [ "type", "dimensions" ]
+}
