@@ -7,7 +7,7 @@ WORKDIR /chart-pipeline
 
 COPY environment.yml environment.yml
 RUN conda env create -f environment.yml
-RUN echo "source activate chartocr" > ~/.bashrc
+RUN echo "source activate chartenv" > ~/.bashrc
 
 ENV PATH /opt/conda/envs/chartocr/bin:$PATH
 
