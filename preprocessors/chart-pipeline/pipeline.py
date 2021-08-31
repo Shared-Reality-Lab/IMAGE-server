@@ -18,7 +18,6 @@ from RuleGroup.LineQuiry import GroupQuiry
 from RuleGroup.LIneMatch import GroupLine
 from RuleGroup.Bar import GroupBar
 from RuleGroup.Pie import GroupPie
-from utils.misc import check_status
 
 import math
 from PIL import Image
@@ -298,8 +297,6 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
 
     with torch.no_grad():
 
-        check_status(2, methods)
-
         results = methods['Cls'][2](image, methods['Cls'][0], methods['Cls'][1], cuda_id=0, debug=False)
         results = results
         info = results[0]
@@ -317,7 +314,6 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
         chartinfo.append(x_labels)
 
         # ------------------------------------------------
-        check_status(3, methods)
         if args.mode == 1:
             methods['Cls'][1].cpu()
         if args.mode == 2:
@@ -325,7 +321,6 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
             methods['Cls'][1].cpu()
         if args.empty_cache:
             torch.cuda.empty_cache()
-        check_status(4, methods)
         # -------------------------------------------------
 
         # Bar chart
@@ -362,7 +357,6 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
                 plot_area = [0, 0, 600, 400]
             image_painted, quiry, keys, hybrids = GroupQuiry(image_painted, keys, hybrids, plot_area, min_value, max_value)
 
-            check_status(5, methods)
             if args.mode == 1:
                 del methods['Line']
                 methods = Pre_load_nets([5], methods)
@@ -371,14 +365,11 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
                 methods['Line'][1].cpu()
             if args.empty_cache:
                 torch.cuda.empty_cache()
-            check_status(6, methods)
 
             results = methods['LineCls'][2](image, methods['LineCls'][0], quiry, methods['LineCls'][1], cuda_id=0, debug=False)
             line_data, pixel_points = GroupLine(image_painted, keys, hybrids, plot_area, results, min_value, max_value)
             
             grouped_data = groupByLabels(line_data[0], x_pos, plot_area)
-
-            check_status(7, methods)
 
             return plot_area, image_painted, grouped_data, chartinfo, x_labels, pixel_points[0], info['data_type'], image.shape
 

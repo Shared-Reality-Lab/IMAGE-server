@@ -13,6 +13,7 @@ ENV PATH /opt/conda/envs/chartocr/bin:$PATH
 
 COPY . .
 
+RUN apt-get update && apt-get install unzip
 RUN pip install gdown
 RUN gdown https://drive.google.com/uc?id=1qtCLlzKm8mx7kQOV1criUbqcGnNh58Rr
 RUN unzip Chart-pipieline-models.zip
