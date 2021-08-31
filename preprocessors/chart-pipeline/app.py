@@ -1,0 +1,143 @@
+import torch
+from flask import Flask, request, jsonify
+import json
+import time
+import jsonschema
+import logging
+import numpy as np
+import base64
+import cv2
+from threading import Thread
+from argparse import ArgumentParser
+
+from pipeline import get_data_from_chart, Pre_load_nets
+
+"""
+MODE 1: 'Cls' model permanent (switch between CPU and GPU), others temporary and directly loaded on GPU
+MODE 2: All models permanent (switch all models between CPU and GPU) - Cls on GPU, others on CPU - without torch.empty_cache()
+"""
+
+# Create app
+app = Flask(__name__)
+
+# Args
+parser = ArgumentParser()
+parser.add_argument("--mode", dest="mode", help="Mode of operation", default=1, type=int)
+parser.add_argument("--empty_cache", dest="empty_cache", help="Clear GPU cache after use", default=False, type=bool)
+args = parser.parse_args()
+
+print("CURRENT MODE: {}\n".format(args.mode))
+
+# Setup and Pre-load models
+methods = {}
+if args.mode == 1:
+    methods = Pre_load_nets([1], methods)
+if args.mode == 2:
+    methods = Pre_load_nets([2, 3], methods)
+    methods['Line'][1].cpu()
+    methods['LineCls'][1].cpu()
+    methods = Pre_load_nets([1], methods)
+if args.empty_cache:
+    torch.cuda.empty_cache()
+
+# Function to restore models to the right place after exec
+def ResetApp():
+    if args.mode == 1:
+        print(list(methods.keys())[-1])
+        del methods[list(methods.keys())[-1]]
+        methods['Cls'][1].cuda(0)
+        print(methods.keys())
+
+    if args.mode == 2:
+        methods['Cls'][1].cuda(0)
+        methods['LineCls'][1].cpu()
+    if args.empty_cache:
+        torch.cuda.empty_cache()
+
+
+@app.route("/preprocessor", methods=['POST', 'GET'])
+def readImage():
+
+    if request.method == 'POST':
+
+        # Get request.json
+        content = request.get_json()
+        
+        # Store reqd parameters for output json
+        request_uuid = content["request_uuid"]
+        timestamp = time.time()
+        name = "ca.mcgill.a11y.image.preprocessor.chart"
+        
+        # Extraxt image from URI
+        url = content["image"]
+        image_b64 = url.split(",")[1]
+        binary = base64.b64decode(image_b64)
+        image = np.asarray(bytearray(binary), dtype="uint8")
+        img = cv2.imdecode(image, cv2.IMREAD_COLOR)
+
+        # Process image using the model to get output json
+        output, type_no = get_data_from_chart(img, methods, args)
+        
+        # Load schemas
+        if type_no == 0:
+            with open('./schemas/preprocessors/bar-response.schema.json') as jsonfile:
+                data_schema = json.load(jsonfile)
+        if type_no == 1:
+            with open('./schemas/preprocessors/line-response.schema.json') as jsonfile:
+                data_schema = json.load(jsonfile)
+        if type_no == 2:
+            with open('./schemas/preprocessors/pie-response.schema.json') as jsonfile:
+                data_schema = json.load(jsonfile)
+
+        with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+            schema = json.load(jsonfile)
+        with open('./schemas/definitions.json') as jsonfile:
+            definition_schema = json.load(jsonfile)
+        
+        schema_store = {
+            schema['$id']: schema,
+            definition_schema['$id']: definition_schema,
+            data_schema['$id']: data_schema
+        }
+
+        resolver = jsonschema.RefResolver.from_schema(
+                schema, store=schema_store)
+
+        # Validate model output with schema
+        try:
+            validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+            validator.validate(output)
+        except jsonschema.exceptions.ValidationError as e:
+            logging.error(e)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+
+        # Format and create response json obj using output
+        response = {
+            "title": "Chart Data",
+            "description": "Data extracted from the given chart",
+                "request_uuid": request_uuid,
+                "timestamp": int(timestamp),
+                "name": name,
+                "data": output
+                }
+        
+        # Validate final response
+        try:
+            validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as e:
+            logging.error(e)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+
+        # Start thread to reset models            
+        Thread(target=ResetApp).start()
+
+        return response
+
+    return "Expected POST request, got GET request instead."
+
+
+if __name__ == '__main__':
+
+    # Run app
+    app.run(host='0.0.0.0', port=5000)
