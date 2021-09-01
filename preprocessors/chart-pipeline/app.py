@@ -24,7 +24,7 @@ app = Flask(__name__)
 # Args
 parser = ArgumentParser()
 parser.add_argument("--mode", dest="mode", help="Mode of operation", default=1, type=int)
-parser.add_argument("--empty_cache", dest="empty_cache", help="Clear GPU cache after use", default=False, type=bool)
+parser.add_argument("--empty_cache", dest="empty_cache", help="Clear GPU cache after use", default=True, type=bool)
 parser.add_argument("--debug", dest="debug", help="Show intermediate results for debugging", default=False, type=bool)
 args = parser.parse_args()
 

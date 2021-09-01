@@ -5,8 +5,7 @@ COPY --from=schemas /schemas /app/schemas
 
 WORKDIR /chart-pipeline
 
-RUN apt-get update && apt-get install unzip
-RUN apt-get install -y g++
+RUN apt-get update && apt-get install unzip && apt-get install -y g++
 RUN pip install gdown
 
 COPY environment.yml environment.yml
@@ -19,8 +18,7 @@ COPY . .
 
 WORKDIR /chart-pipeline/models/kp_models/_cpool_layers
 ENV CXX g++
-RUN python setup.py build_ext --inplace
-RUN rm -r build
+RUN python setup.py build_ext --inplace && rm -r build
 
 WORKDIR /chart-pipeline
 
