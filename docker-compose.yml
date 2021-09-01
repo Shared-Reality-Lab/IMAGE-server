@@ -88,6 +88,21 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
+    chart-pipeline:
+        build:
+            context: ./preprocessors/chart-pipeline
+            dockerfile: Dockerfile
+        image: "chart-pipeline:latest"
+        command: --mode=1 --empty_cache=True
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 5000
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                    - driver: nvidia
+                      capabilities: ["gpu", "utility", "compute"]
     hello-tts-handler:
         build:
             context: ./handlers/hello-tts-handler
