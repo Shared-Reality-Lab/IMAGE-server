@@ -10,11 +10,12 @@ import cv2
 from threading import Thread
 from argparse import ArgumentParser
 
-from pipeline import get_data_from_chart, Pre_load_nets
+from pipeline import get_data_from_chart, pre_load_nets
 
 """
 MODE 1: 'Cls' model permanent (switch between CPU and GPU), others temporary and directly loaded on GPU
 MODE 2: All models permanent (switch all models between CPU and GPU) - Cls on GPU, others on CPU - without torch.empty_cache()
+MODE 3: All models permanently on GPU
 """
 
 # Create app
@@ -24,35 +25,40 @@ app = Flask(__name__)
 parser = ArgumentParser()
 parser.add_argument("--mode", dest="mode", help="Mode of operation", default=1, type=int)
 parser.add_argument("--empty_cache", dest="empty_cache", help="Clear GPU cache after use", default=False, type=bool)
+parser.add_argument("--debug", dest="debug", help="Show intermediate results for debugging", default=False, type=bool)
 args = parser.parse_args()
 
-print("CURRENT MODE: {}\n".format(args.mode))
+print("-----------------------------------------------")
+print("Mode: {}".format(args.mode))
+print("Empty GPU cache: {}".format(args.empty_cache))
+print("Debug: {}".format(args.debug))
+print("------------------------------------------------\n")
 
-# Setup and Pre-load models
+
+# Setup and load models
 methods = {}
 if args.mode == 1:
-    methods = Pre_load_nets([1], methods)
+    methods = pre_load_nets([1], methods)
 if args.mode == 2:
-    methods = Pre_load_nets([2, 3], methods)
-    methods['Line'][1].cpu()
-    methods['LineCls'][1].cpu()
-    methods = Pre_load_nets([1], methods)
-if args.empty_cache:
+    methods = pre_load_nets([2, 3, 4, 5], methods)
+    for model in methods:
+        methods[model][1].cpu()
+    methods = pre_load_nets([1], methods)
+if args.mode == 3:
+    methods = pre_load_nets([1, 2, 3, 4, 5])
+if args.empty_cache == True:
     torch.cuda.empty_cache()
+
 
 # Function to restore models to the right place after exec
 def ResetApp():
     if args.mode == 1:
-        print(list(methods.keys())[-1])
         del methods[list(methods.keys())[-1]]
-        methods['Cls'][1].cuda(0)
-        print(methods.keys())
-
     if args.mode == 2:
-        methods['Cls'][1].cuda(0)
-        methods['LineCls'][1].cpu()
+        methods[list(methods.keys())[-1]][1].cpu()
     if args.empty_cache:
         torch.cuda.empty_cache()
+    methods['Cls'][1].cuda(0)
 
 
 @app.route("/preprocessor", methods=['POST', 'GET'])
@@ -132,7 +138,7 @@ def readImage():
         # Start thread to reset models            
         Thread(target=ResetApp).start()
 
-        return response
+        return jsonify(response)
 
     return "Expected POST request, got GET request instead."
 

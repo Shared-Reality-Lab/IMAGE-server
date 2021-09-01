@@ -1,23 +1,21 @@
-#!/usr/bin/env python
 import os
 import json
 import torch
-import argparse
 from scipy.signal import find_peaks
 import numpy as np
 
 import matplotlib
 matplotlib.use("Agg")
 import cv2
-from config import system_configs
-from nnet.py_factory import NetworkFactory
+from config.config import system_configs
+from models.py_factory import NetworkFactory
 from db.datasets import datasets
 import importlib
-from RuleGroup.Cls import GroupCls
-from RuleGroup.LineQuiry import GroupQuiry
-from RuleGroup.LIneMatch import GroupLine
-from RuleGroup.Bar import GroupBar
-from RuleGroup.Pie import GroupPie
+from post_processing.Cls import GroupCls
+from post_processing.LineQuiry import GroupQuiry
+from post_processing.LIneMatch import GroupLine
+from post_processing.Bar import GroupBar
+from post_processing.Pie import GroupPie
 
 import math
 from PIL import Image
@@ -26,29 +24,6 @@ import requests
 import time
 import re
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Test CornerNet")
-    parser.add_argument("--cfg_file", dest="cfg_file", help="config file", default="CornerNetLine", type=str)
-    parser.add_argument("--testiter", dest="testiter",
-                        help="test at iteration i",
-                        default=50000, type=int)
-    parser.add_argument("--split", dest="split",
-                        help="which split to use",
-                        default="validation", type=str)
-    parser.add_argument('--cache_path', dest="cache_path", type=str)
-    parser.add_argument('--result_path', dest="result_path", type=str)
-    parser.add_argument('--tar_data_path', dest="tar_data_path", type=str)
-    parser.add_argument("--suffix", dest="suffix", default=None, type=str)
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--data_dir", dest="data_dir", default="data/linedata(1028)", type=str)
-    parser.add_argument("--image_dir", dest="image_dir", default=None, type=str)
-    args = parser.parse_args()
-    return args
-
-def make_dirs(directories):
-    for directory in directories:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
 
 def load_net(num, testiter, cfg_name, data_dir, cache_dir, result_dir, cuda_id):
     cfg_file = os.path.join(system_configs.config_dir, cfg_name + ".json")
@@ -71,11 +46,6 @@ def load_net(num, testiter, cfg_name, data_dir, cache_dir, result_dir, cuda_id):
         "testing": test_split
     }["validation"]
 
-    result_dir = system_configs.result_dir
-    result_dir = os.path.join(result_dir, str(testiter), split)
-
-    make_dirs([result_dir])
-
     test_iter = system_configs.max_iter if testiter is None else testiter
     dataset = system_configs.dataset
     db = datasets[dataset](configs["db"], split)
@@ -89,35 +59,34 @@ def load_net(num, testiter, cfg_name, data_dir, cache_dir, result_dir, cuda_id):
     return db, nnet
 
 
-def Pre_load_nets(num, methods):
+def pre_load_nets(num, methods):
 
     if (1 in num):
         db_cls, nnet_cls = load_net(1, 50000, "CornerNetCls", "data/clsdata(1031)", "data/clsdata(1031)/cache",
                                     "data/clsdata(1031)/result", 0)
 
-        from testfile.test_line_cls_pure_real import testing
-        path = 'testfile.test_%s' % "CornerNetCls"
+        path = 'pipeline_inference.test_%s' % "CornerNetCls"
         testing_cls = importlib.import_module(path).testing
         methods['Cls'] = [db_cls, nnet_cls, testing_cls]
 
     if (2 in num):
         db_bar, nnet_bar = load_net(2, 50000, "CornerNetPureBar", "data/bardata(1031)", "data/bardata(1031)/cache",
                                 "data/bardata(1031)/result", 0)
-        path = 'testfile.test_%s' % "CornerNetPureBar"
+        path = 'pipeline_inference.test_%s' % "CornerNetPureBar"
         testing_bar = importlib.import_module(path).testing
         methods['Bar'] = [db_bar, nnet_bar, testing_bar]
 
     if (3 in num):
         db_pie, nnet_pie = load_net(3, 50000, "CornerNetPurePie", "data/piedata(1008)", "data/piedata(1008)/cache",
                                 "data/piedata(1008)/result", 0)
-        path = 'testfile.test_%s' % "CornerNetPurePie"
+        path = 'pipeline_inference.test_%s' % "CornerNetPurePie"
         testing_pie = importlib.import_module(path).testing
         methods['Pie'] = [db_pie, nnet_pie, testing_pie]
     
     if (4 in num):
         db_line, nnet_line = load_net(4, 50000, "CornerNetLine", "data/linedata(1028)", "data/linedata(1028)/cache",
                                     "data/linedata(1028)/result", 0)
-        path = 'testfile.test_%s' % "CornerNetLine"
+        path = 'pipeline_inference.test_%s' % "CornerNetLine"
         testing_line = importlib.import_module(path).testing
         methods['Line'] = [db_line, nnet_line, testing_line]
 
@@ -125,7 +94,7 @@ def Pre_load_nets(num, methods):
         db_line_cls, nnet_line_cls = load_net(5, 20000, "CornerNetLineClsReal", "data/linedata(1028)",
                                             "data/linedata(1028)/cache",
                                             "data/linedata(1028)/result", 0)
-        path = 'testfile.test_%s' % "CornerNetLineCls"
+        path = 'pipeline_inference.test_%s' % "CornerNetLineCls"
         testing_line_cls = importlib.import_module(path).testing
         methods['LineCls'] = [db_line_cls, nnet_line_cls, testing_line_cls]
 
@@ -133,6 +102,7 @@ def Pre_load_nets(num, methods):
 
 
 def ocr_result(image_path):
+
     subscription_key = "ad143190288d40b79483aa0d5c532724"
     vision_base_url = "https://westus2.api.cognitive.microsoft.com/vision/v2.0/"
     ocr_url = vision_base_url + "read/core/asyncBatchAnalyze"
@@ -313,12 +283,8 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
         chartinfo = [info['data_type'], cls_info, title2string, min_value, max_value]
         chartinfo.append(x_labels)
 
-        # ------------------------------------------------
-        if args.mode == 1:
-            methods['Cls'][1].cpu()
-        if args.mode == 2:
-            methods['Line'][1].cuda(0)
-            methods['Cls'][1].cpu()
+        # -------------------------------------------------
+        methods['Cls'][1].cpu()
         if args.empty_cache:
             torch.cuda.empty_cache()
         # -------------------------------------------------
@@ -326,8 +292,12 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
         # Bar chart
         if info['data_type'] == 0:
 
-            methods = Pre_load_nets([2], methods)
-            print("Predicted as bar chart")
+            # ---------------------------------------------
+            if args.mode == 1:
+                methods = pre_load_nets([2], methods)
+            if args.mode == 2:
+                methods['Bar'][1].cuda(0)
+            # ---------------------------------------------
 
             results = methods['Bar'][2](image, methods['Bar'][0], methods['Bar'][1], debug=False)
             tls = results[0]
@@ -345,8 +315,12 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
         # Line chart
         if info['data_type'] == 1:
 
-            methods = Pre_load_nets([4], methods)
-            print("Predicted as line chart")
+            # ---------------------------------------------
+            if args.mode == 1:
+                methods = pre_load_nets([4], methods)
+            if args.mode == 2:
+                methods['Line'][1].cuda(0)
+            # ---------------------------------------------
 
             results = methods['Line'][2](image, methods['Line'][0], methods['Line'][1], cuda_id=0, debug=False)
             keys = results[0]
@@ -357,14 +331,14 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
                 plot_area = [0, 0, 600, 400]
             image_painted, quiry, keys, hybrids = GroupQuiry(image_painted, keys, hybrids, plot_area, min_value, max_value)
 
+            # ---------------------------------------------
             if args.mode == 1:
                 del methods['Line']
-                methods = Pre_load_nets([5], methods)
+                methods = pre_load_nets([5], methods)
             if args.mode == 2:
                 methods['LineCls'][1].cuda(0)
                 methods['Line'][1].cpu()
-            if args.empty_cache:
-                torch.cuda.empty_cache()
+            # ---------------------------------------------
 
             results = methods['LineCls'][2](image, methods['LineCls'][0], quiry, methods['LineCls'][1], cuda_id=0, debug=False)
             line_data, pixel_points = GroupLine(image_painted, keys, hybrids, plot_area, results, min_value, max_value)
@@ -376,8 +350,12 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
         # Pie chart
         if info['data_type'] == 2:
 
-            methods = Pre_load_nets([3], methods)
-            print("Predicted as pie chart")
+            # ---------------------------------------------
+            if args.mode == 1:
+                methods = pre_load_nets([3], methods)
+            if args.mode == 2:
+                methods['Pie'][1].cuda(0)
+            # ---------------------------------------------
 
             results = methods['Pie'][2](image, methods['Pie'][0], methods['Pie'][1], debug=False)
             cens = results[0]

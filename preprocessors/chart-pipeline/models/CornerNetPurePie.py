@@ -1,8 +1,6 @@
-import torch
 import torch.nn as nn
-
-from .py_utils import kp_pure_pie, kp_pure_pie_s, AELossPurePie, _neg_loss, convolution, residual
-from .py_utils import TopPool, BottomPool, LeftPool, RightPool
+from models.kp_models import kp_pure_pie, AELossPurePie, _neg_loss, convolution, residual
+from models.kp_models import TopPool, BottomPool, LeftPool, RightPool
 
 class pool(nn.Module):
     def __init__(self, dim, pool1, pool2):
