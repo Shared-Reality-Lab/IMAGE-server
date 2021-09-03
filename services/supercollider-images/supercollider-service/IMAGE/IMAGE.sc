@@ -49,7 +49,7 @@ IMAGE {
             var sig;
             sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *
             EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
-            Out.ar(out, Pan2.ar(sig, stereoPos))
+            Out.ar(out, Pan2.ar(sig * gain, stereoPos))
         }).store;
 
         // Ambisonics Buffers Playback
@@ -59,7 +59,7 @@ IMAGE {
                 var sig, encoded;
                 sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *  EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
                 encoded = HoaEncodeDirection.ar(sig, theta, phi, radius, order.asInteger);
-                Out.ar(out, encoded)
+                Out.ar(out, encoded * gain)
             }).store;
 
             SynthDef((\playBufferReverbHOA++(i+1)).asSymbol, { |buffNum = 0, start = 0, duration = 1,
@@ -74,7 +74,7 @@ IMAGE {
                 sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *  EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
                 sig = FreeVerb.ar(sig, mix: mix, room: room, damp: damp);
                 encoded = HoaEncodeDirection.ar(sig, theta, phi, radius, order.asInteger);
-                Out.ar(out, encoded)
+                Out.ar(out, encoded * gain)
             }).store;
         });
 
@@ -93,7 +93,7 @@ IMAGE {
                     Line.ar(phiStart, phiStop, duration),
                     Line.ar(radiusStart, radiusStop, duration),
                     order.asInteger);
-                Out.ar(out, encoded)
+                Out.ar(out, encoded * gain)
             }).store;
 
             SynthDef((\playBufferLinearMoveReverbHOA++(i+1)).asSymbol, { |buffNum = 0, start = 0, duration = 1,
@@ -113,7 +113,7 @@ IMAGE {
                     Line.ar(phiStart, phiStop, duration),
                     Line.ar(radiusStart, radiusStop, duration),
                     order.asInteger);
-                Out.ar(out, encoded)
+                Out.ar(out, encoded * gain)
             }).store;
 
             // Play buffer for segmentations
