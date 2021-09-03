@@ -121,7 +121,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
                 duration = (and.at("duration").asInteger / ttsData.sampleRate);
                 score.add([
                     timing,
-                    [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, and.at("offset").asInteger, \duration, duration]
+                    [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, and.at("offset").asInteger, \duration, duration, \gain, 0.5]
                 ]);
                 timing = timing + duration;
             }
@@ -137,7 +137,8 @@ renderGeneric = { |json, ttsData, outPath, addr|
                         \start, audio.at("offset").asInteger,
                         \duration, dur,
                         \theta, LinLin.ar(item.at("centroid").at(0).asFloat, 0, 1, -0.5pi, 0.5pi),
-                        \phi, LinLin.ar(item.at("centroid").at(1).asFloat, 0, 1, -0.5pi, 0.5pi)
+                        \phi, LinLin.ar(item.at("centroid").at(1).asFloat, 0, 1, -0.5pi, 0.5pi),
+                        \gain, 0.5
                     ]
                 ]);
             },
