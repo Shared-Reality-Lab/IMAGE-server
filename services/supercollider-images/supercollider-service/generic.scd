@@ -85,7 +85,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
                     score.add([
                         (timing + dur),
                         [\s_new, (\pingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
-                            \gain, 0.5,
+                            \gain, 0.8,
                             \room, 0.6,
                             \damp, 0.5,
                             \mix, 0.3,
@@ -121,7 +121,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
                 duration = (and.at("duration").asInteger / ttsData.sampleRate);
                 score.add([
                     timing,
-                    [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, and.at("offset").asInteger, \duration, duration, \gain, 0.5]
+                    [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, and.at("offset").asInteger, \duration, duration, \gain, 1]
                 ]);
                 timing = timing + duration;
             }
@@ -130,22 +130,28 @@ renderGeneric = { |json, ttsData, outPath, addr|
         dur = (audio.at("duration").asInteger / ttsData.sampleRate);
         if(item.at("centroid").notNil,
             {
+                var theta, phi;
+                # theta, phi = IMAGE.mapCoords(
+                    item.at("centroid").at(0).asFloat,
+                    item.at("centroid").at(1).asFloat
+                );
                 score.add([
                     timing,
                     [\s_new, (\playBufferHOA++order.asSymbol).asSymbol, -1, 2, 1001,
                         \buffNum, 210,
                         \start, audio.at("offset").asInteger,
                         \duration, dur,
-                        \theta, LinLin.ar(item.at("centroid").at(0).asFloat, 0, 1, -0.5pi, 0.5pi),
-                        \phi, LinLin.ar(item.at("centroid").at(1).asFloat, 0, 1, -0.5pi, 0.5pi),
+                        \theta, theta,
+                        \phi, phi,
                         \gain, 0.5
                     ]
                 ]);
             },
             {
+                "No centroid on item!".postln;
                 score.add([
                     timing,
-                    [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, audio.at("offset").asInteger, \duration, dur]
+                    [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, audio.at("offset").asInteger, \duration, dur, \gain, 0.8]
                 ]);
             }
         );
