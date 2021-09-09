@@ -25,7 +25,7 @@ IMAGE {
             SynthDef((\noiseBurstHOA++(i+1)).asSymbol, { |theta = 0.0, phi = 0.0, radius = 1.5, out = 2, gain = 1|
                 var sig, encoded;
                 sig = WhiteNoise.ar(0.1) * EnvGen.ar( Env.perc, 1, doneAction:2 );
-                encoded = HoaEncodeDirection.ar(sig, theta, phi, radius, order.asInteger);
+                encoded = HoaEncodeDirection.ar(sig * gain, theta, phi, radius, order.asInteger);
                 Out.ar(out, encoded)
             }).store;
 
@@ -37,8 +37,8 @@ IMAGE {
                 sig = Ringz.ar( PinkNoise.ar(0.1) * envGen, freq, resonz) * AmpComp.kr(freq, 300);
                 rev = FreeVerb.ar(sig, mix: mix, room: room, damp:damp);
                 DetectSilence.ar(rev, doneAction:2);
-                encoded = HoaEncodeDirection.ar(rev, theta, phi, radius, order.asInteger);
-                Out.ar(out, encoded * gain)
+                encoded = HoaEncodeDirection.ar(rev * gain, theta, phi, radius, order.asInteger);
+                Out.ar(out, encoded)
             }).store;
         });
 
@@ -58,8 +58,8 @@ IMAGE {
             SynthDef((\playBufferHOA++(i+1)).asSymbol, { |buffNum = 0, start = 0, duration = 1, theta = 0.0, phi = 0.0, radius = 1.5, out = 2, gain = 1|
                 var sig, encoded;
                 sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *  EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
-                encoded = HoaEncodeDirection.ar(sig, theta, phi, radius, order.asInteger);
-                Out.ar(out, encoded * gain)
+                encoded = HoaEncodeDirection.ar(sig * gain, theta, phi, radius, order.asInteger);
+                Out.ar(out, encoded)
             }).store;
 
             SynthDef((\playBufferReverbHOA++(i+1)).asSymbol, { |buffNum = 0, start = 0, duration = 1,
@@ -73,8 +73,8 @@ IMAGE {
                 var sig, encoded;
                 sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *  EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
                 sig = FreeVerb.ar(sig, mix: mix, room: room, damp: damp);
-                encoded = HoaEncodeDirection.ar(sig, theta, phi, radius, order.asInteger);
-                Out.ar(out, encoded * gain)
+                encoded = HoaEncodeDirection.ar(sig * gain, theta, phi, radius, order.asInteger);
+                Out.ar(out, encoded)
             }).store;
         });
 
@@ -89,11 +89,11 @@ IMAGE {
                 var sig, encoded;
                 sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *
                 EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
-                encoded = HoaEncodeDirection.ar(sig, Line.ar(thetaStart, thetaStop, duration),
+                encoded = HoaEncodeDirection.ar(sig * gain, Line.ar(thetaStart, thetaStop, duration),
                     Line.ar(phiStart, phiStop, duration),
                     Line.ar(radiusStart, radiusStop, duration),
                     order.asInteger);
-                Out.ar(out, encoded * gain)
+                Out.ar(out, encoded)
             }).store;
 
             SynthDef((\playBufferLinearMoveReverbHOA++(i+1)).asSymbol, { |buffNum = 0, start = 0, duration = 1,
@@ -109,11 +109,11 @@ IMAGE {
                 EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
 
                 sig = FreeVerb.ar(sig, mix: 0.33, room: 0.5, damp:0.5);
-                encoded = HoaEncodeDirection.ar(sig, Line.ar(thetaStart, thetaStop, duration),
+                encoded = HoaEncodeDirection.ar(sig * gain, Line.ar(thetaStart, thetaStop, duration),
                     Line.ar(phiStart, phiStop, duration),
                     Line.ar(radiusStart, radiusStop, duration),
                     order.asInteger);
-                Out.ar(out, encoded * gain)
+                Out.ar(out, encoded)
             }).store;
 
             // Play buffer for segmentations
