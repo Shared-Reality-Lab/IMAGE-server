@@ -1,7 +1,7 @@
 var renderGeneric;
 "Generic Object Description".postln;
 renderGeneric = { |json, ttsData, outPath, addr|
-    var score, timing, order=5, objects, groupedObjIds;
+    var score, timing, order=5, objects, groupedObjIds, maxArea=0;
     timing = 0;
     score = IMAGE.newScore(order);
 
@@ -34,6 +34,15 @@ renderGeneric = { |json, ttsData, outPath, addr|
 
     // Iterate over objects (currently unsorted)
     objects = json.at("objects");
+    // Determine maximum area of an object
+    objects.do({ |item|
+        if(item.at("area").asFloat > maxArea,
+            {
+                maxArea = item.at("area").asFloat;
+            }
+        );
+    });
+    ("Max Area: " + maxArea.asString).postln;
     groupedObjIds = Array.new;
     json.at("groups").do({ |item, i|
         item.at("IDs").postln;
@@ -81,13 +90,11 @@ renderGeneric = { |json, ttsData, outPath, addr|
                         item.at("centroid").at(1).asFloat
                     );
                     dur = item.at("centroid").at(0).asFloat.linlin(0.0, 1.0, 0.0, totalDur);
-                    ("Area " + item.at("area").asString).postln;
-                    volume = item.at("area").asFloat.explin(0.001, 0.25, -10, 20);
-                    dur.postln;
+                    volume = item.at("area").asFloat.linlin(0, maxArea, -10, 0);
                     score.add([
                         (timing + dur),
                         [\s_new, (\pingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
-                            \gain, volume.dbamp,
+                            \gain, 0.8 * volume.dbamp,
                             \room, 0.6,
                             \damp, 0.5,
                             \mix, 0.3,
@@ -130,7 +137,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
         );
         audio = item.at("audio");
         dur = (audio.at("duration").asInteger / ttsData.sampleRate);
-        volume = item.at("area").asFloat.explin(0.001, 0.25, -20, 10);
+        volume = item.at("area").asFloat.linlin(0, maxArea, -10, 0);
         if(item.at("centroid").notNil,
             {
                 var theta, phi;
@@ -146,7 +153,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
                         \duration, dur,
                         \theta, theta,
                         \phi, phi,
-                        \gain, volume.dbamp
+                        \gain, 0.5 * volume.dbamp
                     ]
                 ]);
             },
@@ -154,7 +161,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
                 "No centroid on item!".postln;
                 score.add([
                     timing,
-                    [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, audio.at("offset").asInteger, \duration, dur, \gain, volume.dbamp]
+                    [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, audio.at("offset").asInteger, \duration, dur, \gain, 0.8 * volume.dbamp]
                 ]);
             }
         );
