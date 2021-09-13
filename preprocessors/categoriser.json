@@ -5,7 +5,7 @@
     "title": "First level Categoriser",
     "description": "Information on the category of the image",
     "properties": {
-        "category": { "type": "string" }
+        "category": { "enum": ["chart", "image", "other","text"] }
     },
     "required": [ "category"]
 }
