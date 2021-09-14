@@ -64,6 +64,14 @@ services:
                     devices:
                     - driver: nvidia
                       capabilities: ["gpu", "utility", "compute"]
+    first-categoriser:
+        build:
+            context: ./preprocessors/categoriser
+            dockerfile: Dockerfile
+        image: "first-categoriser:latest"
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 5000
     object-grouping:
         build:
             context: ./preprocessors/grouping
@@ -78,7 +86,7 @@ services:
             dockerfile: Dockerfile
         image: "scene-detection:latest"
         labels:
-            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
     semantic-segmentation:
         build:
@@ -86,7 +94,7 @@ services:
             dockerfile: ./Dockerfile
         image: "semantic-segmentation:latest"
         labels:
-            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
     hello-tts-handler:
         build:
