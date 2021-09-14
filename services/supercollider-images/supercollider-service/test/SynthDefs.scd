@@ -430,3 +430,94 @@ HOABinaural.lastBuffID.postln;
 
 
 */
+
+
+
+// PIE CHART   PIE CHART   PIE CHART   PIE CHART   PIE CHART   PIE CHART   PIE CHART   PIE CHART   PIE CHART   PIE CHART
+
+
+5.do({|i|
+	var order = i+1;
+SynthDef((\playMovingVoiceHOA++(i+1)).asSymbol,{|freq = 100, blend = 0.5, bright = 0, duration = 3, phi = 0, thetaStart= -0.5pi, thetaEnd=  0.5pi, radius = 1, gain = 1|
+    var va = Vowel(\a, \bass),
+        vi = Vowel(\i, \soprano),
+        sig, line, encoded, segduration, env, reverb;
+		segduration = ((thetaEnd - thetaStart) / 2pi) * duration;
+		env = EnvGen.kr(Env.new([0,1,1,0],[0.01, segduration, 0.01]), 1.0, doneAction: Done.none);
+		sig =  BPFStack.ar( Decay.ar(Impulse.ar(freq), 0.01) * PinkNoise.ar(0.9) , va.blend(vi, blend).brightenExp(bright, 1), widthMods: 5 ) * env;
+		reverb = FreeVerb.ar(sig, 0.33, 0.9, damp: 0.9, mul: 500);
+	encoded = HoaEncodeDirection.ar(reverb *  gain,
+			                    Line.ar(thetaStart, thetaEnd, segduration + 0.02),
+			                    phi,
+			                    2.0,
+			                    order.asInteger);
+    Out.ar(2,  encoded);
+}).add
+});
+
+
+
+
+/*
+~path = "/Users/floriangrond/Documents/PROJECTS/2021-ATP/Rendering/";
+~order = 5;
+~score = Score.new;
+~duration = 2;
+
+//~wedges = ({10.0.rand}!5).normalizeSum;
+//~wedges = ~wedges.sort({|a,b| a> b});
+~wedges = [0.5, 0.2, 0.1, 0.07, 0.08];
+
+~wedges = ~wedges.integrate;
+~wedges = ~wedges!2;
+~wedges = ~wedges.flop.flat;
+~wedges = ~wedges.drop(-1);
+~wedges = ~wedges.addFirst(0.0);
+~arcs = ~wedges.linlin(0.0, 1.0 , 0.0, 2pi);
+~arcs = ~arcs.clump(2);
+
+HOABinaural.loadbinauralIRs4Score2(~score, ~order);
+HOABinaural.lastBuffID.postln;
+
+~score.add([ 0.0, [ 's_new', (\binauralDecodeNrt++~order.asSymbol).asSymbol, 1001, 0, 1, \in, 2] ],);
+// beginning of the piechart wedge, launch the synth
+
+
+~wait = 0;
+
+~arcs.do({|item,i|
+~thetaStart = ~arcs[i][0]; ~thetaEnd = ~arcs[i][1];
+
+~percetage = ((~thetaEnd - ~thetaStart) / 2pi) ;
+~percetage.postln;
+~score.add([ ~wait, [ 's_new', (\playMovingVoiceHOA++~order.asSymbol).asSymbol, 1002 + i, 2, 1001,
+                             \freq, ~percetage.linlin(0.0,1.0, 1.0,0.0).linexp(0.0,1.0, 4.0, 40),
+                             \blend, ~percetage.linlin(0,1,0,1),
+                             \bright, ~percetage.linlin(0,1,0.8,2.0),
+                             \gain, ~percetage.linlin(0,1,0.2,1.0),
+                             \thetaStart, ~thetaStart,
+                             \thetaEnd, ~thetaEnd,
+                             \duration, ~duration] ],);
+
+~wait = ~wait + ( ((~thetaEnd - ~thetaStart) / 2pi) * ~duration ) + 0.3 + 0.1;
+});
+
+// free the synth not really necessary
+// ~score.add([ 7, [ '/n_free', 1001] ],);
+
+~score.add([7.1, [0]] );
+~path = "/Users/floriangrond/Documents/PROJECTS/2021-ATP/Rendering/";
+~score.saveToFile(~path++"score.txt");
+
+~score.recordNRT(
+    "/tmp/trashme",
+	~path++"testscore.wav",
+    sampleRate: 48000,
+	headerFormat: "WAV",
+	sampleFormat: "int16",
+    options: ServerOptions.new.numOutputBusChannels_(2)
+);
+
+*/
+
+
