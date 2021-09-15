@@ -15,27 +15,27 @@ import os
 
 app = Flask(__name__)
 
+
 class Net(pl.LightningModule):
     def __init__(self, num_classes=10, lr=1e-3):
         super().__init__()
         self.save_hyperparameters()
-        #os.environ['TORCH_HOME'] = './'
         self.model = models.densenet121(pretrained=True)
         for param in self.model.parameters():
             param.requires_grad = False
         self.model.classifier = nn.Linear(self.model.classifier.in_features, 4)
-        
-    def forward(self,x):
+
+    def forward(self, x):
         logits = self.model(x)
         preds = torch.argmax(logits, 1)
         pred_int = preds.int()
         pred_int = pred_int.detach().numpy()
         return str(pred_int[0])
 
-@app.route("/atp/preprocessor", methods=['POST',])
 
+@app.route("/atp/preprocessor", methods=['POST', ])
 def categorise():
-    labels_dict = {"0":"chart","1":"image","2":"other","3":"text"}
+    labels_dict = {"0": "chart", "1": "image", "2": "other", "3": "text"}
     with open('./schemas/preprocessors/categoriser.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
@@ -43,28 +43,27 @@ def categorise():
     with open('./schemas/definitions.json') as jsonfile:
         definitionSchema = json.load(jsonfile)
     schema_store = {
-    schema['$id']: schema,
-    definitionSchema['$id']: definitionSchema
+        schema['$id']: schema,
+        definitionSchema['$id']: definitionSchema
     }
     resolver = jsonschema.RefResolver.from_schema(
-    schema, store=schema_store)
+        schema, store=schema_store)
     content = request.get_json()
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    name = "ca.mcgill.cim.bach.atp.preprocessor.objectDetection"
+    name = "ca.mcgill.cim.bach.atp.preprocessor.firstCategoriser"
     source = content["image"]
     image_b64 = source.split(",")[1]
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
     img = cv2.imdecode(image, cv2.IMREAD_COLOR)
     net = Net.load_from_checkpoint('./latest-0.ckpt')
-    #img = cv2.imread('/Users/rohanakut/Desktop/test.png')
-    img = cv2.resize(img, (224, 224)) 
-    image = img.reshape(1,3, 224, 224)
+    img = cv2.resize(img, (224, 224))
+    image = img.reshape(1, 3, 224, 224)
     inputs = torch.FloatTensor(image)
     net.eval()
     pred = net(inputs)
-    type = {"category":labels_dict[pred]}
+    type = {"category": labels_dict[pred]}
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(type)
@@ -72,11 +71,11 @@ def categorise():
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
     response = {
-                "request_uuid": request_uuid,
-                "timestamp": int(timestamp),
-                "name": name,
-                "data": type
-                }
+        "request_uuid": request_uuid,
+        "timestamp": int(timestamp),
+        "name": name,
+        "data": type
+    }
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
@@ -85,7 +84,8 @@ def categorise():
         return jsonify("Invalid Preprocessor JSON format"), 500
     torch.cuda.empty_cache()
     return response
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
     categorise()
-	
