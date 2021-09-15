@@ -521,3 +521,87 @@ HOABinaural.lastBuffID.postln;
 */
 
 
+
+5.do({|i|
+	var order = i+1;
+SynthDef((\playVoicePingHOA++(i+1)).asSymbol,{|freq = 100, blend = 0.5, bright = 0, duration = 0.5, phi = 0, theta = 0.0, radius = 1, gain = 1, lag = 0.01|
+    var va = Vowel(\a, \bass),
+        vi = Vowel(\i, \bass),
+        sig, encoded, env, partials, excitation, reverb;
+		excitation = WhiteNoise.ar(0.1);
+		partials =  Klank.ar(`[{|i| i+1}!20, nil, {0.4}!20] , excitation, freq.lag(lag));
+		sig =  BPFStack.ar( partials , va.blend(vi, blend.lag(lag)).brightenExp(bright.lag(lag), 1), widthMods: 5 ) ;
+		reverb = FreeVerb.ar(sig, 0.22, 0.5, damp: 0.9, mul: 500) * env;
+	encoded = HoaEncodeDirection.ar(reverb *  gain,
+			                    theta.lag(lag),
+			                    phi.lag(lag),
+			                    2.0,
+			                    order.asInteger);
+    Out.ar(2,  encoded);
+}).add
+});
+
+
+/*
+~path = "/Users/floriangrond/Documents/PROJECTS/2021-ATP/Rendering/";
+~order = 5;
+~score = Score.new;
+~duration = 0.1;
+
+~xPoints = {|i| i * 0.1}!100;
+~xyPoints = ~xPoints.collect({|item,i| [item, (item).sin]  });
+~xyPoints.flop.plot;
+
+~yMin = ~xyPoints.flop[1].minItem;
+~yMax = ~xyPoints.flop[1].maxItem;
+
+~xMin = ~xyPoints.flop[0].minItem;
+~xMax = ~xyPoints.flop[0].maxItem;
+
+
+HOABinaural.loadbinauralIRs4Score2(~score, ~order);
+HOABinaural.lastBuffID.postln;
+
+~score.add([ 0.0, [ 's_new', (\binauralDecodeNrt++~order.asSymbol).asSymbol, 1001, 0, 1, \in, 2] ],);
+// beginning of the piechart wedge, launch the synth
+
+~wait = 0;
+
+~xyPoints.do({|item,i|
+~score.add([ ~wait, [ 's_new', (\playVoicePingHOA++~order.asSymbol).asSymbol, 1002 + i, 2, 1001,
+                             \freq, item[1].linlin(~yMin, ~yMax, 40,52).midicps,
+                             \blend, item[1].linlin(~yMin, ~yMax, 1.0,0.0),
+                             \bright, item[1].linlin(~yMin, ~yMax, 1.0,2.0),
+                             \gain, 0.001,
+                             \theta, item[0].linlin(~xMin, ~xMax, -0.5pi, 0.5pi),
+                             \phi, item[1].linlin(~yMin, ~yMax, -0.3pi, 0.3pi),
+                             \duration, ~duration] ],);
+
+~wait = ~wait + (~duration * 0.5);
+});
+
+// free the synth not really necessary
+// ~score.add([ ~wait + 1, [ '/n_free', 1001] ],);
+
+~score.add([~wait + 1.1, [0]] );
+~path = "/Users/floriangrond/Documents/PROJECTS/2021-ATP/Rendering/";
+~score.saveToFile(~path++"score.txt");
+
+
+~srvrOpts = ServerOptions.new;
+~srvrOpts.numOutputBusChannels_(2);
+~srvrOpts.memSize_(8192 * 8);
+
+~score.recordNRT(
+    "/tmp/trashme",
+	~path++"testscore.wav",
+    sampleRate: 48000,
+	headerFormat: "WAV",
+	sampleFormat: "int16",
+    options: ~srvrOpts
+);
+
+*/
+
+
+
