@@ -17,6 +17,7 @@ app = Flask(__name__)
 
 
 class Net(pl.LightningModule):
+    # initial initialisation if architecture. It  is needed to load the weights
     def __init__(self, num_classes=10, lr=1e-3):
         super().__init__()
         self.save_hyperparameters()
@@ -25,6 +26,7 @@ class Net(pl.LightningModule):
             param.requires_grad = False
         self.model.classifier = nn.Linear(self.model.classifier.in_features, 4)
 
+    # the main loop used for prediction.
     def forward(self, x):
         logits = self.model(x)
         preds = torch.argmax(logits, 1)
@@ -35,6 +37,7 @@ class Net(pl.LightningModule):
 
 @app.route("/atp/preprocessor", methods=['POST', ])
 def categorise():
+    # load the schema
     labels_dict = {"0": "chart", "1": "image", "2": "other", "3": "text"}
     with open('./schemas/preprocessors/categoriser.json') as jsonfile:
         data_schema = json.load(jsonfile)
@@ -52,11 +55,16 @@ def categorise():
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.cim.bach.atp.preprocessor.firstCategoriser"
+
+    # convert the uri to processable image
     source = content["image"]
     image_b64 = source.split(",")[1]
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
     img = cv2.imdecode(image, cv2.IMREAD_COLOR)
+
+    # download the weights and test the input image. The input image passed to
+    # the "forward" function to get the predictions.
     net = Net.load_from_checkpoint('./latest-0.ckpt')
     img = cv2.resize(img, (224, 224))
     image = img.reshape(1, 3, 224, 224)
