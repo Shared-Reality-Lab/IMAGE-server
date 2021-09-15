@@ -40,6 +40,23 @@ IMAGE {
                 encoded = HoaEncodeDirection.ar(rev * gain, theta, phi, radius, order.asInteger);
                 Out.ar(out, encoded)
             }).store;
+
+            // Moving voice
+            SynthDef((\playMovingVoiceHOA++(i+1)).asSymbol,{|freq = 100, blend = 0.5, bright = 0, duration = 3, phi = 0, thetaStart= -0.5pi, thetaEnd=  0.5pi, radius = 1, gain = 1|
+                var va = Vowel(\a, \bass),
+                    vi = Vowel(\i, \soprano),
+                    sig, line, encoded, segduration, env, reverb;
+                segduration = ((thetaEnd - thetaStart) / 2pi) * duration;
+                env = EnvGen.kr(Env.new([0,1,1,0],[0.01, segduration, 0.01]), 1.0, doneAction: Done.none);
+                sig =  BPFStack.ar( Decay.ar(Impulse.ar(freq), 0.01) * PinkNoise.ar(0.9) , va.blend(vi, blend).brightenExp(bright, 1), widthMods: 5 ) * env;
+                reverb = FreeVerb.ar(sig, 0.33, 0.9, damp: 0.9, mul: 500);
+                encoded = HoaEncodeDirection.ar(reverb *  gain,
+                                            Line.ar(thetaStart, thetaEnd, segduration + 0.02),
+                                            phi,
+                                            2.0,
+                                            order.asInteger);
+                Out.ar(2,  encoded);
+            }).store;
         });
 
 
