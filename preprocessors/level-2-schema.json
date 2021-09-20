@@ -1,0 +1,11 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/classifier2.schema.json",
+    "type": "object",
+    "title": "Second level Categoriser",
+    "description": "Information on the contents of the image",
+    "properties": {
+        "category": { "enum": ["indoor", "outdoor", "people","text"] }
+    },
+    "required": [ "category"]
+}
