@@ -38,52 +38,57 @@ def readImage():
     preprocessor = content["preprocessors"]
     oDpreprocessor = preprocessor["ca.mcgill.a11y.image.preprocessor.objectDetection"]
     objects = oDpreprocessor["objects"]
-    for i in range(len(objects)):
-        object_type.append(objects[i]["type"])
-        dimensions.append(objects[i]["dimensions"])
-    repetition = [item for item, count in collections.Counter(
-    object_type).items() if count > 1]
-    group = [[] for i in range(len(repetition))]
-    final_group = []
-    check_group = [False]*len(objects)
+    preprocessor = content["preprocessors"]
+    category = preprocessor["ca.mcgill.a11y.image.firstCategoriser"]
+    if(category=="image"):
+        for i in range(len(objects)):
+            object_type.append(objects[i]["type"])
+            dimensions.append(objects[i]["dimensions"])
+        repetition = [item for item, count in collections.Counter(
+        object_type).items() if count > 1]
+        group = [[] for i in range(len(repetition))]
+        final_group = []
+        check_group = [False]*len(objects)
 
-    for i in range(len(repetition)):
-        flag=0
-        for j in range(len(objects)):
-            if(objects[j]["type"] == repetition[i]):
-                flag = 1
-                group[i].append([objects[j]["ID"],calculate_diagonal(dimensions[j][0],dimensions[j][1],dimensions[j][2],dimensions[j][3])])
-                check_group[j] = True
-        if(flag==1):
-            group[i] = sorted(group[i], key=itemgetter(1))
-    dummy = [[] for i in range(len(group))]
-    for i in range(len(group)):
-        for j in range(len(group[i])):
-            dummy[i].append(group[i][j][0])
-        final_group.append({"IDs":dummy[i]})
+        for i in range(len(repetition)):
+            flag=0
+            for j in range(len(objects)):
+                if(objects[j]["type"] == repetition[i]):
+                    flag = 1
+                    group[i].append([objects[j]["ID"],calculate_diagonal(dimensions[j][0],dimensions[j][1],dimensions[j][2],dimensions[j][3])])
+                    check_group[j] = True
+            if(flag==1):
+                group[i] = sorted(group[i], key=itemgetter(1))
+        dummy = [[] for i in range(len(group))]
+        for i in range(len(group)):
+            for j in range(len(group[i])):
+                dummy[i].append(group[i][j][0])
+            final_group.append({"IDs":dummy[i]})
 
-    for i in range(len(check_group)):
-        if(check_group[i]==False):
-            ungrouped.append(i)
-    request_uuid = content["request_uuid"]
-    timestamp = time.time()
-    name = "ca.mcgill.a11y.image.preprocessor.grouping"
-    data = {"grouped":final_group,"ungrouped":ungrouped}
-    response = {
-    "title": "Grouping Data",
-    "description": "Grouped data for objects",
-        "request_uuid": request_uuid,
-        "timestamp": int(timestamp),
-        "name": name,
-        "data":data
-        }
-    try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
-        return jsonify("Invalid Preprocessor JSON format"), 500
-    return response
+        for i in range(len(check_group)):
+            if(check_group[i]==False):
+                ungrouped.append(i)
+        request_uuid = content["request_uuid"]
+        timestamp = time.time()
+        name = "ca.mcgill.a11y.image.preprocessor.grouping"
+        data = {"grouped":final_group,"ungrouped":ungrouped}
+        response = {
+        "title": "Grouping Data",
+        "description": "Grouped data for objects",
+            "request_uuid": request_uuid,
+            "timestamp": int(timestamp),
+            "name": name,
+            "data":data
+            }
+        try:
+            validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as e:
+            logging.error(e)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        return response
+    else:
+        return "Preprocessor not run due to category"
 
 
 if __name__ == "__main__":
