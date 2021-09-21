@@ -35,7 +35,7 @@ class Net(pl.LightningModule):
         return str(pred_int[0])
 
 
-@app.route("/atp/preprocessor", methods=['POST', ])
+@app.route("/preprocessor", methods=['POST', ])
 def categorise():
     # load the schema
     labels_dict = {"0": "chart", "1": "image", "2": "other", "3": "text"}
