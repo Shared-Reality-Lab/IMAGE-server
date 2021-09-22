@@ -15,7 +15,6 @@ from models.experimental import attempt_load
 from datasetsChanged import  LoadImages
 from utils.general import check_img_size, non_max_suppression, \
     apply_classifier, scale_coords, set_logging
-from utils.plots import colors, plot_one_box
 from utils.torch_utils import select_device, load_classifier
 
 
@@ -101,7 +100,7 @@ def run(weights='yolov5s.pt',
             if img.ndimension() == 3:
                 img = img.unsqueeze(0)
             pred = model(img, augment=augment)[0]
-            pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
+            pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms)#, max_det=max_det)
             if classify:
                 pred = apply_classifier(pred, modelc, img, im0s)
 
@@ -135,7 +134,7 @@ def run(weights='yolov5s.pt',
                                 "centroid": centre,"area":area
                             }
                             send.append(dictionary)
-                            plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_thickness=line_thickness)
+                            #plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_thickness=line_thickness)
                             i = i+1
                 things = {"objects": send}
                 try:

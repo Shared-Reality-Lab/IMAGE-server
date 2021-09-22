@@ -24,7 +24,7 @@ from torch.utils.data import Dataset
 from tqdm import tqdm
 import base64
 
-from utils.general import check_requirements, check_file, check_dataset, xywh2xyxy, xywhn2xyxy, xyxy2xywhn, \
+from utils.general import check_requirements, check_file, check_dataset, xywh2xyxy, xywhn2xyxy,  \
     xyn2xy, segment2box, segments2boxes, resample_segments, clean_str
 from utils.torch_utils import torch_distributed_zero_first
 
@@ -559,8 +559,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             #     labels = cutout(img, labels)
 
         nL = len(labels)  # number of labels
-        if nL:
-            labels[:, 1:5] = xyxy2xywhn(labels[:, 1:5], w=img.shape[1], h=img.shape[0])  # xyxy to xywh normalized
+        # if nL:
+        #     labels[:, 1:5] = xyxy2xywhn(labels[:, 1:5], w=img.shape[1], h=img.shape[0])  # xyxy to xywh normalized
 
         if self.augment:
             # flip up-down
