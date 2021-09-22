@@ -1,6 +1,6 @@
 FROM schemas:latest AS schemas
 
-FROM ultralytics/yolov5:latest
+FROM ultralytics/yolov5:v5.0
 
 RUN wget bach.cim.mcgill.ca/atp/models/objectDetectionWeights/yolov5s.pt
 
