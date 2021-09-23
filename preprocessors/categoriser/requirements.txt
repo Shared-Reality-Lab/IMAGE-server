@@ -1,0 +1,8 @@
+flask==1.1.2
+flask_api==2.0.0
+numpy==1.20.1
+pillow==8.2.0
+jsonschema==3.2.0
+Werkzeug==0.16.0
+pytorch_lightning==1.4.4
+opencv-python== 4.5.1.48
