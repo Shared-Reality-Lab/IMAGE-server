@@ -42,6 +42,7 @@ IMAGE {
             }).store;
 
             // Moving voice
+            // Designed for pie chart sweeps
             SynthDef((\playMovingVoiceHOA++(i+1)).asSymbol,{|freq = 100, blend = 0.5, bright = 0, duration = 3, phi = 0, thetaStart= -0.5pi, thetaEnd=  0.5pi, radius = 1, gain = 1|
                 var va = Vowel(\a, \bass),
                     vi = Vowel(\i, \soprano),
@@ -56,6 +57,25 @@ IMAGE {
                                             2.0,
                                             order.asInteger);
                 Out.ar(2,  encoded);
+            }).store;
+
+            // Point voice
+            // For discrete line graphs
+            SynthDef((\playVoicePingHOA++(i+1)).asSymbol, {|freq = 100, blend = 0.5, bright = 0, duration = 0.5, phi = 0, theta = 0, radius = 1, gain = 1|
+                var va = Vowel(\a, \bass),
+                    vi = Vowel(\i, \bass),
+                    sig, encoded, env, partials, excitation, reverb;
+                excitation = EnvGen.ar(Env.perc(0.001, duration, 1.0), 1.0, doneAction: Done.none) * PinkNoise.ar(0.1);
+                partials = Klank.ar(`[{|i| i+1}!20, nil, {0.4}!20], excitation, freq);
+                env = EnvGen.ar(Env.perc(0.001, duration * 3, 1.0), 1.0, doneAction: 2);
+                sig = BPFStack.ar(partials, va.blend(vi, blend).brightenExp(bright, 1), widthMods: 5);
+                reverb = FreeVerb.ar(sig, 0.5, 0.9, damp: 0.6, mul: 500) * env;
+                encoded = HoaEncodeDirection.ar(reverb * gain,
+                    theta,
+                    phi,
+                    2.0,
+                    order.asInteger);
+                Out.ar(2, encoded);
             }).store;
         });
 
