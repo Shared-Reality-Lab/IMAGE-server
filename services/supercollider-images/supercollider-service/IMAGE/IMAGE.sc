@@ -77,6 +77,24 @@ IMAGE {
                     order.asInteger);
                 Out.ar(2, encoded);
             }).store;
+
+            // Continuous voice
+            // For continuous line graphs
+            SynthDef((\playVoiceContinuousHOA++(i+1)).asSymbol, {|freq = 200, blend = 0.0, bright = 1, phi = 0, theta = 0.0, radius = 1, gain = 0|
+                var va = Vowel(\a, \bass),
+                    vi = Vowel(\i, \bass),
+                    sig, encoded, env, vow, partials, excitation, reverb;
+                partials = LPF.ar(Decay.ar(Impulse.ar(freq.lag(0.5)), 0.01), 10000);
+                vow = va.blend(vi, blend).brightenExp(bright, 1);
+                sig = BPFStack.ar(partials, vow, widthMods: 0.2);
+                encoded = HoaEncodeDirection.ar(sig * gain.lagud(0.5, 0.5),
+                    theta,
+                    phi,
+                    2.0,
+                    order.asInteger
+                );
+                Out.ar(2, encoded);
+            }).store;
         });
 
 
