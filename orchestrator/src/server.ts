@@ -28,29 +28,40 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
             controller.abort();
         }, PREPROCESSOR_TIME_MS);
 
-        await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
+        const resp = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
             },
             "body": JSON.stringify(data),
             "signal": controller.signal
-        }).then(async (resp) => {
-            if (resp.ok) {
-                return resp.json();
-            } else {
-                let result = await resp.json();
-                throw result;
-            }
-        }).then(json => {
-            (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
-        }).catch(err => {
-            // Try to continue...
-            // tslint:disable-next-line:no-console
-            console.error("Error occured on fetch");
-            // tslint:disable-next-line:no-console
-            console.error(err);
         });
+        // OK data returned
+        if (resp.status === 200) {
+            try {
+                const json = await resp.json();
+                (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+            } catch (err) {
+                // tslint:disable-next-line:no-console
+                console.error("Error occured on fetch");
+                // tslint:disable-next-line:no-console
+                console.error(err);
+            }
+        }
+        // No Content preprocessor not applicable
+        else if (resp.status === 204) {
+            continue;
+        } else {
+            try {
+                const result = await resp.json();
+                throw result;
+            } catch (err) {
+                // tslint:disable-next-line:no-console
+                console.error("Error occured on fetch");
+                // tslint:disable-next-line:no-console
+                console.error(err);
+            }
+        }
     }
     return data;
 }
