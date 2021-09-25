@@ -1,0 +1,11 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/level-2-schema.schema.json",
+    "type": "object",
+    "title": "This schema denotes the classes for the second level classifier used for classfying the images in four categories i.e, indoor, outdoor, people and text. Depending on their class the images will then be routed to the respective downstream model for futher processing. ",
+    "description": "Information on the contents of the image",
+    "properties": {
+        "category": { "enum": ["indoor", "outdoor", "people","text"] }
+    },
+    "required": [ "category"]
+}
