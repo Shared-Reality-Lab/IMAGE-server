@@ -199,7 +199,7 @@ def try_math(image_path, cls_info):
     return title2string, round(min_value, 2), round(max_value, 2), word_infos
 
 
-def findXlabels(word_infos):
+def findXlabels(word_infos, plot_area):
 
     y_list = []
     x_list = []
@@ -210,20 +210,30 @@ def findXlabels(word_infos):
     y = np.asarray(y_list)
     y_approx = list(np.around(y/5)*5)
 
-    max_value = max(y_approx)
-    idx = [index for index, value in enumerate(y_approx) if value == max_value]
+    y_filtered = []
+    words_filtered = []
+    xlist_filtered = []
 
-    if (len(idx) < 3):
+    for i in range (0, len(y_approx)):
+        if ((y_approx[i] + 5) > plot_area[3]):
+            y_filtered.append(y_approx[i])
+            words_filtered.append(word_infos[i])
+            xlist_filtered.append(x_list[i])
+
+    min_value = min(y_filtered)
+    idx = [index for index, value in enumerate(y_filtered) if value == min_value]
+    
+    if (max(xlist_filtered) - min (xlist_filtered) < 0.5*(abs(plot_area[2] - plot_area[0]))):
         for i in idx:
-            y_approx[i] = 0
-        max_value = max(y_approx)
-        idx = [index for index, value in enumerate(y_approx) if value == max_value]
+            y_filtered[i] = max(y_filtered)
+        min_value = min(y_filtered)
+        idx = [index for index, value in enumerate(y_filtered) if value == min_value]
 
     x_labels = []
     x_pos = []            
     for i in idx:
-        x_labels.append(word_infos[i])
-        x_pos.append(x_list[i])
+        x_labels.append(words_filtered[i])
+        x_pos.append(xlist_filtered[i])
 
     return x_labels, x_pos
 
@@ -268,18 +278,15 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
     with torch.no_grad():
 
         results = methods['Cls'][2](image, methods['Cls'][0], methods['Cls'][1], cuda_id=0, debug=False)
-        results = results
-        info = results[0]
-        tls = results[1]
-        brs = results[2]
-        plot_area = []
+
+        info, tls, brs = results[0], results[1], results[2]
+
         image_painted, cls_info = GroupCls(image_cls, tls, brs)
         title2string, min_value, max_value, word_infos = try_math(image_path, cls_info)
-        if min_value_official is not None:
-            min_value = min_value_official
-            max_value = max_value_official
-
-        x_labels, x_pos = findXlabels(word_infos)
+        
+        plot_area = cls_info[5][0:4]
+        x_labels, x_pos = findXlabels(word_infos, plot_area)
+        
         chartinfo = [info['data_type'], cls_info, title2string, min_value, max_value]
         chartinfo.append(x_labels)
 
@@ -302,10 +309,6 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
             results = methods['Bar'][2](image, methods['Bar'][0], methods['Bar'][1], debug=False)
             tls = results[0]
             brs = results[1]
-            if 5 in cls_info.keys():
-                plot_area = cls_info[5][0:4]
-            else:
-                plot_area = [0, 0, 600, 400]
             image_painted, bar_data, pixel_points = GroupBar(image_painted, tls, brs, plot_area, min_value, max_value)
 
             pixel_points = group_bars_by_labels(pixel_points, x_pos)
@@ -325,10 +328,6 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
             results = methods['Line'][2](image, methods['Line'][0], methods['Line'][1], cuda_id=0, debug=False)
             keys = results[0]
             hybrids = results[1]
-            if 5 in cls_info.keys():
-                plot_area = cls_info[5][0:4]
-            else:
-                plot_area = [0, 0, 600, 400]
             image_painted, quiry, keys, hybrids = GroupQuiry(image_painted, keys, hybrids, plot_area, min_value, max_value)
 
             # ---------------------------------------------
@@ -381,7 +380,16 @@ def findPeaksDips(line_data):
 
 
 def get_data_from_chart(img, methods, args):
-    
+
+    if max(img.shape[0], img.shape[1]) > 950:
+        
+        scale_percent = 900/(max(img.shape[0], img.shape[1]))
+        width = int(img.shape[1] * scale_percent)
+        height = int(img.shape[0] * scale_percent)
+        dim = (width, height)
+        
+        img = cv2.resize(img, dim)
+
     cv2.imwrite('./input.png', img)
     image_path = './input.png'
     plot_area, image_painted, data, chartinfo, x_labels, pixel_points, type_no, d = test(image_path, methods, args)
@@ -393,6 +401,10 @@ def get_data_from_chart(img, methods, args):
     if type_no == 2:
         chart_type = 'Pie Chart'
 
+    try:
+        title = chartinfo[2][2]
+    except IndexError:
+        title = None  
 
     if (type_no == 0):
     
@@ -441,7 +453,7 @@ def get_data_from_chart(img, methods, args):
         output = {
                     "type": chart_type,
                     "dimensions": {"h": d[0], "w": d[1]},
-                    "title": chartinfo[2][2], 
+                    "title": title, 
                     "y_range": {
                         "min": str(chartinfo[3]), 
                         "max": str(chartinfo[4])
@@ -480,7 +492,7 @@ def get_data_from_chart(img, methods, args):
         output = {
                     "type": chart_type,
                     "dimensions": {"h": d[0], "w": d[1]},
-                    "title": chartinfo[2][2], 
+                    "title": title, 
                     "y_range": {
                         "min": str(chartinfo[3]), 
                         "max": str(chartinfo[4])
@@ -538,7 +550,7 @@ def get_data_from_chart(img, methods, args):
         output = {
             "type": chart_type,
             "dimensions": {"h": d[0], "w": d[1]},
-            "title": chartinfo[2][2], 
+            "title": title, 
             "sectors": sectors
         }
 
