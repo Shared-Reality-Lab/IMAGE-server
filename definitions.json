@@ -1,0 +1,79 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/definitions.json",
+    "type": "object",
+    "title": "Common Definitions",
+    "description": "Common definitions for use in schemas.",
+    "definitions": {
+        "request_uuid": {
+            "description": "UUID v4 identifying the request.",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+        },
+        "timestamp": {
+            "description": "Time the preprocessor was run in Unix time.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "capability": {
+            "description": "A reverse domain name identifier indicating a usable method of rendering. Each capability should be well-defined and published to permit easy reuse.",
+            "type": "string",
+            "pattern": "^[A-Za-z]{2,6}(\\.((?!-)[A-Za-z0-9-]+(?<!-)))+$"
+        },
+        "renderer": {
+            "description": "A reverse domain name identifier indicating a rendering data format sent from the server to the client",
+            "type": "string",
+            "pattern": "^[A-Za-z]{2,6}(\\.((?!-)[A-Za-z0-9-]+(?<!-)))+$"
+        },
+        "data_schema": {
+            "description": "A URL that resolves to the JSON schema for the data property.",
+            "type": "string",
+            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
+        },
+        "metadata": {
+            "description": "Metadata describing the handler that created a rendering.",
+            "type": "object",
+            "properties": {
+                "homepage": {
+                    "description": "The page for this handler, its package, the team that made it, etc.",
+                    "type": "string",
+                    "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
+                },
+                "description": {
+                    "description": "A brief description of the called handler.",
+                    "type": "string",
+                    "maxLength": 300
+                },
+                "license": {
+                    "description": "The license the rendered content is made available under. This should be an SPDX identifier or URL to the license.",
+                    "type": "string"
+                }
+            }
+        },
+        "rendering": {
+            "description": "A rendering returned by the server.",
+            "type": "object",
+            "properties": {
+                "type_id": { "$ref": "#/definitions/renderer" },
+                "confidence": {
+                    "description": "Estimated percent confidence in the correctness of the rendering.",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "description": {
+                    "description": "A brief description of the rendering to inform the user of what it is before they use it.",
+                    "type": "string",
+                    "maxLength": 300
+                },
+                "metadata": { "$ref": "#/definitions/metadata" },
+                "data_schema": { "$ref": "#/definitions/data_schema" },
+                "data": {
+                    "description": "Rendering data as specified in the schema for this rendering type.",
+                    "type": "object"
+                }
+            },
+            "required": [ "type_id", "confidence", "description", "data" ]
+        }
+    }
+}
