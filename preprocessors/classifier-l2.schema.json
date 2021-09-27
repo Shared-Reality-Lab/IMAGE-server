@@ -5,7 +5,7 @@
     "title": "This schema denotes the classes for the second level classifier used for classfying the images in four categories i.e, indoor, outdoor, people and text. Depending on their class the images will then be routed to the respective downstream model for futher processing. ",
     "description": "Information on the contents of the image",
     "properties": {
-        "category": { "enum": ["indoor", "outdoor", "people","text"] }
+        "category": { "enum": ["other", "indoor", "outdoor", "people"] }
     },
     "required": [ "category"]
 }
