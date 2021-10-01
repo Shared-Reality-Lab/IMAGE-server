@@ -285,7 +285,10 @@ def test(image_path, methods, args, suffix=None, min_value_official=None, max_va
         title2string, min_value, max_value, word_infos = try_math(image_path, cls_info)
         
         plot_area = cls_info[5][0:4]
-        x_labels, x_pos = findXlabels(word_infos, plot_area)
+        if info['data_type'] != 2:
+            x_labels, x_pos = findXlabels(word_infos, plot_area)
+        else:
+            x_labels = x_pos = []
         
         chartinfo = [info['data_type'], cls_info, title2string, min_value, max_value]
         chartinfo.append(x_labels)
@@ -452,7 +455,7 @@ def get_data_from_chart(img, methods, args):
         
         output = {
                     "type": chart_type,
-                    "dimensions": {"h": d[0], "w": d[1]},
+                    "dimensions": [d[0], d[1]],
                     "title": title, 
                     "y_range": {
                         "min": str(chartinfo[3]), 
@@ -491,21 +494,15 @@ def get_data_from_chart(img, methods, args):
 
         output = {
                     "type": chart_type,
-                    "dimensions": {"h": d[0], "w": d[1]},
+                    "dimensions": [d[0], d[1]],
                     "title": title, 
                     "y_range": {
                         "min": str(chartinfo[3]), 
                         "max": str(chartinfo[4])
                             }, 
                     "x_labels": x_labels,
-                    "peaks": {
-                        "count": len(peaks),
-                        "info": []
-                    },
-                    "dips": {
-                        "count": len(dips),
-                        "info": []
-                    }
+                    "peaks": [],
+                    "dips": []
                 }
 
         for i in range (0, len(peaks)):
@@ -515,7 +512,7 @@ def get_data_from_chart(img, methods, args):
                                 "value": round(data[peaks[i]][1]),
                                 "coords": pixel_points[peaks[i]]
                                 }
-            output['peaks']['info'].append(current_peak_info)
+            output['peaks'].append(current_peak_info)
 
         for i in range (0, len(dips)):
             current_dip_info = {
@@ -524,7 +521,7 @@ def get_data_from_chart(img, methods, args):
                                 "value": round(data[dips[i]][1]),
                                 "coords": pixel_points[dips[i]]
                                 }
-            output['dips']['info'].append(current_dip_info)
+            output['dips'].append(current_dip_info)
 
     if (type_no == 2):
 
@@ -538,7 +535,7 @@ def get_data_from_chart(img, methods, args):
         for i in range (len(data)):
             sector_info = {
                 "ID": i + 1,
-                "value(%)": (data[i]/360)*100,
+                "value": (data[i]/360)*100,
                 "center": pixel_points[i][0],
                 "arc_coords": {
                     "start": pixel_points[i][1],
@@ -549,11 +546,11 @@ def get_data_from_chart(img, methods, args):
 
         output = {
             "type": chart_type,
-            "dimensions": {"h": d[0], "w": d[1]},
+            "dimensions": [d[0], d[1]],
             "title": title, 
             "sectors": sectors
         }
 
     os.remove('./input.png')
 
-    return output, type_no
+    return output

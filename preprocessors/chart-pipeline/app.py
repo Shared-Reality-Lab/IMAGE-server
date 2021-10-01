@@ -82,19 +82,11 @@ def readImage():
         img = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
         # Process image using the model to get output json
-        output, type_no = get_data_from_chart(img, methods, args)
+        output = get_data_from_chart(img, methods, args)
         
         # Load schemas
-        if type_no == 0:
-            with open('./schemas/preprocessors/bar-response.schema.json') as jsonfile:
-                data_schema = json.load(jsonfile)
-        if type_no == 1:
-            with open('./schemas/preprocessors/line-response.schema.json') as jsonfile:
-                data_schema = json.load(jsonfile)
-        if type_no == 2:
-            with open('./schemas/preprocessors/pie-response.schema.json') as jsonfile:
-                data_schema = json.load(jsonfile)
-
+        with open('./schemas/preprocessors/chart-information.schema.json') as jsonfile:
+            data_schema = json.load(jsonfile)
         with open('./schemas/preprocessor-response.schema.json') as jsonfile:
             schema = json.load(jsonfile)
         with open('./schemas/definitions.json') as jsonfile:
