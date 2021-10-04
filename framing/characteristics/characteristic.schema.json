@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/framing/characteristics/characteristic.schema.json",
+    "type": "object",
+    "title": "Generic Characteristic",
+    "description": "Prototype of a renderable property that can be applied to an object.",
+    "definitions": {
+        "reverseDNS": {
+            "type": "string",
+            "pattern": "^[A-Za-z]{2,6}(\\.((?!-)[A-Za-z0-9-]+(?<!-)))+$"
+        },
+        "extent": {
+            "description": "The extent in which a characteristic takes effect.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "allOf": [
+                        { "description": "An identifier of the extent type." },
+                        { "$ref": "#/definitions/reverseDNS" }
+                    ]
+                }
+            },
+            "required": [ "name" ]
+        },
+        "normCoord": {
+            "description": "An x-y coordinate in a normalized 0-1 plane",
+            "type": "array",
+            "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+            },
+            "minItems": 2,
+            "maxItems": 2
+        }
+    },
+    "properties": {
+        "name": {
+            "allOf": [
+                { "description": "A reverse domain name identifier indicating the characteristic type." },
+                { "$ref": "#/definitions/reverseDNS" }
+            ]
+        },
+        "extent": { "$ref": "#/definitions/extent" },
+        "data": {
+            "description": "The data used to define parameters of the characteristic.",
+            "type": "object"
+        }
+    },
+    "required": [ name, extent, data ]
+}
