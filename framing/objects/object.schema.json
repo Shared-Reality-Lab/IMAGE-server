@@ -1,0 +1,43 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/framing/objects/object.schema.json",
+    "type": "object",
+    "title": "Generic Object",
+    "description": "Prototype of an abstracted object that has one or more characteristics.",
+    "properties": {
+        "name": {
+            "allOf": [
+                { "description": "A unique identifier for the object type." },
+                { "$ref": "../charcteristics/charcteristic.schema.json#/definitions/reverseDNS" }
+            ]
+        },
+        "characteristics": {
+            "defintions": "A list of characteristics to apply to this object.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "characteristic": { "$ref": "../characteristics/characteristic.schema.json" },
+                    "scale": {
+                        "description": "Inverse scaling factor to transform an extent coordinates to normalized x-y grid. That is, a scaling factor of 2 changes a point at (0.5, 0.5) to (0.25, 0.25).",
+                        "type": "number",
+                        "minimumExclusive": 0
+                    }
+                },
+                "required": [ "characteristic", "scale" ]
+            }
+        },
+        "position": {
+            "description": "Normalized x-y coordinates providing an offset for the characteristics in the scene.",
+            "type": "array",
+            "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+            },
+            "minItems": 2,
+            "maxItems": 2
+        }
+    },
+    "required": [ "name", "charcteristics", "position" ]
+}
