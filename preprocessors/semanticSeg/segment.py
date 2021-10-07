@@ -64,9 +64,9 @@ def findContour(pred_color,width,height):
   nonzero = cv2.findNonZero(gray_contour)
   divide = len(nonzero)/100
   divide = int(divide)
-  for i in range(len(nonzero)):
-    if(i%divide!=0):
-      gray_contour[nonzero[i][0][1]][nonzero[i][0][0]] = 0
+#   for i in range(len(nonzero)):
+#     if(i%divide!=0):
+#       gray_contour[nonzero[i][0][1]][nonzero[i][0][0]] = 0
   totArea = totArea/(width*height)
   result = cv2.findNonZero(gray_contour)
   for i in range(len(result)):
