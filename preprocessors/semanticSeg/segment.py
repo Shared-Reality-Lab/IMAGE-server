@@ -56,7 +56,10 @@ def findContour(pred_color,width,height):
     totArea = totArea + cv2.contourArea(contours[i])
     area.append(cv2.contourArea(contours[i]))
     centres.append((int(moments['m10']/moments['m00']), int(moments['m01']/moments['m00'])))
-  max_value = max(area)
+  if not area:
+      max_value = 0
+  else:
+    max_value = max(area)
   cv2.circle(image, centres[area.index(max_value)], 20, (0, 0, 255), -1)
   centre1 = centres[area.index(max_value)][0]/width
   centre2 = centres[area.index(max_value)][1]/height
@@ -64,9 +67,9 @@ def findContour(pred_color,width,height):
   nonzero = cv2.findNonZero(gray_contour)
   divide = len(nonzero)/100
   divide = int(divide)
-#   for i in range(len(nonzero)):
-#     if(i%divide!=0):
-#       gray_contour[nonzero[i][0][1]][nonzero[i][0][0]] = 0
+  for i in range(len(nonzero)):
+    if(i%divide!=0):
+      gray_contour[nonzero[i][0][1]][nonzero[i][0][0]] = 0
   totArea = totArea/(width*height)
   result = cv2.findNonZero(gray_contour)
   for i in range(len(result)):
