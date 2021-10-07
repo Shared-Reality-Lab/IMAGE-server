@@ -10,7 +10,7 @@
             "pattern": "^[A-Za-z]{2,6}(\\.((?!-)[A-Za-z0-9-]+(?<!-)))+$"
         },
         "extent": {
-            "description": "The extent in which a characteristic takes effect.",
+            "description": "The extent in which a characteristic takes effect. In any extent, the origin (0, 0) corresponds to where the extent will be applied to an object and points range from -0.5 to 0.5.",
             "type": "object",
             "properties": {
                 "name": {
@@ -47,5 +47,5 @@
             "type": "object"
         }
     },
-    "required": [ name, extent, data ]
+    "required": [ "name", "extent", "data" ]
 }
