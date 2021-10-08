@@ -66,7 +66,8 @@ def findContour(pred_color, width, height):
         totArea = totArea + cv2.contourArea(contours[i])
         area.append(cv2.contourArea(contours[i]))
         centres.append(
-            (int(moments['m10'] / moments['m00']), int(moments['m01'] / moments['m00'])))
+            (int(moments['m10'] / moments['m00']),
+             int(moments['m01'] / moments['m00'])))
     if not area:
         max_value = 0
     else:
@@ -150,7 +151,8 @@ def segment():
         color, name = visualize_result(img_original, pred, c)
         send, center, area = findContour(color, width, height)
         dictionary.append(
-            {"nameOfSegment": name, "coord": send, "centroid": center, "area": area})
+            {"nameOfSegment": name, "coord": send,
+             "centroid": center, "area": area})
     segment = {"segments": dictionary}
 
     try:
