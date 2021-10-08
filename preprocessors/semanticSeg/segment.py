@@ -53,7 +53,6 @@ def findContour(pred_color, width, height):
     cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
     image = image - dummy
     gray_contour = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    M = cv2.moments(contours[0])
     centres = []
     area = []
     send = []
