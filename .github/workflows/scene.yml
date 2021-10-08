@@ -19,4 +19,4 @@ jobs:
       - name: Install flake8
         run: pip install flake8
       - name: Check with flake8
-        run: python -m flake8 ./preprocessors/scene--show-source
+        run: python -m flake8 ./preprocessors/scene --show-source
