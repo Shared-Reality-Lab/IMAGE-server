@@ -67,6 +67,9 @@ def run(weights='yolov5s.pt',
         resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
         content = request.get_json()
+        if "image" not in content:
+            logging.info("No image content. Skipping...")
+            return "", 204
         request_uuid = content["request_uuid"]
         timestamp = time.time()
         name = "ca.mcgill.a11y.image.preprocessor.objectDetection"
