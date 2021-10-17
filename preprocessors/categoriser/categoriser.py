@@ -3,7 +3,6 @@ from torch import nn
 import pytorch_lightning as pl
 from torchvision import models
 import numpy as np
-from pathlib import Path
 import cv2
 from flask import Flask, request, jsonify
 import json
@@ -11,7 +10,6 @@ import time
 import jsonschema
 import logging
 import base64
-import os
 
 app = Flask(__name__)
 
