@@ -36,7 +36,6 @@ app.use(express.json({ limit: process.env.MAX_BODY }));
 
 app.post("/handler", async (req, res) => {
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
-        // tslint:disable-next-line:no-console
         console.log("Request validated");
         if (!req.body.image) {
             console.log("Not an image request! Skipping...");
@@ -45,12 +44,11 @@ app.post("/handler", async (req, res) => {
         }
         // Check for text rendering support
         const renderers = req.body.renderers as string[];
-        let rendering = [];
+        const rendering = [];
         if (renderers.includes("ca.mcgill.a11y.image.renderer.Text")) {
             const dims = await extractDimensions(req.body.image);
             rendering.push(generateRendering(dims[0], dims[1]));
         } else {
-            // tslint:disable-next-line:no-console
             console.warn("Text renderer not supported by the client!");
         }
         const response = {
@@ -59,22 +57,18 @@ app.post("/handler", async (req, res) => {
             "renderings": rendering
         };
         if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
-            // tslint:disable-next-line:no-console
             console.log("Valid response generated.");
             res.json(response);
         } else {
-            // tslint:disable-next-line:no-console
             console.log("Failed to generate a valid response (did the schema change?)");
             res.status(500).json(ajv.errors);
         }
     } else {
-        // tslint:disable-next-line:no-console
         console.log("Request did not pass the schema.");
         res.status(400).send(ajv.errors);
     }
 });
 
 app.listen(port, () => {
-    // tslint:disable-next-line:no-console
     console.log(`Started server on port ${port}`);
 });
