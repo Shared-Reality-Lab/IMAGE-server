@@ -8,6 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm ci
 COPY *.json ./
+COPY .eslintrc.js ./
 COPY src ./src
 COPY --from=schemas /schemas src/schemas
 RUN npm run build

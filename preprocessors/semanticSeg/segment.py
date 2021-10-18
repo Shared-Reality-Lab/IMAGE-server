@@ -126,6 +126,9 @@ def segment():
             std=[0.229, 0.224, 0.225])
     ])
     content = request.get_json()
+    if "image" not in content:
+        logging.info("Not image content. Skipping...")
+        return "", 204
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     preprocessorName = "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"

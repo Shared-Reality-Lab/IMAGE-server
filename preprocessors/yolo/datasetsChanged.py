@@ -1,4 +1,6 @@
 # Dataset utils and dataloaders
+# Not our project so turn off qa
+# flake8: noqa
 
 import glob
 import hashlib

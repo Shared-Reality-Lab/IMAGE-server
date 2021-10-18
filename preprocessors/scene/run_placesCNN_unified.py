@@ -93,7 +93,7 @@ def load_model():
         v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
     for i, (name, module) in enumerate(model._modules.items()):
-        module = recursion_change_bn(model)
+        module = recursion_change_bn(model) # noqa
     model.avgpool = torch.nn.AvgPool2d(kernel_size=14, stride=1, padding=0)
     model.eval()
     model.eval()
@@ -116,7 +116,8 @@ weight_softmax[weight_softmax < 0] = 0
 def scenePredictor():
     pred = []
     attributes = []
-    with open('./schemas/preprocessors/scene-detection.schema.json') as jsonfile:
+    with open('./schemas/preprocessors/scene-detection.schema.json') \
+            as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
@@ -129,6 +130,9 @@ def scenePredictor():
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
     content = request.get_json()
+    if "image" not in content:
+        logging.info("Not image content! Skipping...")
+        return "", 204
     img_url = content["image"]
     with urlopen(img_url) as response:
         data = response.read()
@@ -142,13 +146,14 @@ def scenePredictor():
     probs = probs.numpy()
     idx = idx.numpy()
     io_image = np.mean(labels_IO[idx[:10]])
-    #randomly selected thresholding parameter which was created by the owners of this model.
-    # On testing it was concluded that 0.5 works the best for indoor outdoor segregation
+    # randomly selected thresholding parameter which was created
+    # by the owners of this model. On testing it was concluded that
+    # 0.5 works the best for indoor outdoor segregation
     if io_image < 0.5:
         type = "indoor"
     else:
         type = "outdoor"
-    #taking the first five predictions
+    # taking the first five predictions
     for i in range(0, 5):
         dictionary = {"name": classes[idx[i]],
                       "confidence": int(probs[i] * 100)}
@@ -160,11 +165,11 @@ def scenePredictor():
     timestamp = time.time()
     request_uuid = content["request_uuid"]
     name = "ca.mcgill.a11y.image.preprocessor.sceneRecognition"
-    data={
+    data = {
         "type": type,
         "categories": pred,
-        "attributes":attributes
-        }
+        "attributes": attributes
+    }
     try:
         validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
         validator.validate(data)
@@ -175,7 +180,7 @@ def scenePredictor():
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": name,
-        "data":data
+        "data": data
     }
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
