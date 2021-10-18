@@ -54,6 +54,7 @@
                 "allOf": [
                     { "$ref": "../../preprocessors/object-detection.schema.json#/definitions/object" },
                     {
+                        "type": "object",
                         "properties": {
                             "offset": { "$ref": "#/definitions/segmentOffset" }
                         }

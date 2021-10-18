@@ -23,8 +23,7 @@
                         "required": [ "name" ]
                     }
                 ]
-            },
-            "additionalItems": false
+            }
         }
     },
     "required": [ "audioFile", "audioInfo" ]
