@@ -38,6 +38,11 @@ app.post("/handler", async (req, res) => {
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         // tslint:disable-next-line:no-console
         console.log("Request validated");
+        if (!req.body.image) {
+            console.log("Not an image request! Skipping...");
+            res.status(204);
+            return;
+        }
         // Check for text rendering support
         const renderers = req.body.renderers as string[];
         let rendering = [];
