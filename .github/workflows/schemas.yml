@@ -5,15 +5,13 @@ on:
   pull_request:
     branches: [ schemas ]
   workflow_dispatch:
+    branches: [ schemas ]
 jobs:
   compile:
     name: Compile schema with ajv-cli
     runs-on: ubuntu-latest
     steps:
-      - if: github.ref
-        uses: actions/checkout@v2
-      - if: !github.ref
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
           ref: schemas
       - uses: actions/setup-node@v2
