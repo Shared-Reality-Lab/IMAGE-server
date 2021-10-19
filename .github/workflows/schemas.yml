@@ -1,0 +1,18 @@
+name: Schema
+on:
+  push:
+    branches: [ schemas ]
+  pull_request:
+    branches: [ schemas ]
+  workflow_dispatch:
+jobs:
+  compile:
+    name: Compile schema with ajv-cli
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+      - name: Install ajv-cli
+        run: npm i -g ajv-cli
+      - name: Compile schemas
+        run: ajv compile -s "**/*.json"
