@@ -4,26 +4,8 @@
     "title": "Simple Audio Renderer",
     "type": "object",
     "description": "Data for the noninteractive audio renderer ca.mcgill.a11y.image.renderer.SimpleAudio.",
-    "definitions": {
-        "remoteAudioFile": {
-            "description": "HTTP(S) URL to an audio file.",
-            "type": "string",
-            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
-        },
-        "localAudioFile": {
-            "description": "Data URI of an encoded audio file.",
-            "type": "string",
-            "pattern": "^data:audio/[^;]+;base64,[a-zA-Z0-9+/=]+$"
-        },
-        "audioFile": {
-            "oneOf": [
-                { "$ref": "#/definitions/remoteAudioFile" },
-                { "$ref": "#/definitions/localAudioFile" }
-            ]
-        }
-    },
     "properties": {
-        "audio": { "$ref": "#/definitions/audioFile" }
+        "audio": { "$ref": "./definitions.json#/definitions/audioFile" }
     },
     "required": [ "audio" ]
 }
