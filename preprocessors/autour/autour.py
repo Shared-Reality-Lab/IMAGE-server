@@ -10,7 +10,7 @@ app = Flask(__name__)
 @app.route('/preprocessor', methods=['POST', 'GET'])
 def get_map_data():
     
-    with open('./schemas/preprocessors/maps.schema.json') as jsonfile:
+    with open('./schemas/preprocessors/autour.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
@@ -38,7 +38,7 @@ def get_map_data():
             font=9&\
             pad=0'.format(latitude=coords['latitude'], longitude=coords['longitude'])
 
-    name = 'ca.mcgill.a11y.image.preprocessor.maps'
+    name = 'ca.mcgill.a11y.image.preprocessor.autour'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
     response = {

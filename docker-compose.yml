@@ -41,11 +41,11 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 8080
-    maps-preprocessor:
+    autour-preprocessor:
         build:
-            context: ./preprocessors/maps-preprocessor
+            context: ./preprocessors/autour-preprocessor
             dockerfile: Dockerfile
-        image: "maps-preprocessor:latest"
+        image: "autour-preprocessor:latest"
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
