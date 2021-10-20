@@ -3,7 +3,7 @@
     "$id": "https://image.a11y.mcgill.ca/request.schema.json",
     "title": "IMAGE Request",
     "type": "object",
-    "description": "Request for renderings of an image given certain conditions.",
+    "description": "Request for renderings of an image or a map given certain conditions.",
     "properties": {
         "request_uuid": { "$ref": "definitions.json#/definitions/request_uuid" },
         "timestamp": { "$ref": "definitions.json#/definitions/timestamp" },
@@ -21,6 +21,23 @@
             ],
             "minItems": 2,
             "additionalItems": false
+        },
+        "coordinates": {
+            "description": "WGS 84 representation of the location identified in a map",
+            "type": "object",
+            "properties": {
+                "latitude": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                },
+                "longitude": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                }
+            },
+            "required": [ "latitude", "longitude" ]
         },
         "context": {
             "description": "Serialized XML of the image node and possibly related nodes.",
@@ -61,14 +78,29 @@
             }
         }
     },
-    "required": [
-        "request_uuid",
-        "language",
-        "timestamp",
-        "image",
-        "dimensions",
-        "context",
-        "capabilities",
-        "renderers"
+    "oneOf": [
+        {
+            "required": [
+                "request_uuid",
+                "language",
+                "timestamp",
+                "image",
+                "dimensions",
+                "context",
+                "capabilities",
+                "renderers"
+            ]
+        },
+        {
+            "required": [
+                "request_uuid",
+                "language",
+                "timestamp",
+                "coordinates",
+                "context",
+                "capabilities",
+                "renderers"
+            ]
+        }
     ]
 }

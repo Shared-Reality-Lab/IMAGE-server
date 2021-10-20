@@ -5,12 +5,12 @@
     "type": "object",
     "description": "Data for basic audio selection renderer ca.mcgill.a11y.image.renderer.SegmentAudio.",
     "properties": {
-        "audioFile": { "$ref": "./simpleaudio.schema.json#/definitions/audioFile" },
+        "audioFile": { "$ref": "./definitions.json#/definitions/audioFile" },
         "audioInfo": {
             "type": "array",
             "items": {
                 "allOf": [
-                    { "$ref": "https://image.a11y.mcgill.ca/services/supercollider/tts-description.schema.json#/definitions/segmentOffset" },
+                    { "$ref": "../definitions.json#/definitions/segmentOffset" },
                     {
                         "type": "object",
                         "properties": {
@@ -23,8 +23,7 @@
                         "required": [ "name" ]
                     }
                 ]
-            },
-            "additionalItems": false
+            }
         }
     },
     "required": [ "audioFile", "audioInfo" ]
