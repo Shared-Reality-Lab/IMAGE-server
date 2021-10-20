@@ -4,6 +4,7 @@ import time
 import jsonschema
 import logging
 import collections
+import requests
 
 app = Flask(__name__)
 
@@ -38,6 +39,14 @@ def get_map_data():
             font=9&\
             pad=0'.format(latitude=coords['latitude'], longitude=coords['longitude'])
 
+    response = requests.get(api_request).json()
+    results = response['results']
+    footer = response['footer']
+
+    places = dict()
+    for result in results:
+        places[result['id']] = {k: v for k, v in result.items() if k != 'id'}
+
     name = 'ca.mcgill.a11y.image.preprocessor.autour'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
@@ -48,15 +57,13 @@ def get_map_data():
         'data': {
             'url': url,
             'coordinates': coords,
-            'api_request': api_request
+            'api_request': api_request,
+            'places': places,
         }
     }
 
     return response
     
-    
-
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
