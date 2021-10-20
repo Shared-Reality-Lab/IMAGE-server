@@ -41,6 +41,14 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 8080
+    maps-preprocessor:
+        build:
+            context: ./preprocessors/maps-preprocessor
+            dockerfile: Dockerfile
+        image: "maps-preprocessor:latest"
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 5000
     hello-handler:
         build:
             context: ./handlers/hello-handler
