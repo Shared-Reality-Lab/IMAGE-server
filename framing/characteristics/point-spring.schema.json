@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/framing/characteristics/point-spring.schema.json",
+    "type": "object",
+    "title": "Point Spring",
+    "description": "A force-feedback spring coming from a point.",
+    "properties": {
+        "name": {
+            "type": "string",
+            "pattern": "^ca.mcgill.a11y.image.framing.characteristics.PointSpring$"
+        },
+        "extent": {
+        },
+        "data": {
+            "type": "object",
+            "properties": {
+                "k": {
+                    "description": "Spring constant of the spring (N/m)",
+                    "type": "number"
