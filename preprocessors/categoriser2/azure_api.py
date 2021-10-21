@@ -92,7 +92,7 @@ def categorise():
     content = request.get_json()
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    name = "ca.mcgill.a11y.image.secondCategoriser"
+    name = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
 
     # convert the uri to processable image
     source = content["image"]
