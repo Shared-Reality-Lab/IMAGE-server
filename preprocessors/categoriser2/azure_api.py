@@ -37,23 +37,28 @@ def process_image(image, labels):
     headers['Content-Type'] = 'application/octet-stream'
 
     # Set request querystring parameters
-    # params = {'visualFeatures': 'Color,Categories,Tags,Description,ImageType,Faces,Adult,Objects'}
+    # params = {'visualFeatures': 'Color,Categories,
+    # Tags,Description,ImageType,Faces,Adult,Objects'}
     """Only query categories"""
     params = {'visualFeatures': 'Categories'}
 
     # Make request and process response
-    response = requests.request('post',
-                                "https://{}.api.cognitive.microsoft.com/vision/v1.0/analyze".format(
+    response = requests.request(
+        'post',
+        "https://{}.api.cognitive.microsoft.com/vision/v1.0/analyze".format(
                                     region),
-                                data=image,
-                                headers=headers,
-                                params=params)
+        data=image,
+        headers=headers,
+        params=params
+    )
 
     if response.status_code == 200 or response.status_code == 201:
 
-        if 'content-length' in response.headers and int(response.headers['content-length']) == 0:
+        if 'content-length' in response.headers and \
+                int(response.headers['content-length']) == 0:
             result = None
-        elif 'content-type' in response.headers and isinstance(response.headers['content-type'], str):
+        elif 'content-type' in response.headers and \
+                isinstance(response.headers['content-type'], str):
             if 'application/json' in response.headers['content-type'].lower():
                 result = response.json() if response.content else None
             elif 'image' in response.headers['content-type'].lower():
