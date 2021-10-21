@@ -2,7 +2,7 @@ import requests  # pip3 install requests
 from re import search
 import operator
 
-#import numpy as np
+# import numpy as np
 import json
 import time
 import jsonschema
