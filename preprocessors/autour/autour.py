@@ -21,8 +21,10 @@ def get_map_data():
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema
     }
+    
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
+
     content = request.get_json()
     url = content['url']
     coords = content['coordinates']
@@ -50,20 +52,37 @@ def get_map_data():
     name = 'ca.mcgill.a11y.image.preprocessor.autour'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
+    data = {
+        'url': url,
+            'lat': coords['latitude'],
+            'lon': coords['longitude'],
+            'api_request': api_request,
+            'places': places,
+            'footer': footer
+    }
+
+    try:
+        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+        validator.validate(data)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
+
     response = {
         'request_uuid': request_uuid,
         'timestamp': timestamp,
         'name': name,
-        'data': {
-            'url': url,
-            'coordinates': coords,
-            'api_request': api_request,
-            'places': places,
-        }
+        'data': data
     }
+
+    try:
+        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+        validator.validate(response)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
 
     return response
     
-
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
