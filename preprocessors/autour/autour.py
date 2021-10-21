@@ -21,11 +21,15 @@ def get_map_data():
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema
     }
-    
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
 
     content = request.get_json()
+    
+    if 'image' in content:
+        logging.info("Not map content. Skipping...")
+        return "", 204
+
     url = content['url']
     coords = content['coordinates']
     api_request = 'https://isassrv.cim.mcgill.ca/autour/getPlaces.php?\
