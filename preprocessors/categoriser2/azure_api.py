@@ -93,16 +93,13 @@ def categorise():
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
-
     # convert the uri to processable image
     if content["image"] is None:
         return jsonify("Input not an image"), 204
     else:
         source = content["image"]
-     
     image_b64 = source.split(",")[1]
     binary = base64.b64decode(image_b64)
-
     pred = process_image(image=binary, labels=labels)
     type = {"category": pred}
     try:
