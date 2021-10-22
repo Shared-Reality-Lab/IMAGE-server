@@ -43,9 +43,9 @@ services:
             ca.mcgill.a11y.image.port: 8080
     autour-preprocessor:
         build:
-            context: ./preprocessors/autour-preprocessor
+            context: ./preprocessors/autour
             dockerfile: Dockerfile
-        image: "autour-preprocessor:latest"
+        image: "autour:latest"
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
