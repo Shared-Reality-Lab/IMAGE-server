@@ -95,7 +95,7 @@ def categorise():
     name = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
     # convert the uri to processable image
     if content["image"] is None:
-        return jsonify("Input not an image"), 204
+        return "", 204
     else:
         source = content["image"]
     image_b64 = source.split(",")[1]
