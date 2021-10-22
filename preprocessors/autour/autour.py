@@ -1,16 +1,15 @@
-from flask import Flask, request, jsonify
 import json
 import time
-import jsonschema
 import logging
-import collections
+import jsonschema
 import requests
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
 @app.route('/preprocessor', methods=['POST', 'GET'])
 def get_map_data():
-    
+    #load schemas
     with open('./schemas/preprocessors/autour.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
@@ -25,29 +24,28 @@ def get_map_data():
             schema, store=schema_store)
 
     content = request.get_json()
-    
+    #Check if request is for a map
     if 'image' in content:
         logging.info("Not map content. Skipping...")
         return "", 204
-
+    #Build Autour request
     url = content['url']
     coords = content['coordinates']
-    api_request = 'https://isassrv.cim.mcgill.ca/autour/getPlaces.php?\
+    api_request = f"https://isassrv.cim.mcgill.ca/autour/getPlaces.php?\
             framed=1&\
             times=1&\
             radius=250&\
-            lat={latitude}&\
-            lon={longitude}&\
+            lat={coords['latitude']}&\
+            lon={coords['longitude']}&\
             condensed=0&\
             from=foursquare&\
             as=json&\
             fsqmulti=1&\
             font=9&\
-            pad=0'.format(latitude=coords['latitude'], longitude=coords['longitude'])
+            pad=0"
 
     response = requests.get(api_request).json()
     results = response['results']
-    footer = response['footer']
 
     places = dict()
     for result in results:
@@ -58,11 +56,10 @@ def get_map_data():
     timestamp = int(time.time())
     data = {
         'url': url,
-            'lat': coords['latitude'],
-            'lon': coords['longitude'],
-            'api_request': api_request,
-            'places': places,
-            'footer': footer
+        'lat': coords['latitude'],
+        'lon': coords['longitude'],
+        'api_request': api_request,
+        'places': places,
     }
 
     try:
@@ -87,6 +84,7 @@ def get_map_data():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     return response
-    
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
