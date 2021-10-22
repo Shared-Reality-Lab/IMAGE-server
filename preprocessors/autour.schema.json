@@ -82,12 +82,7 @@
                 },
                 "required": ["id", "ll", "cat", "title", "from"]
             }
-        },
-        "footer": {
-            "type": "array",
-            "title": "Footer",
-            "description": "The footer of the autour response"
         }
     },
-    "required": ["url", "lat", "lon", "api_request", "places", "footer"]
+    "required": ["url", "lat", "lon", "api_request", "places"]
 }
