@@ -247,19 +247,19 @@
     "required": ["type", "title", "dimensions","y_range","x_labels","peaks","dips", "sectors","bars"],
     "oneOf": [
         {
-            "required": ["type", "title", "dimensions","y_range","x_labels","peaks","dips", "sectors","bars"],
+            "required": ["y_range", "x_labels", "peaks", "dips","type","title","dimensions"],
             "not": {
                 "anyOf": [ {"required": ["bars"]}, {"required": ["sectors"]} ]
             }
         },
         {
-            "required": ["type", "title", "dimensions","y_range","x_labels","peaks","dips", "sectors","bars"],
+            "required": ["y_range", "x_labels", "bars","type","title","dimensions"],
             "not": {
                 "anyOf": [ {"required": ["peaks"]}, {"required": ["dips"]}, {"required": ["sectors"]} ]
             }
         },
         {
-            "required": ["type", "title", "dimensions","y_range","x_labels","peaks","dips", "sectors","bars"],
+            "required": ["sectors","type","title","dimensions"],
             "not": {
                 "anyOf": [ {"required": ["y_range"]}, {"required": ["x_labels"]}, {"required": ["peaks"]}, {"required": ["dips"]}, {"required": ["bars"]} ]
             }
