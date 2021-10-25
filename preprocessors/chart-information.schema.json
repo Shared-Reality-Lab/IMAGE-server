@@ -191,14 +191,14 @@
             "description": "Image dimensions in pixels (h, w)",
             "type": "array",
             "items": [
-                { "type": "integer" },
-                { "type": "integer" }
+                { "type": "integer", "exclusiveMinimum": 0 },
+                { "type": "integer", "exclusiveMinimum": 0 }
             ],
             "additionalItems": false
         },
         "title": {
             "description": "Title of the chart",
-            "type": ["string"]
+            "type": "string"
         },
         "y_range": {
             "description": "Range of values on the Y axis",
@@ -244,25 +244,15 @@
             }
         }
     },
-    "required": ["type", "title", "dimensions","y_range","x_labels"],
     "oneOf": [
         {
-            "required": ["y_range", "x_labels","type","title","dimensions"],
-            "not": {
-                "anyOf": [ {"required": ["bars"]}, {"required": ["sectors"]} ]
-            }
+            "required": ["type", "title", "dimensions", "y_range", "x_labels", "peaks", "dips"]
         },
         {
-            "required": ["y_range", "x_labels","type","title","dimensions"],
-            "not": {
-                "anyOf": [ {"required": ["peaks"]}, {"required": ["dips"]}, {"required": ["sectors"]} ]
-            }
+            "required": ["type", "title", "dimensions", "y_range", "x_labels", "bars"]
         },
         {
-            "required": ["type","title","dimensions"],
-            "not": {
-                "anyOf": [ {"required": ["y_range"]}, {"required": ["x_labels"]}, {"required": ["peaks"]}, {"required": ["dips"]}, {"required": ["bars"]} ]
-            }
+            "required": ["type", "title", "dimensions", "sectors"]
         }
     ]
 }
