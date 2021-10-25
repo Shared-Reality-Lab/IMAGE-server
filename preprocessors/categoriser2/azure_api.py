@@ -59,7 +59,7 @@ def process_image(image, labels):
 
         if 'content-length' in response.headers and \
                 int(response.headers['content-length']) == 0:
-            label = lables[0]
+            label = labels[0]
         elif 'content-type' in response.headers and \
                 isinstance(response.headers['content-type'], str):
             if 'application/json' in response.headers['content-type'].lower():
@@ -68,13 +68,12 @@ def process_image(image, labels):
                     label = process_results(response=result, labels=labels)
                 else:
                     label = labels[0]
-#                 result = response.json() if response.content else None
             elif 'image' in response.headers['content-type'].lower():
                 result = response.content
 
     else:
+        label = labels[0]
 #         label = response.json()['message']
-        label = lables[0]
 #         print("Error code: %d" % response.status_code)
 #         print("Message: %s" % response.json())
 #     category = process_results(result, labels)
