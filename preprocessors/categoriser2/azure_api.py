@@ -64,7 +64,7 @@ def process_image(image, labels):
                     result = response.json()
                     label = process_results(response=result, labels=labels)
                 else:
-                    label="Cannot process image"
+                    label = "Cannot process image"
 #                 result = response.json() if response.content else None
             elif 'image' in response.headers['content-type'].lower():
                 result = response.content
