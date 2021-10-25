@@ -108,27 +108,27 @@ def categorise():
         image_b64 = source.split(",")[1]
         binary = base64.b64decode(image_b64)
         pred = process_image(image=binary, labels=labels)
-    type = {"category": pred}
-    try:
-        validator = jsonschema.Draft7Validator(data_schema)
-        validator.validate(type)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
-        return jsonify("Invalid Preprocessor JSON format"), 500
-    response = {
-        "request_uuid": request_uuid,
-        "timestamp": int(timestamp),
-        "name": name,
-        "data": type
-    }
-    try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
-        return jsonify("Invalid Preprocessor JSON format"), 500
+        type = {"category": pred}
+        try:
+            validator = jsonschema.Draft7Validator(data_schema)
+            validator.validate(type)
+        except jsonschema.exceptions.ValidationError as e:
+            logging.error(e)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        response = {
+            "request_uuid": request_uuid,
+            "timestamp": int(timestamp),
+            "name": name,
+            "data": type
+        }
+        try:
+            validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as e:
+            logging.error(e)
+            return jsonify("Invalid Preprocessor JSON format"), 500
 
-    return response
+        return response
 
 
 if __name__ == "__main__":
