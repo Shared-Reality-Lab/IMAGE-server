@@ -15,15 +15,18 @@ app = Flask(__name__)
 
 
 def process_results(response, labels):
-    category_dict = {i["name"]: i["score"] for i in response["categories"]}
-
-    label = max(category_dict.items(), key=operator.itemgetter(1))[0]
-    if any(search(i, label) for i in labels):
-        for i in labels:
-            if i in label:
-                return(i)
-    else:
+    if not response["categories"]:
         return labels[0]
+    else:
+        category_dict = {i["name"]: i["score"] for i in response["categories"]}
+
+        label = max(category_dict.items(), key=operator.itemgetter(1))[0]
+        if any(search(i, label) for i in labels):
+            for i in labels:
+                if i in label:
+                    return(i)
+        else:
+            return labels[0]
 
 
 def process_image(image, labels):
@@ -56,7 +59,7 @@ def process_image(image, labels):
 
         if 'content-length' in response.headers and \
                 int(response.headers['content-length']) == 0:
-            label = "Azure server cannot process the image"
+            label = lables[0]
         elif 'content-type' in response.headers and \
                 isinstance(response.headers['content-type'], str):
             if 'application/json' in response.headers['content-type'].lower():
@@ -64,13 +67,14 @@ def process_image(image, labels):
                     result = response.json()
                     label = process_results(response=result, labels=labels)
                 else:
-                    label = "Cannot process image"
+                    label = labels[0]
 #                 result = response.json() if response.content else None
             elif 'image' in response.headers['content-type'].lower():
                 result = response.content
 
     else:
-        label = response.json()['message']
+#         label = response.json()['message']
+        label = lables[0]
 #         print("Error code: %d" % response.status_code)
 #         print("Message: %s" % response.json())
 #     category = process_results(result, labels)
