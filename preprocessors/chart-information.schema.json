@@ -244,22 +244,22 @@
             }
         }
     },
-    "required": ["type", "title", "dimensions","y_range","x_labels","peaks","dips", "sectors","bars"],
+    "required": ["type", "title", "dimensions","y_range","x_labels"],
     "oneOf": [
         {
-            "required": ["y_range", "x_labels", "peaks", "dips","type","title","dimensions"],
+            "required": ["y_range", "x_labels","type","title","dimensions"],
             "not": {
                 "anyOf": [ {"required": ["bars"]}, {"required": ["sectors"]} ]
             }
         },
         {
-            "required": ["y_range", "x_labels", "bars","type","title","dimensions"],
+            "required": ["y_range", "x_labels","type","title","dimensions"],
             "not": {
                 "anyOf": [ {"required": ["peaks"]}, {"required": ["dips"]}, {"required": ["sectors"]} ]
             }
         },
         {
-            "required": ["sectors","type","title","dimensions"],
+            "required": ["type","title","dimensions"],
             "not": {
                 "anyOf": [ {"required": ["y_range"]}, {"required": ["x_labels"]}, {"required": ["peaks"]}, {"required": ["dips"]}, {"required": ["bars"]} ]
             }
