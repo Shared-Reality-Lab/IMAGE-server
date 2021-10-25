@@ -56,20 +56,26 @@ def process_image(image, labels):
 
         if 'content-length' in response.headers and \
                 int(response.headers['content-length']) == 0:
-            result = None
+            label = "Azure server cannot process the image"
         elif 'content-type' in response.headers and \
                 isinstance(response.headers['content-type'], str):
             if 'application/json' in response.headers['content-type'].lower():
-                result = response.json() if response.content else None
+                if response.content:
+                    result = response.json()
+                    label = process_results(response=result, labels=labels)
+                else:
+                    label="Cannot process image"
+#                 result = response.json() if response.content else None
             elif 'image' in response.headers['content-type'].lower():
                 result = response.content
 
     else:
-        print("Error code: %d" % response.status_code)
-        print("Message: %s" % response.json())
-    category = process_results(result, labels)
+        label = response.json()['message']
+#         print("Error code: %d" % response.status_code)
+#         print("Message: %s" % response.json())
+#     category = process_results(result, labels)
 
-    return category
+    return label
 
 
 @app.route("/preprocessor", methods=['POST', ])
@@ -96,11 +102,12 @@ def categorise():
     # convert the uri to processable image
     if content["image"] is None:
         return "", 204
+#         pred = "Input is not an image"
     else:
         source = content["image"]
-    image_b64 = source.split(",")[1]
-    binary = base64.b64decode(image_b64)
-    pred = process_image(image=binary, labels=labels)
+        image_b64 = source.split(",")[1]
+        binary = base64.b64decode(image_b64)
+        pred = process_image(image=binary, labels=labels)
     type = {"category": pred}
     try:
         validator = jsonschema.Draft7Validator(data_schema)
