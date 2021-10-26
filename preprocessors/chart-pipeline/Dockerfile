@@ -1,7 +1,7 @@
 FROM schemas:latest AS schemas
 FROM continuumio/miniconda3
 
-COPY --from=schemas /schemas /app/schemas
+COPY --from=schemas /schemas /chart-pipeline/schemas
 
 WORKDIR /chart-pipeline
 
