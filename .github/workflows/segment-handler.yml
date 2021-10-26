@@ -1,0 +1,29 @@
+name: Segment Handler
+on:
+  push:
+    branches: [ main ]
+    paths: [ "handlers/segment-handler/**" ]
+  pull_request:
+    branches: [ main ]
+    paths: [ "handlers/segment-handler/**" ]
+  workflow_dispatch:
+jobs:
+  lint:
+    name: Basic linting and type checking.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - name: Copy schemas
+        working-directory: ./handlers/segment-handler
+        run: cp -R ../../schemas src/
+      - name: Install dependencies
+        working-directory: ./handlers/segment-handler
+        run: npm ci
+      - name: Check with tsc
+        working-directory: ./handlers/segment-handler
+        run: npx tsc --noEmit

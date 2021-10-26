@@ -1,7 +1,7 @@
 var renderGeneric;
 "Generic Object Description".postln;
 renderGeneric = { |json, ttsData, outPath, addr|
-    var score, timing, order=5, objects, groupedObjIds;
+    var score, timing, order=5, objects, groupedObjIds, maxArea=0;
     timing = 0;
     score = IMAGE.newScore(order);
 
@@ -34,6 +34,15 @@ renderGeneric = { |json, ttsData, outPath, addr|
 
     // Iterate over objects (currently unsorted)
     objects = json.at("objects");
+    // Determine maximum area of an object
+    objects.do({ |item|
+        if(item.at("area").asFloat > maxArea,
+            {
+                maxArea = item.at("area").asFloat;
+            }
+        );
+    });
+    ("Max Area: " + maxArea.asString).postln;
     groupedObjIds = Array.new;
     json.at("groups").do({ |item, i|
         item.at("IDs").postln;
@@ -74,18 +83,18 @@ renderGeneric = { |json, ttsData, outPath, addr|
             var totalDur = 2;
             if(item.at("centroid").notNil,
                 {
-                    var dur, theta, phi;
+                    var dur, theta, phi, volume;
                     //var dur = 0.25, theta, phi;
                     # theta, phi = IMAGE.mapCoords(
                         item.at("centroid").at(0).asFloat,
                         item.at("centroid").at(1).asFloat
                     );
                     dur = item.at("centroid").at(0).asFloat.linlin(0.0, 1.0, 0.0, totalDur);
-                    dur.postln;
+                    volume = item.at("area").asFloat.linlin(0, maxArea, -10, 0);
                     score.add([
                         (timing + dur),
                         [\s_new, (\pingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
-                            \gain, 0.5,
+                            \gain, 0.8 * volume.dbamp,
                             \room, 0.6,
                             \damp, 0.5,
                             \mix, 0.3,
@@ -109,7 +118,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
 
     // Now do remaining objects
     objects.do({ |item, i|
-        var audio, xCent, dur;
+        var audio, xCent, dur, volume;
         // ("Object no. "++i).postln;
         // Play and before last item
         if((i + 1 == objects.size) && (objects.size > 1),
@@ -121,30 +130,38 @@ renderGeneric = { |json, ttsData, outPath, addr|
                 duration = (and.at("duration").asInteger / ttsData.sampleRate);
                 score.add([
                     timing,
-                    [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, and.at("offset").asInteger, \duration, duration]
+                    [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, and.at("offset").asInteger, \duration, duration, \gain, 1]
                 ]);
                 timing = timing + duration;
             }
         );
         audio = item.at("audio");
         dur = (audio.at("duration").asInteger / ttsData.sampleRate);
+        volume = item.at("area").asFloat.linlin(0, maxArea, -10, 0);
         if(item.at("centroid").notNil,
             {
+                var theta, phi;
+                # theta, phi = IMAGE.mapCoords(
+                    item.at("centroid").at(0).asFloat,
+                    item.at("centroid").at(1).asFloat
+                );
                 score.add([
                     timing,
                     [\s_new, (\playBufferHOA++order.asSymbol).asSymbol, -1, 2, 1001,
                         \buffNum, 210,
                         \start, audio.at("offset").asInteger,
                         \duration, dur,
-                        \theta, LinLin.ar(item.at("centroid").at(0).asFloat, 0, 1, -0.5pi, 0.5pi),
-                        \phi, LinLin.ar(item.at("centroid").at(1).asFloat, 0, 1, -0.5pi, 0.5pi)
+                        \theta, theta,
+                        \phi, phi,
+                        \gain, 0.5 * volume.dbamp
                     ]
                 ]);
             },
             {
+                "No centroid on item!".postln;
                 score.add([
                     timing,
-                    [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, audio.at("offset").asInteger, \duration, dur]
+                    [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, audio.at("offset").asInteger, \duration, dur, \gain, 0.8 * volume.dbamp]
                 ]);
             }
         );

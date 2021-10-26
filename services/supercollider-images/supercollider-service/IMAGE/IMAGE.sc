@@ -25,7 +25,7 @@ IMAGE {
             SynthDef((\noiseBurstHOA++(i+1)).asSymbol, { |theta = 0.0, phi = 0.0, radius = 1.5, out = 2, gain = 1|
                 var sig, encoded;
                 sig = WhiteNoise.ar(0.1) * EnvGen.ar( Env.perc, 1, doneAction:2 );
-                encoded = HoaEncodeDirection.ar(sig, theta, phi, radius, order.asInteger);
+                encoded = HoaEncodeDirection.ar(sig * gain, theta, phi, radius, order.asInteger);
                 Out.ar(out, encoded)
             }).store;
 
@@ -37,8 +37,63 @@ IMAGE {
                 sig = Ringz.ar( PinkNoise.ar(0.1) * envGen, freq, resonz) * AmpComp.kr(freq, 300);
                 rev = FreeVerb.ar(sig, mix: mix, room: room, damp:damp);
                 DetectSilence.ar(rev, doneAction:2);
-                encoded = HoaEncodeDirection.ar(rev, theta, phi, radius, order.asInteger);
-                Out.ar(out, encoded * gain)
+                encoded = HoaEncodeDirection.ar(rev * gain, theta, phi, radius, order.asInteger);
+                Out.ar(out, encoded)
+            }).store;
+
+            // Moving voice
+            // Designed for pie chart sweeps
+            SynthDef((\playMovingVoiceHOA++(i+1)).asSymbol,{|freq = 100, blend = 0.5, bright = 0, duration = 3, phi = 0, thetaStart= -0.5pi, thetaEnd=  0.5pi, radius = 1, gain = 1|
+                var va = Vowel(\a, \bass),
+                    vi = Vowel(\i, \soprano),
+                    sig, line, encoded, segduration, env, reverb;
+                segduration = ((thetaEnd - thetaStart) / 2pi) * duration;
+                env = EnvGen.kr(Env.new([0,1,1,0],[0.01, segduration, 0.01]), 1.0, doneAction: Done.none);
+                sig =  BPFStack.ar( Decay.ar(Impulse.ar(freq), 0.01) * PinkNoise.ar(0.9) , va.blend(vi, blend).brightenExp(bright, 1), widthMods: 5 ) * env;
+                reverb = FreeVerb.ar(sig, 0.33, 0.9, damp: 0.9, mul: 500);
+                encoded = HoaEncodeDirection.ar(reverb *  gain,
+                                            Line.ar(thetaStart, thetaEnd, segduration + 0.02),
+                                            phi,
+                                            2.0,
+                                            order.asInteger);
+                Out.ar(2,  encoded);
+            }).store;
+
+            // Point voice
+            // For discrete line graphs
+            SynthDef((\playVoicePingHOA++(i+1)).asSymbol, {|freq = 100, blend = 0.5, bright = 0, duration = 0.5, phi = 0, theta = 0, radius = 1, gain = 1|
+                var va = Vowel(\a, \bass),
+                    vi = Vowel(\i, \bass),
+                    sig, encoded, env, partials, excitation, reverb;
+                excitation = EnvGen.ar(Env.perc(0.001, duration, 1.0), 1.0, doneAction: Done.none) * PinkNoise.ar(0.1);
+                partials = Klank.ar(`[{|i| i+1}!20, nil, {0.4}!20], excitation, freq);
+                env = EnvGen.ar(Env.perc(0.001, duration * 3, 1.0), 1.0, doneAction: 2);
+                sig = BPFStack.ar(partials, va.blend(vi, blend).brightenExp(bright, 1), widthMods: 5);
+                reverb = FreeVerb.ar(sig, 0.5, 0.9, damp: 0.6, mul: 500) * env;
+                encoded = HoaEncodeDirection.ar(reverb * gain,
+                    theta,
+                    phi,
+                    2.0,
+                    order.asInteger);
+                Out.ar(2, encoded);
+            }).store;
+
+            // Continuous voice
+            // For continuous line graphs
+            SynthDef((\playVoiceContinuousHOA++(i+1)).asSymbol, {|freq = 200, blend = 0.0, bright = 1, phi = 0, theta = 0.0, radius = 1, gain = 0|
+                var va = Vowel(\a, \bass),
+                    vi = Vowel(\i, \bass),
+                    sig, encoded, env, vow, partials, excitation, reverb;
+                partials = LPF.ar(Decay.ar(Impulse.ar(freq.lag(0.5)), 0.01), 10000);
+                vow = va.blend(vi, blend).brightenExp(bright, 1);
+                sig = BPFStack.ar(partials, vow, widthMods: 0.2);
+                encoded = HoaEncodeDirection.ar(sig * gain.lagud(0.5, 0.5),
+                    theta,
+                    phi,
+                    2.0,
+                    order.asInteger
+                );
+                Out.ar(2, encoded);
             }).store;
         });
 
@@ -49,7 +104,7 @@ IMAGE {
             var sig;
             sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *
             EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
-            Out.ar(out, Pan2.ar(sig, stereoPos))
+            Out.ar(out, Pan2.ar(sig * gain, stereoPos))
         }).store;
 
         // Ambisonics Buffers Playback
@@ -58,7 +113,7 @@ IMAGE {
             SynthDef((\playBufferHOA++(i+1)).asSymbol, { |buffNum = 0, start = 0, duration = 1, theta = 0.0, phi = 0.0, radius = 1.5, out = 2, gain = 1|
                 var sig, encoded;
                 sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *  EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
-                encoded = HoaEncodeDirection.ar(sig, theta, phi, radius, order.asInteger);
+                encoded = HoaEncodeDirection.ar(sig * gain, theta, phi, radius, order.asInteger);
                 Out.ar(out, encoded)
             }).store;
 
@@ -73,7 +128,7 @@ IMAGE {
                 var sig, encoded;
                 sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *  EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
                 sig = FreeVerb.ar(sig, mix: mix, room: room, damp: damp);
-                encoded = HoaEncodeDirection.ar(sig, theta, phi, radius, order.asInteger);
+                encoded = HoaEncodeDirection.ar(sig * gain, theta, phi, radius, order.asInteger);
                 Out.ar(out, encoded)
             }).store;
         });
@@ -89,7 +144,7 @@ IMAGE {
                 var sig, encoded;
                 sig = PlayBuf.ar(1, bufnum: buffNum, rate: BufRateScale.kr(buffNum), trigger: 1, startPos: start) *
                 EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
-                encoded = HoaEncodeDirection.ar(sig, Line.ar(thetaStart, thetaStop, duration),
+                encoded = HoaEncodeDirection.ar(sig * gain, Line.ar(thetaStart, thetaStop, duration),
                     Line.ar(phiStart, phiStop, duration),
                     Line.ar(radiusStart, radiusStop, duration),
                     order.asInteger);
@@ -109,7 +164,7 @@ IMAGE {
                 EnvGen.ar( Env.new([0,1,1,0],[0.001, duration - 0.002, 0.001],[-1,-1,-1]), 1, doneAction: 2) ;
 
                 sig = FreeVerb.ar(sig, mix: 0.33, room: 0.5, damp:0.5);
-                encoded = HoaEncodeDirection.ar(sig, Line.ar(thetaStart, thetaStop, duration),
+                encoded = HoaEncodeDirection.ar(sig * gain, Line.ar(thetaStart, thetaStop, duration),
                     Line.ar(phiStart, phiStop, duration),
                     Line.ar(radiusStart, radiusStop, duration),
                     order.asInteger);

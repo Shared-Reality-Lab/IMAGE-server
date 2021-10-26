@@ -28,29 +28,38 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
             controller.abort();
         }, PREPROCESSOR_TIME_MS);
 
-        await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
+        const resp = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
             },
             "body": JSON.stringify(data),
             "signal": controller.signal
-        }).then(async (resp) => {
-            if (resp.ok) {
-                return resp.json();
-            } else {
-                let result = await resp.json();
-                throw result;
-            }
-        }).then(json => {
-            (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
-        }).catch(err => {
-            // Try to continue...
-            // tslint:disable-next-line:no-console
-            console.error("Error occured on fetch");
-            // tslint:disable-next-line:no-console
-            console.error(err);
         });
+        clearTimeout(timeout);
+
+        // OK data returned
+        if (resp.status === 200) {
+            try {
+                const json = await resp.json();
+                (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+            } catch (err) {
+                console.error("Error occured on fetch");
+                console.error(err);
+            }
+        }
+        // No Content preprocessor not applicable
+        else if (resp.status === 204) {
+            continue;
+        } else {
+            try {
+                const result = await resp.json();
+                throw result;
+            } catch (err) {
+                console.error("Error occured on fetch");
+                console.error(err);
+            }
+        }
     }
     return data;
 }
@@ -79,21 +88,18 @@ app.post("/render", (req, res) => {
                     if (resp.ok) {
                         return resp.json();
                     } else {
-                        // tslint:disable-next-line:no-console
                         console.error(resp);
-                        let result = await resp.json();
+                        const result = await resp.json();
                         throw result;
                     }
                 }).then(json => {
                     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
                         return json["renderings"];
                     } else {
-                        // tslint:disable-next-line:no-console
                         console.error("Handler response failed validation!");
                         throw Error(JSON.stringify(ajv.errors));
                     }
                 }).catch(err => {
-                    // tslint:disable-next-line:no-console
                     console.error(err);
                     return [];
                 });
@@ -101,23 +107,20 @@ app.post("/render", (req, res) => {
 
             return Promise.all(promises);
         }).then(results => {
-            let renderings = results.reduce((a, b) => a.concat(b), []);
+            const renderings = results.reduce((a, b) => a.concat(b), []);
             const response = {
                 "request_uuid": req.body.request_uuid,
                 "timestamp": Math.round(Date.now() / 1000),
                 "renderings": renderings
             }
             if (ajv.validate("https://image.a11y.mcgill.ca/response.schema.json", response)) {
-                // tslint:disable-next-line:no-console
                 console.debug("Valid response generated.");
                 res.json(response);
             } else {
-                // tslint:disable-next-line:no-console
                 console.debug("Failed to generate a valid response (did the schema change?)");
                 res.status(500).send(ajv.errors);
             }
         }).catch(e => {
-            // tslint:disable-next-line:no-console
             console.error(e);
             res.status(500).send(e.name + ": " + e.message);
         });
@@ -135,16 +138,13 @@ app.post("/render/preprocess", (req, res) => {
             return runPreprocessors(data, preprocessors);
         }).then(data => {
             if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", data)) {
-                // tslint:disable-next-line:no-console
                 console.debug("Valid response generated.");
                 res.json(data);
             } else {
-                // tslint:disable-next-line:no-console
                 console.debug("Failed to generate a valid response.");
                 res.status(500).send(ajv.errors);
             }
         }).catch(e => {
-            // tslint:disable-next-line:no-console
             console.error(e);
             res.status(500).send(e.name + ":" + e.message);
         });
@@ -154,6 +154,5 @@ app.post("/render/preprocess", (req, res) => {
 });
 
 app.listen(port, () => {
-    // tslint:disable-next-line:no-console
     console.log(`Started server on port ${port}`);
 });

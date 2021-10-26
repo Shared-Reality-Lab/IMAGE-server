@@ -40,7 +40,9 @@ def perform_tts():
         return Response(wrapper, mimetype="audio/wav", direct_passthrough=True)
     except Exception as e:
         logger.error(e)
-        return {"error": "An error occurred while performing text-to-speech"}, 500
+        return {
+            "error": "An error occurred while performing text-to-speech"
+        }, 500
 
 
 @app.route("/service/tts/segments", methods=["POST"])
@@ -82,4 +84,6 @@ def segment_tts():
         return response
     except Exception as e:
         logger.error(e)
-        return {"error": "An error occurred while performing text-to-speech"}, 500
+        return {
+            "error": "An error occurred while performing text-to-speech"
+        }, 500
