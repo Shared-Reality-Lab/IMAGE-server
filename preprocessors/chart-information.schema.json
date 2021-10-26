@@ -185,7 +185,7 @@
     "properties": {
         "type": {
             "description": "Type of chart: Line/Bar/Pie",
-            "enum": ["line", "bar", "pie"]
+            "enum": ["Line Chart", "Bar Chart", "Pie Chart"]
         },
         "dimensions": {
             "description": "Image dimensions in pixels (h, w)",
