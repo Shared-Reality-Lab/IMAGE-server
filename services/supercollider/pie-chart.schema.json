@@ -5,12 +5,12 @@
     "title": "Supercollider Pie Chart Sectors",
     "description": "Communication to SuperCollider for pie chart renderings.",
     "properties": {
-        "sectors": {
+        "wedges": {
             "type": "array",
             "items": {
-                "$ref": "https://image.a11y.mcgill.ca/preprocessors/chart-information.schema.json#/definitions/sector"
+                "type": "number"
             }
         }
     },
-    "required": [ "sectors" ]
+    "required": [ "wedges" ]
 }
