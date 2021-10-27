@@ -172,6 +172,17 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+    pie-chart-handler:
+        build:
+            context: ./handlers/pie-chart-handler
+            dockerfile: Dockerfile
+        image: "pie-chart-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
 
 volumes:
     sc-store:
