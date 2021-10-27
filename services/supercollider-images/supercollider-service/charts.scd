@@ -5,7 +5,8 @@ pieChart = { |json, outPath, addr|
     var score, timing=0, order=5, wedges, total, arcs, duration = 2;
     score = IMAGE.newScore(order);
 
-    // TODO load from JSON
+    wedges = json.at("wedges").collect({|item, i| item.asFloat});
+    wedges = wedges.sort({|a,b| a > b});
 
     // Set up b-format decoder
     score.add([
@@ -17,10 +18,11 @@ pieChart = { |json, outPath, addr|
     wedges = wedges.integrate!2;
     wedges = wedges.flop
                    .flat
-                   .drop(-1)
-                   .addFirst(0.0);
-    arcs = wedges.linlin(0.0, wedges.at(-1), 0.0, 2pi)
-                 .clump(2);
+                   .drop(-1);
+    wedges = wedges.addFirst(0.0);
+    wedges.at(-1).postln;
+    arcs = wedges.linlin(0.0, wedges.last, 0.0, 2pi);
+    arcs = arcs.clump(2);
 
     // Render sweeps in order from 0 to 2pi
     arcs.do({|arc, i|
