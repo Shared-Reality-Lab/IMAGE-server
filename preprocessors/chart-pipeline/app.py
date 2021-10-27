@@ -63,12 +63,15 @@ def ResetApp():
 
 @app.route("/preprocessor", methods=['POST', 'GET'])
 def readImage():
-
     if request.method == 'POST':
 
         # Get request.json
         content = request.get_json()
-        
+        preprocess_output = content["preprocessors"]
+        firstCat = preprocess_output["ca.mcgill.a11y.image.firstCategoriser"]
+        type = firstCat["category"]
+        if(type=="image"):
+            return (''), 204
         # Store reqd parameters for output json
         request_uuid = content["request_uuid"]
         timestamp = time.time()

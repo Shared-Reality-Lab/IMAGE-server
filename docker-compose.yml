@@ -50,20 +50,20 @@ services:
             - ./config/express-common.env
         labels:
             ca.mcgill.a11y.image.handler: enable
-    object-detection:
-        build:
-            context: ./preprocessors/yolo
-            dockerfile: Dockerfile
-        image: "object-detection:latest"
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 5000
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                    - driver: nvidia
-                      capabilities: ["gpu", "utility", "compute"]
+    # object-detection:
+    #     build:
+    #         context: ./preprocessors/yolo
+    #         dockerfile: Dockerfile
+    #     image: "object-detection:latest"
+    #     labels:
+    #         ca.mcgill.a11y.image.preprocessor: 3
+    #         ca.mcgill.a11y.image.port: 5000
+    #     deploy:
+    #         resources:
+    #             reservations:
+    #                 devices:
+    #                 - driver: nvidia
+    #                   capabilities: ["gpu", "utility", "compute"]
     first-categoriser:
         build:
             context: ./preprocessors/categoriser
@@ -90,28 +90,28 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 4
             ca.mcgill.a11y.image.port: 5000
-    scene-detection:
-        build:
-            context: ./preprocessors/scene
-            dockerfile: Dockerfile
-        image: "scene-detection:latest"
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 5000
-    semantic-segmentation:
-        build:
-            context: ./preprocessors/semanticSeg
-            dockerfile: ./Dockerfile
-        image: "semantic-segmentation:latest"
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 5000
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                    - driver: nvidia
-                      capabilities: ["gpu", "utility", "compute"]
+    # scene-detection:
+    #     build:
+    #         context: ./preprocessors/scene
+    #         dockerfile: Dockerfile
+    #     image: "scene-detection:latest"
+    #     labels:
+    #         ca.mcgill.a11y.image.preprocessor: 3
+    #         ca.mcgill.a11y.image.port: 5000
+    # semantic-segmentation:
+    #     build:
+    #         context: ./preprocessors/semanticSeg
+    #         dockerfile: ./Dockerfile
+    #     image: "semantic-segmentation:latest"
+    #     labels:
+    #         ca.mcgill.a11y.image.preprocessor: 3
+    #         ca.mcgill.a11y.image.port: 5000
+    #     deploy:
+    #         resources:
+    #             reservations:
+    #                 devices:
+    #                 - driver: nvidia
+    #                   capabilities: ["gpu", "utility", "compute"]
     chart-pipeline:
         build:
             context: ./preprocessors/chart-pipeline
@@ -119,7 +119,7 @@ services:
         image: "chart-pipeline:latest"
         command: --mode=1 --empty_cache=True
         labels:
-            ca.mcgill.a11y.image.preprocessor: 3
+            ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
         deploy:
             resources:
