@@ -7,9 +7,10 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+
 @app.route('/preprocessor', methods=['POST', 'GET'])
 def get_map_data():
-    #load schemas
+    # Load schemas
     with open('./schemas/preprocessors/autour.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
@@ -24,11 +25,11 @@ def get_map_data():
             schema, store=schema_store)
 
     content = request.get_json()
-    #Check if request is for a map
+    # Check if request is for a map
     if 'image' in content:
         logging.info("Not map content. Skipping...")
         return "", 204
-    #Build Autour request
+    # Build Autour request
     url = content['url']
     coords = content['coordinates']
     api_request = f"https://isassrv.cim.mcgill.ca/autour/getPlaces.php?\
