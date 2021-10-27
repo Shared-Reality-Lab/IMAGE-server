@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/services/supercollider/pie-chart.schema.json",
+    "type": "object",
+    "title": "Supercollider Pie Chart Sectors",
+    "description": "Communication to SuperCollider for pie chart renderings.",
+    "properties": {
+        "sectors": {
+            "type": "array",
+            "items": {
+                "$ref": "https://image.a11y.mcgill.ca/preprocessors/chart-information.schema.json#/definitions/sector"
+            }
+        }
+    },
+    "required": [ "sectors" ]
+}
