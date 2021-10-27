@@ -9,10 +9,9 @@ import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseJSON from "./schemas/handler-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 import descriptionJSON from "./schemas/services/supercollider/pie-chart.schema.json";
-import chartJSON from "./schemas/preprocessors/chart-information.schema.json";
 
 const ajv = new Ajv({
-    "schemas": [querySchemaJSON, handlerResponseJSON, definitionsJSON, chartJSON, descriptionJSON]
+    "schemas": [querySchemaJSON, handlerResponseJSON, definitionsJSON, descriptionJSON]
 });
 
 const app = express();
