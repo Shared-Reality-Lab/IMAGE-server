@@ -102,36 +102,48 @@ def categorise():
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
+    preprocess_output = content["preprocessors"]
+
     # convert the uri to processable image
     if content["image"] is None:
         return "", 204
 #         pred = "Input is not an image"
     else:
-        source = content["image"]
-        image_b64 = source.split(",")[1]
-        binary = base64.b64decode(image_b64)
-        pred = process_image(image=binary, labels=labels)
-        type = {"category": pred}
-        try:
-            validator = jsonschema.Draft7Validator(data_schema)
-            validator.validate(type)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
-            return jsonify("Invalid Preprocessor JSON format"), 500
-        response = {
-            "request_uuid": request_uuid,
-            "timestamp": int(timestamp),
-            "name": name,
-            "data": type
-        }
-        try:
-            validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
-            return jsonify("Invalid Preprocessor JSON format"), 500
+        if "ca.mcgill.a11y.image.firstCategoriser" in preprocess_output:
+            firstCat = preprocess_output["ca.mcgill.a11y.image.firstCategoriser"]
+            request_type = firstCat["category"]
+            if request_type == "image":
+                source = content["image"]
+                image_b64 = source.split(",")[1]
+                binary = base64.b64decode(image_b64)
+                pred = process_image(image=binary, labels=labels)
+                type = {"category": pred}
+                try:
+                    validator = jsonschema.Draft7Validator(data_schema)
+                    validator.validate(type)
+                except jsonschema.exceptions.ValidationError as e:
+                    logging.error(e)
+                    return jsonify("Invalid Preprocessor JSON format"), 500
+                response = {
+                    "request_uuid": request_uuid,
+                    "timestamp": int(timestamp),
+                    "name": name,
+                    "data": type
+                }
+                try:
+                    validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+                    validator.validate(response)
+                except jsonschema.exceptions.ValidationError as e:
+                    logging.error(e)
+                    return jsonify("Invalid Preprocessor JSON format"), 500
 
-        return response
+                return response
+            elif request_type == "chart":
+                return "", 204
+            elif request_type == "other":
+                return "", 204
+            else:
+                return "", 204
 
 
 if __name__ == "__main__":
