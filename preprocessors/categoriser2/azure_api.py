@@ -138,10 +138,6 @@ def categorise():
                     return jsonify("Invalid Preprocessor JSON format"), 500
 
                 return response
-            elif request_type == "chart":
-                return "", 204
-            elif request_type == "other":
-                return "", 204
             else:
                 return "", 204
 
