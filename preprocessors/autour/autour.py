@@ -18,13 +18,23 @@ def get_map_data():
     with open('./schemas/definitions.json') as jsonfile:
         definitionSchema = json.load(jsonfile)
     schema_store = {
+        data_schema['$id']: data_schema,
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema
     }
+    content = request.get_json()
+    ###### Currently not validating properly ######
+    # resolver = jsonschema.RefResolver.from_schema(
+    #         data_schema, store=schema_store)
+    # try:
+    #     validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+    #     validator.validate(content)
+    # except jsonschema.exceptions.ValidationError as e:
+    #     logging.error(e)
+    #     return jsonify("Invalid Request JSON format"), 400
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
 
-    content = request.get_json()
     # Check if request is for a map
     if 'image' in content:
         logging.info("Not map content. Skipping...")
