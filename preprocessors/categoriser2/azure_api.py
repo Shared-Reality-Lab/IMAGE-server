@@ -110,7 +110,8 @@ def categorise():
 #         pred = "Input is not an image"
     else:
         if "ca.mcgill.a11y.image.firstCategoriser" in preprocess_output:
-            firstCat = preprocess_output["ca.mcgill.a11y.image.firstCategoriser"]
+            firstCat = \
+                preprocess_output["ca.mcgill.a11y.image.firstCategoriser"]
             request_type = firstCat["category"]
             if request_type == "image":
                 source = content["image"]
@@ -131,7 +132,8 @@ def categorise():
                     "data": type
                 }
                 try:
-                    validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+                    validator = jsonschema.Draft7Validator(schema,
+                                                           resolver=resolver)
                     validator.validate(response)
                 except jsonschema.exceptions.ValidationError as e:
                     logging.error(e)
