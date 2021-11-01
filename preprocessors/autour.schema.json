@@ -32,7 +32,7 @@
             "pattern": "^https?://.*"
         },
         "places": {
-            "type": "object",
+            "type": "array",
             "title": "Places",
             "description": "The places on the map",
             "items": {
