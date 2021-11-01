@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "simplehaptics.schema.json",
+    "title": "Simple Haptics Renderer",
+    "type": "object",
+    "description": "Data for the haptic roundtrip testing ca.mcgill.a11y.image.renderer.SimpleHaptics. renderer sends the bounding box information ",
+    "properties": {
+        "text": {
+            "type": "string"
+        },
+        "image": {
+            "type": "string"
+        },
+        "centroids": {
+            "type": "array"
+        },
+        "coordinates": {
+            "type": "array"
+        }
+    },
+    "required": [ "centroids", "coordinates" ]
+}

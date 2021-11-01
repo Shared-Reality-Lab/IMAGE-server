@@ -2,18 +2,19 @@ FROM schemas:latest AS schemas
 
 FROM node:alpine
 
-RUN addgroup -g 4322 storage && addgroup node storage
-
 WORKDIR /usr/src/app
-
-COPY *.js* ./
+# Apparently splittig this up is good for layers
+# Docker images are onions
+COPY package*.json ./
 RUN npm ci
+COPY *.json ./
+COPY .eslintrc.js ./
 COPY src ./src
-COPY types ./types
 COPY --from=schemas /schemas src/schemas
 RUN npm run build
 
 ENV NODE_ENV=production
+
 EXPOSE 80
 
-CMD [ "node", "." ]
+CMD [ "node", "dist/server.js" ]
