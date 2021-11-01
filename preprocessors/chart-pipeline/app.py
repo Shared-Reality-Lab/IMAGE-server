@@ -74,6 +74,24 @@ def processImage(content):
     img = cv2.imdecode(image, cv2.IMREAD_COLOR)
     return img, request_uuid, timestamp, name
 
+def loadSchemas():
+    with open('./schemas/preprocessors/chart-information.schema.json') as jsonfile:
+                data_schema = json.load(jsonfile)
+    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+        schema = json.load(jsonfile)
+    with open('./schemas/definitions.json') as jsonfile:
+        definition_schema = json.load(jsonfile)
+    
+    schema_store = {
+        schema['$id']: schema,
+        definition_schema['$id']: definition_schema,
+        data_schema['$id']: data_schema
+    }
+
+    resolver = jsonschema.RefResolver.from_schema(
+            schema, store=schema_store)
+    return data_schema, schema, definition_schema, schema_store, resolver
+
 @app.route("/preprocessor", methods=['POST', 'GET'])
 def readImage():
     if request.method == 'POST':
@@ -92,21 +110,7 @@ def readImage():
                 output = get_data_from_chart(img, methods, args)
                 
                 # Load schemas
-                with open('./schemas/preprocessors/chart-information.schema.json') as jsonfile:
-                    data_schema = json.load(jsonfile)
-                with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-                    schema = json.load(jsonfile)
-                with open('./schemas/definitions.json') as jsonfile:
-                    definition_schema = json.load(jsonfile)
-                
-                schema_store = {
-                    schema['$id']: schema,
-                    definition_schema['$id']: definition_schema,
-                    data_schema['$id']: data_schema
-                }
-
-                resolver = jsonschema.RefResolver.from_schema(
-                        schema, store=schema_store)
+                data_schema, schema, definition_schema, schema_store, resolver = loadSchemas()
 
                 # Validate model output with schema
                 try:
@@ -145,22 +149,7 @@ def readImage():
             output = get_data_from_chart(img, methods, args)
             
             # Load schemas
-            with open('./schemas/preprocessors/chart-information.schema.json') as jsonfile:
-                data_schema = json.load(jsonfile)
-            with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-                schema = json.load(jsonfile)
-            with open('./schemas/definitions.json') as jsonfile:
-                definition_schema = json.load(jsonfile)
-            
-            schema_store = {
-                schema['$id']: schema,
-                definition_schema['$id']: definition_schema,
-                data_schema['$id']: data_schema
-            }
-
-            resolver = jsonschema.RefResolver.from_schema(
-                    schema, store=schema_store)
-
+            data_schema, schema, definition_schema, schema_store, resolver = loadSchemas()
             # Validate model output with schema
             try:
                 validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
