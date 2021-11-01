@@ -60,6 +60,19 @@ def ResetApp():
         torch.cuda.empty_cache()
     methods['Cls'][1].cuda(0)
 
+def processImage(content):
+    # Store reqd parameters for output json
+    request_uuid = content["request_uuid"]
+    timestamp = time.time()
+    name = "ca.mcgill.a11y.image.preprocessor.chart"
+    
+    # Extraxt image from URI
+    url = content["image"]
+    image_b64 = url.split(",")[1]
+    binary = base64.b64decode(image_b64)
+    image = np.asarray(bytearray(binary), dtype="uint8")
+    img = cv2.imdecode(image, cv2.IMREAD_COLOR)
+    return img, request_uuid, timestamp, name
 
 @app.route("/preprocessor", methods=['POST', 'GET'])
 def readImage():
@@ -73,16 +86,7 @@ def readImage():
             type = firstCat["category"]
             if(type=="chart"):
                 # Store reqd parameters for output json
-                request_uuid = content["request_uuid"]
-                timestamp = time.time()
-                name = "ca.mcgill.a11y.image.preprocessor.chart"
-                
-                # Extraxt image from URI
-                url = content["image"]
-                image_b64 = url.split(",")[1]
-                binary = base64.b64decode(image_b64)
-                image = np.asarray(bytearray(binary), dtype="uint8")
-                img = cv2.imdecode(image, cv2.IMREAD_COLOR)
+                img, request_uuid, timestamp, name = processImage(content)
 
                 # Process image using the model to get output json
                 output = get_data_from_chart(img, methods, args)
@@ -136,17 +140,7 @@ def readImage():
             else:
                 return (''), 204
         else:
-            request_uuid = content["request_uuid"]
-            timestamp = time.time()
-            name = "ca.mcgill.a11y.image.preprocessor.chart"
-            
-            # Extraxt image from URI
-            url = content["image"]
-            image_b64 = url.split(",")[1]
-            binary = base64.b64decode(image_b64)
-            image = np.asarray(bytearray(binary), dtype="uint8")
-            img = cv2.imdecode(image, cv2.IMREAD_COLOR)
-
+            img, request_uuid, timestamp, name = processImage(content)
             # Process image using the model to get output json
             output = get_data_from_chart(img, methods, args)
             
