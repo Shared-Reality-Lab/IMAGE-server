@@ -119,11 +119,11 @@ def categorise():
                 pred = process_image(image=binary, labels=labels)
                 type = {"category": pred}
             else:
-                """If the first classifier does not detect an image 
+                """If the first classifier does not detect an image
                 the second classifier should not process the request"""
                 type = {"category": labels[0]}
         else:
-            """Same as before, the second classifier should be invoked only 
+            """Same as before, the second classifier should be invoked only
             after the first classifier is able to process the image"""
             type = {"category": labels[0]}
 
