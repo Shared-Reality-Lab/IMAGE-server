@@ -126,7 +126,6 @@ def categorise():
             """Same as before, the second classifier should be invoked only
             after the first classifier is able to process the image"""
             type = {"category": labels[0]}
-
         try:
             validator = jsonschema.Draft7Validator(data_schema)
             validator.validate(type)
