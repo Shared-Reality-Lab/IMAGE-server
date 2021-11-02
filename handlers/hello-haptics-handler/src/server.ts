@@ -2,12 +2,13 @@ import express from "express";
 import Ajv from "ajv";
 import * as utils from "./utils";
 import querySchemaJSON from "./schemas/request.schema.json";
+import helloHapticsSchemaJSON from "./schemas/simplehaptics.schema.json"
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 const app = express();
 const port = 80;
 const ajv = new Ajv({
-	"schemas": [querySchemaJSON, definitionsJSON, handlerResponseSchemaJSON]
+	"schemas": [querySchemaJSON, definitionsJSON, helloHapticsSchemaJSON, handlerResponseSchemaJSON]
 });
 // async function extractDimensions(dataUrl: string) {
 //     const imageBuffer = Buffer.from(dataUrl.split(",")[1], "base64");
@@ -108,21 +109,30 @@ app.post("/handler", async (req, res) => {
 	const rendering = [];
 	rendering.push(generateRendering(objectText, objectCentroids, objectCoords, image));
 
+	// if(!ajv.validate(helloHapticsSchemaJSON, rendering)) {
+	// 	console.error("Invalid JSON detected");
+	// 	console.error(ajv.errors);
+	// 	const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+	// 	res.json(response);
+	// 	return;
+	// }
+
 	const response = {
 		"request_uuid": req.body.request_uuid,
 		"timestamp": Math.round(Date.now() / 1000),
 		"renderings": rendering
 	};
 
-	res.json(response);
-	// if(ajv.validate("../../schemas/renderers/simplehaptics.schema.json", response)) {
-	// 	res.json(response);
-	// } else {
-	// 	res.json(ajv.errors);
-		// console.error("Failed to generate a valid response.");
-		// console.error(ajv.errors);
-		// res.status(500).json(ajv.errors);
-	//}
+	//res.json(response);
+	//"./schemas/request.schema.json"
+	if(ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
+		res.json(response);
+	} else {
+		res.json(ajv.errors);
+		console.error("Failed to generate a valid response.");
+		console.error(ajv.errors);
+		res.status(500).json(ajv.errors);
+	}
 });
 app.listen(port, () => {
 	console.log(`Started server on port ${port}`);
