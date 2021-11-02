@@ -119,7 +119,7 @@ services:
         image: "chart-pipeline:latest"
         command: --mode=1 --empty_cache=True
         labels:
-            ca.mcgill.a11y.image.preprocessor: 3
+            ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
         deploy:
             resources:

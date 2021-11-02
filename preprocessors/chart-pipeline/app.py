@@ -60,77 +60,125 @@ def ResetApp():
         torch.cuda.empty_cache()
     methods['Cls'][1].cuda(0)
 
+def processImage(content):
+    # Store reqd parameters for output json
+    request_uuid = content["request_uuid"]
+    timestamp = time.time()
+    name = "ca.mcgill.a11y.image.preprocessor.chart"
+    
+    # Extraxt image from URI
+    url = content["image"]
+    image_b64 = url.split(",")[1]
+    binary = base64.b64decode(image_b64)
+    image = np.asarray(bytearray(binary), dtype="uint8")
+    img = cv2.imdecode(image, cv2.IMREAD_COLOR)
+    return img, request_uuid, timestamp, name
+
+def loadSchemas():
+    with open('./schemas/preprocessors/chart-information.schema.json') as jsonfile:
+                data_schema = json.load(jsonfile)
+    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+        schema = json.load(jsonfile)
+    with open('./schemas/definitions.json') as jsonfile:
+        definition_schema = json.load(jsonfile)
+    
+    schema_store = {
+        schema['$id']: schema,
+        definition_schema['$id']: definition_schema,
+        data_schema['$id']: data_schema
+    }
+
+    resolver = jsonschema.RefResolver.from_schema(
+            schema, store=schema_store)
+    return data_schema, schema, definition_schema, schema_store, resolver
 
 @app.route("/preprocessor", methods=['POST', 'GET'])
 def readImage():
-
     if request.method == 'POST':
 
         # Get request.json
         content = request.get_json()
-        
-        # Store reqd parameters for output json
-        request_uuid = content["request_uuid"]
-        timestamp = time.time()
-        name = "ca.mcgill.a11y.image.preprocessor.chart"
-        
-        # Extraxt image from URI
-        url = content["image"]
-        image_b64 = url.split(",")[1]
-        binary = base64.b64decode(image_b64)
-        image = np.asarray(bytearray(binary), dtype="uint8")
-        img = cv2.imdecode(image, cv2.IMREAD_COLOR)
+        preprocess_output = content["preprocessors"]
+        if "ca.mcgill.a11y.image.firstCategoriser" in preprocess_output:
+            firstCat = preprocess_output["ca.mcgill.a11y.image.firstCategoriser"]
+            type = firstCat["category"]
+            if(type=="chart"):
+                # Store reqd parameters for output json
+                img, request_uuid, timestamp, name = processImage(content)
 
-        # Process image using the model to get output json
-        output = get_data_from_chart(img, methods, args)
-        
-        # Load schemas
-        with open('./schemas/preprocessors/chart-information.schema.json') as jsonfile:
-            data_schema = json.load(jsonfile)
-        with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-            schema = json.load(jsonfile)
-        with open('./schemas/definitions.json') as jsonfile:
-            definition_schema = json.load(jsonfile)
-        
-        schema_store = {
-            schema['$id']: schema,
-            definition_schema['$id']: definition_schema,
-            data_schema['$id']: data_schema
-        }
+                # Process image using the model to get output json
+                output = get_data_from_chart(img, methods, args)
+                
+                # Load schemas
+                data_schema, schema, definition_schema, schema_store, resolver = loadSchemas()
 
-        resolver = jsonschema.RefResolver.from_schema(
-                schema, store=schema_store)
+                # Validate model output with schema
+                try:
+                    validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+                    validator.validate(output)
+                except jsonschema.exceptions.ValidationError as e:
+                    logging.error(e)
+                    return jsonify("Invalid Preprocessor JSON format"), 500
 
-        # Validate model output with schema
-        try:
-            validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
-            validator.validate(output)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
-            return jsonify("Invalid Preprocessor JSON format"), 500
+                # Format and create response json obj using output
+                response = {
+                    "title": "Chart Data",
+                    "description": "Data extracted from the given chart",
+                        "request_uuid": request_uuid,
+                        "timestamp": int(timestamp),
+                        "name": name,
+                        "data": output
+                        }
+                
+                # Validate final response
+                try:
+                    validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+                    validator.validate(response)
+                except jsonschema.exceptions.ValidationError as e:
+                    logging.error(e)
+                    return jsonify("Invalid Preprocessor JSON format"), 500
 
-        # Format and create response json obj using output
-        response = {
-            "title": "Chart Data",
-            "description": "Data extracted from the given chart",
-                "request_uuid": request_uuid,
-                "timestamp": int(timestamp),
-                "name": name,
-                "data": output
-                }
-        
-        # Validate final response
-        try:
-            validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
-            return jsonify("Invalid Preprocessor JSON format"), 500
+                # Start thread to reset models            
+                Thread(target=ResetApp).start()
+                return jsonify(response)
+            else:
+                return (''), 204
+        else:
+            img, request_uuid, timestamp, name = processImage(content)
+            # Process image using the model to get output json
+            output = get_data_from_chart(img, methods, args)
+            
+            # Load schemas
+            data_schema, schema, definition_schema, schema_store, resolver = loadSchemas()
+            # Validate model output with schema
+            try:
+                validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+                validator.validate(output)
+            except jsonschema.exceptions.ValidationError as e:
+                logging.error(e)
+                return jsonify("Invalid Preprocessor JSON format"), 500
 
-        # Start thread to reset models            
-        Thread(target=ResetApp).start()
+            # Format and create response json obj using output
+            response = {
+                "title": "Chart Data",
+                "description": "Data extracted from the given chart",
+                    "request_uuid": request_uuid,
+                    "timestamp": int(timestamp),
+                    "name": name,
+                    "data": output
+                    }
+            
+            # Validate final response
+            try:
+                validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+                validator.validate(response)
+            except jsonschema.exceptions.ValidationError as e:
+                logging.error(e)
+                return jsonify("Invalid Preprocessor JSON format"), 500
 
-        return jsonify(response)
+            # Start thread to reset models            
+            Thread(target=ResetApp).start()
+            return jsonify(response)
 
     return "Expected POST request, got GET request instead."
 
