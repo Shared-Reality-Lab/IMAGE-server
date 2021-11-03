@@ -124,8 +124,9 @@ def categorise():
                 return "", 204
         else:
             """We are providing the user the ability to process an image 
-            even when the first classifier is absent, however it is recommended that the second classifier 
-            be used in conjunction with the first classifier."""
+            even when the first classifier is absent, however it is 
+            recommended that the second classifier be used in conjunction 
+            with the first classifier."""
             source = content["image"]
             image_b64 = source.split(",")[1]
             binary = base64.b64decode(image_b64)
