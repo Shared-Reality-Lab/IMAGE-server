@@ -102,16 +102,36 @@ def categorise():
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
+    preprocess_output = content["preprocessors"]
+
     # convert the uri to processable image
     if content["image"] is None:
         return "", 204
-#         pred = "Input is not an image"
     else:
-        source = content["image"]
-        image_b64 = source.split(",")[1]
-        binary = base64.b64decode(image_b64)
-        pred = process_image(image=binary, labels=labels)
-        type = {"category": pred}
+        if "ca.mcgill.a11y.image.firstCategoriser" in preprocess_output:
+            firstCat = \
+                preprocess_output["ca.mcgill.a11y.image.firstCategoriser"]
+            request_type = firstCat["category"]
+            if request_type == "image":
+                source = content["image"]
+                image_b64 = source.split(",")[1]
+                binary = base64.b64decode(image_b64)
+                pred = process_image(image=binary, labels=labels)
+                type = {"category": pred}
+            else:
+                """If the first classifier does not detect an image
+                the second classifier should not process the request"""
+                return "", 204
+        else:
+            """We are providing the user the ability to process an image
+            even when the first classifier is absent, however it is
+            recommended that the second classifier be used in conjunction
+            with the first classifier."""
+            source = content["image"]
+            image_b64 = source.split(",")[1]
+            binary = base64.b64decode(image_b64)
+            pred = process_image(image=binary, labels=labels)
+            type = {"category": pred}
         try:
             validator = jsonschema.Draft7Validator(data_schema)
             validator.validate(type)
@@ -125,12 +145,12 @@ def categorise():
             "data": type
         }
         try:
-            validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+            validator = jsonschema.Draft7Validator(schema,
+                                                   resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 500
-
         return response
 
 
