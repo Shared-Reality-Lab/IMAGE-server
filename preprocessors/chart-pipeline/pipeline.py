@@ -274,7 +274,6 @@ def group_bars_by_labels(pixel_points, x_pos):
 def test(image_path, methods, args, suffix=None, min_value_official=None, max_value_official=None):
     image_cls = Image.open(image_path)
     image = cv2.imread(image_path)
-
     with torch.no_grad():
 
         results = methods['Cls'][2](image, methods['Cls'][0], methods['Cls'][1], cuda_id=0, debug=False)
@@ -404,10 +403,13 @@ def get_data_from_chart(img, methods, args):
     if type_no == 2:
         chart_type = 'Pie Chart'
 
-    try:
-        title = chartinfo[2][2]
-    except IndexError:
-        title = None  
+    if(len(chartinfo[2])==0):
+        title = "not available"
+    else:
+        try:
+            title = chartinfo[2][2]
+        except IndexError:
+            title = None
 
     if (type_no == 0):
     
@@ -452,7 +454,8 @@ def get_data_from_chart(img, methods, args):
             x_labels[i]['centroid'] = [0.5*(x_labels[i]['coords'][0] + x_labels[i]['coords'][2]), 0.5*(x_labels[i]['coords'][1] + x_labels[i]['coords'][3])]
             x_labels[i]['area'] = (x_labels[i]['coords'][2] - x_labels[i]['coords'][0])*(x_labels[i]['coords'][3] - x_labels[i]['coords'][1])
         
-        
+        if(title==None):
+            title = "not available"
         output = {
                     "type": chart_type,
                     "dimensions": [d[0], d[1]],
