@@ -2,7 +2,7 @@ import express from "express";
 import Ajv from "ajv";
 import * as utils from "./utils";
 import querySchemaJSON from "./schemas/request.schema.json";
-import helloHapticsSchemaJSON from "./schemas/simplehaptics.schema.json"
+import helloHapticsSchemaJSON from "./simplehaptics.schema.json"
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 const app = express();
@@ -122,6 +122,7 @@ app.post("/handler", async (req, res) => {
 		"timestamp": Math.round(Date.now() / 1000),
 		"renderings": rendering
 	};
+	console.log(response);
 
 	//res.json(response);
 	//"./schemas/request.schema.json"
