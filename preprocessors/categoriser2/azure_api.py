@@ -121,11 +121,16 @@ def categorise():
             else:
                 """If the first classifier does not detect an image
                 the second classifier should not process the request"""
-                type = {"category": labels[0]}
+                return "", 204
         else:
-            """Same as before, the second classifier should be invoked only
-            after the first classifier is able to process the image"""
-            type = {"category": labels[0]}
+            """We are providing the user the ability to process an image 
+            even when the first classifier is absent, however it is recommended that the second classifier 
+            be used in conjunction with the first classifier."""
+            source = content["image"]
+            image_b64 = source.split(",")[1]
+            binary = base64.b64decode(image_b64)
+            pred = process_image(image=binary, labels=labels)
+            type = {"category": pred}
         try:
             validator = jsonschema.Draft7Validator(data_schema)
             validator.validate(type)
