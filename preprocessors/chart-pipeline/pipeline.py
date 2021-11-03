@@ -454,8 +454,6 @@ def get_data_from_chart(img, methods, args):
             x_labels[i]['centroid'] = [0.5*(x_labels[i]['coords'][0] + x_labels[i]['coords'][2]), 0.5*(x_labels[i]['coords'][1] + x_labels[i]['coords'][3])]
             x_labels[i]['area'] = (x_labels[i]['coords'][2] - x_labels[i]['coords'][0])*(x_labels[i]['coords'][3] - x_labels[i]['coords'][1])
         
-        if(title==None):
-            title = "not available"
         output = {
                     "type": chart_type,
                     "dimensions": [d[0], d[1]],
