@@ -1,0 +1,88 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/autour.schema.json",
+    "type": "object",
+    "title": "Autour Maps Preprocessor",
+    "description": "Information on the contents of a place on a map",
+    "properties": {
+        "url": {
+            "type": "string",
+            "title": "URL",
+            "description": "The URL of the map",
+            "pattern": "^https?://.*"
+        },
+        "lat": {
+            "type": "number",
+            "title": "Latitude",
+            "description": "The latitude of the map",
+            "minimum": -90,
+            "maximum": 90
+        },
+        "lon": {
+            "type": "number",
+            "title": "Longitude",
+            "description": "The longitude of the map",
+            "minimum": -180,
+            "maximum": 180
+        },
+        "api_request": {
+            "type": "string",
+            "title": "API Request",
+            "description": "The API request to be made to the map",
+            "pattern": "^https?://.*"
+        },
+        "places": {
+            "type": "array",
+            "title": "Places",
+            "description": "The places on the map",
+            "items": {
+                "type": "object",
+                "title": "Place",
+                "description": "Information on a place on the map",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "The name of the place",
+                        "minLength": 1
+                    },
+                    "ll": {
+                        "type": "array",
+                        "title": "Latitude/Longitude",
+                        "description": "The latitude and longitude of the place",
+                        "items": {
+                            "type": "number"
+                        }
+                    },
+                    "cat": {
+                        "type": "number",
+                        "title": "Category",
+                        "description": "The category of a place"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title",
+                        "description": "The name of the place"
+                    },
+                    "from": {
+                        "type": "string",
+                        "title": "From",
+                        "description": "The server that returned the data of this place"
+                    },
+                    "addr": {
+                        "type": "string",
+                        "title": "Address",
+                        "description": "The address of the place"
+                    },
+                    "website": {
+                        "type": "string",
+                        "title": "Website",
+                        "description": "The website of the place"
+                    }
+                },
+                "required": ["id", "ll", "cat", "title", "from"]
+            }
+        }
+    },
+    "required": ["url", "lat", "lon", "api_request", "places"]
+}
