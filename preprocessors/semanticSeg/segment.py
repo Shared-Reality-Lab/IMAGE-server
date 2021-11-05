@@ -183,8 +183,8 @@ def segment():
     else:
         """We are providing the user the ability to process an image
         even when the second classifier is absent, however it is
-        recommended to the objection detection model in conjunction
-        with the second classifier."""
+        recommended to the run the semantic segmentation
+        model in conjunction with the second classifier."""
         segment = run_segmentation(content["image"],
                                    segmentation_module,
                                    dictionary,

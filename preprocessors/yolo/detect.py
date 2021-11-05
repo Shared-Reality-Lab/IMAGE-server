@@ -210,8 +210,8 @@ def run(weights='yolov5s.pt',
         else:
             """We are providing the user the ability to process an image
             even when the second classifier is absent, however it is
-            recommended to the objection detection model in conjunction
-            with the second classifier."""
+            recommended to the run objection detection model
+            in conjunction with the second classifier."""
             things = detect_objects(send,
                                     device,
                                     weights,
