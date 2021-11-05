@@ -23,13 +23,12 @@ def get_map_data():
         definitionSchema['$id']: definitionSchema
     }
     content = request.get_json()
-    ###### Currently not validating properly ######
-    with open('./schemas/preprocessors/request.schema.json') as jsonfile:
+    with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
     resolver = jsonschema.RefResolver.from_schema(
             request_schema, store=schema_store)
     try:
-        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+        validator = jsonschema.Draft7Validator(request_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
