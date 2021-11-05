@@ -10,34 +10,36 @@ app = Flask(__name__)
 
 @app.route('/preprocessor', methods=['POST', 'GET'])
 def get_map_data():
+    """
+    Gets data on locations nearby a map from the Autour API
+    """
     # Load schemas
     with open('./schemas/preprocessors/autour.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
-        definitionSchema = json.load(jsonfile)
+        definition_schema = json.load(jsonfile)
     schema_store = {
         data_schema['$id']: data_schema,
         schema['$id']: schema,
-        definitionSchema['$id']: definitionSchema
+        definition_schema['$id']: definition_schema
     }
     content = request.get_json()
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
+    # Validate incoming request
     resolver = jsonschema.RefResolver.from_schema(
             request_schema, store=schema_store)
     try:
         validator = jsonschema.Draft7Validator(request_schema, resolver=resolver)
         validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+    except jsonschema.exceptions.ValidationError as error:
+        logging.error(error)
         return jsonify("Invalid Request JSON format"), 400
-
-        
+    # Use response schema to validate response
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
-
     # Check if request is for a map
     if 'image' in content:
         logging.info("Not map content. Skipping...")
@@ -61,7 +63,7 @@ def get_map_data():
     response = requests.get(api_request).json()
     results = response['results']
 
-    places = dict()
+    places = {}
     for result in results:
         places[result['id']] = {k: v for k, v in result.items() if k != 'id'}
 
@@ -79,8 +81,8 @@ def get_map_data():
     try:
         validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
         validator.validate(data)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+    except jsonschema.exceptions.ValidationError as error:
+        logging.error(error)
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {
@@ -93,8 +95,8 @@ def get_map_data():
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+    except jsonschema.exceptions.ValidationError as error:
+        logging.error(error)
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     return response
