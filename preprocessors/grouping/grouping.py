@@ -22,8 +22,8 @@ def readImage():
     dimensions = []
     ungrouped = []
     flag = 0
-    # with open('./schemas/preprocessors/grouping.schema.json') as jsonfile:
-    #     data_schema = json.load(jsonfile)
+    with open('./schemas/preprocessors/grouping.schema.json') as jsonfile:
+        data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
@@ -79,6 +79,12 @@ def readImage():
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.grouping"
     data = {"grouped": final_group, "ungrouped": ungrouped}
+    try:
+        validator = jsonschema.Draft7Validator(data_schema)
+        validator.validate(data)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
     response = {
         "title": "Grouping Data",
         "description": "Grouped data for objects",
