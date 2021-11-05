@@ -59,7 +59,7 @@ def findContour(pred_color, width, height):
     totArea = 0
     for i in range(len(contours)):
         moments = cv2.moments(contours[i])
-        if(moments['m00'] == 0):
+        if moments['m00'] == 0:
             continue
         if cv2.contourArea(contours[i]) < 2000:
             continue
@@ -80,7 +80,7 @@ def findContour(pred_color, width, height):
     divide = len(nonzero) / 100
     divide = int(divide)
     for i in range(len(nonzero)):
-        if(i % divide != 0):
+        if i % divide != 0:
             gray_contour[nonzero[i][0][1]][nonzero[i][0][0]] = 0
     totArea = totArea / (width * height)
     result = cv2.findNonZero(gray_contour)
@@ -88,6 +88,37 @@ def findContour(pred_color, width, height):
         send.append([float((result[i][0][1]) / height),
                     float((result[i][0][0]) / width)])
     return send, centre, totArea
+
+
+def run_segmentation(url,
+                     segmentation_module,
+                     dictionary,
+                     pil_to_tensor):
+    image_b64 = url.split(",")[1]
+    binary = base64.b64decode(image_b64)
+    image = np.asarray(bytearray(binary), dtype="uint8")
+    pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+    height, width, channels = pil_image.shape
+    img = pil_image
+    img_original = numpy.array(img)
+    img_data = pil_to_tensor(img)
+    img_data = img_data.cuda()
+    singleton_batch = {'img_data': img_data[None]}
+    output_size = img_data.shape[1:]
+    with torch.no_grad():
+        scores = segmentation_module(singleton_batch,
+                                     segSize=output_size)
+    _, pred = torch.max(scores, dim=1)
+    pred = pred.cpu()[0].numpy()
+    color, name = visualize_result(img_original, pred, 0)
+    predicted_classes = numpy.bincount(pred.flatten()).argsort()[::-1]
+    for c in predicted_classes[:5]:
+        color, name = visualize_result(img_original, pred, c)
+        send, center, area = findContour(color, width, height)
+        dictionary.append(
+            {"nameOfSegment": name, "coord": send,
+             "centroid": center, "area": area})
+    return {"segments": dictionary}
 
 
 @app.route("/preprocessor", methods=['POST', 'GET'])
@@ -145,62 +176,19 @@ def segment():
             logging.info("Cannot process image")
             return "", 204
         else:
-            url = content["image"]
-            image_b64 = url.split(",")[1]
-            binary = base64.b64decode(image_b64)
-            image = np.asarray(bytearray(binary), dtype="uint8")
-            pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-            height, width, channels = pil_image.shape
-            img = pil_image
-            img_original = numpy.array(img)
-            img_data = pil_to_tensor(img)
-            img_data = img_data.cuda()
-            singleton_batch = {'img_data': img_data[None]}
-            output_size = img_data.shape[1:]
-            with torch.no_grad():
-                scores = segmentation_module(singleton_batch,
-                                             segSize=output_size)
-            _, pred = torch.max(scores, dim=1)
-            pred = pred.cpu()[0].numpy()
-            color, name = visualize_result(img_original, pred, 0)
-            predicted_classes = numpy.bincount(pred.flatten()).argsort()[::-1]
-            for c in predicted_classes[:5]:
-                color, name = visualize_result(img_original, pred, c)
-                send, center, area = findContour(color, width, height)
-                dictionary.append(
-                    {"nameOfSegment": name, "coord": send,
-                     "centroid": center, "area": area})
-            segment = {"segments": dictionary}
+            segment = run_segmentation(content["image"],
+                                       segmentation_module,
+                                       dictionary,
+                                       pil_to_tensor)
     else:
         """We are providing the user the ability to process an image
         even when the second classifier is absent, however it is
         recommended to the objection detection model in conjunction
         with the second classifier."""
-        url = content["image"]
-        image_b64 = url.split(",")[1]
-        binary = base64.b64decode(image_b64)
-        image = np.asarray(bytearray(binary), dtype="uint8")
-        pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-        height, width, channels = pil_image.shape
-        img = pil_image
-        img_original = numpy.array(img)
-        img_data = pil_to_tensor(img)
-        img_data = img_data.cuda()
-        singleton_batch = {'img_data': img_data[None]}
-        output_size = img_data.shape[1:]
-        with torch.no_grad():
-            scores = segmentation_module(singleton_batch, segSize=output_size)
-        _, pred = torch.max(scores, dim=1)
-        pred = pred.cpu()[0].numpy()
-        color, name = visualize_result(img_original, pred, 0)
-        predicted_classes = numpy.bincount(pred.flatten()).argsort()[::-1]
-        for c in predicted_classes[:5]:
-            color, name = visualize_result(img_original, pred, c)
-            send, center, area = findContour(color, width, height)
-            dictionary.append(
-                {"nameOfSegment": name, "coord": send,
-                 "centroid": center, "area": area})
-        segment = {"segments": dictionary}
+        segment = run_segmentation(content["image"],
+                                   segmentation_module,
+                                   dictionary,
+                                   pil_to_tensor)
     try:
         validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
         validator.validate(segment)
