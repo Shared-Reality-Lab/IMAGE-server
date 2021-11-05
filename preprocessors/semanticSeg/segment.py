@@ -131,11 +131,15 @@ def segment():
         return "", 204
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    preprocessorName = "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
+    preprocessorName = \
+        "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
     preprocess_output = content["preprocessors"]
-    if "ca.mcgill.a11y.image.preprocessor.secondCategoriser" in preprocess_output:
+    if "ca.mcgill.a11y.image.preprocessor.secondCategoriser" \
+            in preprocess_output:
+        label = \
+            "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
         firstCat = \
-            preprocess_output["ca.mcgill.a11y.image.preprocessor.secondCategoriser"]
+            preprocess_output[label]
         request_type = firstCat["category"]
         if request_type != "indoor":
             logging.info("Cannot process image")
@@ -154,7 +158,8 @@ def segment():
             singleton_batch = {'img_data': img_data[None]}
             output_size = img_data.shape[1:]
             with torch.no_grad():
-                scores = segmentation_module(singleton_batch, segSize=output_size)
+                scores = segmentation_module(singleton_batch,
+                                             segSize=output_size)
             _, pred = torch.max(scores, dim=1)
             pred = pred.cpu()[0].numpy()
             color, name = visualize_result(img_original, pred, 0)

@@ -22,8 +22,8 @@ def readImage():
     dimensions = []
     ungrouped = []
     flag = 0
-    with open('./schemas/preprocessors/grouping.schema.json') as jsonfile:
-        data_schema = json.load(jsonfile)
+    # with open('./schemas/preprocessors/grouping.schema.json') as jsonfile:
+    #     data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
