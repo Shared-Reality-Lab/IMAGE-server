@@ -88,7 +88,7 @@ app.post("/render", (req, res) => {
                     if (resp.ok) {
                         return resp.json();
                     } else {
-                        console.error(resp);
+                        console.error(`${resp.status} ${resp.statusText}`);
                         const result = await resp.json();
                         throw result;
                     }
