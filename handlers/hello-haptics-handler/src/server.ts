@@ -71,19 +71,19 @@ app.post("/handler", async (req, res) => {
 	}
 
 	// Check for a usable renderer
-	// const hasHaply = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.simpleHaptics");
-	// if(!hasHaply) {
-	// 	console.warn("Simple Haply renderer not supported!");
-	// 	const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-	// 	if(ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
-	// 		res.json(response);
-	// 	} else {
-	// 		console.error("Failed to generate a valid empty response!");
-	// 		console.error(ajv.errors);
-	// 		res.status(500).json(ajv.errors);
-	// 	}
-	// 	return;
-	// }
+	const hasHaply = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.simplehaptics");
+	if(!hasHaply) {
+		console.warn("Simple Haply renderer not supported!");
+		const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+		if(ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
+			res.json(response);
+		} else {
+			console.error("Failed to generate a valid empty response!");
+			console.error(ajv.errors);
+			res.status(500).json(ajv.errors);
+		}
+		return;
+	}
 
 	// Going ahead with SimpleHaptics
 	const objects = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]["objects"];
@@ -109,13 +109,13 @@ app.post("/handler", async (req, res) => {
 	const rendering = [];
 	rendering.push(generateRendering(objectText, objectCentroids, objectCoords, image));
 
-	// if(!ajv.validate(helloHapticsSchemaJSON, rendering)) {
-	// 	console.error("Invalid JSON detected");
-	// 	console.error(ajv.errors);
-	// 	const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-	// 	res.json(response);
-	// 	return;
-	// }
+	if(!ajv.validate(helloHapticsSchemaJSON, rendering)) {
+		console.error("Invalid JSON detected");
+		console.error(ajv.errors);
+		const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+		res.json(response);
+		return;
+	}
 
 	const response = {
 		"request_uuid": req.body.request_uuid,
