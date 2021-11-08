@@ -32,7 +32,10 @@ def get_map_data():
     resolver = jsonschema.RefResolver.from_schema(
             request_schema, store=schema_store)
     try:
-        validator = jsonschema.Draft7Validator(request_schema, resolver=resolver)
+        validator = jsonschema.Draft7Validator(
+            request_schema,
+            resolver=resolver
+        )
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as error:
         logging.error(error)
