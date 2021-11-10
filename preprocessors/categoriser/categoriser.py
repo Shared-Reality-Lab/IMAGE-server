@@ -56,7 +56,7 @@ def categorise():
         return "", 204  # No content
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    name = "ca.mcgill.a11y.image.firstCategoriser"
+    name = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
 
     # convert the uri to processable image
     source = content["image"]

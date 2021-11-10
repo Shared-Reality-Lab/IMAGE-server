@@ -99,10 +99,13 @@ def readImage():
         # Get request.json
         content = request.get_json()
         preprocess_output = content["preprocessors"]
-        if "ca.mcgill.a11y.image.firstCategoriser" in preprocess_output:
-            firstCat = preprocess_output["ca.mcgill.a11y.image.firstCategoriser"]
-            type = firstCat["category"]
-            if(type=="chart"):
+        classifier_1 = \
+            "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
+        if classifier_1 in preprocess_output:
+            classifier_1_output\
+                = preprocess_output[classifier_1]
+            classifier_1_label = classifier_1_output["category"]
+            if classifier_1_label=="chart":
                 # Store reqd parameters for output json
                 img, request_uuid, timestamp, name = processImage(content)
 

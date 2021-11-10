@@ -164,15 +164,16 @@ def segment():
     timestamp = time.time()
     preprocessorName = \
         "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
+    classifier_1 = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
+    classifier_2 = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
     preprocess_output = content["preprocessors"]
-    if "ca.mcgill.a11y.image.preprocessor.secondCategoriser" \
+    if classifier_1 and classifier_2 \
             in preprocess_output:
-        label = \
-            "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
-        firstCat = \
-            preprocess_output[label]
-        request_type = firstCat["category"]
-        if request_type != "indoor":
+        classifier_2_output = \
+            preprocess_output[classifier_2]
+        classifier_2_label = \
+            classifier_2_output["category"]
+        if classifier_2_label != "indoor":
             logging.info("Cannot process image")
             return "", 204
         else:
