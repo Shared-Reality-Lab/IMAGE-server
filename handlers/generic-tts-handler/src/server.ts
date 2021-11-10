@@ -64,6 +64,24 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
+    const objectData = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
+    if (objectData["objects"].length === 0) {
+        console.warn("No objects detected despite running.");
+        const response = {
+            "request_uuid": req.body["request_uuid"],
+            "timestamp": Math.round(Date.now() / 1000),
+            "renderings": []
+        };
+        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
+            res.json(response);
+        } else {
+            console.error("Failed to generate a valid empty response!");
+            console.error(ajv.errors);
+            res.status(500).json(ajv.errors);
+        }
+        return;
+    }
+
     if (!req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SimpleAudio")) {
         console.warn("Simple audio renderer not supported.");
         const response = {
@@ -99,7 +117,6 @@ app.post("/handler", async (req, res) => {
 
     const staticSegments = [ttsIntro, "with", "and"];
     const segments = Array.from(staticSegments);
-    const objectData = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
     const groupData = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
     for (const object of objectData["objects"]) {
         const articled = Articles.articlize(object["type"].trim());
