@@ -175,16 +175,17 @@ def run(weights='yolov5s.pt',
         image = np.asarray(bytearray(binary), dtype="uint8")
         imgDim = cv2.imdecode(image, cv2.IMREAD_COLOR)
         height, width, channels = imgDim.shape
+        classifier_1 = "ca.mcgill.a11y.image.firstCategoriser"
+        classifier_2 = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
         """Check if the second classifier returns other,
         do not process further after that."""
-        if "ca.mcgill.a11y.image.preprocessor.secondCategoriser" \
+        if classifier_1 and classifier_2 \
                 in preprocess_output:
-            label = \
-                "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
-            firstCat = \
-                preprocess_output[label]
-            request_type = firstCat["category"]
-            if request_type == "other":
+            classifier_2_output = \
+                preprocess_output[classifier_2]
+            classifier_2_label = \
+                classifier_2_output["category"]
+            if classifier_2_label == "other":
                 logging.info("Cannot process image")
                 return "", 204
             else:
