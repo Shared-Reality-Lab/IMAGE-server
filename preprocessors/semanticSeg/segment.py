@@ -164,7 +164,7 @@ def segment():
     timestamp = time.time()
     preprocessorName = \
         "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
-    classifier_1 = "ca.mcgill.a11y.image.firstCategoriser"
+    classifier_1 = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
     classifier_2 = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
     preprocess_output = content["preprocessors"]
     if classifier_1 and classifier_2 \

@@ -103,7 +103,7 @@ def categorise():
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
     preprocess_output = content["preprocessors"]
-    classifier_1 = "ca.mcgill.a11y.image.firstCategoriser"
+    classifier_1 = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
     # convert the uri to processable image
     if content["image"] is None:
         return "", 204
