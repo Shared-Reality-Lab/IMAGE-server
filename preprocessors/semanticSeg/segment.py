@@ -176,7 +176,7 @@ def segment():
         if classifier_2 in preprocess_output:
             classifier_2_output = preprocess_output[classifier_2]
             classifier_2_label = classifier_2_output["category"]
-            if classifier_2_label != "indoor":
+            if classifier_2_label != "outdoor":
                 logging.info("Cannot process image")
                 return "", 204
             segment = run_segmentation(content["image"],
