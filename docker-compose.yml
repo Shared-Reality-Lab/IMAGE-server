@@ -191,6 +191,15 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+    object-text-handler:
+        build:
+            context: ./handlers/object-text-handler
+            dockerfile: Dockerfile
+        image: "object-text-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
 
 volumes:
     sc-store:
