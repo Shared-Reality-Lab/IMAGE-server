@@ -177,19 +177,41 @@ def run(weights='yolov5s.pt',
         height, width, channels = imgDim.shape
         classifier_1 = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
         classifier_2 = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
-        """Check if the second classifier returns other,
-        do not process further after that."""
-        if classifier_1 and classifier_2 \
-                in preprocess_output:
-            classifier_2_output = \
-                preprocess_output[classifier_2]
-            classifier_2_label = \
-                classifier_2_output["category"]
-            if classifier_2_label == "other":
-                logging.info("Cannot process image")
+        if classifier_1 in preprocess_output:
+            classifier_1_output = preprocess_output[classifier_1]
+            classifier_1_label = classifier_1_output["category"]
+            if classifier_1_label != "image":
+                logging.info("Not image content. Skipping...")
                 return "", 204
+            if classifier_2 in preprocess_output:
+                classifier_2_output = preprocess_output[classifier_2]
+                classifier_2_label = classifier_2_output["category"]
+                if classifier_2_label == "other":
+                    logging.info("Cannot process image")
+                    return "", 204
+                things = detect_objects(send,
+                                        device,
+                                        weights,
+                                        imgsz,
+                                        half,
+                                        source,
+                                        augment,
+                                        width,
+                                        height,
+                                        conf_thres,
+                                        iou_thres,
+                                        classes,
+                                        agnostic_nms,
+                                        save_img,
+                                        save_crop,
+                                        view_img,
+                                        hide_labels,
+                                        hide_conf)
             else:
-                # Load the Model and the weights
+                """We are providing the user the ability to process an image
+                even when the second classifier is absent, however it is
+                recommended to the run objection detection model
+                in conjunction with the second classifier."""
                 things = detect_objects(send,
                                         device,
                                         weights,
@@ -210,9 +232,9 @@ def run(weights='yolov5s.pt',
                                         hide_conf)
         else:
             """We are providing the user the ability to process an image
-            even when the second classifier is absent, however it is
+            even when the first classifier is absent, however it is
             recommended to the run objection detection model
-            in conjunction with the second classifier."""
+            in conjunction with the first classifier."""
             things = detect_objects(send,
                                     device,
                                     weights,

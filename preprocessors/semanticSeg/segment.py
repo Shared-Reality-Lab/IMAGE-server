@@ -167,25 +167,36 @@ def segment():
     classifier_1 = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
     classifier_2 = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
     preprocess_output = content["preprocessors"]
-    if classifier_1 and classifier_2 \
-            in preprocess_output:
-        classifier_2_output = \
-            preprocess_output[classifier_2]
-        classifier_2_label = \
-            classifier_2_output["category"]
-        if classifier_2_label != "indoor":
-            logging.info("Cannot process image")
+    if classifier_1 in preprocess_output:
+        classifier_1_output = preprocess_output[classifier_1]
+        classifier_1_label = classifier_1_output["category"]
+        if classifier_1_label != "image":
+            logging.info("Not image content. Skipping...")
             return "", 204
+        if classifier_2 in preprocess_output:
+            classifier_2_output = preprocess_output[classifier_2]
+            classifier_2_label = classifier_2_output["category"]
+            if classifier_2_label != "indoor":
+                logging.info("Cannot process image")
+                return "", 204
+            segment = run_segmentation(content["image"],
+                                       segmentation_module,
+                                       dictionary,
+                                       pil_to_tensor)
         else:
+            """We are providing the user the ability to process an image
+            even when the second classifier is absent, however it is
+            recommended to the run the semantic segmentation
+            model in conjunction with the second classifier."""
             segment = run_segmentation(content["image"],
                                        segmentation_module,
                                        dictionary,
                                        pil_to_tensor)
     else:
         """We are providing the user the ability to process an image
-        even when the second classifier is absent, however it is
+        even when the first classifier is absent, however it is
         recommended to the run the semantic segmentation
-        model in conjunction with the second classifier."""
+        model in conjunction with the first classifier."""
         segment = run_segmentation(content["image"],
                                    segmentation_module,
                                    dictionary,
