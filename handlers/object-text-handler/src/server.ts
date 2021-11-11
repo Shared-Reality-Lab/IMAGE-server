@@ -7,9 +7,10 @@ import pluralize from "pluralize"
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseJSON from "./schemas/handler-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
+import textJSON from "./schemas/renderers/text.schema.json";
 
 const ajv = new Ajv({
-    "schemas": [querySchemaJSON, handlerResponseJSON, definitionsJSON]
+    "schemas": [querySchemaJSON, handlerResponseJSON, definitionsJSON, textJSON]
 });
 
 const app = express();
@@ -128,7 +129,8 @@ app.post("/handler", async (req, res) => {
         ]
     };
 
-    if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
+    if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response) &&
+       ajv.validate("https://image.a11y.mcgill.ca/renderers/text.schema.json", response["renderings"][0]["data"])) {
         res.json(response);
     } else {
         console.error("Failed to generate a valid response.");
