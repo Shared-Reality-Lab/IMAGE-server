@@ -111,6 +111,7 @@ app.post("/handler", async (req, res) => {
     }
 
     segments.splice(-1, 0, "and");
+    segments[segments.length - 1] += ".";
     const text = segments.join(" ");
     const response = {
         "request_uuid": req.body["request_uuid"],
