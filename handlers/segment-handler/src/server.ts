@@ -37,7 +37,7 @@ app.post("/handler", async (req, res) => {
     // Check for required preprocessor data
     const preprocessors = req.body["preprocessors"];
     if (!preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]) {
-        console.warn("No semantic segmentation data: can't render!");
+        console.debug("No semantic segmentation data: can't render!");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
 
         if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
@@ -166,7 +166,6 @@ app.post("/handler", async (req, res) => {
                 try {
                     // Handle response from SuperCollider
                     oscPort.on("message", (oscMsg: osc.OscMessage) => {
-                        console.log(oscMsg);
                         const arg = oscMsg["args"] as osc.Argument[];
                         if (arg[0] === "done") {
                             const respArr: {"name": string, "offset": number, "duration": number}[] = [];

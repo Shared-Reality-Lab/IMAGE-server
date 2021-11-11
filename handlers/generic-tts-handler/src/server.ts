@@ -133,8 +133,6 @@ app.post("/handler", async (req, res) => {
         segments.push(`${num.toString()} ${pType}`);
     }
 
-    console.log(segments);
-
     let ttsResponse;
     try {
         ttsResponse = await fetch("http://espnet-tts/service/tts/segments", {
@@ -226,7 +224,6 @@ app.post("/handler", async (req, res) => {
             new Promise<string>((resolve, reject) => {
                 try {
                     oscPort.on("message", (oscMsg: osc.OscMessage) => {
-                        console.log(oscMsg);
                         const arg = oscMsg["args"] as osc.Argument[];
                         if (arg[0] === "done") {
                             oscPort.close();

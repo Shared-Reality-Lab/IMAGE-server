@@ -20,7 +20,6 @@ pieChart = { |json, outPath, addr|
                    .flat
                    .drop(-1);
     wedges = wedges.addFirst(0.0);
-    wedges.at(-1).postln;
     arcs = wedges.linlin(0.0, wedges.last, 0.0, 2pi);
     arcs = arcs.clump(2);
 
@@ -30,7 +29,6 @@ pieChart = { |json, outPath, addr|
         start = arc[0];
         end = arc[1];
         percentage = ((end - start) / 2pi);
-        percentage.postln;
 
         score.add([
             timing,

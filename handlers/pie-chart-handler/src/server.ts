@@ -34,7 +34,7 @@ app.post("/handler", async (req, res) => {
         preprocessors["ca.mcgill.a11y.image.preprocessor.chart"]
         && preprocessors["ca.mcgill.a11y.image.preprocessor.chart"]["type"] === "Pie Chart"
     )) {
-        console.warn("Not enough data to generate a rendering or not applicable.");
+        console.debug("Not enough data to generate a rendering or not applicable.");
         const response = {
             "request_uuid": req.body["request_uuid"],
             "timestamp": Math.round(Date.now() / 1000),
@@ -71,7 +71,6 @@ app.post("/handler", async (req, res) => {
     const scData = {
         "wedges": preprocessors["ca.mcgill.a11y.image.preprocessor.chart"]["sectors"].map((e: Record<string, unknown>) => e["value"]),
     };
-    console.log(scData);
     const renderings: Record<string, unknown>[] = [];
     const outFile = filePrefix + uuidv4() + ".wav";
     await fs.writeFile(outFile, "");
