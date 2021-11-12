@@ -110,8 +110,17 @@ app.post("/handler", async (req, res) => {
         const num = group["IDs"].length;
         segments.push(`${num.toString()} ${pType}`);
     }
+    for (const id of groupData["ungrouped"]) {
+        const obj = objectData["objects"].find((obj: Record<string, unknown>) => {
+            return obj["ID"] == id;
+        });
+        const sType = obj ? obj["type"] : "object";
+        segments.push(`1 ${sType.trim()}`);
+    }
 
-    segments.splice(-1, 0, "and");
+    if (groupData["grouped"].length + groupData["ungrouped"].length > 1) {
+        segments.splice(-1, 0, "and");
+    }
     segments[segments.length - 1] += ".";
     const text = segments.join(" ");
     const response = {
