@@ -2,7 +2,7 @@ import express from "express";
 import Ajv from "ajv";
 import * as utils from "./utils";
 import querySchemaJSON from "./schemas/request.schema.json";
-//import helloHapticsSchemaJSON from "./simplehaptics.schema.json"
+import helloHapticsSchemaJSON from "./simplehaptics.schema.json"
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 const app = express();
@@ -13,7 +13,7 @@ const ajv = new Ajv({
 
 function generateRendering(objectData: object, image: string[]): object {
 	return {
-		"type_id": "ca.mcgill.a11y.image.renderer.simpleHaptics",
+		"type_id": "ca.mcgill.a11y.image.renderer.SimpleHaptics",
 		"confidence": 0,
 		"description": "Bounding box and centroid for haptic round trip example.",
 		"metadata": {
@@ -96,13 +96,13 @@ app.post("/handler", async (req, res) => {
 	const rendering = [];
 	rendering.push(generateRendering(objs, image));
 
-	// if(!ajv.validate(helloHapticsSchemaJSON, rendering)) {
-	// 	console.error("Invalid JSON detected");
-	// 	console.error(ajv.errors);
-	// 	const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-	// 	res.json(response);
-	// 	return;
-	// }
+	if(!ajv.validate(helloHapticsSchemaJSON, rendering)) {
+		console.error("Invalid JSON detected");
+		console.error(ajv.errors);
+		const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+		res.json(response);
+		return;
+	}
 
 	const response = {
 		"request_uuid": req.body.request_uuid,
