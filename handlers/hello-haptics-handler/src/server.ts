@@ -21,7 +21,7 @@ function generateRendering(objectData: object, image: string[]): object {
 		},
 		"data": {
 			"image": image,
-			objectData
+			"data": objectData
 		}
 	}
 }
