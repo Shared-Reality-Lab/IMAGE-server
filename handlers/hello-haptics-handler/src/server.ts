@@ -8,10 +8,11 @@ import definitionsJSON from "./schemas/definitions.json";
 const app = express();
 const port = 80;
 const ajv = new Ajv({
-	"schemas": [querySchemaJSON, definitionsJSON, handlerResponseSchemaJSON]
+	"schemas": [querySchemaJSON, definitionsJSON, handlerResponseSchemaJSON, helloHapticsSchemaJSON]
 });
 
-function generateRendering(objectData: object, image: string[]): object {
+function generateRendering(objectData: object, image: string[]) {
+	console.log(typeof(objectData));
 	return {
 		"type_id": "ca.mcgill.a11y.image.renderer.SimpleHaptics",
 		"confidence": 0,
@@ -23,6 +24,7 @@ function generateRendering(objectData: object, image: string[]): object {
 			"image": image,
 			"data": objectData
 		}
+		
 	}
 }
 
@@ -54,7 +56,7 @@ app.post("/handler", async (req, res) => {
 	}
 
 	// Check for a usable renderer
-	// const hasHaply = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.simplehaptics");
+	// const hasHaply = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SimpleHaptics");
 	// if(!hasHaply) {
 	// 	console.warn("Simple Haply renderer not supported!");
 	// 	const response = utils.generateEmptyResponse(req.body["request_uuid"]);
@@ -93,10 +95,10 @@ app.post("/handler", async (req, res) => {
 
 	const image = req.body.image;
 
-	const rendering = [];
+	const rendering:Record<string,unknown>[] = [];
 	rendering.push(generateRendering(objs, image));
-
-	if(!ajv.validate(helloHapticsSchemaJSON, rendering)) {
+	
+	if(!ajv.validate(helloHapticsSchemaJSON, rendering[0]["data"])) {  
 		console.error("Invalid JSON detected");
 		console.error(ajv.errors);
 		const response = utils.generateEmptyResponse(req.body["request_uuid"]);
@@ -110,7 +112,7 @@ app.post("/handler", async (req, res) => {
 		"renderings": rendering
 	};
 
-	if(ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
+	if(ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) { // 
 		res.json(response);
 	} else {
 		res.json(ajv.errors);
