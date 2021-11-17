@@ -11,6 +11,7 @@ COPY ./requirements.txt /app/requirements.txt
 WORKDIR /app
 
 RUN pip install -r requirements.txt
+RUN pip install gunicorn
 
 COPY --from=schemas /schemas /app/schemas
 
@@ -20,4 +21,4 @@ EXPOSE 5000
 
 
 ENV FLASK_APP=grouping.py
-CMD [ "flask", "run", "--host=0.0.0.0" ]
+CMD [ "gunicorn", "grouping:app", "-b", "0.0.0.0:5000" ]
