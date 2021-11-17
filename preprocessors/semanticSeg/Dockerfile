@@ -9,6 +9,7 @@ RUN pip3 install --upgrade pip
 RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install -y git
 RUN pip install -r /app/requirements.txt
+RUN pip install gunicorn
 
 COPY --from=schemas /schemas /app/schemas
 WORKDIR /app
@@ -19,4 +20,5 @@ RUN wget bach.cim.mcgill.ca/atp/models/semanticSegmentation/encoder_epoch_20.pth
 
 EXPOSE 5000
 ENV FLASK_APP=segment.py
-CMD [ "flask", "run", "--host=0.0.0.0" ]
+#CMD [ "flask", "run", "--host=0.0.0.0" ]
+CMD [ "gunicorn", "segment:app", "-b", "0.0.0.0:5000" ]
