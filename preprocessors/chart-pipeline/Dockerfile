@@ -22,6 +22,7 @@ RUN python setup.py build_ext --inplace && rm -r build
 
 WORKDIR /chart-pipeline
 
+RUN pip install gunicorn
 RUN gdown https://drive.google.com/uc?id=1qtCLlzKm8mx7kQOV1criUbqcGnNh58Rr
 RUN unzip Chart-pipeline-models.zip
 RUN rm Chart-pipeline-models.zip
@@ -33,4 +34,4 @@ RUN rm pycocotool.zip
 
 EXPOSE 5000
 
-ENTRYPOINT ["python3", "-m" , "app"]
+ENTRYPOINT ["./boot.sh"]
