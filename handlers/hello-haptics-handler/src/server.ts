@@ -56,19 +56,19 @@ app.post("/handler", async (req, res) => {
 	}
 
 	// Check for a usable renderer
-	// const hasHaply = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SimpleHaptics");
-	// if(!hasHaply) {
-	// 	console.warn("Simple Haply renderer not supported!");
-	// 	const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-	// 	if(ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
-	// 		res.json(response);
-	// 	} else {
-	// 		console.error("Failed to generate a valid empty response!");
-	// 		console.error(ajv.errors);
-	// 		res.status(500).json(ajv.errors);
-	// 	}
-	// 	return;
-	// }
+	const hasHaply = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SimpleHaptics");
+	if(!hasHaply) {
+		console.warn("Simple Haply renderer not supported!");
+		const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+		if(ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
+			res.json(response);
+		} else {
+			console.error("Failed to generate a valid empty response!");
+			console.error(ajv.errors);
+			res.status(500).json(ajv.errors);
+		}
+		return;
+	}
 
 	// Going ahead with simplehaptics
 	const objects = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]["objects"];
@@ -87,8 +87,8 @@ app.post("/handler", async (req, res) => {
 
 		const data = {
 			"text": type,
-			"centroid": centroid,
-			"dimensions": dimensions
+			"centroids": centroid,
+			"coords": dimensions
 		}
 		objs.push(data)
 	}
