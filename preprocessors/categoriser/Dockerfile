@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y python3-opencv && rm -rf /var/lib/apt/l
 RUN pip3 install --upgrade pip
 RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 RUN pip install -r /app/requirements.txt
-RUN pip install gunicorn
+
 
 COPY --from=schemas /schemas /app/schemas
 WORKDIR /app
