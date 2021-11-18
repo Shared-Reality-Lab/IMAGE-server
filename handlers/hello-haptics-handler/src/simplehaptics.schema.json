@@ -1,22 +1,47 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "simplehaptics.schema.json",
+    "$id": "ca.mcgill.a11y.image.renderer.SimpleHaptics",
     "title": "Simple Haptics Renderer",
     "type": "object",
     "description": "Data for the haptic roundtrip testing ca.mcgill.a11y.image.renderer.SimpleHaptics. renderer sends the bounding box information ",
     "properties": {
-        "text": {
-            "type": "string"
-        },
         "image": {
             "type": "string"
         },
-        "centroids": {
-            "type": "array"
-        },
-        "coordinates": {
-            "type": "array"
+        "data":{
+            "type":"array",
+            "items":{
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "text" : {
+                                "type": "string"
+                                },
+                                "centroids": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "number",
+                                        "minimum":0,
+                                        "maximum":1},
+                                    "minItems": 2,
+                                    "maxItems": 2
+                                },
+                                "coords": {
+                                    "type": "array",
+                                    "items": { 
+                                        "type": "number", 
+                                        "minimum": 0, 
+                                        "maximum": 1 }, 
+                                    "minItems": 4, 
+                                    "maxItems": 4 
+                                }
+                        },
+                        "required": [ "centroids", "coords"]
+                    }   
+                ]
+            } 
         }
     },
-    "required": [ "centroids", "coordinates" ]
+    "required": [ "data"]
 }
