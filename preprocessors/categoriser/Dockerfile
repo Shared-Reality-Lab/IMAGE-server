@@ -8,6 +8,7 @@ RUN pip3 install --upgrade pip
 RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 RUN pip install -r /app/requirements.txt
 
+
 COPY --from=schemas /schemas /app/schemas
 WORKDIR /app
 COPY . /app
@@ -21,4 +22,4 @@ RUN mv densenet121-a639ec97.pth /app/hub/checkpoints/
 EXPOSE 5000
 ENV FLASK_APP=categoriser.py
 ENV TORCH_HOME=/app
-CMD [ "flask", "run", "--host=0.0.0.0" ]
+CMD [ "gunicorn", "categoriser:app", "-b", "0.0.0.0:5000" ]
