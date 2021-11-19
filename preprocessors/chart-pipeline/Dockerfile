@@ -22,8 +22,8 @@ RUN python setup.py build_ext --inplace && rm -r build
 
 WORKDIR /chart-pipeline
 
-RUN pip install gunicorn
-RUN gdown https://drive.google.com/uc?id=1qtCLlzKm8mx7kQOV1criUbqcGnNh58Rr
+RUN pip install gunicorn==20.1.0
+RUN wget https://image.a11y.mcgill.ca/models/chart/Chart-pipeline-models.zip
 RUN unzip Chart-pipeline-models.zip
 RUN rm Chart-pipeline-models.zip
 RUN mv data/clsdata\(1031\)/cls data/clsdata\(1031\)/Cls
