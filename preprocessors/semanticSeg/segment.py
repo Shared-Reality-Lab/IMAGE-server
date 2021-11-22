@@ -13,6 +13,7 @@ import cv2
 import numpy as np
 from mit_semseg.models import ModelBuilder, SegmentationModule
 from mit_semseg.utils import colorEncode
+import gc
 
 
 app = Flask(__name__)
@@ -100,7 +101,7 @@ def run_segmentation(url,
     pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     height, width, channels = pil_image.shape
     img = pil_image
-    img_original = numpy.array(img)
+    img_original = numpy.array(img) 
     img_data = pil_to_tensor(img)
     img_data = img_data.cuda()
     singleton_batch = {'img_data': img_data[None]}
@@ -123,6 +124,8 @@ def run_segmentation(url,
 
 @app.route("/preprocessor", methods=['POST', 'GET'])
 def segment():
+    gc.collect()
+    torch.cuda.empty_cache()
     dictionary = []
     with open('./schemas/preprocessors/segmentation.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
