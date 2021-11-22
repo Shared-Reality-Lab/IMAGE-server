@@ -101,7 +101,7 @@ def run_segmentation(url,
     pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     height, width, channels = pil_image.shape
     img = pil_image
-    img_original = numpy.array(img) 
+    img_original = numpy.array(img)
     img_data = pil_to_tensor(img)
     img_data = img_data.cuda()
     singleton_batch = {'img_data': img_data[None]}
