@@ -12,6 +12,7 @@ WORKDIR /app
 
 RUN pip install -r requirements.txt
 
+
 COPY --from=schemas /schemas /app/schemas
 
 COPY . /app
@@ -20,4 +21,4 @@ EXPOSE 5000
 
 
 ENV FLASK_APP=grouping.py
-CMD [ "flask", "run", "--host=0.0.0.0" ]
+CMD [ "gunicorn", "grouping:app", "-b", "0.0.0.0:5000" ]
