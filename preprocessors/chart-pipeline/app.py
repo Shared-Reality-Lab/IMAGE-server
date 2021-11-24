@@ -17,17 +17,19 @@ MODE 1: 'Cls' model permanent (switch between CPU and GPU), others temporary and
 MODE 2: All models permanent (switch all models between CPU and GPU) - Cls on GPU, others on CPU - without torch.empty_cache()
 MODE 3: All models permanently on GPU
 """
-
+class Namespace:
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 # Create app
 app = Flask(__name__)
 
 # Args
-parser = ArgumentParser()
-parser.add_argument("--mode", dest="mode", help="Mode of operation", default=1, type=int)
-parser.add_argument("--empty_cache", dest="empty_cache", help="Clear GPU cache after use", default=True, type=bool)
-parser.add_argument("--debug", dest="debug", help="Show intermediate results for debugging", default=False, type=bool)
-args = parser.parse_args()
-
+# parser = ArgumentParser()
+# parser.add_argument("--mode", dest="mode", help="Mode of operation", default=1, type=int)
+# parser.add_argument("--empty_cache", dest="empty_cache", help="Clear GPU cache after use", default=True, type=bool)
+# parser.add_argument("--debug", dest="debug", help="Show intermediate results for debugging", default=False, type=bool)
+# args = parser.parse_args()
+args = Namespace(mode=1,empty_cache=True,debug=False)
 print("-----------------------------------------------")
 print("Mode: {}".format(args.mode))
 print("Empty GPU cache: {}".format(args.empty_cache))
