@@ -7,7 +7,7 @@ WORKDIR /chart-pipeline
 
 RUN apt-get update && apt-get install unzip && apt-get install -y g++
 
-
+RUN pip install gdown
 COPY environment.yml environment.yml
 RUN conda env create -f environment.yml
 RUN echo "source activate chartenv" > ~/.bashrc
