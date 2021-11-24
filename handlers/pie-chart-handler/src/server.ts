@@ -9,9 +9,11 @@ import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseJSON from "./schemas/handler-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 import descriptionJSON from "./schemas/services/supercollider/pie-chart.schema.json";
+import rendererDefJSON from "./schemas/renderers/definitions.json";
+import simpleAudioJSON from "./schemas/renderers/simpleaudio.schema.json";
 
 const ajv = new Ajv({
-    "schemas": [querySchemaJSON, handlerResponseJSON, definitionsJSON, descriptionJSON]
+    "schemas": [querySchemaJSON, handlerResponseJSON, definitionsJSON, descriptionJSON, rendererDefJSON, simpleAudioJSON]
 });
 
 const app = express();
@@ -126,14 +128,20 @@ app.post("/handler", async (req, res) => {
         ]);
         await fs.readFile(outFile).then(buffer => {
             const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
-            renderings.push({
+            const r = {
                 "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
                 "confidence": 50,
                 "description": "A spatial sonification of a pie chart without label information.",
                 "data": {
                     "audio": dataURL
                 }
-            });
+            };
+            if (ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", r["data"])) {
+                renderings.push(r);
+            } else {
+                console.error("Failed to generate a valid empty response!");
+                console.error(ajv.errors);
+            }
         });
     } catch (err) {
         console.error(err);

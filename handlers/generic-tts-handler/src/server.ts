@@ -14,9 +14,11 @@ import definitionsJSON from "./schemas/definitions.json";
 import ttsRequestJSON from "./schemas/services/tts/segment.request.json";
 import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
 import descriptionJSON from "./schemas/services/supercollider/tts-description.schema.json";
+import rendererDefJSON from "./schemas/renderers/definitions.json";
+import simpleAudioJSON from "./schemas/renderers/simpleaudio.schema.json";
 
 const ajv = new Ajv({
-    "schemas": [querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, descriptionJSON]
+    "schemas": [querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, descriptionJSON, rendererDefJSON, simpleAudioJSON]
 });
 
 const app = express();
@@ -275,6 +277,12 @@ app.post("/handler", async (req, res) => {
                 "audio": dataURL
             }
         });
+        // Verify match of simple audio
+        if (!ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", renderings[renderings.length - 1]["data"])) {
+            console.error("Failed to validate data of simple renderer.");
+            renderings.pop();
+            throw ajv.errors;
+        }
     }).catch(err => {
         console.error(err);
     }).finally(() => {
