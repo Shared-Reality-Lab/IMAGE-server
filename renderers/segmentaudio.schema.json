@@ -10,7 +10,7 @@
             "type": "array",
             "items": {
                 "allOf": [
-                    { "$ref": "../definitions.json#/definitions/segmentOffset" },
+                    { "$ref": "./definitions.json#/definitions/segmentOffsetSeconds" },
                     {
                         "type": "object",
                         "properties": {

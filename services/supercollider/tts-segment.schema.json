@@ -57,7 +57,7 @@
                         "type": "object",
                         "description": "TTS reading of segment name information.",
                         "properties": {
-                            "audio": { "$ref": "../../definitions.json#/definitions/segmentOffset" }
+                            "audio": { "$ref": "../../definitions.json#/definitions/segmentOffsetSamples" }
                         }
                     }
                 ]

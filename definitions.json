@@ -75,7 +75,7 @@
             },
             "required": [ "type_id", "confidence", "description", "data" ]
         },
-        "segmentOffset": {
+        "segmentOffsetSamples": {
             "description": "Data on the offset of an audio segment in the file and its duration. Both are reported in samples.",
             "type": "object",
             "properties": {

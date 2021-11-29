@@ -4,6 +4,21 @@
     "title": "Renderer definitions",
     "description": "Common definitions used in renderers.",
     "definitions": {
+        "segmentOffsetSeconds": {
+        "description": "Data on the offset of an audio segment in the file and its duration. Both are reported in seconds.",
+            "type": "object",
+            "properties": {
+                "offset": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "duration": {
+                    "type": "number",
+                    "minimum": 0
+                }
+            },
+            "required": [ "offset", "duration" ]
+        },
         "remoteAudioFile": {
             "description": "HTTP(S) URL to an audio file.",
             "type": "string",
