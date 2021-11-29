@@ -37,4 +37,4 @@ RUN rm pycocotool.zip
 
 EXPOSE 5000
 
-ENTRYPOINT ["python3", "-m" , "app"]
+ENTRYPOINT ["./boot.sh"]
