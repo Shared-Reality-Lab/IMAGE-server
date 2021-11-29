@@ -31,7 +31,7 @@ RUN unzip Chart-pipeline-models.zip
 RUN rm Chart-pipeline-models.zip
 RUN mv data/clsdata\(1031\)/cls data/clsdata\(1031\)/Cls
 
-RUN gdown https://drive.google.com/uc?id=1-4PDJ9JHAOGtyLkvVHAHVuo0xGERC1XL
+RUN wget https://image.a11y.mcgill.ca/models/chart/pycocotool.zip
 RUN unzip pycocotool.zip
 RUN rm pycocotool.zip
 
