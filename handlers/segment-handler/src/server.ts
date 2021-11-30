@@ -12,11 +12,14 @@ import ttsRequestJSON from "./schemas/services/tts/segment.request.json";
 import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
 import descriptionJSON from "./schemas/services/supercollider/tts-description.schema.json";
 import segmentJSON from "./schemas/services/supercollider/tts-segment.schema.json";
+import rendererDefJSON from "./schemas/renderers/definitions.json";
+import simpleAudioJSON from "./schemas/renderers/simpleaudio.schema.json";
+import segmentAudioJSON from "./schemas/renderers/segmentaudio.schema.json";
 
 import * as utils from "./utils";
 
 const ajv = new Ajv({
-    "schemas": [ querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, descriptionJSON, segmentJSON ]
+    "schemas": [ querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, descriptionJSON, segmentJSON, rendererDefJSON, simpleAudioJSON, segmentAudioJSON ]
 });
 
 const app = express();
@@ -37,7 +40,7 @@ app.post("/handler", async (req, res) => {
     // Check for required preprocessor data
     const preprocessors = req.body["preprocessors"];
     if (!preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]) {
-        console.warn("No semantic segmentation data: can't render!");
+        console.debug("No semantic segmentation data: can't render!");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
 
         if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
@@ -166,7 +169,6 @@ app.post("/handler", async (req, res) => {
                 try {
                     // Handle response from SuperCollider
                     oscPort.on("message", (oscMsg: osc.OscMessage) => {
-                        console.log(oscMsg);
                         const arg = oscMsg["args"] as osc.Argument[];
                         if (arg[0] === "done") {
                             const respArr: {"name": string, "offset": number, "duration": number}[] = [];
@@ -218,17 +220,23 @@ app.post("/handler", async (req, res) => {
         // TODO detect MIME type from file
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
         if (hasSimple) {
-            renderings.push({
+            const r = {
                 "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
                 "confidence": 50, // TODO magic number
                 "description": "A sonification of segments detected in the image.",
                 "data": {
                     "audio": dataURL
                 }
-            });
+            };
+            if (ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", r["data"])) {
+                renderings.push(r);
+            } else {
+                console.error(ajv.errors);
+                throw ajv.errors;
+            }
         }
         if (segArray.length > 0 && hasSegment) {
-            renderings.push({
+            const r = {
                 "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
                 "confidence": 50, // TODO magic number
                 "description": "Navigable sonifications of segments detected in the image.",
@@ -236,7 +244,13 @@ app.post("/handler", async (req, res) => {
                     "audioFile": dataURL,
                     "audioInfo": segArray
                 }
-            });
+            };
+            if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudio.schema.json", r["data"])) {
+                renderings.push(r);
+            } else {
+                console.error(ajv.errors);
+                throw ajv.errors;
+            }
         }
     }).catch(err => {
         console.error(err);

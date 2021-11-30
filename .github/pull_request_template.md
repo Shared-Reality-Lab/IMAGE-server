@@ -12,3 +12,4 @@ Please ensure you've followed the checklist and provide all the required informa
 - [ ] The Docker image builds
 - [ ] The container runs correctly when sent inputs with the changes
 - [ ] No models or other large files are part of these commits
+- [ ] A description of the tests already run as part of this PR is present

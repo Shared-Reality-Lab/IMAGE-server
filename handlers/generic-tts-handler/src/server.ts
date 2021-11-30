@@ -14,9 +14,11 @@ import definitionsJSON from "./schemas/definitions.json";
 import ttsRequestJSON from "./schemas/services/tts/segment.request.json";
 import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
 import descriptionJSON from "./schemas/services/supercollider/tts-description.schema.json";
+import rendererDefJSON from "./schemas/renderers/definitions.json";
+import simpleAudioJSON from "./schemas/renderers/simpleaudio.schema.json";
 
 const ajv = new Ajv({
-    "schemas": [querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, descriptionJSON]
+    "schemas": [querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, descriptionJSON, rendererDefJSON, simpleAudioJSON]
 });
 
 const app = express();
@@ -49,6 +51,24 @@ app.post("/handler", async (req, res) => {
         && preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
     )) {
         console.warn("Not enough data to generate a rendering.");
+        const response = {
+            "request_uuid": req.body["request_uuid"],
+            "timestamp": Math.round(Date.now() / 1000),
+            "renderings": []
+        };
+        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
+            res.json(response);
+        } else {
+            console.error("Failed to generate a valid empty response!");
+            console.error(ajv.errors);
+            res.status(500).json(ajv.errors);
+        }
+        return;
+    }
+
+    const objectData = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
+    if (objectData["objects"].length === 0) {
+        console.warn("No objects detected despite running.");
         const response = {
             "request_uuid": req.body["request_uuid"],
             "timestamp": Math.round(Date.now() / 1000),
@@ -99,7 +119,6 @@ app.post("/handler", async (req, res) => {
 
     const staticSegments = [ttsIntro, "with", "and"];
     const segments = Array.from(staticSegments);
-    const objectData = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
     const groupData = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
     for (const object of objectData["objects"]) {
         const articled = Articles.articlize(object["type"].trim());
@@ -115,8 +134,6 @@ app.post("/handler", async (req, res) => {
         const num = group["IDs"].length;
         segments.push(`${num.toString()} ${pType}`);
     }
-
-    console.log(segments);
 
     let ttsResponse;
     try {
@@ -209,7 +226,6 @@ app.post("/handler", async (req, res) => {
             new Promise<string>((resolve, reject) => {
                 try {
                     oscPort.on("message", (oscMsg: osc.OscMessage) => {
-                        console.log(oscMsg);
                         const arg = oscMsg["args"] as osc.Argument[];
                         if (arg[0] === "done") {
                             oscPort.close();
@@ -261,6 +277,12 @@ app.post("/handler", async (req, res) => {
                 "audio": dataURL
             }
         });
+        // Verify match of simple audio
+        if (!ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", renderings[renderings.length - 1]["data"])) {
+            console.error("Failed to validate data of simple renderer.");
+            renderings.pop();
+            throw ajv.errors;
+        }
     }).catch(err => {
         console.error(err);
     }).finally(() => {

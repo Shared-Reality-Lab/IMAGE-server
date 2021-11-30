@@ -5,11 +5,12 @@ import Ajv from "ajv";
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
+import textSchemaJSON from "./schemas/renderers/text.schema.json";
 
 const app = express();
 const port = 80;
 const ajv = new Ajv({
-    "schemas": [querySchemaJSON, definitionsJSON, handlerResponseSchemaJSON]
+    "schemas": [querySchemaJSON, definitionsJSON, handlerResponseSchemaJSON, textSchemaJSON]
 });
 
 async function extractDimensions(dataUrl: string) {
@@ -18,7 +19,7 @@ async function extractDimensions(dataUrl: string) {
     return [metadata.width as number, metadata.height as number];
 }
 
-function generateRendering(width: number, height: number): object {
+function generateRendering(width: number, height: number) {
     return {
         "type_id": "ca.mcgill.a11y.image.renderer.Text",
         "confidence": 100,
@@ -47,7 +48,14 @@ app.post("/handler", async (req, res) => {
         const rendering = [];
         if (renderers.includes("ca.mcgill.a11y.image.renderer.Text")) {
             const dims = await extractDimensions(req.body.image);
-            rendering.push(generateRendering(dims[0], dims[1]));
+            const r: Record<string, unknown> = generateRendering(dims[0], dims[1]);
+            if (ajv.validate("https://image.a11y.mcgill.ca/renderers/text.schema.json", r["data"])) {
+                rendering.push(r);
+            } else {
+                console.error("Failed to generate a valid text rendering!");
+                res.status(500).json(ajv.errors);
+                return;
+            }
         } else {
             console.warn("Text renderer not supported by the client!");
         }

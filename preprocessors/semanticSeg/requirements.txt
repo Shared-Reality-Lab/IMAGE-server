@@ -9,4 +9,5 @@ jsonschema==3.2.0
 Werkzeug==0.16.0
 scipy==1.7.0
 opencv-python== 4.5.1.48
+gunicorn==20.1.0
 git+https://github.com/CSAILVision/semantic-segmentation-pytorch.git@8f27c9b97d2ca7c6e05333d5766d144bf7d8c31b

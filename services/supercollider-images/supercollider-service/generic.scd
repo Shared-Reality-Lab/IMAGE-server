@@ -114,7 +114,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
     // Remove objects handled by groups
     objects.takeThese({ |item, i|
         groupedObjIds.includes(item.at("ID").asInteger)
-    }).postln;
+    });
 
     // Now do remaining objects
     objects.do({ |item, i|
@@ -199,7 +199,6 @@ renderGeneric = { |json, ttsData, outPath, addr|
 OSCdef.newMatching(\genericObject, { |msg, time, addr, recvPort|
     var json = nil, ttsData = nil;
     "Received a message at /render/genericObject...".postln;
-    msg.at(1).asString.postln;
     # json, ttsData = IMAGE.loadTTSJSON(msg.at(1).asString);
     if(json.notNil && ttsData.notNil,
         {
@@ -219,8 +218,8 @@ OSCdef.newMatching(\genericObject, { |msg, time, addr, recvPort|
         },
         {
             "JSON or TTS data nil!".postln;
-            json.postln;
-            ttsData.postln;
+            if(json.isNil, { "JSON is nil.".postln; });
+            if(ttsData.isNil, { "TTS data is nil.".postln; });
             addr.sendMsg(\status, \fail);
         }
     );

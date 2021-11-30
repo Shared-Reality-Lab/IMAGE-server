@@ -111,7 +111,6 @@ renderSegments = { |json, ttsData, outPath, addr|
 OSCdef.newMatching(\semseg, { |msg, time, addr, recvPort|
     var json = nil, ttsData = nil;
     "Received a message at /render/semanticSegmentation...".postln;
-    msg.at(1).asString.postln;
     # json, ttsData = IMAGE.loadTTSJSON(msg.at(1).asString);
     if(json.notNil && ttsData.notNil,
         {
@@ -131,8 +130,8 @@ OSCdef.newMatching(\semseg, { |msg, time, addr, recvPort|
         },
         {
             "JSON or TTS data nil!".postln;
-            json.postln;
-            ttsData.postln;
+            if(json.isNil, { "JSON is nil.".postln; });
+            if(ttsData.isNil, { "TTS data is nil.".postln; });
             addr.sendMsg(\status, \fail);
         }
     );

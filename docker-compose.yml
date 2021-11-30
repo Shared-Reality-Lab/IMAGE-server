@@ -41,6 +41,14 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 8080
+    autour-preprocessor:
+        build:
+            context: ./preprocessors/autour
+            dockerfile: Dockerfile
+        image: "autour:latest"
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 2
+            ca.mcgill.a11y.image.port: 5000
     hello-handler:
         build:
             context: ./handlers/hello-handler
@@ -112,6 +120,22 @@ services:
                     devices:
                     - driver: nvidia
                       capabilities: ["gpu", "utility", "compute"]
+    chart-pipeline:
+        build:
+            context: ./preprocessors/chart-pipeline
+            dockerfile: Dockerfile
+        image: "chart-pipeline:latest"
+        command: --mode=1 --empty_cache=True
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 2
+            ca.mcgill.a11y.image.port: 5000
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                    - driver: nvidia
+                      device_ids: ['0']
+                      capabilities: ["gpu", "utility", "compute"]
     hello-tts-handler:
         build:
             context: ./handlers/hello-tts-handler
@@ -156,6 +180,26 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+    pie-chart-handler:
+        build:
+            context: ./handlers/pie-chart-handler
+            dockerfile: Dockerfile
+        image: "pie-chart-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+    object-text-handler:
+        build:
+            context: ./handlers/object-text-handler
+            dockerfile: Dockerfile
+        image: "object-text-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
 
 volumes:
     sc-store:
