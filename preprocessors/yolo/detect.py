@@ -165,7 +165,8 @@ def run(weights='yolov5s.pt',
             schema, store=schema_store)
         content = request.get_json()
         try:
-            validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
+            validator = jsonschema.Draft7Validator(
+                first_schema, resolver=resolver)
             validator.validate(content)
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
