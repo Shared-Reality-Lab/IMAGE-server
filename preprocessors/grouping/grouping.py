@@ -28,6 +28,8 @@ def readImage():
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
         definitionSchema = json.load(jsonfile)
+    with open('./schemas/request.schema.json') as jsonfile:
+        first_schema = json.load(jsonfile)
     schema_store = {
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema
@@ -35,6 +37,12 @@ def readImage():
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
     content = request.get_json()
+    try:
+        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
+        validator.validate(content)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 400
     preprocessor = content["preprocessors"]
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" \
             not in preprocessor:
