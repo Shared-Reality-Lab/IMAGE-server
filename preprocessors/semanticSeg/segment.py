@@ -133,6 +133,8 @@ def segment():
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
         definitionSchema = json.load(jsonfile)
+    with open('./schemas/request.schema.json') as jsonfile:
+        first_schema = json.load(jsonfile)
     schema_store = {
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema
@@ -160,6 +162,12 @@ def segment():
             std=[0.229, 0.224, 0.225])
     ])
     content = request.get_json()
+    try:
+        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
+        validator.validate(content)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 400
     if "image" not in content:
         logging.info("Not image content. Skipping...")
         return "", 204
