@@ -20,4 +20,4 @@ RUN wget bach.cim.mcgill.ca/atp/models/semanticSegmentation/encoder_epoch_20.pth
 
 EXPOSE 5000
 ENV FLASK_APP=segment.py
-CMD [ "gunicorn", "segment:app", "-b", "0.0.0.0:5000" ]
+CMD [ "gunicorn", "segment:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
