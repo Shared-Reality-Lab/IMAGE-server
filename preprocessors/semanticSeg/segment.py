@@ -78,7 +78,6 @@ def findContour(pred_color, width, height):
     centre = [centre1, centre2]
     totArea = totArea / (width * height)
     nonzero = np.concatenate(contours, dtype=np.float32)
-    logging.warn(f"Nonzero Shape: {nonzero.shape}")
     result = nonzero
 
     result = np.squeeze(result)
@@ -122,7 +121,6 @@ def run_segmentation(url,
 
 @app.route("/preprocessor", methods=['POST', 'GET'])
 def segment():
-    logging.warn("TEST")
     gc.collect()
     torch.cuda.empty_cache()
     dictionary = []
