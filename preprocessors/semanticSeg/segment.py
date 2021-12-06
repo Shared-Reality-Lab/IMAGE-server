@@ -58,7 +58,7 @@ def sort_outline(points):
         min_idx = distances[idx].index(min(distances[idx]))
         sorted_points.append(points[min_idx])
         for j in range(len(points)):
-            dist[j][min_idx] = math.inf
+            distances[j][min_idx] = math.inf
         idx = min_idx
     return sorted_points
 
