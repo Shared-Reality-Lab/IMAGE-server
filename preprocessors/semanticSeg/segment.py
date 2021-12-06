@@ -3,7 +3,6 @@ import torch
 import numpy
 import scipy.io
 import torchvision.transforms
-import math
 from flask import Flask, request, jsonify
 import json
 import time
