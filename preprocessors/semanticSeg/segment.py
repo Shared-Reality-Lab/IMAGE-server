@@ -3,6 +3,7 @@ import torch
 import numpy
 import scipy.io
 import torchvision.transforms
+import math
 from flask import Flask, request, jsonify
 import json
 import time
@@ -42,6 +43,24 @@ def visualize_result(img, pred, index=None):
 
 # takes the colored segment(determined in visualise_reslt function and
 # compressed the segment to 100 pixels
+
+
+# Arrange points in order by nearest neighbors
+# Adapted from Florian's supercollider code
+def sort_outline(points):
+    if len(points) < 3:
+        return points
+    # Construct dense distance matrix.
+    distances = [[np.linalg.norm(np.array(i) - np.array(j)) if np.linalg.norm(np.array(i) - np.array(j)) > 0 else math.inf for j in points] for i in points]
+    idx = 0
+    sorted_points = [points[idx]]
+    while len(sorted_points) < len(points):
+        min_idx = distances[idx].index(min(distances[idx]))
+        sorted_points.append(points[min_idx])
+        for j in range(len(points)):
+            dist[j][min_idx] = math.inf
+        idx = min_idx
+    return sorted_points
 
 
 def findContour(pred_color, width, height):
@@ -116,6 +135,8 @@ def run_segmentation(url,
     for c in predicted_classes[:5]:
         color, name = visualize_result(img_original, pred, c)
         send, center, area = findContour(color, width, height)
+        # Sort segment outline
+        send = sort_outline(send)
         dictionary.append(
             {"nameOfSegment": name, "coord": send,
              "centroid": center, "area": area})
