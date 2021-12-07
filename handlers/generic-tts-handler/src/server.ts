@@ -102,7 +102,10 @@ app.post("/handler", async (req, res) => {
     }
 
     // Form TTS segments
-    const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
+    // const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
+    // Removing scenes due to server#167.
+    const sceneData: any = undefined;
+    const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.secondCategoriser"];
     let ttsIntro;
     if (sceneData && sceneData["categories"].length > 0) {
         let sceneName = sceneData["categories"][0]["name"] as string;
@@ -113,6 +116,13 @@ app.post("/handler", async (req, res) => {
         sceneName = sceneName.replace("_", " ").trim();
         const articled = Articles.articlize(sceneName);
         ttsIntro = `This picture of ${articled} contains`;
+    } else if (secondClassifierData) {
+        const category: string = secondClassifierData["category"];
+        if (category === "indoor" || category === "outdoor") {
+            ttsIntro = `This ${category} picture contains`;
+        } else {
+            ttsIntro = "This picture contains";
+        }
     } else {
         ttsIntro = "This picture contains";
     }

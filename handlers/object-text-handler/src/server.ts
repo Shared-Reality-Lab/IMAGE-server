@@ -83,7 +83,10 @@ app.post("/handler", async (req, res) => {
     }
 
     // Collect data
-    const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
+    // const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
+    // Scene recognition dropped due to poor/horrible results.
+    const sceneData: any = undefined;
+    const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.secondCategoriser"]
     let intro;
     if (sceneData && sceneData["categories"].length > 0) {
         let sceneName = sceneData["categories"][0]["name"] as string;
@@ -94,6 +97,13 @@ app.post("/handler", async (req, res) => {
         sceneName = sceneName.replace("_", " ").trim();
         const articled = Articles.articlize(sceneName);
         intro = `This picture of ${articled} contains`;
+    } else if (secondClassifierData) {
+        const key: string = secondClassifierData["category"];
+        if (key === "indoor" || key === "outdoor") {
+            intro = `This ${key} picture contains`;
+        } else {
+            intro = "This picture contains";
+        }
     } else {
         intro = "This picture contains";
     }
