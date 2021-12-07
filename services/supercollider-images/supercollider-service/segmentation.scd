@@ -23,7 +23,7 @@ renderSegments = { |json, ttsData, outPath, addr|
     // Load segments from file
     segments = json.at("segments");
     segments.do({ |segment, i|
-        var audio, duration, centroid, theta, phi, midinote, pingDur=0.01;
+        var audio, duration, centroid, theta, phi, midinote, pingDur=0.001;
         audio = segment.at("audio");
         duration = (audio.at("duration").asInteger / ttsData.sampleRate);
         centroid = segment.at("centroid");

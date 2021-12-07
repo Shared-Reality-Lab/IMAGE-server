@@ -53,10 +53,8 @@ def findContour(pred_color, width, height):
         thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
     image = image - dummy
-    gray_contour = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     centres = []
     area = []
-    send = []
     totArea = 0
     for i in range(len(contours)):
         moments = cv2.moments(contours[i])
@@ -77,17 +75,15 @@ def findContour(pred_color, width, height):
     centre1 = centres[area.index(max_value)][0] / width
     centre2 = centres[area.index(max_value)][1] / height
     centre = [centre1, centre2]
-    nonzero = cv2.findNonZero(gray_contour)
-    divide = len(nonzero) / 100
-    divide = int(divide)
-    for i in range(len(nonzero)):
-        if i % divide != 0:
-            gray_contour[nonzero[i][0][1]][nonzero[i][0][0]] = 0
     totArea = totArea / (width * height)
-    result = cv2.findNonZero(gray_contour)
-    for i in range(len(result)):
-        send.append([float((result[i][0][1]) / height),
-                    float((result[i][0][0]) / width)])
+    nonzero = np.concatenate(contours, dtype=np.float32)
+    result = nonzero
+
+    result = np.squeeze(result)
+    result = np.swapaxes(result, 0, 1)
+    result[0] = result[0] / float(width)
+    result[1] = result[1] / float(height)
+    send = np.swapaxes(result, 0, 1).tolist()
     return send, centre, totArea
 
 
