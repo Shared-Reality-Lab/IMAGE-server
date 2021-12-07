@@ -104,7 +104,7 @@ app.post("/handler", async (req, res) => {
     // Form TTS segments
     // const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
     // Removing scenes due to server#167.
-    const sceneData = undefined;
+    const sceneData: any = undefined;
     const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.secondCategoriser"];
     let ttsIntro;
     if (sceneData && sceneData["categories"].length > 0) {

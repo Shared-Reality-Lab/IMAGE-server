@@ -85,7 +85,7 @@ app.post("/handler", async (req, res) => {
     // Collect data
     // const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
     // Scene recognition dropped due to poor/horrible results.
-    const sceneData = undefined;
+    const sceneData: any = undefined;
     const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.secondCategoriser"]
     let intro;
     if (sceneData && sceneData["categories"].length > 0) {
@@ -99,7 +99,7 @@ app.post("/handler", async (req, res) => {
         intro = `This picture of ${articled} contains`;
     } else if (secondClassifierData) {
         const key: string = secondClassifierData["category"];
-        if (key === "indoor" or key === "outdoor") {
+        if (key === "indoor" || key === "outdoor") {
             intro = `This picture of an ${key} scene contains`;
         } else {
             intro = "This picture contains";
