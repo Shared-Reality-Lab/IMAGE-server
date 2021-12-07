@@ -119,7 +119,7 @@ app.post("/handler", async (req, res) => {
     } else if (secondClassifierData) {
         const category: string = secondClassifierData["category"];
         if (category === "indoor" || category === "outdoor") {
-            ttsIntro = `This picture of an ${category} scene contains`;
+            ttsIntro = `This ${category} picture contains`;
         } else {
             ttsIntro = "This picture contains";
         }
