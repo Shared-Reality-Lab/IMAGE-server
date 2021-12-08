@@ -24,7 +24,6 @@
           "description": "The normalized coordinates forming the contour as returned by OpenCV.",
           "type": "array",
           "items": { "$ref": "#/definitions/normCoord" }
-          }
         },
         "centroid": {
           "allOf": [
