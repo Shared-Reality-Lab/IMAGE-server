@@ -12,7 +12,9 @@
         "type": "number",
         "minimum": 0,
         "maximum": 1
-      }
+      },
+      "minItems": 2,
+      "maxItems": 2
     },
     "contour": {
       "type": "object",
@@ -21,11 +23,7 @@
         "coordinates": {
           "description": "The normalized coordinates forming the contour as returned by OpenCV.",
           "type": "array",
-          "items": {
-            "type": "array",
-            "items": { "$ref": "#/definitions/normCoord" },
-            "minItems": 2,
-            "maxItems": 2
+          "items": { "$ref": "#/definitions/normCoord" }
           }
         },
         "centroid": {
