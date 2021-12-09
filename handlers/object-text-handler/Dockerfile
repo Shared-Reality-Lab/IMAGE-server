@@ -3,6 +3,8 @@ FROM schemas:latest AS schemas
 FROM node:alpine
 
 WORKDIR /usr/src/app
+RUN chown node:node .
+USER node
 
 COPY *.js* ./
 RUN npm ci

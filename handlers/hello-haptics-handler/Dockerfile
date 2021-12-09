@@ -3,6 +3,9 @@ FROM schemas:latest AS schemas
 FROM node:alpine
 
 WORKDIR /usr/src/app
+RUN chown node:node .
+USER node
+
 # Apparently splittig this up is good for layers
 # Docker images are onions
 COPY package*.json ./
