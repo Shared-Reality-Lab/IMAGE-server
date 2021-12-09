@@ -5,8 +5,6 @@ FROM node:alpine
 RUN addgroup -g 4322 storage && addgroup node storage
 
 WORKDIR /usr/src/app
-RUN chown node:storage .
-USER node
 
 COPY . /usr/src/app
 RUN npm ci
@@ -16,4 +14,5 @@ RUN npm run build
 ENV NODE_ENV=production
 EXPOSE 80
 
+USER node
 CMD [ "node", "." ]
