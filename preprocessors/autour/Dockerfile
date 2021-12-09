@@ -2,11 +2,16 @@ FROM schemas:latest AS schemas
 
 FROM python:3.9.5
 
+RUN adduser --disabled-password python
+WORKDIR /app
+RUN chown python:python .
+USER python
+ENV PATH="/home/python/.local/bin:${PATH}"
+
 RUN pip3 install --upgrade pip
 
 COPY ./requirements.txt /app/requirements.txt
 
-WORKDIR /app
 
 RUN pip3 install -r requirements.txt
 

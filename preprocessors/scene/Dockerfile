@@ -4,15 +4,17 @@ FROM python:3.7
 
 RUN apt-get update && apt-get install -y python3-opencv && rm -rf /var/lib/apt/lists/*
 
+RUN adduser --disabled-password python
+WORKDIR /app
+RUN chown python:python .
+USER python
+ENV PATH="/home/python/.local/bin:${PATH}"
+
 RUN wget http://places2.csail.mit.edu/models_places365/wideresnet18_places365.pth.tar
 
 RUN pip3 install --upgrade pip
 
 COPY ./requirements.txt /app/requirements.txt
-
-RUN mv wideresnet18_places365.pth.tar app/
-
-WORKDIR /app
 
 RUN pip install -r requirements.txt
 

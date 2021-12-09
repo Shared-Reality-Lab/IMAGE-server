@@ -2,14 +2,20 @@ FROM schemas:latest AS schemas
 
 FROM ultralytics/yolov5:v5.0
 
+
+WORKDIR /usr/src/app
+RUN adduser --disabled-password python
+RUN chown python:python .
+USER python
+ENV PATH="/usr/src/app/.local/bin:${PATH}"
+
 RUN wget bach.cim.mcgill.ca/atp/models/objectDetectionWeights/yolov5s.pt
 
 RUN pip3 install --upgrade pip
-RUN pip install gunicorn==20.1.0
-RUN pip install jsonschema==3.2.0
+RUN pip3 install gunicorn==20.1.0
+RUN pip3 install jsonschema==3.2.0
 
 COPY --from=schemas /schemas /usr/src/app/schemas
-WORKDIR /usr/src/app
 COPY . /usr/src/app
 
 EXPOSE 5000

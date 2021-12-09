@@ -1,6 +1,12 @@
 FROM schemas:latest AS schemas
 FROM pytorch/pytorch:1.8.1-cuda10.2-cudnn7-runtime
 
+RUN adduser --disabled-password python
+WORKDIR /app
+RUN chown python:python .
+USER python
+ENV PATH="/home/python/.local/bin:${PATH}"
+
 COPY ./requirements.txt /app/requirements.txt
 
 RUN pip3 install --upgrade pip
