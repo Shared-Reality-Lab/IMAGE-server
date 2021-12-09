@@ -8,6 +8,9 @@ services:
         image: "orchestrator:latest"
         env_file:
             - ./config/express-common.env
+        group_add:
+            # This should be set in an environment variable or .env
+            - ${DOCKER_GID}
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
     supercollider:
