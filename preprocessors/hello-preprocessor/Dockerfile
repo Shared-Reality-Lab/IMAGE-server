@@ -3,8 +3,6 @@ FROM schemas:latest AS schemas
 FROM node:alpine
 
 WORKDIR /usr/src/app
-RUN chown node:node .
-USER node
 
 # Apparently splittig this up is good for layers
 # Docker images are onions
@@ -18,4 +16,5 @@ ENV NODE_ENV=production
 
 EXPOSE 8080
 
+USER node
 CMD [ "node", "dist/server.js" ]

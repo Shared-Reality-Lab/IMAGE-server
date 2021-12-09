@@ -5,8 +5,6 @@ FROM ultralytics/yolov5:v5.0
 
 WORKDIR /usr/src/app
 RUN adduser --disabled-password python
-RUN chown python:python .
-USER python
 ENV PATH="/usr/src/app/.local/bin:${PATH}"
 
 RUN wget bach.cim.mcgill.ca/atp/models/objectDetectionWeights/yolov5s.pt
@@ -21,4 +19,5 @@ COPY . /usr/src/app
 EXPOSE 5000
 
 ENV FLASK_APP=detect.py
+USER python
 CMD [ "gunicorn", "detect:app", "-b", "0.0.0.0:5000" ]

@@ -6,8 +6,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-
 
 WORKDIR /app
 RUN adduser --disabled-password python
-RUN chown python:python .
-USER python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 
@@ -25,4 +23,5 @@ RUN wget bach.cim.mcgill.ca/atp/models/semanticSegmentation/encoder_epoch_20.pth
 
 EXPOSE 5000
 ENV FLASK_APP=segment.py
+USER python
 CMD [ "gunicorn", "segment:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]

@@ -3,8 +3,6 @@ FROM pytorch/pytorch:1.8.1-cuda10.2-cudnn7-runtime
 
 RUN adduser --disabled-password python
 WORKDIR /app
-RUN chown python:python .
-USER python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 COPY ./requirements.txt /app/requirements.txt
@@ -19,4 +17,5 @@ COPY . /app
 
 EXPOSE 5000
 ENV FLASK_APP=azure_api.py
+USER python
 CMD [ "gunicorn", "azure_api:app", "-b", "0.0.0.0:5000" ]

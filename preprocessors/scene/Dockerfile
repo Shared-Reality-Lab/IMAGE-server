@@ -6,8 +6,6 @@ RUN apt-get update && apt-get install -y python3-opencv && rm -rf /var/lib/apt/l
 
 RUN adduser --disabled-password python
 WORKDIR /app
-RUN chown python:python .
-USER python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN wget http://places2.csail.mit.edu/models_places365/wideresnet18_places365.pth.tar
@@ -28,4 +26,5 @@ EXPOSE 5000
 #CMD [ "python", "./run_placesCNN_unified.py" ]
 
 ENV FLASK_APP=run_placesCNN_unified.py
+USER python
 CMD [ "flask", "run", "--host=0.0.0.0" ]

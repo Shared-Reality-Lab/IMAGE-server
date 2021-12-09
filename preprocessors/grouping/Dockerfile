@@ -6,8 +6,6 @@ RUN apt-get update && apt-get install -y python3-opencv && rm -rf /var/lib/apt/l
 
 RUN adduser --disabled-password python
 WORKDIR /app
-RUN chown python:python .
-USER python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip install --upgrade pip
@@ -23,4 +21,5 @@ EXPOSE 5000
 
 
 ENV FLASK_APP=grouping.py
+USER python
 CMD [ "gunicorn", "grouping:app", "-b", "0.0.0.0:5000" ]
