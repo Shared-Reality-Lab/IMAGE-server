@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y libsndfile1 build-essential && rm -rf /
 
 WORKDIR /run/tts
 RUN adduser --disabled-password python
+RUN chown python:python .
+USER python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip install --upgrade pip
@@ -23,5 +25,4 @@ COPY --from=schemas /schemas/services/tts/* ./
 ENV TORCH_DEVICE="cpu"
 EXPOSE 80
 
-USER python
 CMD ["gunicorn", "app:app", "-b", "0.0.0.0:80"]
