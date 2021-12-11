@@ -11,7 +11,7 @@ RUN pip install jsonschema==3.2.0
 COPY --from=schemas /schemas /usr/src/app/schemas
 WORKDIR /usr/src/app
 COPY . /usr/src/app
-#RUN sed -i "s|releases/latest|releases/tag/v5.0|g" /usr/src/app/utils/google_utils.py
+
 
 EXPOSE 5000
 
