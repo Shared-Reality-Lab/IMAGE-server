@@ -79,13 +79,6 @@ def findContour(pred_color, width, height):
     result = np.concatenate(contours, dtype=np.float32)
 
     result = np.squeeze(result)
-    # Filter to 1000 points
-    div = len(result) // 1000
-    result = np.delete(
-            result,
-            [x for x in range(len(result)) if x % div != 0],
-            axis=0
-    )
     result = np.swapaxes(result, 0, 1)
     result[0] = result[0] / float(width)
     result[1] = result[1] / float(height)
