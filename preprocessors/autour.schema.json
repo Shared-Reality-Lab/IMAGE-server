@@ -9,7 +9,7 @@
             "type": "string",
             "title": "URL",
             "description": "The URL of the map",
-            "pattern": "^https?://.*"
+            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,}\\.[a-z]{2,}\\b(\\S*)$"
         },
         "lat": {
             "type": "number",
@@ -29,7 +29,7 @@
             "type": "string",
             "title": "API Request",
             "description": "The API request to be made to the map",
-            "pattern": "^https?://.*"
+            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,}\\.[a-z]{2,}\\b(\\S*)$"
         },
         "places": {
             "type": "array",
