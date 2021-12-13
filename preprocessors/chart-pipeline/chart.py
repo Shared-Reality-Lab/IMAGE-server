@@ -83,6 +83,8 @@ def loadSchemas():
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
         definition_schema = json.load(jsonfile)
+    with open('./schemas/request.schema.json') as jsonfile:
+        first_schema = json.load(jsonfile)
     
     schema_store = {
         schema['$id']: schema,
@@ -92,7 +94,7 @@ def loadSchemas():
 
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
-    return data_schema, schema, definition_schema, schema_store, resolver
+    return data_schema, schema, definition_schema, schema_store, resolver,first_schema
 
 @app.route("/preprocessor", methods=['POST', 'GET'])
 def readImage():
@@ -100,6 +102,13 @@ def readImage():
 
         # Get request.json
         content = request.get_json()
+        data_schema, schema, definition_schema, schema_store, resolver,first_schema = loadSchemas()
+        try:
+            validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
+            validator.validate(content)
+        except jsonschema.exceptions.ValidationError as e:
+            logging.error(e)
+            return jsonify("Invalid Preprocessor JSON format"), 400
         preprocess_output = content["preprocessors"]
         classifier_1 = \
             "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
@@ -115,7 +124,7 @@ def readImage():
                 output = get_data_from_chart(img, methods, args)
                 
                 # Load schemas
-                data_schema, schema, definition_schema, schema_store, resolver = loadSchemas()
+               # data_schema, schema, definition_schema, schema_store, resolver = loadSchemas()
 
                 # Validate model output with schema
                 try:
