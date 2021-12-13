@@ -23,10 +23,15 @@ renderSegments = { |json, ttsData, outPath, addr|
     // Load segments from file
     segments = json.at("segments");
     segments.do({ |segment, i|
-        var audio, duration, centroid, theta, phi, midinote, pingDur=0.001;
+        var audio, duration, centroid, theta, phi, midinote, pingDur, area, totalTime;
         audio = segment.at("audio");
         duration = (audio.at("duration").asInteger / ttsData.sampleRate);
         centroid = segment.at("centroid");
+        area = segment.at("area").asFloat;
+
+        // Calculate pingDur from area of the contours
+        totalTime = area * 40;
+        pingDur = totalTime / segment.at("coord").size;
 
         // Add segment info to array
         segmentInfo = segmentInfo.add(segment.at("nameOfSegment").asString);
