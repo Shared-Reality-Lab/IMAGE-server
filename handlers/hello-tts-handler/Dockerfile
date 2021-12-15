@@ -16,4 +16,5 @@ RUN npm run build
 ENV NODE_ENV=production
 EXPOSE 80
 
+USER node
 CMD [ "node", "." ]

@@ -3,6 +3,7 @@ FROM schemas:latest AS schemas
 FROM node:alpine
 
 WORKDIR /usr/src/app
+
 # Apparently splittig this up is good for layers
 # Docker images are onions
 COPY package*.json ./
@@ -17,4 +18,5 @@ ENV NODE_ENV=production
 
 EXPOSE 80
 
+USER node
 CMD [ "node", "dist/server.js" ]
