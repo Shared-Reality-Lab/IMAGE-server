@@ -102,9 +102,9 @@ def pre_load_nets(num, methods):
 
 
 def ocr_result(image_path):
-
-    subscription_key = "ad143190288d40b79483aa0d5c532724"
-    vision_base_url = "https://westus2.api.cognitive.microsoft.com/vision/v2.0/"
+    api_key = os.environ["CHART_KEY"]
+    subscription_key = api_key
+    vision_base_url = "https://canadacentral.api.cognitive.microsoft.com/vision/v2.0/"
     ocr_url = vision_base_url + "read/core/asyncBatchAnalyze"
     headers = {'Ocp-Apim-Subscription-Key': subscription_key, 'Content-Type': 'application/octet-stream'}
     params = {'language': 'unk', 'detectOrientation': 'true'}
