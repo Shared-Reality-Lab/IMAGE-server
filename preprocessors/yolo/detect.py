@@ -193,11 +193,11 @@ def run(weights='yolov5x.pt',
                 logging.info("Not image content. Skipping...")
                 return "", 204
             if classifier_2 in preprocess_output:
-                classifier_2_output = preprocess_output[classifier_2]
-                classifier_2_label = classifier_2_output["category"]
-                if classifier_2_label == "other":
-                    logging.info("Cannot process image")
-                    return "", 204
+                # classifier_2_output = preprocess_output[classifier_2]
+                # classifier_2_label = classifier_2_output["category"]
+                # if classifier_2_label == "other":
+                #     logging.info("Cannot process image")
+                #     return "", 204
                 things = detect_objects(send,
                                         device,
                                         weights,
