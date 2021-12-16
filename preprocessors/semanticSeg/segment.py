@@ -56,22 +56,29 @@ def findContour(pred_color, width, height):
     centres = []
     area = []
     totArea = 0
+    flag=0
+    #print("contour are", contours)
     for i in range(len(contours)):
         moments = cv2.moments(contours[i])
         if moments['m00'] == 0:
             continue
+        ## if contour area for a given class is very small then omit that
         if cv2.contourArea(contours[i]) < 2000:
+            print("here")
             continue
         totArea = totArea + cv2.contourArea(contours[i])
         area.append(cv2.contourArea(contours[i]))
+        print(area)
         centres.append(
             (int(moments['m10'] / moments['m00']),
              int(moments['m01'] / moments['m00'])))
     if not area:
-        max_value = 0
+        flag = 1
     else:
         max_value = max(area)
-    cv2.circle(image, centres[area.index(max_value)], 20, (0, 0, 255), -1)
+    if(flag==1):
+        return ([0,0],[0,0],0)
+    #cv2.circle(image, centres[area.index(max_value)], 20, (0, 0, 255), -1)
     centre1 = centres[area.index(max_value)][0] / width
     centre2 = centres[area.index(max_value)][1] / height
     centre = [centre1, centre2]
@@ -98,7 +105,7 @@ def run_segmentation(url,
     img = pil_image
     img_original = numpy.array(img)
     img_data = pil_to_tensor(img)
-    img_data = img_data.cuda()
+   # img_data = img_data.cuda()
     singleton_batch = {'img_data': img_data[None]}
     output_size = img_data.shape[1:]
     with torch.no_grad():
@@ -106,11 +113,14 @@ def run_segmentation(url,
                                      segSize=output_size)
     _, pred = torch.max(scores, dim=1)
     pred = pred.cpu()[0].numpy()
+    #print(pred)
     color, name = visualize_result(img_original, pred, 0)
     predicted_classes = numpy.bincount(pred.flatten()).argsort()[::-1]
     for c in predicted_classes[:5]:
         color, name = visualize_result(img_original, pred, c)
         send, center, area = findContour(color, width, height)
+        if(area==0):
+            continue
         dictionary.append(
             {"nameOfSegment": name, "coord": send,
              "centroid": center, "area": area})
@@ -120,22 +130,22 @@ def run_segmentation(url,
 @app.route("/preprocessor", methods=['POST', 'GET'])
 def segment():
     gc.collect()
-    torch.cuda.empty_cache()
+    #torch.cuda.empty_cache()
     dictionary = []
-    with open('./schemas/preprocessors/segmentation.schema.json') as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definitionSchema = json.load(jsonfile)
-    with open('./schemas/request.schema.json') as jsonfile:
-        first_schema = json.load(jsonfile)
-    schema_store = {
-        schema['$id']: schema,
-        definitionSchema['$id']: definitionSchema
-    }
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
+    # with open('./schemas/preprocessors/segmentation.schema.json') as jsonfile:
+    #     data_schema = json.load(jsonfile)
+    # with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+    #     schema = json.load(jsonfile)
+    # with open('./schemas/definitions.json') as jsonfile:
+    #     definitionSchema = json.load(jsonfile)
+    # with open('./schemas/request.schema.json') as jsonfile:
+    #     first_schema = json.load(jsonfile)
+    # schema_store = {
+    #     schema['$id']: schema,
+    #     definitionSchema['$id']: definitionSchema
+    # }
+    # resolver = jsonschema.RefResolver.from_schema(
+    #     schema, store=schema_store)
     net_encoder = ModelBuilder.build_encoder(
         arch='resnet50dilated',
         fc_dim=2048,
@@ -149,7 +159,7 @@ def segment():
     crit = torch.nn.NLLLoss(ignore_index=-1)
     segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)
     segmentation_module.eval()
-    segmentation_module.cuda()
+    #segmentation_module.cuda()
     pil_to_tensor = torchvision.transforms.Compose([
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize(
@@ -157,15 +167,15 @@ def segment():
             std=[0.229, 0.224, 0.225])
     ])
     content = request.get_json()
-    try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
-        return jsonify("Invalid Preprocessor JSON format"), 400
-    if "image" not in content:
-        logging.info("Not image content. Skipping...")
-        return "", 204
+    # try:
+    #     validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
+    #     validator.validate(content)
+    # except jsonschema.exceptions.ValidationError as e:
+    #     logging.error(e)
+    #     return jsonify("Invalid Preprocessor JSON format"), 400
+    # if "image" not in content:
+    #     logging.info("Not image content. Skipping...")
+    #     return "", 204
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     preprocessorName = \
@@ -207,24 +217,24 @@ def segment():
                                    segmentation_module,
                                    dictionary,
                                    pil_to_tensor)
-    try:
-        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
-        validator.validate(segment)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
-        return jsonify("Invalid Preprocessor JSON format"), 500
+    # try:
+    #     validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+    #     validator.validate(segment)
+    # except jsonschema.exceptions.ValidationError as e:
+    #     logging.error(e)
+    #     return jsonify("Invalid Preprocessor JSON format"), 500
     response = {
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": preprocessorName,
         "data": segment
     }
-    try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
-        return jsonify("Invalid Preprocessor JSON format"), 500
+    # try:
+    #     validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+    #     validator.validate(response)
+    # except jsonschema.exceptions.ValidationError as e:
+    #     logging.error(e)
+    #     return jsonify("Invalid Preprocessor JSON format"), 500
 
     return response
 
