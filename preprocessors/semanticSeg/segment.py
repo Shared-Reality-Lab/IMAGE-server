@@ -77,8 +77,8 @@ def findContour(pred_color, width, height):
     centre = [centre1, centre2]
     totArea = totArea / (width * height)
     result = np.concatenate(contours, dtype=np.float32)
-    if(totArea<0.05):
-        return ([0,0],[0,0],0)
+    if(totArea < 0.05):
+        return ([0, 0], [0, 0], 0)
     result = np.squeeze(result)
     result = np.swapaxes(result, 0, 1)
     result[0] = result[0] / float(width)
