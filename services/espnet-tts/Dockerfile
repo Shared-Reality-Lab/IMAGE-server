@@ -25,4 +25,4 @@ COPY --from=schemas /schemas/services/tts/* ./
 ENV TORCH_DEVICE="cpu"
 EXPOSE 80
 
-CMD ["gunicorn", "app:app", "-b", "0.0.0.0:80"]
+CMD ["gunicorn", "app:app", "-b", "0.0.0.0:80", "--capture-output", "--log-level=debug"]

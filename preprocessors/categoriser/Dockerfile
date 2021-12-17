@@ -25,4 +25,4 @@ EXPOSE 5000
 ENV FLASK_APP=categoriser.py
 ENV TORCH_HOME=/app
 USER python
-CMD [ "gunicorn", "categoriser:app", "-b", "0.0.0.0:5000" ]
+CMD [ "gunicorn", "categoriser:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
