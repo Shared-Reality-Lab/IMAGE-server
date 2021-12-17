@@ -77,7 +77,8 @@ def findContour(pred_color, width, height):
     centre = [centre1, centre2]
     totArea = totArea / (width * height)
     result = np.concatenate(contours, dtype=np.float32)
-
+    if(totArea < 0.05):
+        return ([0, 0], [0, 0], 0)
     result = np.squeeze(result)
     result = np.swapaxes(result, 0, 1)
     result[0] = result[0] / float(width)
@@ -111,6 +112,8 @@ def run_segmentation(url,
     for c in predicted_classes[:5]:
         color, name = visualize_result(img_original, pred, c)
         send, center, area = findContour(color, width, height)
+        if(area == 0):
+            continue
         dictionary.append(
             {"nameOfSegment": name, "coord": send,
              "centroid": center, "area": area})
