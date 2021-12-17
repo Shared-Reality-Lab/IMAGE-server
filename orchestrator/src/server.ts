@@ -28,15 +28,23 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
             controller.abort();
         }, PREPROCESSOR_TIME_MS);
 
-        const resp = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
-            "method": "POST",
-            "headers": {
-                "Content-Type": "application/json"
-            },
-            "body": JSON.stringify(data),
-            "signal": controller.signal
-        });
-        clearTimeout(timeout);
+        let resp;
+        try {
+            resp = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
+                "method": "POST",
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": JSON.stringify(data),
+                "signal": controller.signal
+            });
+            clearTimeout(timeout);
+        } catch (err) {
+            // Most likely a timeout
+            console.error("Error occured fetching from " + preprocessor[0]);
+            console.error(err);
+            continue;
+        }
 
         // OK data returned
         if (resp.status === 200) {
@@ -44,7 +52,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
                 const json = await resp.json();
                 (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
             } catch (err) {
-                console.error("Error occured on fetch");
+                console.error("Error occured on fetch from " + preprocessor[0]);
                 console.error(err);
             }
         }
@@ -56,7 +64,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
                 const result = await resp.json();
                 throw result;
             } catch (err) {
-                console.error("Error occured on fetch");
+                console.error("Error occured on fetch from " + preprocessor[0]);
                 console.error(err);
             }
         }
