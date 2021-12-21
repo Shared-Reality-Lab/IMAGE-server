@@ -1,0 +1,44 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/renderers/Builder.schema.json",
+    "title": "Renderer Builder",
+    "type": "object",
+    "description": "Structure for a way of constructring renderers from preset elements and actions. ca.mcgill.a11y.image.renderers.Builder.",
+    "properties": {
+        "resources": {
+            "type": "object",
+            "description": "Field for data that can be used in a rendering."
+        },
+        "elements": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "description": "A reverse domain name identifier required for each element.",
+                    "type": "string",
+                    "pattern": "^[A-Za-z]{2,6}(\\.((?!-)[A-Za-z0-9-]+(?<!-)))+$"
+                }
+            },
+            "description": "Field for UI elements that are used. These are added in the order they appear."
+        },
+        "actions": {
+            "description": "A list of actions that are performed in order. The next action does not occur until the previous one finishes. This can contain arrays containing actions that may occur in parallel.",
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "description": "A reverse domain name identifier required for each action.",
+                                "type": "string",
+                                "pattern": "^[A-Za-z]{2,6}(\\.((?!-)[A-Za-z0-9-]+(?<!-)))+$"
+                            }
+                        }
+                    },
+                    { "$ref": "#/properties/actions" }
+                ]
+            }
+        }
+    },
+    "required": [ "elements", "actions" ]
+}
