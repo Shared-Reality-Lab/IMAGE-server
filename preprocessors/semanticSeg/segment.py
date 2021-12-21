@@ -56,7 +56,7 @@ def findContour(pred_color, width, height):
     centres = []
     area = []
     totArea = 0
-    flag = 0
+    flag = False
     for i in range(len(contours)):
         moments = cv2.moments(contours[i])
         if moments['m00'] == 0:
@@ -70,10 +70,10 @@ def findContour(pred_color, width, height):
             (int(moments['m10'] / moments['m00']),
              int(moments['m01'] / moments['m00'])))
     if not area:
-        flag = 1
+        flag = True
     else:
         max_value = max(area)
-    if(flag == 1):
+    if(flag == True):
         return ([0, 0], [0, 0], 0)
     centre1 = centres[area.index(max_value)][0] / width
     centre2 = centres[area.index(max_value)][1] / height
