@@ -10,7 +10,7 @@
             "pattern": "^ca\\.mcgill\\.a11y\\.image\\.renderers\\.actions\\.PlayAudioSegment"
         },
         "source": {
-            "description": "A URI fragment to a resource of type array containing https://image.a11y.mcgill.ca/renderers/definitions.json#definitions/labeledSegmentOffsetSeconds.",
+            "description": "A URI fragment to a resource of type array containing https://image.a11y.mcgill.ca/renderers/builder/AudioSegments.schema.json.",
             "type": "string",
             "pattern": "^#(/\\w+)+$"
         },
