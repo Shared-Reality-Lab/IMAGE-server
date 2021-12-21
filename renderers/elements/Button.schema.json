@@ -1,0 +1,18 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/renderers/elements/Button.schema.json",
+    "title": "Button",
+    "type": "object",
+    "description": "A user interface element with the functionality of a button.",
+    "properties": {
+        "type": {
+            "type": "string",
+            "pattern": "^ca\\.mcgill\\.a11y\\.image\\.renderers\\.elements\\.Button$"
+        },
+        "label": {
+            "description": "A user facing label for this element.",
+            "type": "string"
+        }
+    },
+    "required": [ "type", "label" ]
+}

@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/renderers/elements/Select.schema.json",
+    "title": "Select",
+    "type": "object",
+    "description": "A user interface element permitting the selection of one element of a finite set.",
+    "properties": {
+        "type": {
+            "type": "string",
+            "pattern": "^ca\\.mcgill\\.a11y\\.image\\.renderers\\.elements\\.Select"
+        },
+        "label": {
+            "description": "A user facing label for this element.",
+            "type": "string"
+        },
+        "optionsFrom": {
+            "description": "A URI fragment to an array in the same document. The array values are treated as options. If the array contains objects, then a label key is looked for in each object.",
+            "type": "string",
+            "pattern": "^#(/\\w+)+$"
+        }
+    },
+    "required": [ "type", "label", "optionsFrom" ]
+}

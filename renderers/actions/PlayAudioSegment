@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/renderers/actions/PlayAudioSegment.schema.json",
+    "title": "PlayAudioSegment",
+    "type": "object",
+    "description": "An action that occurs to play a specified segment of audio as indexed by a UI element.",
+    "properties": {
+        "type": {
+            "type": "string",
+            "pattern": "^ca\\.mcgill\\.a11y\\.image\\.renderers\\.actions\\.PlayAudioSegment"
+        },
+        "source": {
+            "description": "A URI fragment to a resource of type array containing https://image.a11y.mcgill.ca/renderers/definitions.json#definitions/labeledSegmentOffsetSeconds.",
+            "type": "string",
+            "pattern": "^#(/\\w+)+$",
+        },
+        
+    },
+    "required": [ "type", "on" ]
+}

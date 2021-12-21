@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/renderers/actions/Trigger.schema.json",
+    "title": "Trigger",
+    "type": "object",
+    "description": "An action that occurs when a binary event is triggered through a UI element. Typically this is by a button.",
+    "properties": {
+        "type": {
+            "type": "string",
+            "pattern": "^ca\\.mcgill\\.a11y\\.image\\.renderers\\.actions\\.Trigger"
+        },
+        "on": {
+            "description": "A URI fragment to a UI element capable of calling this event.",
+            "type": "string",
+            "pattern": "^#(/\\w+)+$"
+        }
+    },
+    "required": [ "type", "on" ]
+}

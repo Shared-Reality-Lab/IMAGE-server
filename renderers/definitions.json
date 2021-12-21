@@ -34,6 +34,20 @@
                 { "$ref": "#/definitions/remoteAudioFile" },
                 { "$ref": "#/definitions/localAudioFile" }
             ]
+        },
+        "labeledSegmentOffsetSeconds": {
+            "allOf": [
+                {"$ref": "#/definitions/segmentOffsetSeconds" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "label": {
+                            "description": "A user facing label for the segment.",
+                            "type": "string"
+                        }
+                    }
+                }
+            ]
         }
     }
 }
