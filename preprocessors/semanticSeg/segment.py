@@ -56,10 +56,12 @@ def findContour(pred_color, width, height):
     centres = []
     area = []
     totArea = 0
+    flag = False
     for i in range(len(contours)):
         moments = cv2.moments(contours[i])
         if moments['m00'] == 0:
             continue
+        # if contour area for a given class is very small then omit that
         if cv2.contourArea(contours[i]) < 2000:
             continue
         totArea = totArea + cv2.contourArea(contours[i])
@@ -68,10 +70,11 @@ def findContour(pred_color, width, height):
             (int(moments['m10'] / moments['m00']),
              int(moments['m01'] / moments['m00'])))
     if not area:
-        max_value = 0
+        flag = True
     else:
         max_value = max(area)
-    cv2.circle(image, centres[area.index(max_value)], 20, (0, 0, 255), -1)
+    if(flag is True):
+        return ([0, 0], [0, 0], 0)
     centre1 = centres[area.index(max_value)][0] / width
     centre2 = centres[area.index(max_value)][1] / height
     centre = [centre1, centre2]
