@@ -73,7 +73,7 @@ def findContour(pred_color, width, height):
         flag = True
     else:
         max_value = max(area)
-    if(flag == True):
+    if(flag is True):
         return ([0, 0], [0, 0], 0)
     centre1 = centres[area.index(max_value)][0] / width
     centre2 = centres[area.index(max_value)][1] / height
