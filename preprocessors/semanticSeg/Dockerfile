@@ -1,5 +1,5 @@
 FROM schemas:latest AS schemas
-FROM pytorch/pytorch:1.8.1-cuda10.2-cudnn7-runtime
+FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
 
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv wget git && rm -rf /var/lib/apt/lists/*
