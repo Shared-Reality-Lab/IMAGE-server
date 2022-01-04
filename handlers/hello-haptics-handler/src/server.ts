@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public License
+ * and our Additional Terms along with this program.
+ * If not, see <https://github.com/Shared-Reality-Lab/auditory-haptic-graphics-server/LICENSE>.
+ */
 import express from "express";
 import Ajv from "ajv";
 import * as utils from "./utils";
@@ -24,7 +40,7 @@ function generateRendering(objectData: object, image: string[]) {
 			"image": image,
 			"data": objectData
 		}
-		
+
 	}
 }
 
@@ -97,8 +113,8 @@ app.post("/handler", async (req, res) => {
 
 	const rendering:Record<string,unknown>[] = [];
 	rendering.push(generateRendering(objs, image));
-	
-	if(!ajv.validate(helloHapticsSchemaJSON, rendering[0]["data"])) {  
+
+	if(!ajv.validate(helloHapticsSchemaJSON, rendering[0]["data"])) {
 		console.error("Invalid JSON detected");
 		console.error(ajv.errors);
 		const response = utils.generateEmptyResponse(req.body["request_uuid"]);
@@ -113,7 +129,7 @@ app.post("/handler", async (req, res) => {
 	};
 	console.log(response);
 
-	if(ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) { // 
+	if(ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) { //
 		res.json(response);
 	} else {
 		res.json(ajv.errors);
