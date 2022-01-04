@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/sorting.schema.json",
+    "type": "object",
+    "title": "Sorted Data",
+    "description": "Objects grouped in different orders",
+    "properties": {
+        "left2right": {
+            "description": "The objects are sorted from left to right in this section. The IDs of the object are presented starting with the left most element first",
+            "type": "array",
+            "items": {
+               "type":"number"
+        }
+    },
+        "top2bottom": {
+            "description": "The objects are sorted from top to bottom in this section. The IDs of the object are presented starting with the top most element first",
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        }
+    },
+    "required": ["left2right", "top2bottom"]
+}
