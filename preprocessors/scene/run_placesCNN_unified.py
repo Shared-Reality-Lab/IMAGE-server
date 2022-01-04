@@ -11,9 +11,11 @@
 # GNU Affero General Public License for more details.
 # You should have received a copy of the GNU Affero General Public License
 # and our Additional Terms along with this program.
-# If not, see <https://github.com/Shared-Reality-Lab/auditory-haptic-graphics-server/LICENSE>.
+# If not, see
+# <https://github.com/Shared-Reality-Lab/auditory-haptic-graphics-server/LICENSE>.
 #
-# This was adapted from CSAIL's Places365 project <https://github.com/CSAILVision/places365>
+# This was adapted from CSAIL's Places365 project
+# <https://github.com/CSAILVision/places365>
 # by Bolei Zhou, sep 2, 2017
 
 import torch
