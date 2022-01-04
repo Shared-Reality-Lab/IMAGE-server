@@ -18,7 +18,14 @@
             "items": {
                 "type": "number"
             }
+        },
+        "small2big": {
+            "description": "The objects are sorted in terms of their size from small to big. The IDs of the object are presented starting with the top most element first",
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
         }
     },
-    "required": ["left2right", "top2bottom"]
+    "required": ["left2right", "top2bottom", "small2big"]
 }
