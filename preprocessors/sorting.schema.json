@@ -2,30 +2,30 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://image.a11y.mcgill.ca/preprocessors/sorting.schema.json",
     "type": "object",
-    "title": "Sorted Data",
-    "description": "Objects grouped in different orders",
+    "title": "Objects detected using Object detection model are sorted using different ordering schemes",
+    "description": "Object detected by the Object Detection model are sorted from left to right, top to bottom and also in terms of their size.",
     "properties": {
-        "left2right": {
-            "description": "The objects are sorted from left to right in this section. The IDs of the object are presented starting with the left most element first",
+        "leftToRight": {
+            "description": "The objects are sorted from left to right in this section. The IDs of the object are presented starting with the left most object first",
             "type": "array",
             "items": {
                "type":"number"
         }
     },
-        "top2bottom": {
-            "description": "The objects are sorted from top to bottom in this section. The IDs of the object are presented starting with the top most element first",
+        "topToBottom": {
+            "description": "The objects are sorted from top to bottom in this section. The IDs of the object are presented starting with the top most object first",
             "type": "array",
             "items": {
                 "type": "number"
             }
         },
-        "small2big": {
-            "description": "The objects are sorted in terms of their size from small to big. The IDs of the object are presented starting with the top most element first",
+        "smallToBig": {
+            "description": "The objects are sorted in terms of their size from small to big. The IDs of the object are presented starting with the smallest object first",
             "type": "array",
             "items": {
                 "type": "number"
             }
         }
     },
-    "required": ["left2right", "top2bottom", "small2big"]
+    "required": ["leftToRight", "topToBottom", "smallToBig"]
 }
