@@ -95,6 +95,36 @@ IMAGE {
                 );
                 Out.ar(2, encoded);
             }).store;
+
+            // Discrete Sine Pings Length 5 For earcons
+            SynthDef((\playDiscreteSinePingHOA++(i+1)).asSymbol, {|note = 80, int0=0, int1=1, int2=1, int3=0, int4=2, phi=0, theta=0, radius=1, gain=0, decay=0.02, imp=48|
+                var sig1, env1, ping1, sig2, env2, ping2, sig3, env3, ping3, sig4, env4, ping4, sig5, env5, ping5, encoded, excitation, reverb;
+                // excitation = Dust.ar(100);
+                env1 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                sig1 = SinOsc.ar((note + int0).midicps, 0.0);
+                ping1 = env1 * sig1 * AmpComp.kr((note + int0).midicps, 200);
+                env2 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                sig2 = SinOsc.ar((note + int1).midicps, 0.0);
+                ping2 = env2 * sig2 * AmpComp.kr((note + int1).midicps, 200);
+                env3 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                sig3 = SinOsc.ar((note + int2).midicps, 0.0);
+                ping3 = env3 * sig3 * AmpComp.kr((note + int2).midicps, 200);
+                env4 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                sig4 = SinOsc.ar((note + int3).midicps, 0.0);
+                ping4 = env4 * sig4 * AmpComp.kr((note + int3).midicps, 200);
+                env5 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                sig5 = SinOsc.ar((note + int4).midicps, 0.0);
+                ping5 = env5 * sig5 * AmpComp.kr((note + int4).midicps, 200);
+
+                // reverb = FreeVerb.ar(sig, 0.1, 0.3, damp: 0.5, mul: 1);
+                encoded = HoaEncodeDirection.ar((ping1 + ping2 + ping3 + ping4 + ping5) * gain,
+                    theta,
+                    phi,
+                    2.0,
+                    order.asInteger
+                );
+                Out.ar(2, encoded);
+            }).store;
         });
 
 
