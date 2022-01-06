@@ -103,16 +103,16 @@ IMAGE {
                 env1 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
                 sig1 = SinOsc.ar((note + int0).midicps, 0.0);
                 ping1 = env1 * sig1 * AmpComp.kr((note + int0).midicps, 200);
-                env2 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                env2 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0.1, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
                 sig2 = SinOsc.ar((note + int1).midicps, 0.0);
                 ping2 = env2 * sig2 * AmpComp.kr((note + int1).midicps, 200);
-                env3 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                env3 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0.2, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
                 sig3 = SinOsc.ar((note + int2).midicps, 0.0);
                 ping3 = env3 * sig3 * AmpComp.kr((note + int2).midicps, 200);
-                env4 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                env4 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0.3, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
                 sig4 = SinOsc.ar((note + int3).midicps, 0.0);
                 ping4 = env4 * sig4 * AmpComp.kr((note + int3).midicps, 200);
-                env5 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                env5 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0.4, 0.01, 1.0], curve: [1, 8, -9]), 1, doneAction: Done.none);
                 sig5 = SinOsc.ar((note + int4).midicps, 0.0);
                 ping5 = env5 * sig5 * AmpComp.kr((note + int4).midicps, 200);
 
