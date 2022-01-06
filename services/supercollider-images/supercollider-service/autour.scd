@@ -18,9 +18,22 @@
 var autourStyle;
 "Autour-style POI Rendering".postln;
 autourStyle = { |json, ttsData, outPath, addr|
-    var score, timing, order=5, length=5, nTones=3, earconList, places;
+    var dMeters, score, timing, order=5, length=5, nTones=3, earconList, places, lat, lon, poiDelay=0.5, endDelay=0.5;
     timing = 0;
     score = IMAGE.newScore(order);
+
+    // Distance in meters from lat-lon
+    // From https://stackoverflow.com/a/11172685/1086511
+    dMeters = { |lat1, lon1, lat2, lon2|
+        var R, dLat, dLon, a, c, d;
+        R = 6378.137;
+        dLat = (lat2 * pi / 180.0) - (lat1 * pi / 180.0);
+        dLon = (lon2 * pi / 180.0) - (lon1 * pi / 180.0);
+        a = (dLat / 2.0).sin.squared + ((lat1 * pi / 180.0).cos * (lat2 * pi / 180.0).cos * (dLon / 2.0).sin.squared);
+        c = 2 * a.sqrt.atan2((1 - a).sqrt);
+        d = R * c;
+        d * 1000
+    };
 
     // Set up b-format decoder
     score.add([
@@ -43,10 +56,26 @@ autourStyle = { |json, ttsData, outPath, addr|
 
     // Begin rendering places
     places = json.at("places");
+    lat = json.at("lat").asFloat;
+    lon = json.at("lon").asFloat;
+    places.do({ |item|
+        var dist, dLat, dLon;
+        dLat = item.at("ll").at(0).asFloat;
+        dLon = item.at("ll").at(1).asFloat;
+        dist = dMeters.(lat, lon, dLat, dLon).asFloat;
+        item.add(\dist -> dist);
+    });
+    // Sort from nearest to farthest
+    places.sort({ |a, b| a.at("dist") < b.at("dist") });
+    places.do({ |item, i|
+        // TODO play earcon based on category
+        // TODO play title of POI
 
-    // TODO
+        timing = timing + poiDelay;
+    });
 
     // Add last no-op
+    timing = timing + endDelay;
     score.add([timing, [0]]);
     score.saveToFile("/tmp/sc-store/score.txt");
 
