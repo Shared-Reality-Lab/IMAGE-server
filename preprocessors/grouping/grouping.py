@@ -1,4 +1,5 @@
-#Lines 34-40 refered from https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
+#Lines 35-40 refered from https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
+#Line 17 refered from https://www.w3resource.com/python-exercises/python-basic-exercise-40.php
 from flask import Flask, request, jsonify
 import json
 import time
