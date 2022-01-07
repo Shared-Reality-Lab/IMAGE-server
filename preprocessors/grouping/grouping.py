@@ -1,4 +1,4 @@
-# Lines 37-42 refered from 
+# Lines 37-42 refered from
 # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
 # Line 19 refered from
 # https://www.w3resource.com/python-exercises/python-basic-exercise-40.php
