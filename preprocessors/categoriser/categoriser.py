@@ -1,5 +1,7 @@
-#Lines 49-54 refered from https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
-#Lines 73-76 are refered form https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
+# Lines 51-56 refered from 
+# https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
+# Lines 75-78 are refered form
+# https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
 import torch
 from torch import nn
 import pytorch_lightning as pl
