@@ -1,3 +1,7 @@
+# Lines 37-42 refered from
+# https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
+# Line 19 refered from
+# https://www.w3resource.com/python-exercises/python-basic-exercise-40.php
 from flask import Flask, request, jsonify
 import json
 import time
@@ -12,7 +16,7 @@ app = Flask(__name__)
 
 
 def calculate_diagonal(x1, y1, x2, y2):
-    diag = sqrt((x2-x1)**2+(y2-y1)**2)
+    diag = sqrt((x2 - x1)**2 + (y2 - y1)**2)
     return diag
 
 
@@ -35,7 +39,7 @@ def readImage():
         definitionSchema['$id']: definitionSchema
     }
     resolver = jsonschema.RefResolver.from_schema(
-            schema, store=schema_store)
+        schema, store=schema_store)
     content = request.get_json()
     try:
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
@@ -59,7 +63,7 @@ def readImage():
                   collections.Counter(object_type).items() if count > 1]
     group = [[] for i in range(len(repetition))]
     final_group = []
-    check_group = [False]*len(objects)
+    check_group = [False] * len(objects)
 
     for i in range(len(repetition)):
         flag = 0
@@ -100,7 +104,7 @@ def readImage():
         "timestamp": int(timestamp),
         "name": name,
         "data": data
-        }
+    }
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
