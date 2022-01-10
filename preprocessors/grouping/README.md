@@ -11,4 +11,4 @@ The grouping preprocessor tries to group in the objects detected by the Object D
 | Gunicorn | [Link](https://github.com/benoitc/gunicorn) | MIT License(MIT) |
 | Flask_API | [Link](https://pypi.org/project/Flask-API/) | OSI Approved: BSD License |
 
-The versions for the above mentioned libraries have been mentioned in requirement.txt
+The versions for the above mentioned libraries have been mentioned in ```requirement.txt```
