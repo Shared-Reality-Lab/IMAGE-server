@@ -59,16 +59,46 @@ autourStyle = { |json, ttsData, outPath, addr|
     lat = json.at("lat").asFloat;
     lon = json.at("lon").asFloat;
     places.do({ |item|
-        var dist, dLat, dLon;
+        var dist, dLat, dLon, xDist, yDist;
         dLat = item.at("ll").at(0).asFloat;
         dLon = item.at("ll").at(1).asFloat;
         dist = dMeters.(lat, lon, dLat, dLon).asFloat;
+        ("Dist: " + dist.asString).postln;
+        xDist = dMeters.(lat, lon, dLat, lon).asFloat * (dLat - lat).sign;
+        ("xDist: " + xDist.asString).postln;
+        yDist = dMeters.(lat, lon, lat, dLon).asFloat * (dLon - lon).sign;
+        ("yDist: " + yDist.asString).postln;
         item.add(\dist -> dist);
+        item.add(\xDist -> xDist);
+        item.add(\yDist -> yDist);
     });
     // Sort from nearest to farthest
     places.sort({ |a, b| a.at("dist") < b.at("dist") });
     places.do({ |item, i|
+        var note, ecPattern, theta, phi;
+        note = yDist.linlin(-250, 250, 80, 104);
+        theta = yDist.atan2(xDist);
+        phi = 0;
+        //phi = yDist.linlin(-250, 250, -0.25pi, 0.25pi);
+        ecPattern = earconList.at(item.at("cat"));
         // TODO play earcon based on category
+        // As of writing (2022-01-06), the radius for included POIs is 250 meters.
+        score.add([
+            timing,
+            [\s_new, (\playDiscreteSinePingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
+                \note, note,
+                \int0, ecPattern.at(0),
+                \int1, ecPattern.at(1),
+                \int2, ecPattern.at(2),
+                \int3, ecPattern.at(3),
+                \int4, ecPattern.at(4),
+                \theta, theta,
+                \phi, phi,
+                \gain, 0.01
+            ]
+        ]);
+        timing = timing + 1.0; // TODO adjust based on length along with synthdef
+
         // TODO play title of POI
 
         timing = timing + poiDelay;
