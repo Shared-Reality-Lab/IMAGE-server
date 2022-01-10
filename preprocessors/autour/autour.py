@@ -1,3 +1,4 @@
+import os
 import json
 import time
 import logging
@@ -26,6 +27,12 @@ def get_map_data():
         definition_schema['$id']: definition_schema
     }
     content = request.get_json()
+    if 'coordinates' not in content.keys() and 'place' in content.keys():
+        # Query google places API to find latlong
+        place_response = requests.get(f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={content['place']}&key={os.environ['GOOGLE_PLACES_KEY']}'")
+        content['coordinates']['latitude'] = place_response.json()['results'][0]['geometry']['location']['lat']
+        content['coordinates']['longitude'] = place_response.json()['results'][0]['geometry']['location']['lng']
+    
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
     # Validate incoming request
