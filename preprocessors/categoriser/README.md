@@ -35,3 +35,4 @@ The following libraries were used for creating this preprocessor
 | opencv-python | [Link](https://github.com/skvark/opencv-python) | MIT License(MIT) |
 | Gunicorn | [Link](https://github.com/benoitc/gunicorn) | MIT License(MIT) |
 
+The versions for each of these libraries has been mentioned in the requirements.txt
