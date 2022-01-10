@@ -19,7 +19,7 @@ This preprocessor classifies whether the input image is a picture or a chart. Th
 | Chart Dataset  | [Link](https://github.com/soap117/DeepRule)  | BSD3 |
 | Text Dataset  | [Link](https://github.com/doc-analysis/DocBank)  | Apache-2.0 |
 
-the following libraries were used for creating this preprocessor
+The following libraries were used for creating this preprocessor
 
 ## Libraries Used
 
@@ -32,4 +32,6 @@ the following libraries were used for creating this preprocessor
 | Jsonschema | [Link](https://pypi.org/project/jsonschema/)  | MIT License|
 | Werkzeug | [Link](https://pypi.org/project/Werkzeug/) | BSD-3 |
 | Pytorch Lightning | [Link](https://pypi.org/project/Werkzeug/) | Apache Software License (Apache-2.0) |
+| opencv-python | [Link](https://github.com/skvark/opencv-python) | MIT License(MIT) |
+| Gunicorn | [Link](https://github.com/benoitc/gunicorn) | MIT License(MIT) |
 
