@@ -19,5 +19,17 @@ This preprocessor classifies whether the input image is a picture or a chart. Th
 | Chart Dataset  | [Link](https://github.com/soap117/DeepRule)  | BSD3 |
 | Text Dataset  | [Link](https://github.com/doc-analysis/DocBank)  | Apache-2.0 |
 
+the following libraries were used for creating this preprocessor
 
+## Libraries Used
+
+| Library | Link | Distribution License |
+| ------------- | ------------- | -------------|
+| Requests  | [Link](https://pypi.org/project/requests/)  | Apache 2.0|
+| Flask | [Link](https://pypi.org/project/Flask/)  | BSD-3-Clause License|
+| Numpy | [Link](https://pypi.org/project/numpy/)  | BSD-3-Clause License|
+| Pillow | [Link](https://pypi.org/project/Pillow/)  | Historical Permission Notice and Disclaimer (HPND)|
+| Jsonschema | [Link](https://pypi.org/project/jsonschema/)  | MIT License|
+| Werkzeug | [Link](https://pypi.org/project/Werkzeug/) | BSD-3 |
+| Pytorch Lightning | [Link](https://pypi.org/project/Werkzeug/) | Apache Software License (Apache-2.0) |
 
