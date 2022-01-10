@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # and our Additional Terms along with this program.
 # If not, see
-# <https://github.com/Shared-Reality-Lab/auditory-haptic-graphics-server/LICENSE>.
+# <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
 # Lines 37-42 refered from
 # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
 # Line 19 refered from

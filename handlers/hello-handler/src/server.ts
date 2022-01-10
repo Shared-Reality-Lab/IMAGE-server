@@ -12,7 +12,7 @@
  * GNU Affero General Public License for more details.
  * You should have received a copy of the GNU Affero General Public License
  * and our Additional Terms along with this program.
- * If not, see <https://github.com/Shared-Reality-Lab/auditory-haptic-graphics-server/LICENSE>.
+ * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
  */
 import express from "express";
 import sharp from "sharp";

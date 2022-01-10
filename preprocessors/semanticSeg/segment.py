@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # and our Additional Terms along with this program.
 # If not, see
-# <https://github.com/Shared-Reality-Lab/auditory-haptic-graphics-server/LICENSE>.
+# <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
 #
 # This was adapted from CSAIL's Semantic Segmentation library at
 # <https://github.com/CSAILVision/semantic-segmentation-pytorch>
