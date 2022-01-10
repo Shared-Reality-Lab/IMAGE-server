@@ -69,12 +69,12 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                    - driver: nvidia
-                      capabilities: ["gpu", "utility", "compute"]
+        # deploy:
+        #     resources:
+        #         reservations:
+        #             devices:
+        #             - driver: nvidia
+        #               capabilities: ["gpu", "utility", "compute"]
     first-categoriser:
         build:
             context: ./preprocessors/categoriser
@@ -132,13 +132,13 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                    - driver: nvidia
-                      device_ids: ['0']
-                      capabilities: ["gpu", "utility", "compute"]
+        # deploy:
+        #     resources:
+        #         reservations:
+        #             devices:
+        #             - driver: nvidia
+        #               device_ids: ['0']
+        #               capabilities: ["gpu", "utility", "compute"]
         env_file:
             - ./config/chart.env
     hello-tts-handler:

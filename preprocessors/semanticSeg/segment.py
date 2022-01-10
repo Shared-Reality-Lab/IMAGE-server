@@ -16,6 +16,8 @@
 #
 # This was adapted from CSAIL's Semantic Segmentation library at
 # <https://github.com/CSAILVision/semantic-segmentation-pytorch>
+# Lines 99-102 are refered form
+# https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
 
 import csv
 import torch
