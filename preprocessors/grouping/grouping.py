@@ -13,10 +13,6 @@
 # and our Additional Terms along with this program.
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
-# Lines 37-42 refered from
-# https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
-# Line 19 refered from
-# https://www.w3resource.com/python-exercises/python-basic-exercise-40.php
 
 from flask import Flask, request, jsonify
 import json
@@ -32,6 +28,8 @@ app = Flask(__name__)
 
 
 def calculate_diagonal(x1, y1, x2, y2):
+    #refered from
+    #https://www.w3resource.com/python-exercises/python-basic-exercise-40.php
     diag = sqrt((x2 - x1)**2 + (y2 - y1)**2)
     return diag
 
@@ -50,6 +48,8 @@ def readImage():
         definitionSchema = json.load(jsonfile)
     with open('./schemas/request.schema.json') as jsonfile:
         first_schema = json.load(jsonfile)
+    #Following 6 lines refered from
+    #https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
     schema_store = {
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema

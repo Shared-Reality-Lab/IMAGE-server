@@ -115,6 +115,8 @@ def run_segmentation(url,
                      segmentation_module,
                      dictionary,
                      pil_to_tensor):
+    #Following 4 lines refered from 
+    #https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
     image_b64 = url.split(",")[1]
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
@@ -157,6 +159,8 @@ def segment():
         definitionSchema = json.load(jsonfile)
     with open('./schemas/request.schema.json') as jsonfile:
         first_schema = json.load(jsonfile)
+    # Following 6 lines refered from
+    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
     schema_store = {
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema
