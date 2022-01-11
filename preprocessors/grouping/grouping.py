@@ -1,3 +1,23 @@
+# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# and our Additional Terms along with this program.
+# If not, see
+# <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
+# Lines 37-42 refered from
+# https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
+# Line 19 refered from
+# https://www.w3resource.com/python-exercises/python-basic-exercise-40.php
+
 from flask import Flask, request, jsonify
 import json
 import time
@@ -12,7 +32,7 @@ app = Flask(__name__)
 
 
 def calculate_diagonal(x1, y1, x2, y2):
-    diag = sqrt((x2-x1)**2+(y2-y1)**2)
+    diag = sqrt((x2 - x1)**2 + (y2 - y1)**2)
     return diag
 
 
@@ -35,7 +55,7 @@ def readImage():
         definitionSchema['$id']: definitionSchema
     }
     resolver = jsonschema.RefResolver.from_schema(
-            schema, store=schema_store)
+        schema, store=schema_store)
     content = request.get_json()
     try:
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
@@ -59,7 +79,7 @@ def readImage():
                   collections.Counter(object_type).items() if count > 1]
     group = [[] for i in range(len(repetition))]
     final_group = []
-    check_group = [False]*len(objects)
+    check_group = [False] * len(objects)
 
     for i in range(len(repetition)):
         flag = 0
@@ -100,7 +120,7 @@ def readImage():
         "timestamp": int(timestamp),
         "name": name,
         "data": data
-        }
+    }
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
