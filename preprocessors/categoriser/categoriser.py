@@ -60,9 +60,9 @@ def categorise():
         definitionSchema = json.load(jsonfile)
     with open('./schemas/request.schema.json') as jsonfile:
         first_schema = json.load(jsonfile)
-    #Following 6 lines of code
-    #refered from 
-    #https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
+    # Following 6 lines of code
+    # refered from
+    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
     schema_store = {
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema
@@ -86,7 +86,7 @@ def categorise():
 
     # convert the uri to processable image
     # Following 4 lines of code
-    # refered form 
+    # refered form
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
     source = content["image"]
     image_b64 = source.split(",")[1]

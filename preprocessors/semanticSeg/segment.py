@@ -115,8 +115,8 @@ def run_segmentation(url,
                      segmentation_module,
                      dictionary,
                      pil_to_tensor):
-    #Following 4 lines refered from 
-    #https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
+    # Following 4 lines refered from
+    # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
     image_b64 = url.split(",")[1]
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
