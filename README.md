@@ -1,5 +1,11 @@
 # IMAGE-server
-auditory-haptic-graphics server components, including Handlers
+IMAGE server components, including Handlers
+
+## IMAGE project information
+Please see https://image.a11y.mcgill.ca for general information about the project.
+
+If you wish to contribute to the project, the following wiki page is a good starting point, including for those on the IMAGE project team:
+https://github.com/Shared-Reality-Lab/IMAGE-server/wiki
 
 ## Set Up
 
