@@ -101,6 +101,17 @@
                 "capabilities",
                 "renderers"
             ]
+        },
+        {
+            "required": [
+                "request_uuid",
+                "language",
+                "timestamp",
+                "placeID",
+                "context",
+                "capabilities",
+                "renderers"
+            ]
         }
     ]
 }
