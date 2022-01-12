@@ -175,7 +175,7 @@ def run(weights='yolov5x.pt',
             definitionSchema = json.load(jsonfile)
         with open('./schemas/request.schema.json') as jsonfile:
             first_schema = json.load(jsonfile)
-        # Following 6 lines of code are refered from
+        # Following 6 lines of code are referred from
         # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
         schema_store = {
             schema['$id']: schema,
