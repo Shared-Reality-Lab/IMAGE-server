@@ -74,9 +74,10 @@
                     "type": "string",
                     "title": "Website",
                     "description": "The website of the place"
-                },
-                "required": ["id", "ll", "cat", "title", "from"]
-            }
+                }
+            },
+            "required": ["id", "ll", "cat", "title", "from"]
+            
         }
     },
     "required": ["url", "lat", "lon", "api_request", "places"]
