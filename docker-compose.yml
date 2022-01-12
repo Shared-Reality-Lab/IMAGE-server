@@ -8,9 +8,6 @@ services:
         image: "orchestrator:latest"
         env_file:
             - ./config/express-common.env
-        group_add:
-            # This should be set in an environment variable or .env
-            - ${DOCKER_GID}
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
     supercollider:
@@ -139,8 +136,6 @@ services:
         #             - driver: nvidia
         #               device_ids: ['0']
         #               capabilities: ["gpu", "utility", "compute"]
-        env_file:
-            - ./config/chart.env
     hello-tts-handler:
         build:
             context: ./handlers/hello-tts-handler
