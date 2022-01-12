@@ -35,49 +35,45 @@
             "type": "object",
             "title": "Places",
             "description": "The places on the map",
-            "properties": {
-                "id": {
-                    "type": "string",
-                    "title": "Name",
-                    "description": "The name of the place",
-                    "minLength": 1
-                },
-                "ll": {
-                    "type": "array",
-                    "title": "Latitude/Longitude",
-                    "description": "The latitude and longitude of the place",
-                    "items": {
-                        "type": "number"
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "ll": {
+                        "type": "array",
+                        "title": "Latitude/Longitude",
+                        "description": "The latitude and longitude of the place",
+                        "items": {
+                            "type": "number"
+                        }
+                    },
+                    "cat": {
+                        "type": "number",
+                        "title": "Category",
+                        "description": "The category of a place"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title",
+                        "description": "The name of the place"
+                    },
+                    "from": {
+                        "type": "string",
+                        "title": "From",
+                        "description": "The server that returned the data of this place"
+                    },
+                    "addr": {
+                        "type": "string",
+                        "title": "Address",
+                        "description": "The address of the place"
+                    },
+                    "website": {
+                        "type": "string",
+                        "title": "Website",
+                        "description": "The website of the place"
                     }
                 },
-                "cat": {
-                    "type": "number",
-                    "title": "Category",
-                    "description": "The category of a place"
-                },
-                "title": {
-                    "type": "string",
-                    "title": "Title",
-                    "description": "The name of the place"
-                },
-                "from": {
-                    "type": "string",
-                    "title": "From",
-                    "description": "The server that returned the data of this place"
-                },
-                "addr": {
-                    "type": "string",
-                    "title": "Address",
-                    "description": "The address of the place"
-                },
-                "website": {
-                    "type": "string",
-                    "title": "Website",
-                    "description": "The website of the place"
-                }
-            },
-            "required": ["id", "ll", "cat", "title", "from"]
-            
+                "required": ["ll", "cat", "title", "from"]
+            }
         }
     },
     "required": ["url", "lat", "lon", "api_request", "places"]
