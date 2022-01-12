@@ -33,8 +33,11 @@ def get_map_data():
     if 'coordinates' not in content.keys() and 'placeID' in content.keys():
         # Query google places API to find latlong
         place_response = requests.get(f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={content['placeID']}&key={google_api_key}")
-        content['coordinates']['latitude'] = place_response.json()['results'][0]['geometry']['location']['lat']
-        content['coordinates']['longitude'] = place_response.json()['results'][0]['geometry']['location']['lng']
+        coordinates = {
+            'latitude': place_response.json()['results'][0]['geometry']['location']['lat'],
+            'longitude': place_response.json()['results'][0]['geometry']['location']['lng']
+        }
+        content['coordinates'] = coordinates
     
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
