@@ -39,6 +39,10 @@
             },
             "required": [ "latitude", "longitude" ]
         },
+        "placeID": {
+            "description": "The place ID of the location identified in a map.",
+            "type": "string"
+        },
         "context": {
             "description": "Serialized XML of the image node and possibly related nodes.",
             "type": "string"
