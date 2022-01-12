@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 RUN adduser --disabled-password python
 ENV PATH="/usr/src/app/.local/bin:${PATH}"
 
-RUN wget bach.cim.mcgill.ca/atp/models/objectDetectionWeights/yolov5x.pt
+RUN wget https://image.a11y.mcgill.ca/models/objectDetectionWeights/yolov5x.pt
 
 RUN pip3 install --upgrade pip
 RUN pip3 install gunicorn==20.1.0

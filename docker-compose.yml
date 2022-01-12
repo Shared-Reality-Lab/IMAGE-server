@@ -10,7 +10,8 @@ services:
             - ./config/express-common.env
         group_add:
             # This should be set in an environment variable or .env
-            - ${DOCKER_GID}
+#            - ${DOCKER_GID}
+            - 134
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
     supercollider:
@@ -83,16 +84,16 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
-    second-categoriser:
-        build:
-            context: ./preprocessors/categoriser2
-            dockerfile: Dockerfile
-        image: "second-categoriser:latest"
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 2
-            ca.mcgill.a11y.image.port: 5000
-        env_file:
-            - ./config/azure-api.env
+#    second-categoriser:
+#        build:
+#            context: ./preprocessors/categoriser2
+#            dockerfile: Dockerfile
+#        image: "second-categoriser:latest"
+#        labels:
+#            ca.mcgill.a11y.image.preprocessor: 2
+#            ca.mcgill.a11y.image.port: 5000
+#        env_file:
+#            - ./config/azure-api.env
     object-grouping:
         build:
             context: ./preprocessors/grouping
@@ -100,6 +101,14 @@ services:
         image: "object-grouping:latest"
         labels:
             ca.mcgill.a11y.image.preprocessor: 4
+            ca.mcgill.a11y.image.port: 5000
+    object-sorting:
+        build:
+            context: ./preprocessors/sorting
+            dockerfile: Dockerfile
+        image: "object-sorting:latest"
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 5
             ca.mcgill.a11y.image.port: 5000
     scene-detection:
         build:
@@ -109,29 +118,29 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
-    semantic-segmentation:
-        build:
-            context: ./preprocessors/semanticSeg
-            dockerfile: ./Dockerfile
-        image: "semantic-segmentation:latest"
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 5000
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                    - driver: nvidia
-                      capabilities: ["gpu", "utility", "compute"]
-    chart-pipeline:
-        build:
-            context: ./preprocessors/chart-pipeline
-            dockerfile: Dockerfile
-        image: "chart-pipeline:latest"
-        command: --mode=1 --empty_cache=True
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 2
-            ca.mcgill.a11y.image.port: 5000
+#    semantic-segmentation:
+#        build:
+#            context: ./preprocessors/semanticSeg
+#            dockerfile: ./Dockerfile
+#        image: "semantic-segmentation:latest"
+#        labels:
+#            ca.mcgill.a11y.image.preprocessor: 3
+#            ca.mcgill.a11y.image.port: 5000
+#        deploy:
+#            resources:
+#                reservations:
+#                    devices:
+#                    - driver: nvidia
+#                      capabilities: ["gpu", "utility", "compute"]
+#    chart-pipeline:
+#        build:
+#            context: ./preprocessors/chart-pipeline
+#            dockerfile: Dockerfile
+#        image: "chart-pipeline:latest"
+#        command: --mode=1 --empty_cache=True
+#        labels:
+#            ca.mcgill.a11y.image.preprocessor: 2
+#            ca.mcgill.a11y.image.port: 5000
         # deploy:
         #     resources:
         #         reservations:
@@ -139,8 +148,8 @@ services:
         #             - driver: nvidia
         #               device_ids: ['0']
         #               capabilities: ["gpu", "utility", "compute"]
-        env_file:
-            - ./config/chart.env
+#        env_file:
+#            - ./config/chart.env
     hello-tts-handler:
         build:
             context: ./handlers/hello-tts-handler
