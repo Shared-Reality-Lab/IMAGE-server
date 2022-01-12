@@ -75,13 +75,14 @@ autourStyle = { |json, ttsData, outPath, addr|
     // Sort from nearest to farthest
     places.sort({ |a, b| a.at("dist") < b.at("dist") });
     places.do({ |item, i|
-        var note, ecPattern, theta, phi;
+        var note, ecPattern, theta, phi, audio;
         note = yDist.linlin(-250, 250, 80, 104);
         theta = yDist.atan2(xDist);
+        audio = item.at("audio");
         phi = 0;
         //phi = yDist.linlin(-250, 250, -0.25pi, 0.25pi);
         ecPattern = earconList.at(item.at("cat"));
-        // TODO play earcon based on category
+        // play earcon based on category
         // As of writing (2022-01-06), the radius for included POIs is 250 meters.
         score.add([
             timing,
@@ -100,6 +101,19 @@ autourStyle = { |json, ttsData, outPath, addr|
         timing = timing + 1.0; // TODO adjust based on length along with synthdef
 
         // TODO play title of POI
+        score.add([
+            timing,
+            [\s_new, (\playBufferHOA++order.asSymbol).asSymbol, -1, 2, 1001,
+                \buffNum, 210,
+                \start, audio.at("offset").asInteger,
+                \duration, (audio.at("duration").asInteger / ttsData.sampleRate),
+                \theta, theta,
+                \phi, phi,
+                \gain, 0.01
+            ]
+        ]);
+        timing = timing + (audio.at("duration").asInteger / ttsData.sampleRate);
+
 
         timing = timing + poiDelay;
     });
