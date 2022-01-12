@@ -4,8 +4,6 @@ import fetch from "node-fetch";
 import fs from "fs/promises";
 import osc from "osc";
 import { v4 as uuidv4 } from "uuid";
-import Articles from "articles";
-import pluralize from "pluralize"
 
 // JSON imports
 import querySchemaJSON from "./schemas/request.schema.json";
@@ -28,15 +26,6 @@ const filePrefix = "/tmp/sc-store/autour-handler-";
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
-function calcConfidence(objects: Record<string, unknown>[]): number {
-    let confidence = objects.reduce((acc, cur) => {
-        acc += cur["confidence"] as number;
-        return acc;
-    }, 0);
-    confidence /= objects.length;
-    return confidence;
-}
-
 app.post("/handler", async (req, res) => {
     // Check for good data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
@@ -46,10 +35,7 @@ app.post("/handler", async (req, res) => {
     }
     // Check for the preprocessor data we need
     const preprocessors = req.body["preprocessors"];
-    if (!(
-        preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
-        && preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
-    )) {
+    if (!preprocessors["ca.mcgill.a11y.image.preprocessor.autour"]) {
         console.warn("Not enough data to generate a rendering.");
         const response = {
             "request_uuid": req.body["request_uuid"],
@@ -66,9 +52,9 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    const objectData = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
-    if (objectData["objects"].length === 0) {
-        console.warn("No objects detected despite running.");
+    const autourData = preprocessors["ca.mcgill.a11y.image.preprocessor.autour"];
+    if (autourData["places"].length === 0) {
+        console.warn("No places detected despite running.");
         const response = {
             "request_uuid": req.body["request_uuid"],
             "timestamp": Math.round(Date.now() / 1000),
@@ -102,24 +88,9 @@ app.post("/handler", async (req, res) => {
     }
 
     // Form TTS segments
-    let ttsIntro;
-
-    const staticSegments = [ttsIntro, "with", "and"];
-    const segments = Array.from(staticSegments);
-    const groupData = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
-    for (const object of objectData["objects"]) {
-        const articled = Articles.articlize(object["type"].trim());
-        segments.push(`${articled}`);
-    }
-    for (const group of groupData["grouped"]) {
-        const exId = group["IDs"][0];
-        const exObjs = objectData["objects"].filter((obj: Record<string, unknown>) => {
-            return obj["ID"] == exId;
-        });
-        const sType = (exObjs.length > 0) ? (exObjs[0]["type"]) : "object";
-        const pType = pluralize(sType.trim());
-        const num = group["IDs"].length;
-        segments.push(`${num.toString()} ${pType}`);
+    const segments = [];
+    for (const place of autourData["places"]) {
+        segments.push(place["title"]);
     }
 
     let ttsResponse;
@@ -138,47 +109,18 @@ app.post("/handler", async (req, res) => {
         ttsResponse = ttsResponse as Record<string, unknown>;
     } catch (e) {
         console.error(e);
-        res.status(500).json({"error": e.message});
+        res.status(500).json({"error": (e as Error).message});
         return;
     }
 
     const durations = (ttsResponse as Record<string, unknown>)["durations"] as number[];
-    const joining: Record<string, unknown> = {};
-    const intro = {
-        "offset": 0,
-        "duration": durations[0]
-    };
-    let runningOffset = durations[0];
-    for (let i = 1; i < staticSegments.length; i++) {
-        joining[staticSegments[i]] = {
-            "offset": runningOffset,
-            "duration": durations[i]
-        };
-        runningOffset += durations[i];
-    }
+    let runningOffset = 0;
+    const scData = autourData;
+    scData["ttsFileName"] = "";
 
-    const scData = {
-        "audioTemplate": {
-            "intro": intro,
-            "joining": joining
-        },
-        "objects": objectData["objects"],
-        "groups": groupData["grouped"],
-        "ordering": "leftToRight",
-        "ttsFileName": ""
-    };
-
-    let durIdx = staticSegments.length;
-    for (const object of scData["objects"]) {
-        object["audio"] = {
-            "offset": runningOffset,
-            "duration": durations[durIdx]
-        };
-        runningOffset += durations[durIdx];
-        durIdx += 1;
-    }
-    for (const group of scData["groups"]) {
-        group["audio"] = {
+    let durIdx = 0;
+    for (const place of scData["places"]) {
+        place["audio"] = {
             "offset": runningOffset,
             "duration": durations[durIdx]
         };
@@ -258,8 +200,8 @@ app.post("/handler", async (req, res) => {
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
         renderings.push({
             "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-            "confidence": calcConfidence(objectData["objects"]),
-            "description": "An audio description of elements in the image with non-speech effects.",
+            "confidence": 100,
+            "description": "Points of interest around the location in the map.",
             "data": {
                 "audio": dataURL
             }
