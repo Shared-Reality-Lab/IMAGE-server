@@ -173,6 +173,18 @@ renderGeneric = { |json, ttsData, outPath, addr|
                         \gain, 0.5 * volume.dbamp
                     ]
                 ]);
+                score.add([
+                    (timing + dur),
+                    [\s_new, (\pingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
+                        \gain, 0.8 * volume.dbamp,
+                        \room, 0.6,
+                        \damp, 0.5,
+                        \mix, 0.3,
+                        \freq, item.at("centroid").at(1).asFloat.linlin(0.0, 1.0, 2000, 1000),
+                        \resonz, 0.01,
+                        \theta, theta,
+                        \phi, phi]
+                ]);
             },
             {
                 "No centroid on item!".postln;
@@ -182,7 +194,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
                 ]);
             }
         );
-        timing = timing + dur;
+        timing = timing + dur + 0.5; // 0.5 for ping
     });
 
     // Add one last noop msg w/ half second pause
