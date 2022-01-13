@@ -1,5 +1,21 @@
-# Lines 183-187 are refered form
-# https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# and our Additional Terms along with this program.
+# If not, see
+# <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
+
+
 import time
 from pathlib import Path
 from flask import Flask, jsonify, request
@@ -159,6 +175,8 @@ def run(weights='yolov5x.pt',
             definitionSchema = json.load(jsonfile)
         with open('./schemas/request.schema.json') as jsonfile:
             first_schema = json.load(jsonfile)
+        # Following 6 lines of code are referred from
+        # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
         schema_store = {
             schema['$id']: schema,
             definitionSchema['$id']: definitionSchema
@@ -180,6 +198,8 @@ def run(weights='yolov5x.pt',
         request_uuid = content["request_uuid"]
         timestamp = time.time()
         name = "ca.mcgill.a11y.image.preprocessor.objectDetection"
+        # Following 4 lines are refered from
+        # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
         source = content["image"]
         image_b64 = source.split(",")[1]
         binary = base64.b64decode(image_b64)

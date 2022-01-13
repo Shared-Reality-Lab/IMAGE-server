@@ -1,3 +1,23 @@
+# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# and our Additional Terms along with this program.
+# If not, see
+# <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
+#
+# This was adapted from CSAIL's Places365 project
+# <https://github.com/CSAILVision/places365>
+# by Bolei Zhou, sep 2, 2017
+
 import torch
 from torch.autograd import Variable as V
 from torchvision import transforms as trn
@@ -93,7 +113,7 @@ def load_model():
         v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
     for i, (name, module) in enumerate(model._modules.items()):
-        module = recursion_change_bn(model) # noqa
+        module = recursion_change_bn(model)  # noqa
     model.avgpool = torch.nn.AvgPool2d(kernel_size=14, stride=1, padding=0)
     model.eval()
     model.eval()
@@ -123,6 +143,8 @@ def scenePredictor():
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
         definitionSchema = json.load(jsonfile)
+    # Following 6 lines of code are refered from
+    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
     schema_store = {
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema

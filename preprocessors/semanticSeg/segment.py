@@ -1,5 +1,24 @@
+# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# and our Additional Terms along with this program.
+# If not, see
+# <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
+#
+# This was adapted from CSAIL's Semantic Segmentation library at
+# <https://github.com/CSAILVision/semantic-segmentation-pytorch>
 # Lines 99-102 are refered form
 # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
+
 import csv
 import torch
 import numpy
@@ -96,6 +115,8 @@ def run_segmentation(url,
                      segmentation_module,
                      dictionary,
                      pil_to_tensor):
+    # Following 4 lines refered from
+    # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
     image_b64 = url.split(",")[1]
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
@@ -138,6 +159,8 @@ def segment():
         definitionSchema = json.load(jsonfile)
     with open('./schemas/request.schema.json') as jsonfile:
         first_schema = json.load(jsonfile)
+    # Following 6 lines refered from
+    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
     schema_store = {
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema

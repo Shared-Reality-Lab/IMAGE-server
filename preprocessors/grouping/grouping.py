@@ -1,7 +1,19 @@
-# Lines 37-42 refered from
-# https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
-# Line 19 refered from
-# https://www.w3resource.com/python-exercises/python-basic-exercise-40.php
+# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# and our Additional Terms along with this program.
+# If not, see
+# <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
+
 from flask import Flask, request, jsonify
 import json
 import time
@@ -16,6 +28,8 @@ app = Flask(__name__)
 
 
 def calculate_diagonal(x1, y1, x2, y2):
+    # refered from
+    # https://www.w3resource.com/python-exercises/python-basic-exercise-40.php
     diag = sqrt((x2 - x1)**2 + (y2 - y1)**2)
     return diag
 
@@ -34,6 +48,8 @@ def readImage():
         definitionSchema = json.load(jsonfile)
     with open('./schemas/request.schema.json') as jsonfile:
         first_schema = json.load(jsonfile)
+    # Following 6 lines refered from
+    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
     schema_store = {
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema
