@@ -51,10 +51,10 @@ def get_map_data():
             request_schema, store=schema_store)
 
     validated = validate(
-        schema=request_schema, 
-        data=content, 
-        resolver=resolver, 
-        json_messaage="Invalid Request JSON format", 
+        schema=request_schema,
+        data=content,
+        resolver=resolver,
+        json_messaage="Invalid Request JSON format",
         error_code=400)
 
     if validated is not None:
@@ -110,10 +110,10 @@ def get_map_data():
             schema, store=schema_store)
 
     validated = validate(
-        schema=data_schema, 
-        data=data, 
-        resolver=resolver, 
-        json_message='Invalid Preprocessor JSON format', 
+        schema=data_schema,
+        data=data,
+        resolver=resolver,
+        json_message='Invalid Preprocessor JSON format',
         error_code=500)
 
     if validated is not None:
@@ -127,10 +127,10 @@ def get_map_data():
     }
 
     validated = validate(
-        schema=schema, 
-        data=response, 
-        resolver=resolver, 
-        json_message='Invalid Preprocessor JSON format', 
+        schema=schema,
+        data=response,
+        resolver=resolver,
+        json_message='Invalid Preprocessor JSON format',
         error_code=500)
 
     if validated is not None:
@@ -189,9 +189,10 @@ def get_coordinates(content):
     if not check_google_response(place_response):
         return None
 
+    location = place_response['results'][0]['geometry']['location']
     coordinates = {
-        'latitude': place_response['results'][0]['geometry']['location']['lat'],
-        'longitude': place_response['results'][0]['geometry']['location']['lng']
+        'latitude': location['lat'],
+        'longitude': location['lng']
     }
 
     return coordinates
@@ -213,7 +214,7 @@ def check_google_response(place_response):
         return False
 
     results = place_response['results'][0]
-    
+
     if 'geometry' not in results:
         logging.error("No geometry found for placeID")
         return False
