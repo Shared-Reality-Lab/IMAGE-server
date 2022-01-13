@@ -30,15 +30,6 @@ def get_map_data():
     }
     content = request.get_json()
     
-    if 'coordinates' not in content.keys() and 'placeID' in content.keys():
-        # Query google places API to find latlong
-        place_response = requests.get(f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={content['placeID']}&key={google_api_key}")
-        coordinates = {
-            'latitude': place_response.json()['results'][0]['geometry']['location']['lat'],
-            'longitude': place_response.json()['results'][0]['geometry']['location']['lng']
-        }
-        content['coordinates'] = coordinates
-    
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
     # Validate incoming request
@@ -60,9 +51,10 @@ def get_map_data():
     if 'image' in content:
         logging.info("Not map content. Skipping...")
         return "", 204
+        
     # Build Autour request
     url = content['url']
-    coords = content['coordinates']
+    coords = get_coordinates(content)
     api_request = f"https://isassrv.cim.mcgill.ca/autour/getPlaces.php?\
             framed=1&\
             times=1&\
@@ -117,6 +109,17 @@ def get_map_data():
 
     return response
 
+def get_coordinates(content):
+    if 'coordinates' in content.keys():
+        return content['coordinates']
 
+    # Query google places API to find latlong
+    place_response = requests.get(f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={content['placeID']}&key={google_api_key}")
+    coordinates = {
+        'latitude': place_response.json()['results'][0]['geometry']['location']['lat'],
+        'longitude': place_response.json()['results'][0]['geometry']['location']['lng']
+    }
+    return coordinates
+        
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
