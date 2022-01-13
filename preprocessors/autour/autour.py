@@ -34,7 +34,12 @@ def get_map_data():
     resolver = jsonschema.RefResolver.from_schema(
             request_schema, store=schema_store)
 
-    validated = validate(request_schema, content, resolver, "Invalid Request JSON format", 400)
+    validated = validate(
+        schema=request_schema, 
+        data=content, 
+        resolver=resolver, 
+        json_messaage="Invalid Request JSON format", 
+        error_code=400)
 
     if validated is not None:
         return validated
@@ -88,7 +93,12 @@ def get_map_data():
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
 
-    validated = validate(data_schema, data, resolver, 'Invalid Preprocessor JSON format', 500)
+    validated = validate(
+        schema=data_schema, 
+        data=data, 
+        resolver=resolver, 
+        json_message='Invalid Preprocessor JSON format', 
+        error_code=500)
 
     if validated is not None:
         return validated
@@ -100,12 +110,18 @@ def get_map_data():
         'data': data
     }
 
-    validated = validate(schema, response, resolver, 'Invalid Preprocessor JSON format', 500)
+    validated = validate(
+        schema=schema, 
+        data=response, 
+        resolver=resolver, 
+        json_message='Invalid Preprocessor JSON format', 
+        error_code=500)
 
     if validated is not None:
         return validated
 
     return response
+
 
 def validate(schema, data, resolver, json_messaage, error_code):
     """
@@ -129,6 +145,7 @@ def validate(schema, data, resolver, json_messaage, error_code):
         return jsonify(json_messaage), error_code
 
     return None
+
 
 def get_coordinates(content):
     """
@@ -163,6 +180,7 @@ def get_coordinates(content):
 
     return coordinates
 
+
 def check_google_response(place_response):
     """
     Helper method to check whether the response from
@@ -174,23 +192,25 @@ def check_google_response(place_response):
     Returns:
         bool: True if valid, False otherwise
     """
-    if 'results' not in place_response.keys() or len(place_response['results']) == 0:
+    if 'results' not in place_response or len(place_response['results']) == 0:
         logging.error("No results found for placeID")
         return False
 
-    if 'geometry' not in place_response['results'][0].keys():
+    results = place_response['results'][0]
+    
+    if 'geometry' not in results:
         logging.error("No geometry found for placeID")
         return False
 
-    if 'location' not in place_response['results'][0]['geometry'].keys():
+    if 'location' not in results['geometry']:
         logging.error("No location found for placeID")
         return False
 
-    if 'lat' not in place_response['results'][0]['geometry']['location'].keys():
+    if 'lat' not in results['geometry']['location']:
         logging.error("No lat found for placeID")
         return False
 
-    if 'lng' not in place_response['results'][0]['geometry']['location'].keys():
+    if 'lng' not in results['geometry']['location']:
         logging.error("No lng found for placeID")
         return False
 
