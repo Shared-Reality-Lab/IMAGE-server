@@ -52,6 +52,14 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
+    ocr-preprocessor:
+        build:
+            context: ./preprocessors/ocr
+            dockerfile: Dockerfile
+        image: "ocr:latest"
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 2
+            ca.mcgill.a11y.image.port: 5000
     hello-handler:
         build:
             context: ./handlers/hello-handler
