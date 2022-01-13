@@ -90,10 +90,6 @@ def get_map_data():
     response = requests.get(api_request).json()
     results = response['results']
 
-    places = {}
-    for result in results:
-        places[result['id']] = {k: v for k, v in result.items() if k != 'id'}
-
     name = 'ca.mcgill.a11y.image.preprocessor.autour'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
@@ -102,7 +98,7 @@ def get_map_data():
         'lat': coords['latitude'],
         'lon': coords['longitude'],
         'api_request': api_request,
-        'places': places,
+        'places': results,
     }
 
     # Use response schema to validate response
