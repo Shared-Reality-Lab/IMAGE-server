@@ -33,15 +33,12 @@ def get_map_data():
     # Validate incoming request
     resolver = jsonschema.RefResolver.from_schema(
             request_schema, store=schema_store)
-    try:
-        validator = jsonschema.Draft7Validator(
-            request_schema,
-            resolver=resolver
-        )
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
-        return jsonify("Invalid Request JSON format"), 400
+    
+    validated = validate(request_schema, content, resolver, "Invalid Request JSON format", 400)
+    
+    if validated is not None:
+        return validated
+    
     # Use response schema to validate response
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
@@ -53,6 +50,12 @@ def get_map_data():
     # Build Autour request
     url = content['url']
     coords = get_coordinates(content)
+    
+    if coords is None:
+        error = 'Invalid map place received. Unable to find Lat/Lng'
+        logging.error(error)
+        return jsonify(error), 400
+    
     api_request = f"https://isassrv.cim.mcgill.ca/autour/getPlaces.php?\
             framed=1&\
             times=1&\
@@ -84,13 +87,11 @@ def get_map_data():
         'places': places,
     }
 
-    try:
-        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
-        validator.validate(data)
-    except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
-        return jsonify("Invalid Preprocessor JSON format"), 500
+    validated = validate(data_schema, data, resolver, 'Invalid Preprocessor JSON format', 500)
 
+    if validated is not None:
+        return validated
+    
     response = {
         'request_uuid': request_uuid,
         'timestamp': timestamp,
@@ -98,14 +99,22 @@ def get_map_data():
         'data': data
     }
 
-    try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
-        return jsonify("Invalid Preprocessor JSON format"), 500
+    validated = validate(schema, response, resolver, 'Invalid Preprocessor JSON format', 500)
+    
+    if validated is not None:
+        return validated
 
     return response
+
+def validate(schema, data, resolver, json_messaage, error_code):
+    try:
+        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+        validator.validate(data)
+    except jsonschema.exceptions.ValidationError as error:
+        logging.error(error)
+        return jsonify(json_messaage), error_code
+    
+    return None
 
 def get_coordinates(content):
     if 'coordinates' in content.keys():
@@ -114,12 +123,43 @@ def get_coordinates(content):
     google_api_key = os.environ["GOOGLE_PLACES_KEY"]
     
     # Query google places API to find latlong
-    place_response = requests.get(f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={content['placeID']}&key={google_api_key}")
+    place_response = requests.get(
+        f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={content['placeID']}&key={google_api_key}"
+        ).json()
+    
+    if not check_google_response(place_response):
+        return None
+    
     coordinates = {
-        'latitude': place_response.json()['results'][0]['geometry']['location']['lat'],
-        'longitude': place_response.json()['results'][0]['geometry']['location']['lng']
+        'latitude': place_response['results'][0]['geometry']['location']['lat'],
+        'longitude': place_response['results'][0]['geometry']['location']['lng']
     }
+    
     return coordinates
         
+def check_google_response(place_response):
+    if 'results' not in place_response.keys() or len(place_response['results']) == 0:
+        logging.error("No results found for placeID")
+        return False
+    
+    if 'geometry' not in place_response['results'][0].keys():
+        logging.error("No geometry found for placeID")
+        return False
+    
+    if 'location' not in place_response['results'][0]['geometry'].keys():
+        logging.error("No location found for placeID")
+        return False
+    
+    if 'lat' not in place_response['results'][0]['geometry']['location'].keys():
+        logging.error("No lat found for placeID")
+        return False
+    
+    if 'lng' not in place_response['results'][0]['geometry']['location'].keys():
+        logging.error("No lng found for placeID")
+        return False
+    
+    return True
+    
+    
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
