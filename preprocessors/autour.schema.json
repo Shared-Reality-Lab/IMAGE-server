@@ -32,12 +32,17 @@
             "pattern": "^https?://.*"
         },
         "places": {
-            "type": "object",
+            "type": "array",
             "title": "Places",
             "description": "The places on the map",
-            "additionalProperties": {
+            "items": {
                 "type": "object",
                 "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "ID",
+                        "description": "The ID of the place"
+                    },
                     "ll": {
                         "type": "array",
                         "title": "Latitude/Longitude",
@@ -72,7 +77,7 @@
                         "description": "The website of the place"
                     }
                 },
-                "required": ["ll", "cat", "title", "from"]
+                "required": ["id", "ll", "cat", "title", "from"]
             }
         }
     },
