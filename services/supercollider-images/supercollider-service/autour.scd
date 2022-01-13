@@ -75,7 +75,9 @@ autourStyle = { |json, ttsData, outPath, addr|
     // Sort from nearest to farthest
     places.sort({ |a, b| a.at("dist") < b.at("dist") });
     places.do({ |item, i|
-        var note, ecPattern, theta, phi, audio;
+        var note, ecPattern, theta, phi, audio, xDist, yDist;
+        xDist = item.at("xDist").asFloat;
+        yDist = item.at("yDist").asFloat;
         note = yDist.linlin(-250, 250, 80, 104);
         theta = yDist.atan2(xDist);
         audio = item.at("audio");
