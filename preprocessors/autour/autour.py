@@ -14,8 +14,6 @@ def get_map_data():
     """
     Gets data on locations nearby a map from the Autour API
     """
-    
-    google_api_key = os.environ["GOOGLE_PLACES_KEY"]
     # Load schemas
     with open('./schemas/preprocessors/autour.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
@@ -113,6 +111,8 @@ def get_coordinates(content):
     if 'coordinates' in content.keys():
         return content['coordinates']
 
+    google_api_key = os.environ["GOOGLE_PLACES_KEY"]
+    
     # Query google places API to find latlong
     place_response = requests.get(f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={content['placeID']}&key={google_api_key}")
     coordinates = {
