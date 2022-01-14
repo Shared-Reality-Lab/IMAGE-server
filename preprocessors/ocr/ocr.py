@@ -67,6 +67,9 @@ def get_ocr_text():
             schema, store=schema_store)
     # Get OCR text response
     ocr_result = get_ocr_text(content['url'])
+    
+    if ocr_result is None:
+        return jsonify("Could not retreive Azure results"), 400
 
     name = 'ca.mcgill.a11y.image.preprocessor.ocr'
     request_uuid = content['request_uuid']
