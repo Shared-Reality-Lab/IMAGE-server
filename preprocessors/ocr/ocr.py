@@ -1,4 +1,4 @@
- Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -14,12 +14,18 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
 
+
 import json
 import time
 import logging
 import jsonschema
 import requests
+import os
 from flask import Flask, request, jsonify
+from azure.cognitiveservices.vision.computervision import ComputerVisionClient
+from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
+from azure.cognitiveservices.vision.computervision.models import VisualFeatureTypes
+from msrest.authentication import CognitiveServicesCredentials
 
 app = Flask(__name__)
 
@@ -59,25 +65,20 @@ def get_ocr_text():
     # Use response schema to validate response
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
-    # Build Azure OCR request
-    url = content['url']
-    api_request = f""
-
-    response = requests.get(api_request).json()
-    results = response['results']
+    # Get OCR text response
+    ocr_result = get_ocr_text(content['url'])
 
     name = 'ca.mcgill.a11y.image.preprocessor.ocr'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
-    data = {
-    }
+    data = ocr_result.json()
 
-    try:
-        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
-        validator.validate(data)
-    except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
-        return jsonify("Invalid Preprocessor JSON format"), 500
+    # try:
+    #     validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+    #     validator.validate(data)
+    # except jsonschema.exceptions.ValidationError as error:
+    #     logging.error(error)
+    #     return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {
         'request_uuid': request_uuid,
@@ -94,6 +95,37 @@ def get_ocr_text():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     return response
+
+def get_ocr_text(url):
+    """
+    Gets OCR text data from Azure API
+    """
+    subscription_key = os.environ["AZURE_API_KEY"]
+    endpoint = os.environ["AZURE_API_ENDPOINT"]
+    
+    computervision_client = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
+    
+    read_response = computervision_client.read(url,  raw=True)
+    
+    read_operation_location = read_response.headers["Operation-Location"]
+    # Grab the ID from the URL
+    operation_id = read_operation_location.split("/")[-1]
+
+    # Call the "GET" API and wait for it to retrieve the results 
+    while True:
+        read_result = computervision_client.get_read_result(operation_id)
+        if read_result.status not in ['notStarted', 'running']:
+            break
+        time.sleep(1)
+
+    # Check for success
+    if read_result.status == OperationStatusCodes.succeeded:
+        logging.info("OCR text: {}".format(read_result.analyze_result.read_results[0].text))
+        return read_result
+    else:
+        logging.error("OCR text: {}".format(read_result.status))
+        return None
+    
 
 
 if __name__ == "__main__":
