@@ -49,6 +49,8 @@ services:
             context: ./preprocessors/autour
             dockerfile: Dockerfile
         image: "autour:latest"
+        env_file:
+            - ./config/maps.env
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
@@ -146,17 +148,6 @@ services:
             context: ./handlers/hello-tts-handler
             dockerfile: Dockerfile
         image: "hello-tts-handler:latest"
-        env_file:
-            - ./config/express-common.env
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-        volumes:
-            - sc-store:/tmp/sc-store
-    generic-tts-handler:
-        build:
-            context: ./handlers/generic-tts-handler
-            dockerfile: Dockerfile
-        image: "generic-tts-handler:latest"
         env_file:
             - ./config/express-common.env
         labels:
