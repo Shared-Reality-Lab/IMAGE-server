@@ -154,7 +154,7 @@ def validate(schema, data, resolver, json_message, error_code):
         validator.validate(data)
     except jsonschema.exceptions.ValidationError as error:
         logging.error(error)
-        return jsonify(json_messaage), error_code
+        return jsonify(json_message), error_code
 
     return None
 
