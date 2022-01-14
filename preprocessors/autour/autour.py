@@ -54,7 +54,7 @@ def get_map_data():
         schema=request_schema,
         data=content,
         resolver=resolver,
-        json_messaage="Invalid Request JSON format",
+        json_message="Invalid Request JSON format",
         error_code=400)
 
     if validated is not None:
@@ -135,7 +135,7 @@ def get_map_data():
     return response
 
 
-def validate(schema, data, resolver, json_messaage, error_code):
+def validate(schema, data, resolver, json_message, error_code):
     """
     Validate a piece of data against a schema
 
@@ -176,11 +176,15 @@ def get_coordinates(content):
     google_api_key = os.environ["GOOGLE_PLACES_KEY"]
 
     # Query google places API to find latlong
-    place_response = requests.get(
-        f"https://maps.googleapis.com/maps/api/place/textsearch/json? \
-            query={content['placeID']}& \
+    request = f"https://maps.googleapis.com/maps/api/place/textsearch/json?\
+            query={content['placeID']}&\
             key={google_api_key}"
-        ).json()
+
+    request.replace(" ", "")
+
+    logging.error("Misformatted request: " + request)
+
+    place_response = requests.get(request).json()
 
     if not check_google_response(place_response):
         return None
@@ -207,6 +211,7 @@ def check_google_response(place_response):
     """
     if 'results' not in place_response or len(place_response['results']) == 0:
         logging.error("No results found for placeID")
+        logging.error(place_response)
         return False
 
     results = place_response['results'][0]
