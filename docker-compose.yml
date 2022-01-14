@@ -103,6 +103,14 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 4
             ca.mcgill.a11y.image.port: 5000
+    object-sorting:
+        build:
+            context: ./preprocessors/sorting
+            dockerfile: Dockerfile
+        image: "object-sorting:latest"
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 5
+            ca.mcgill.a11y.image.port: 5000
     scene-detection:
         build:
             context: ./preprocessors/scene
