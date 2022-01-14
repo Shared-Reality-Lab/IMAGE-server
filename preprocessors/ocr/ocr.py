@@ -21,6 +21,7 @@ import logging
 import jsonschema
 import requests
 import os
+import cv2
 from flask import Flask, request, jsonify
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
@@ -66,7 +67,7 @@ def get_ocr_text():
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
     # Get OCR text response
-    ocr_result = get_ocr_text(content['url'])
+    ocr_result = get_ocr_text(content['image'])
     
     if ocr_result is None:
         return jsonify("Could not retreive Azure results"), 400
@@ -99,16 +100,20 @@ def get_ocr_text():
 
     return response
 
-def get_ocr_text(url):
+def get_ocr_text(source):
     """
     Gets OCR text data from Azure API
     """
+
+    #Get image binary
+    img = None
+
     subscription_key = os.environ["AZURE_API_KEY"]
-    endpoint = os.environ["AZURE_API_ENDPOINT"]
+    endpoint = "https://image-cv.cognitiveservices.azure.com/"
     
     computervision_client = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
     
-    read_response = computervision_client.read(url,  raw=True)
+    read_response = computervision_client.read(img,  raw=True)
     
     read_operation_location = read_response.headers["Operation-Location"]
     # Grab the ID from the URL
