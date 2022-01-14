@@ -43,20 +43,19 @@ def readImage():
     top_id = []
     left_id = []
     small_id = []
-    flag = 0
     with open('./schemas/preprocessors/sorting.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
-        definitionSchema = json.load(jsonfile)
+        definition_schema = json.load(jsonfile)
     with open('./schemas/request.schema.json') as jsonfile:
         first_schema = json.load(jsonfile)
     # Following 6 lines of code are refered from
     # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
     schema_store = {
         schema['$id']: schema,
-        definitionSchema['$id']: definitionSchema
+        definition_schema['$id']: definition_schema
     }
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
