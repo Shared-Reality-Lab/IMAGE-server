@@ -180,9 +180,7 @@ def get_coordinates(content):
             query={content['placeID']}&\
             key={google_api_key}"
 
-    request.replace(" ", "")
-
-    logging.error("Misformatted request: " + request)
+    request = request.replace(" ", "")
 
     place_response = requests.get(request).json()
 
