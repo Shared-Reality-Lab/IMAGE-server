@@ -28,7 +28,6 @@ const ajv = new Ajv({
 });
 
 function generateRendering(objectData: object, image: string[]) {
-	console.log(typeof(objectData));
 	return {
 		"type_id": "ca.mcgill.a11y.image.renderer.SimpleHaptics",
 		"confidence": 0,
@@ -111,7 +110,7 @@ app.post("/handler", async (req, res) => {
 
 	const image = req.body.image;
 
-	const rendering:Record<string,unknown>[] = [];
+	const rendering: Record<string, unknown>[] = [];
 	rendering.push(generateRendering(objs, image));
 
 	if(!ajv.validate(helloHapticsSchemaJSON, rendering[0]["data"])) {
