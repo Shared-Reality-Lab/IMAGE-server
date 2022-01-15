@@ -2,7 +2,32 @@
 
 This service basically involves automatic communication with the openstreetmap (OSM), based on the user's orientation and location, to extract critical map information within an optimum user's radius. The extracted data would be transformed to a suitable data framework, for effective audio and haptic rendering.
 
-## Instructions
+
+
+## Instruction (Docker Setup) - Recommended
+
+1. Ensure you're in the directory `services/openstreet`
+
+```
+$ cd  /project-path/services/openstreet
+
+```
+2. Build the service (Only reguired for the first time)
+
+```
+$ docker-compose build
+```
+
+3. Run the service
+
+```
+$ docker-compose up
+```
+
+4. With your browser or Postman, navigate to http://localhost:8000
+
+
+## Instructions (Without Docker Setup)
 Follow the instructions to run this service locally.
 
 1. Ensure you're in the directory `services/openstreet`
@@ -42,13 +67,3 @@ $ pip install -r requirements.txt
 ```
 $ uvicorn app.main:app --reload
 ```
-
-## Docker Setup
-
-1. Run the following command
-
-```
-$ docker-compose up 
-```
-
-2. Navigate to http://localhost:8000
