@@ -116,7 +116,7 @@ app.post("/handler", async (req, res) => {
         ttsResponse = ttsResponse as Record<string, unknown>;
     } catch (e) {
         console.error(e);
-        res.status(500).json({"error": e.message});
+        res.status(500).json({"error": (e as Error).message});
         return;
     }
 
