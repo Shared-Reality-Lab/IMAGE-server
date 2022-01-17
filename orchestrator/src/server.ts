@@ -65,7 +65,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
         // OK data returned
         if (resp.status === 200) {
             try {
-                const json = await resp.json() as { "name": string, "data": Record<string, unknown> };
+                const json = await resp.json();
                 (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
             } catch (err) {
                 console.error("Error occured on fetch from " + preprocessor[0]);
@@ -110,7 +110,7 @@ app.post("/render", (req, res) => {
                     "body": JSON.stringify(data)
                 }).then(async (resp) => {
                     if (resp.ok) {
-                        return resp.json() as Promise<{ "renderings": Record<string, unknown>[] }>;
+                        return resp.json();
                     } else {
                         console.error(`${resp.status} ${resp.statusText}`);
                         const result = await resp.json();
@@ -131,8 +131,7 @@ app.post("/render", (req, res) => {
 
             return Promise.all(promises);
         }).then(results => {
-            const renderings: Record<string, unknown>[] = [];
-            for (const result of results) renderings.concat(result);
+            const renderings = results.reduce((a, b) => a.concat(b), []);
             const response = {
                 "request_uuid": req.body.request_uuid,
                 "timestamp": Math.round(Date.now() / 1000),
