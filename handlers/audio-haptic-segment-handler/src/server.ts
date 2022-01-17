@@ -137,7 +137,7 @@ app.post("/handler", async (req, res) => {
     for (let i = 0; i < segments.length; i++) {
 
         const contourPoints: number[] = segments[i]["coord"];
-        const ref: any = contourPoints[0];
+        const ref = segments[i]["coord"][0];
         const center = segments[i]["centroid"];
         segments[i]["coord"].sort(
             (a: [number, number], b: [number, number]) => {
