@@ -37,14 +37,11 @@
             "description": "The places on the map",
             "items": {
                 "type": "object",
-                "title": "Place",
-                "description": "Information on a place on the map",
                 "properties": {
                     "id": {
                         "type": "string",
-                        "title": "Name",
-                        "description": "The name of the place",
-                        "minLength": 1
+                        "title": "ID",
+                        "description": "The ID of the place"
                     },
                     "ll": {
                         "type": "array",
