@@ -40,7 +40,7 @@
             "required": [ "latitude", "longitude" ]
         },
         "placeID": {
-            "description": "The place ID of the location identified in a map.",
+            "description": "The Google place ID of the location identified in a map.",
             "type": "string"
         },
         "context": {
