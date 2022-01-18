@@ -29,7 +29,7 @@ import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
 import descriptionJSON from "./schemas/services/supercollider/tts-description.schema.json";
 import segmentJSON from "./schemas/services/supercollider/tts-segment.schema.json";
 import rendererDefJSON from "./schemas/renderers/definitions.json";
-import segmentAudioHapticsJSON from "./schemas/renderers/segmentaudiohaptics.schema.json";
+import segmentAudioHapticsJSON from "./segmentaudiohaptics.schema.json";
 
 import * as utils from "./utils";
 
@@ -42,20 +42,26 @@ const port = 80;
 const scPort = 57120;
 const filePrefix = "/tmp/sc-store/semantic-segmentation-handler-";
 
-app.use(express.json({limit: process.env.MAX_BODY}));
+// app.use(express.json({limit: process.env.MAX_BODY}));
+// console.log(process.env.MAX_BODY);
+app.use(express.json({limit: '100mb'}));
 
 app.post("/handler", async (req, res) => {
+    console.log("in post!");
     // Validate the request data (just in case)
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
         res.status(400).json(ajv.errors);
         return;
     }
+    else{
+        console.log("passed request data validation!");
+    }
 
     // Check for required preprocessor data
     const preprocessors = req.body["preprocessors"];
     if (!preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]) {
-        console.debug("No semantic segmentation data: can't render!");
+        // console.debug("No semantic segmentation data: can't render!");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
 
         if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
@@ -66,22 +72,25 @@ app.post("/handler", async (req, res) => {
             res.status(500).json(ajv.errors);
         }
         return;
+    }
+    else{
+        console.log("passed required preprocesser data validation!");
     }
 
     // Check for a usable renderer
-    const hasSegmentAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SegmentAudioHaptics");
-    if (!hasSegmentAudioHaptic) {
-        console.warn("Simple and segment audio renderers not supported!");
-        const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
-            res.json(response);
-        } else {
-            console.error("Failed to generate a valid empty response!");
-            console.error(ajv.errors);
-            res.status(500).json(ajv.errors);
-        }
-        return;
-    }
+    // const hasSegmentAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SegmentAudioHaptics");
+    // if (!hasSegmentAudioHaptic) {
+    //     console.warn("Simple and segment audio renderers not supported!");
+    //     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+    //     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
+    //         res.json(response);
+    //     } else {
+    //         console.error("Failed to generate a valid empty response!");
+    //         console.error(ajv.errors);
+    //         res.status(500).json(ajv.errors);
+    //     }
+    //     return;
+    // }
 
     // Going ahead with SimpleAudio and/or SegmentAudioHaptics
     // Form TTS announcement for each segment
@@ -246,7 +255,7 @@ app.post("/handler", async (req, res) => {
         const buffer = await fs.readFile(outFile);
         // TODO detect MIME type from file
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
-        if (segArray.length > 0 && hasSegmentAudioHaptic) {
+        if (segArray.length > 0 ) {  //&& hasSegmentAudioHaptic
             const r = {
                 "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudioHaptics",
                 "confidence": 50, // TODO magic number

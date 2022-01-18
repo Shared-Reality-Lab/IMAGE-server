@@ -92,7 +92,7 @@ services:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
         env_file:
-            - ./config/azure-api.env
+            # - ./config/azure-api.env
     object-grouping:
         build:
             context: ./preprocessors/grouping
@@ -205,6 +205,17 @@ services:
             - ./config/express-common.env
         labels:
             ca.mcgill.a11y.image.handler: enable
+    
+    audiohaptic-handler:
+        build:
+            context: ./handlers/audio-haptic-segment-handler
+            dockerfile: Dockerfile
+        image: "audio-haptic-segment-handler:latest"
+        env_file:
+            -./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+
 
 volumes:
     sc-store:
