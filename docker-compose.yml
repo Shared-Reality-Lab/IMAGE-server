@@ -212,7 +212,7 @@ services:
             dockerfile: Dockerfile
         image: "audio-haptic-segment-handler:latest"
         env_file:
-            -./config/express-common.env
+            - ./config/express-common.env
         labels:
             ca.mcgill.a11y.image.handler: enable
 
