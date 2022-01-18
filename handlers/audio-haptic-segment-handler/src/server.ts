@@ -29,13 +29,12 @@ import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
 import descriptionJSON from "./schemas/services/supercollider/tts-description.schema.json";
 import segmentJSON from "./schemas/services/supercollider/tts-segment.schema.json";
 import rendererDefJSON from "./schemas/renderers/definitions.json";
-import simpleAudioJSON from "./schemas/renderers/simpleaudio.schema.json";
 import segmentAudioHapticsJSON from "./schemas/renderers/segmentaudiohaptics.schema.json";
 
 import * as utils from "./utils";
 
 const ajv = new Ajv({
-    "schemas": [ querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, descriptionJSON, segmentJSON, rendererDefJSON, simpleAudioJSON, segmentAudioHapticsJSON ]
+    "schemas": [ querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, descriptionJSON, segmentJSON, rendererDefJSON, segmentAudioHapticsJSON ]
 });
 
 const app = express();
@@ -70,9 +69,8 @@ app.post("/handler", async (req, res) => {
     }
 
     // Check for a usable renderer
-    const hasSimple = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SimpleAudio");
     const hasSegmentAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SegmentAudioHaptics");
-    if (!hasSimple && !hasSegmentAudioHaptic) {
+    if (!hasSegmentAudioHaptic) {
         console.warn("Simple and segment audio renderers not supported!");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
         if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
@@ -248,22 +246,6 @@ app.post("/handler", async (req, res) => {
         const buffer = await fs.readFile(outFile);
         // TODO detect MIME type from file
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
-        if (hasSimple) {
-            const r = {
-                "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                "confidence": 50, // TODO magic number
-                "description": "A sonification of segments detected in the image.",
-                "data": {
-                    "audio": dataURL
-                }
-            };
-            if (ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", r["data"])) {
-                renderings.push(r);
-            } else {
-                console.error(ajv.errors);
-                throw ajv.errors;
-            }
-        }
         if (segArray.length > 0 && hasSegmentAudioHaptic) {
             const r = {
                 "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudioHaptics",
