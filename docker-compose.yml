@@ -206,7 +206,7 @@ services:
         labels:
             ca.mcgill.a11y.image.handler: enable
     
-    audiohaptic-handler:
+    audio-haptic-segment-handler:
         build:
             context: ./handlers/audio-haptic-segment-handler
             dockerfile: Dockerfile
