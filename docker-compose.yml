@@ -83,16 +83,16 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
-    second-categoriser:
-        build:
-            context: ./preprocessors/categoriser2
-            dockerfile: Dockerfile
-        image: "second-categoriser:latest"
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 2
-            ca.mcgill.a11y.image.port: 5000
-        env_file:
-            # - ./config/azure-api.env
+    # second-categoriser:
+    #     build:
+    #         context: ./preprocessors/categoriser2
+    #         dockerfile: Dockerfile
+    #     image: "second-categoriser:latest"
+    #     labels:
+    #         ca.mcgill.a11y.image.preprocessor: 2
+    #         ca.mcgill.a11y.image.port: 5000
+    #     env_file:
+    #         # - ./config/azure-api.env
     object-grouping:
         build:
             context: ./preprocessors/grouping
