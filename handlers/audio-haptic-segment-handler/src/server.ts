@@ -42,21 +42,21 @@ const port = 80;
 const scPort = 57120;
 const filePrefix = "/tmp/sc-store/semantic-segmentation-handler-";
 
-// app.use(express.json({limit: process.env.MAX_BODY}));
+app.use(express.json({limit: process.env.MAX_BODY}));
 // console.log(process.env.MAX_BODY);
-app.use(express.json({limit: '100mb'}));
+// app.use(express.json({limit: '100mb'}));
 
 app.post("/handler", async (req, res) => {
-    console.log("in post!");
+    // console.log("in post!");
     // Validate the request data (just in case)
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
         res.status(400).json(ajv.errors);
         return;
     }
-    else{
-        console.log("passed request data validation!");
-    }
+    // else{
+    //     console.log("passed request data validation!");
+    // }
 
     // Check for required preprocessor data
     const preprocessors = req.body["preprocessors"];
@@ -73,9 +73,9 @@ app.post("/handler", async (req, res) => {
         }
         return;
     }
-    else{
-        console.log("passed required preprocesser data validation!");
-    }
+    // else{
+    //     console.log("passed required preprocesser data validation!");
+    // }
 
     // Check for a usable renderer
     // const hasSegmentAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SegmentAudioHaptics");
@@ -257,7 +257,7 @@ app.post("/handler", async (req, res) => {
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
         if (segArray.length > 0 ) {  //&& hasSegmentAudioHaptic
             const r = {
-                "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudioHaptics",
+                "type_id": segmentAudioHapticsJSON, //"ca.mcgill.a11y.image.renderer.SegmentAudioHaptics",
                 "confidence": 50, // TODO magic number
                 "description": "Navigable segment sonifications and tracing detected in the image.",
                 "data": {
