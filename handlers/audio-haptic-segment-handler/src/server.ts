@@ -158,6 +158,7 @@ app.post("/handler", async (req, res) => {
             "coordinates": contourPoints 
         }
 
+        console.log(r);
         hapticInfo.push(r)
     }
     // Order contours bottom-to-top to not conflict with rising pitches of sonification
@@ -255,9 +256,10 @@ app.post("/handler", async (req, res) => {
         const buffer = await fs.readFile(outFile);
         // TODO detect MIME type from file
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
+        // console.log("creating rendering item");
         if (segArray.length > 0 ) {  //&& hasSegmentAudioHaptic
             const r = {
-                "type_id": segmentAudioHapticsJSON, //"ca.mcgill.a11y.image.renderer.SegmentAudioHaptics",
+                "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudioHaptics",
                 "confidence": 50, // TODO magic number
                 "description": "Navigable segment sonifications and tracing detected in the image.",
                 "data": {
@@ -267,9 +269,12 @@ app.post("/handler", async (req, res) => {
                     "hapticInfo": hapticInfo
                 }
             };
-            if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudiohaptics.schema.json", r["data"])) {
-                renderings.push(r);
+            // console.log(r);
+            if (ajv.validate(segmentAudioHapticsJSON, r["data"])) { //"https://image.a11y.mcgill.ca/renderers/segmentaudiohaptics.schema.json"
+                renderings.push(r);  //generateRendering(objs, image)
+                console.log("pushed to renderings!");
             } else {
+                console.log("not pushed to renderings!");
                 console.error(ajv.errors);
                 throw ajv.errors;
             }
@@ -289,8 +294,14 @@ app.post("/handler", async (req, res) => {
         }
     });
 
-    const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-    response["renderings"] = renderings;
+    // const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+    // response["renderings"] = renderings;
+
+    const response = {
+		"request_uuid": req.body.request_uuid,
+		"timestamp": Math.round(Date.now() / 1000),
+		"renderings": renderings
+	};
 
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);

@@ -22,6 +22,7 @@ export function generateEmptyResponse(requestUUID: string): { "request_uuid": st
     };
 }
 
+
 type V2 = [number, number];
 
 class V3 {
