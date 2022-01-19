@@ -16,7 +16,8 @@
  */
 
 var autourStyle;
-"Autour-style POI Rendering".postln;
+"Autour-style Rendering".postln;
+
 autourStyle = { |json, ttsData, outPath, addr|
     var dMeters, score, timing, order=5, length=5, nTones=3, earconList, places, lat, lon, poiDelay=0.5, endDelay=0.5;
     timing = 0;
@@ -25,20 +26,20 @@ autourStyle = { |json, ttsData, outPath, addr|
     // Distance in meters from lat-lon
     // From https://stackoverflow.com/a/11172685/1086511
     dMeters = { |lat1, lon1, lat2, lon2|
-        var R, dLat, dLon, a, c, d;
-        R = 6378.137;
+        var radius, dLat, dLon, a, c, d;
+        radius = 6378.137;
         dLat = (lat2 * pi / 180.0) - (lat1 * pi / 180.0);
         dLon = (lon2 * pi / 180.0) - (lon1 * pi / 180.0);
         a = (dLat / 2.0).sin.squared + ((lat1 * pi / 180.0).cos * (lat2 * pi / 180.0).cos * (dLon / 2.0).sin.squared);
         c = 2 * a.sqrt.atan2((1 - a).sqrt);
-        d = R * c;
+        d = radius * c;
         d * 1000
     };
 
     // Set up b-format decoder
     score.add([
         timing,
-        [\s_new, (\binauralDecoderNrt++order.asSymbol).asSymbol, 1001, 0, 1, \in, 2]
+        [\s_new, (\binauralDecodeNrt++order.asSymbol).asSymbol, 1001, 0, 1, \in, 2]
     ]);
 
     // Initialize earcon list
@@ -46,7 +47,7 @@ autourStyle = { |json, ttsData, outPath, addr|
                         .allTuples
                         .select({ |item| item.includesAll((0..(nTones - 1))); })
                         .perfectShuffle;
-    earconList = earconList.rotate(earconList.size / 2);
+    earconList = earconList.rotate((earconList.size / 2).asInteger);
 
     // Load TTS buffer
     score.add([
@@ -58,32 +59,31 @@ autourStyle = { |json, ttsData, outPath, addr|
     places = json.at("places");
     lat = json.at("lat").asFloat;
     lon = json.at("lon").asFloat;
-    places.do({ |item|
+    places.do({ |item, i|
         var dist, dLat, dLon, xDist, yDist;
         dLat = item.at("ll").at(0).asFloat;
         dLon = item.at("ll").at(1).asFloat;
         dist = dMeters.(lat, lon, dLat, dLon).asFloat;
-        ("Dist: " + dist.asString).postln;
         xDist = dMeters.(lat, lon, dLat, lon).asFloat * (dLat - lat).sign;
-        ("xDist: " + xDist.asString).postln;
         yDist = dMeters.(lat, lon, lat, dLon).asFloat * (dLon - lon).sign;
-        ("yDist: " + yDist.asString).postln;
-        item.add(\dist -> dist);
-        item.add(\xDist -> xDist);
-        item.add(\yDist -> yDist);
+        item = item.grow(6);
+        item.put(\dist, dist);
+        item.put(\xDist, xDist);
+        item.put(\yDist, yDist);
     });
     // Sort from nearest to farthest
-    places.sort({ |a, b| a.at("dist") < b.at("dist") });
+    places.sortBy(\dist);
+    places = places.keep(20);
     places.do({ |item, i|
         var note, ecPattern, theta, phi, audio, xDist, yDist;
-        xDist = item.at("xDist").asFloat;
-        yDist = item.at("yDist").asFloat;
+        xDist = item.at(\xDist).asFloat;
+        yDist = item.at(\yDist).asFloat;
         note = yDist.linlin(-250, 250, 80, 104);
         theta = yDist.atan2(xDist);
         audio = item.at("audio");
         phi = 0;
         //phi = yDist.linlin(-250, 250, -0.25pi, 0.25pi);
-        ecPattern = earconList.at(item.at("cat"));
+        ecPattern = earconList.at(item.at("cat").asInteger);
         // play earcon based on category
         // As of writing (2022-01-06), the radius for included POIs is 250 meters.
         score.add([
@@ -97,7 +97,7 @@ autourStyle = { |json, ttsData, outPath, addr|
                 \int4, ecPattern.at(4),
                 \theta, theta,
                 \phi, phi,
-                \gain, 0.01
+                \gain, 0.1
             ]
         ]);
         timing = timing + 1.0; // TODO adjust based on length along with synthdef
@@ -111,7 +111,7 @@ autourStyle = { |json, ttsData, outPath, addr|
                 \duration, (audio.at("duration").asInteger / ttsData.sampleRate),
                 \theta, theta,
                 \phi, phi,
-                \gain, 0.01
+                \gain, 0.1
             ]
         ]);
         timing = timing + (audio.at("duration").asInteger / ttsData.sampleRate);
@@ -133,7 +133,7 @@ autourStyle = { |json, ttsData, outPath, addr|
         headerFormat: "WAV",
         sampleFormat: "int16",
         options: ServerOptions.new.numOutputBusChannels_(2),
-        actions: {
+        action: {
             // Check for successful write (file exists)
             if(File.exists(outPath),
                 { addr.sendMsg(\status, \done); },
