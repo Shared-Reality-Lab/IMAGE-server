@@ -213,6 +213,8 @@ services:
             - ./config/express-common.env
         labels:
             ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
 
 volumes:
     sc-store:
