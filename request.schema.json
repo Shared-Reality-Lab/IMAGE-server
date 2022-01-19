@@ -50,7 +50,7 @@
         "URL": {
             "description": "URL of the page the request was generated from.",
             "type": "string",
-            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
+            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,}\\.[a-z]{2,}\\b(\\S*)$"
         },
         "language": {
             "description": "Language requested by the user as ISO 639-1.",

@@ -28,7 +28,7 @@
         "data_schema": {
             "description": "A URL that resolves to the JSON schema for the data property.",
             "type": "string",
-            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
+            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,}\\.[a-z]{2,}\\b(\\S*)$"
         },
         "metadata": {
             "description": "Metadata describing the handler that created a rendering.",
@@ -37,7 +37,7 @@
                 "homepage": {
                     "description": "The page for this handler, its package, the team that made it, etc.",
                     "type": "string",
-                    "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
+                    "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,}\\.[a-z]{2,}\\b(\\S*)$"
                 },
                 "description": {
                     "description": "A brief description of the called handler.",
