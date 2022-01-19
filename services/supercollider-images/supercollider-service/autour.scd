@@ -46,15 +46,12 @@ autourStyle = { |json, ttsData, outPath, addr|
     places = json.at("places");
     places.sort({ |a, b| a.at("azimuth").asFloat <= b.at("azimuth").asFloat });
     places.do({ |item, i|
-        var note, ecPattern, theta, phi, audio, yDist;
+        var note, ecPattern, theta, phi, audio, dist;
         theta = item.at("azimuth").asFloat;
-        theta.postln;
-        //yDist = 250 * theta.cos;
-        //note = yDist.linlin(-250, 250, 80, 104);
+        dist = item.at("dist").asFloat;
         note = theta.cos.linlin(-1, 1, 80, 104);
         audio = item.at("audio");
         phi = 0;
-        //phi = yDist.linlin(-250, 250, -0.25pi, 0.25pi);
         ecPattern = earconList.at(item.at("cat").asInteger);
         // play earcon based on category
         // As of writing (2022-01-06), the radius for included POIs is 250 meters.
@@ -69,7 +66,7 @@ autourStyle = { |json, ttsData, outPath, addr|
                 \int4, ecPattern.at(4),
                 \theta, theta,
                 \phi, phi,
-                \gain, 0.1
+                \gain, 0.1 * dist.linlin(0, 250, 0, -6)
             ]
         ]);
         timing = timing + 1.0; // TODO adjust based on length along with synthdef
@@ -83,7 +80,7 @@ autourStyle = { |json, ttsData, outPath, addr|
                 \duration, (audio.at("duration").asInteger / ttsData.sampleRate),
                 \theta, theta,
                 \phi, phi,
-                \gain, 0.1
+                \gain, 0.2 * dist.linlin(0, 250, 0, -6)
             ]
         ]);
         timing = timing + (audio.at("duration").asInteger / ttsData.sampleRate);
