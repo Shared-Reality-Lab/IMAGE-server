@@ -23,19 +23,6 @@ autourStyle = { |json, ttsData, outPath, addr|
     timing = 0;
     score = IMAGE.newScore(order);
 
-    // Distance in meters from lat-lon
-    // From https://stackoverflow.com/a/11172685/1086511
-    dMeters = { |lat1, lon1, lat2, lon2|
-        var radius, dLat, dLon, a, c, d;
-        radius = 6378.137;
-        dLat = (lat2 * pi / 180.0) - (lat1 * pi / 180.0);
-        dLon = (lon2 * pi / 180.0) - (lon1 * pi / 180.0);
-        a = (dLat / 2.0).sin.squared + ((lat1 * pi / 180.0).cos * (lat2 * pi / 180.0).cos * (dLon / 2.0).sin.squared);
-        c = 2 * a.sqrt.atan2((1 - a).sqrt);
-        d = radius * c;
-        d * 1000
-    };
-
     // Set up b-format decoder
     score.add([
         timing,
@@ -57,29 +44,14 @@ autourStyle = { |json, ttsData, outPath, addr|
 
     // Begin rendering places
     places = json.at("places");
-    lat = json.at("lat").asFloat;
-    lon = json.at("lon").asFloat;
+    places.sort({ |a, b| a.at("azimuth").asFloat <= b.at("azimuth").asFloat });
     places.do({ |item, i|
-        var dist, dLat, dLon, xDist, yDist;
-        dLat = item.at("ll").at(0).asFloat;
-        dLon = item.at("ll").at(1).asFloat;
-        dist = dMeters.(lat, lon, dLat, dLon).asFloat;
-        xDist = dMeters.(lat, lon, dLat, lon).asFloat * (dLat - lat).sign;
-        yDist = dMeters.(lat, lon, lat, dLon).asFloat * (dLon - lon).sign;
-        item = item.grow(6);
-        item.put(\dist, dist);
-        item.put(\xDist, xDist);
-        item.put(\yDist, yDist);
-    });
-    // Sort from nearest to farthest
-    places.sortBy(\dist);
-    places = places.keep(20);
-    places.do({ |item, i|
-        var note, ecPattern, theta, phi, audio, xDist, yDist;
-        xDist = item.at(\xDist).asFloat;
-        yDist = item.at(\yDist).asFloat;
-        note = yDist.linlin(-250, 250, 80, 104);
-        theta = yDist.atan2(xDist);
+        var note, ecPattern, theta, phi, audio, yDist;
+        theta = item.at("azimuth").asFloat;
+        theta.postln;
+        //yDist = 250 * theta.cos;
+        //note = yDist.linlin(-250, 250, 80, 104);
+        note = theta.cos.linlin(-1, 1, 80, 104);
         audio = item.at("audio");
         phi = 0;
         //phi = yDist.linlin(-250, 250, -0.25pi, 0.25pi);

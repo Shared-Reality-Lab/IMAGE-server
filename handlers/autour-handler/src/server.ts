@@ -4,6 +4,7 @@ import fetch from "node-fetch";
 import fs from "fs/promises";
 import osc from "osc";
 import { v4 as uuidv4 } from "uuid";
+import { LatLonVectors as LatLon } from "geodesy";
 
 // JSON imports
 import querySchemaJSON from "./schemas/request.schema.json";
@@ -86,6 +87,18 @@ app.post("/handler", async (req, res) => {
         }
         return;
     }
+
+    // Sort and filter POIs
+    // Do this before since TTS is time consuming
+    const places = autourData["places"];
+    const source = new LatLon(autourData["lat"], autourData["lon"]);
+    for (const place of places) {
+        const dest = new LatLon(place["ll"][0], place["ll"][1]);
+        place["dist"] = source.distanceTo(dest);
+        place["azimuth"] = source.bearingTo(dest) * Math.PI / 180;
+    }
+    places.sort((a: { dist: number }, b: { dist: number }) => a["dist"] - b["dist"]);
+    places.splice(20);  // Cut off at 20 for now
 
     // Form TTS segments
     const segments = [];
