@@ -113,7 +113,7 @@ def load_model():
         v in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
     for i, (name, module) in enumerate(model._modules.items()):
-        module = recursion_change_bn(model) # noqa
+        module = recursion_change_bn(model)  # noqa
     model.avgpool = torch.nn.AvgPool2d(kernel_size=14, stride=1, padding=0)
     model.eval()
     model.eval()
@@ -143,6 +143,8 @@ def scenePredictor():
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
         definitionSchema = json.load(jsonfile)
+    # Following 6 lines of code are refered from
+    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
     schema_store = {
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema

@@ -14,8 +14,7 @@
 # and our Additional Terms along with this program.
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
-# Lines 183-187 are refered form
-# https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
+
 
 import time
 from pathlib import Path
@@ -176,6 +175,8 @@ def run(weights='yolov5x.pt',
             definitionSchema = json.load(jsonfile)
         with open('./schemas/request.schema.json') as jsonfile:
             first_schema = json.load(jsonfile)
+        # Following 6 lines of code are referred from
+        # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
         schema_store = {
             schema['$id']: schema,
             definitionSchema['$id']: definitionSchema
@@ -197,6 +198,8 @@ def run(weights='yolov5x.pt',
         request_uuid = content["request_uuid"]
         timestamp = time.time()
         name = "ca.mcgill.a11y.image.preprocessor.objectDetection"
+        # Following 4 lines are refered from
+        # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
         source = content["image"]
         image_b64 = source.split(",")[1]
         binary = base64.b64decode(image_b64)

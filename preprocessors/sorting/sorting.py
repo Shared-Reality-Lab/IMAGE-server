@@ -28,9 +28,7 @@ app = Flask(__name__)
 
 
 def calculate_diagonal(x1, y1, x2, y2):
-    # refered from
-    # https://www.w3resource.com/python-exercises/python-basic-exercise-40.php
-    diag = sqrt((x2 - x1)**2 + (y2 - y1)**2)
+    diag = sqrt((x2-x1)**2+(y2-y1)**2)
     return diag
 
 
@@ -38,24 +36,29 @@ def calculate_diagonal(x1, y1, x2, y2):
 def readImage():
     object_type = []
     dimensions = []
-    ungrouped = []
-    flag = 0
-    with open('./schemas/preprocessors/grouping.schema.json') as jsonfile:
+    area = []
+    left2right =[]
+    top2bottom =[]
+    small2big=[]
+    top_id = []
+    left_id = []
+    small_id = []
+    with open('./schemas/preprocessors/sorting.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
-        definitionSchema = json.load(jsonfile)
+        definition_schema = json.load(jsonfile)
     with open('./schemas/request.schema.json') as jsonfile:
         first_schema = json.load(jsonfile)
-    # Following 6 lines refered from
+    # Following 6 lines of code are refered from
     # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
     schema_store = {
         schema['$id']: schema,
-        definitionSchema['$id']: definitionSchema
+        definition_schema['$id']: definition_schema
     }
     resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
+            schema, store=schema_store)
     content = request.get_json()
     try:
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
@@ -75,38 +78,22 @@ def readImage():
     for i in range(len(objects)):
         object_type.append(objects[i]["type"])
         dimensions.append(objects[i]["dimensions"])
-    repetition = [item for item, count in
-                  collections.Counter(object_type).items() if count > 1]
-    group = [[] for i in range(len(repetition))]
-    final_group = []
-    check_group = [False] * len(objects)
-
-    for i in range(len(repetition)):
-        flag = 0
-        for j in range(len(objects)):
-            if objects[j]["type"] == repetition[i]:
-                flag = 1
-                group[i].append([objects[j]["ID"],
-                                 calculate_diagonal(dimensions[j][0],
-                                                    dimensions[j][1],
-                                                    dimensions[j][2],
-                                                    dimensions[j][3])])
-                check_group[j] = True
-        if flag == 1:
-            group[i] = sorted(group[i], key=itemgetter(1))
-    dummy = [[] for i in range(len(group))]
-    for i in range(len(group)):
-        for j in range(len(group[i])):
-            dummy[i].append(group[i][j][0])
-        final_group.append({"IDs": dummy[i]})
-
-    for i in range(len(check_group)):
-        if check_group[i] is False:
-            ungrouped.append(i)
+        area.append(objects[i]["area"])
+    for i in range(len(objects)):
+        left2right.append([objects[i]["ID"],dimensions[i][2]])
+        top2bottom.append([objects[i]["ID"],dimensions[i][1]])
+        small2big.append([objects[i]["ID"],area[i]])
+    top2bottom = sorted(top2bottom, key=lambda x: x[1])
+    left2right = sorted(left2right, key=lambda x: x[1])
+    small2big = sorted(small2big, key=lambda x: x[1])
+    for i in range(len(top2bottom)):
+        top_id.append(top2bottom[i][0])
+        left_id.append(left2right[i][0])
+        small_id.append(small2big[i][0])
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    name = "ca.mcgill.a11y.image.preprocessor.grouping"
-    data = {"grouped": final_group, "ungrouped": ungrouped}
+    name = "ca.mcgill.a11y.image.preprocessor.sorting"
+    data = {"leftToRight": left_id, "topToBottom": top_id,"smallToBig":small_id}
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(data)
@@ -114,15 +101,14 @@ def readImage():
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
     response = {
-        "title": "Grouping Data",
-        "description": "Grouped data for objects",
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": name,
         "data": data
-    }
+        }
     try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+        validator = jsonschema.Draft7Validator(
+            schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
