@@ -101,7 +101,8 @@ app.post("/handler", async (req, res) => {
     places.splice(20);  // Cut off at 20 for now
 
     // Form TTS segments
-    const segments = [];
+    const ttsIntro = "From due north moving clockwise, there are the following";
+    const segments = [ttsIntro];
     for (const place of autourData["places"]) {
         segments.push(place["title"]);
     }
@@ -132,6 +133,12 @@ app.post("/handler", async (req, res) => {
     scData["ttsFileName"] = "";
 
     let durIdx = 0;
+    scData["intro"] = {
+        "offset": runningOffset,
+        "duration": durations[durIdx]
+    };
+    runningOffset += durations[durIdx];
+    durIdx += 1;
     for (const place of scData["places"]) {
         place["audio"] = {
             "offset": runningOffset,

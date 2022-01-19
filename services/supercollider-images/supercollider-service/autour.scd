@@ -19,7 +19,7 @@ var autourStyle;
 "Autour-style Rendering".postln;
 
 autourStyle = { |json, ttsData, outPath, addr|
-    var dMeters, score, timing, order=5, length=5, nTones=3, earconList, places, lat, lon, poiDelay=0.5, endDelay=0.5;
+    var dMeters, score, timing, order=5, length=5, nTones=3, earconList, places, lat, lon, poiDelay=0.5, endDelay=0.5, intro;
     timing = 0;
     score = IMAGE.newScore(order);
 
@@ -41,6 +41,13 @@ autourStyle = { |json, ttsData, outPath, addr|
         timing,
         [\b_allocRead, 210, ttsData.path, 0, 0]
     ]);
+
+    intro = json.at("intro");
+    score.add([
+        timing,
+        [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, intro.at("offset"), \duration, (intro.at("duration").asInteger / ttsData.sampleRate)]
+    ]);
+    timing = timing + (intro.at("duration").asInteger / ttsData.sampleRate);
 
     // Begin rendering places
     places = json.at("places");
