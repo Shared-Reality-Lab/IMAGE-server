@@ -20,6 +20,8 @@ import fetch from "node-fetch";
 import fs from "fs/promises";
 import osc from "osc";
 import { v4 as uuidv4 } from "uuid";
+import Articles from "articles";
+import pluralize from "pluralize"
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseJSON from "./schemas/handler-response.schema.json";
@@ -34,7 +36,15 @@ import segmentAudioHapticsJSON from "./schemas/renderers/segmentaudiohaptics.sch
 import * as utils from "./utils";
 
 const ajv = new Ajv({
-    "schemas": [ querySchemaJSON, handlerResponseJSON, definitionsJSON, ttsRequestJSON, ttsResponseJSON, descriptionJSON, segmentJSON, rendererDefJSON, segmentAudioHapticsJSON ]
+    "schemas": [ querySchemaJSON, 
+        handlerResponseJSON, 
+        definitionsJSON, 
+        ttsRequestJSON, 
+        ttsResponseJSON, 
+        descriptionJSON, 
+        segmentJSON, 
+        rendererDefJSON, 
+        segmentAudioHapticsJSON ]
 });
 
 const app = express();
@@ -52,10 +62,14 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    // Check for required preprocessor data
+    // *******************************************************
+    // Check for preprocessor data
+    // *******************************************************
     const preprocessors = req.body["preprocessors"];
-    if (!preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"] &&
-        !preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]) {
+    const preSemSeg = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]
+    const preObjDet = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
+
+    if (!preObjDet && !preSemSeg) {
         console.debug("No semantic segmentation and object detection data: can't render!");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
 
@@ -69,7 +83,9 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    // Check for a usable renderer
+    // *******************************************************
+    // Check for renderer availability
+    // *******************************************************
     const hasSegmentAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SegmentAudioHaptics");
     if (!hasSegmentAudioHaptic) {
         console.warn("Segment audio-haptic renderers not supported!");
@@ -84,127 +100,267 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    const hapticInfo: ({ centroids: number[]; coordinates: number[]; }[] | { text: string; centroids: number[]; coords: number[]; }[])[] = []; //: { centroids: number[]; coordinates: number[]; }[] = [];
+    //const hapticInfo: any = [];//: ({ centroids: number[]; coordinates: number[]; }[] | { text: string; centroids: number[]; coords: number[]; }[])[] = []; //: { centroids: number[]; coordinates: number[]; }[] = [];
+    let hapticInfo = [];
+    let hapticObjInfo = [];
+    let hapticSegInfo = [];
+    let audioInfo;
 
-    // Going ahead with SegmentAudioHaptics
-    // Form TTS announcement for each segment
-    const ttsText: string[] = [];
-    const segments = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]["segments"];
-    if (segments.length === 0) {
-        console.warn("No segments were detected, so we can't do anything!");
-        const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-        res.json(response);
-        return;
-    }
+    // *******************************************************
+    // Check that we have at least one segment
+    // *******************************************************
+    const segments = preSemSeg["segments"];
+    if (segments.length !== 0) {
+        
+        // *******************************************************
+        // Get segment info
+        // *******************************************************
+        const ttsText: string[] = [];
+        for (const segment of segments) {
+            ttsText.push(segment["nameOfSegment"]);
 
-    const segInfo = [];
-    for (const segment of segments) {
-        ttsText.push(segment["nameOfSegment"]);
-
-        // For haptics
-        const contourPoints: number[] = segment["coord"];
-        const center = segments["centroid"];
-        const data = {
-            "centroids": center,
-            "coordinates": contourPoints 
+            // Grab coordinates for haptic
+            const contourPoints: number[] = segment["coord"];
+            const center: number[] = segment["centroid"];
+            const data = {
+                "centroid": center,
+                "coordinates": contourPoints 
+            }
+            hapticSegInfo.push(data);
         }
 
-        segInfo.push(data)
-    }
+        // Array of arrays for semantic info
+        hapticInfo.push(hapticSegInfo);
 
-    hapticInfo.push(segInfo);
-
-    // For separating TTS
-    ttsText.push("In this picture there is:")
-
-    // Form TTS announcement for each object
-    const objects = req.body["preprocessors"]["ca.mcgill.a11y.image.preprocessor.objectDetection"]["objects"]
-    if (objects.length == 0) {
-        console.warn("No segments were detected, so we can't do anything!");
-        const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-        res.json(response);
-        return;
-    }
-
-    const objDetectionInfo = [];
-    for (const obj of objects) {
-        ttsText.push(obj["nameOfObject"]);
-
-        const type: string = obj["type"]
-		const centroid: number[] = obj["centroid"]
-		const dimensions: number[] = obj["dimensions"]
-
-		const data = {
-			"text": type,
-			"centroids": centroid,
-			"coords": dimensions
-		}
-		objDetectionInfo.push(data)
-    }
-
-    hapticInfo.push(objDetectionInfo);
-
-    let ttsResponse;
-    // Get the TTS file for each audio plus snippet info
-    try {
-        ttsResponse = await fetch("http://espnet-tts/service/tts/segments", {
-            "method": "POST",
-            "headers": {
-                "Content-Type": "application/json",
-            },
-            "body": JSON.stringify({
-                "segments": ttsText
-            })
-        }).then(resp => {
-            return resp.json();
-        });
+        // *******************************************************
+        // Call TTS service for segment info
+        // *******************************************************
+        let ttsResponse;
+        try {
+            ttsResponse = await getTTS(ttsText);
+        } catch (e) {
+            console.error(e);
+            res.status(500).json({"error": (e as Error).message});
+        }
         ttsResponse = ttsResponse as Record<string, unknown>;
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({"error": e.message});
-        return;
-    }
 
-    // Add TTS location for name of each segment
-    let runningOffset = 0;
-    const durations = ttsResponse["durations"] as number[];
-    for (let i = 0; i < segments.length; i++) {
-        segments[i]["audio"] = {
-            "offset": runningOffset,
-            "duration": durations[i]
+        let runningOffset = 0;
+        const durations = ttsResponse["durations"] as number[];
+        for (let i = 0; i < segments.length; i++) {
+            segments[i]["audio"] = {
+                "offset": runningOffset,
+                "duration": durations[i]
+            };
+            runningOffset += durations[i];
+        }
+
+        // TODO adjustment of contours
+        // Sort contour points
+        for (let i = 0; i < segments.length; i++) {
+
+            const center = segments[i]["centroid"];
+            const ref = segments[i]["coord"][0];
+            segments[i]["coord"].sort(
+                (a: [number, number], b: [number, number]) => {
+                    return utils.getContourRefAngle(center, ref, a) < utils.getContourRefAngle(center, ref, b);
+                }
+            );
+        }
+        // Order contours bottom-to-top to not conflict with rising pitches of sonification
+        // Note: normalized coordinates follow graphics convention!
+        type centroid = [number, number];
+        segments.sort((a: { "centroid": centroid }, b: { "centroid": centroid }) => {
+            return b["centroid"][1] - a["centroid"][1];
+        });
+
+        const scData = {
+            "segments": segments,
+            "ttsFileName": "",
         };
-        runningOffset += durations[i];
+
+        pushAudioInfo(ttsResponse, scData, audioInfo);
+    } else {
+        console.warn("No segments were detected, skipping to objection detection.");
     }
 
-    // TODO adjustment of contours
-    // Sort contour points
-    for (let i = 0; i < segments.length; i++) {
+    // *******************************************************
+    // Object detection
+    // *******************************************************
+    const objects = req.body["preprocessors"]["ca.mcgill.a11y.image.preprocessor.objectDetection"]["objects"]
+    if (objects.length !== 0) {
 
-        const center = segments[i]["centroid"];
-        const ref = segments[i]["coord"][0];
-        segments[i]["coord"].sort(
-            (a: [number, number], b: [number, number]) => {
-                return utils.getContourRefAngle(center, ref, a) < utils.getContourRefAngle(center, ref, b);
+        for (const obj of objects) {
+            const centroid: number[] = obj["centroid"]
+            const dimensions: number[] = obj["dimensions"]
+
+            // For haptics
+            const data = {
+                "centroids": centroid,
+                "coords": dimensions
             }
-        );
+            hapticObjInfo.push(data)
+        }
+        hapticInfo.push(hapticObjInfo);
+
+        // *******************************************************
+        // TTS for object detection
+        // *******************************************************
+
+        // Form TTS segments
+        // const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
+        // Removing scenes due to server#167.
+        const sceneData: any = undefined;
+        const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.secondCategoriser"];
+        let ttsIntro;
+        if (sceneData && sceneData["categories"].length > 0) {
+            let sceneName = sceneData["categories"][0]["name"] as string;
+            // '/' is used to have more specific categories
+            if (sceneName.includes("/")) {
+                sceneName = sceneName.split("/")[0]
+            }
+            sceneName = sceneName.replace("_", " ").trim();
+            const articled = Articles.articlize(sceneName);
+            ttsIntro = `This picture of ${articled} contains`;
+        } else if (secondClassifierData) {
+            const category: string = secondClassifierData["category"];
+            if (category === "indoor" || category === "outdoor") {
+                ttsIntro = `This ${category} picture contains`;
+            } else {
+                ttsIntro = "This picture contains";
+            }
+        } else {
+            ttsIntro = "This picture contains";
+        }
+
+        const staticSegments = [ttsIntro, "with", "and"];
+        const ttsSegments = Array.from(staticSegments);
+        const groupData = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
+        for (const object of objects["objects"]) {
+            const articled = Articles.articlize(object["type"].trim());
+            ttsSegments.push(`${articled}`);
+        }
+        for (const group of groupData["grouped"]) {
+            const exId = group["IDs"][0];
+            const exObjs = objects["objects"].filter((obj: Record<string, unknown>) => {
+                return obj["ID"] == exId;
+            });
+            const sType = (exObjs.length > 0) ? (exObjs[0]["type"]) : "object";
+            const pType = pluralize(sType.trim());
+            const num = group["IDs"].length;
+            ttsSegments.push(`${num.toString()} ${pType}`);
+        }
+
+        let ttsResponse;
+        try {
+            ttsResponse = await getTTS(ttsSegments);
+        } catch (e) {
+            console.error(e);
+            res.status(500).json({"error": (e as Error).message});
+        }
+        ttsResponse = ttsResponse as Record<string, unknown>;
+
+        const durations = (ttsResponse as Record<string, unknown>)["durations"] as number[];
+        const joining: Record<string, unknown> = {};
+        const intro = {
+            "offset": 0,
+            "duration": durations[0]
+        };
+        let runningOffset = durations[0];
+        for (let i = 1; i < staticSegments.length; i++) {
+            joining[staticSegments[i]] = {
+                "offset": runningOffset,
+                "duration": durations[i]
+            };
+            runningOffset += durations[i];
+        }
+
+        const scData = {
+            "audioTemplate": {
+                "intro": intro,
+                "joining": joining
+            },
+            "objects": objects["objects"],
+            "groups": groupData["grouped"],
+            "ordering": "leftToRight",
+            "ttsFileName": ""
+        };
+
+        let durIdx = staticSegments.length;
+        for (const object of scData["objects"]) {
+            object["audio"] = {
+                "offset": runningOffset,
+                "duration": durations[durIdx]
+            };
+            runningOffset += durations[durIdx];
+            durIdx += 1;
+        }
+        for (const group of scData["groups"]) {
+            group["audio"] = {
+                "offset": runningOffset,
+                "duration": durations[durIdx]
+            };
+            runningOffset += durations[durIdx];
+            durIdx += 1;
+        }
+        pushAudioInfo(ttsResponse, scData, audioInfo);
+    } else {
+        console.warn("No objects were detected, so we can't do anything!");
     }
-    // Order contours bottom-to-top to not conflict with rising pitches of sonification
-    // Note: normalized coordinates follow graphics convention!
-    type centroid = [number, number];
-    segments.sort((a: { "centroid": centroid }, b: { "centroid": centroid }) => {
-        return b["centroid"][1] - a["centroid"][1];
-    });
 
-    const scData = {
-        "segments": segments,
-        "ttsFileName": "",
-    };
-
-    // Put it all together
     //TODO: require image?
     const image = req.body.image;
-    let inFile: string, outFile: string, jsonFile: string;
+    let r = {
+         "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudioHaptics",
+        "confidence": 50, // TODO magic number
+        "description": "Navigable segment sonifications and tracing detected in the image.",
+        "data": {
+            "image": image,
+            "audio": audioInfo,
+            "haptic": hapticInfo
+        }       
+    };
+
     const renderings: Record<string, unknown>[] = [];
+
+    if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudiohaptics.schema.json", r["data"])) {
+        renderings.push(r);
+    } else {
+        console.error(ajv.errors);
+        throw ajv.errors;
+    }
+
+    const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+    response["renderings"] = renderings;
+
+    if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
+        res.json(response);
+    } else {
+        console.error("Failed to generate a valid response.");
+        console.error(ajv.errors);
+        res.status(500).json(ajv.errors);
+    }
+});
+
+/** Returns TTS json. */
+async function getTTS(ttsText: string[]) {
+    let ttsResponse;
+    ttsResponse = fetch("http://espnet-tts/service/tts/segments", {
+        "method": "POST",
+        "headers": {
+            "Content-Type": "application/json",
+        },
+        "body": JSON.stringify({
+            "segments": ttsText
+        })
+    })
+    return ttsResponse.json();
+}
+
+/** Pushes SuperCollider audio data to passed audioArray. */
+async function pushAudioInfo(ttsResponse: any, scData: any, audioArray: any) {
+
+    let inFile: string, outFile: string, jsonFile: string;
+    //const renderings: Record<string, unknown>[] = [];
     const dataURI = ttsResponse["audio"] as string;
     // First turn data URI into a writable binary buffer
     await fetch(dataURI).then(resp => {
@@ -279,32 +435,21 @@ app.post("/handler", async (req, res) => {
                 }, 5000);
             })
         ]);
-    }).then(async (segArray) => {
+    }).then(async (array) => {
         const buffer = await fs.readFile(outFile);
         // TODO detect MIME type from file
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
-        if (segArray.length > 0 && hasSegmentAudioHaptic) {
-            const r = {
-                "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudioHaptics",
-                "confidence": 50, // TODO magic number
-                "description": "Navigable segment sonifications and tracing detected in the image.",
-                "data": {
-                    "image": image,
-                    "audioFile": dataURL,
-                    "audioInfo": segArray,
-                    "hapticInfo": hapticInfo
-                }
-            };
-            if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudiohaptics.schema.json", r["data"])) {
-                renderings.push(r);
-            } else {
-                console.error(ajv.errors);
-                throw ajv.errors;
+
+        if (array.length > 0) {
+            const data = {
+                "audioFile": dataURL,
+                "audioInfo": array
             }
+            audioArray.push(data);
         }
-    }).catch(err => {
-        console.error(err);
-    }).finally(() => {
+        }).catch(err => {
+            console.error(err);
+        }).finally(() => {
         // Delete files off of the disk
         if (inFile !== undefined) {
             fs.access(inFile).then(() => { return fs.unlink(inFile); }).catch(() => { /* noop */ });
@@ -316,18 +461,7 @@ app.post("/handler", async (req, res) => {
             fs.access(outFile).then(() => { return fs.unlink(outFile); }).catch(() => { /* noop */ });
         }
     });
-
-    const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-    response["renderings"] = renderings;
-
-    if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
-        res.json(response);
-    } else {
-        console.error("Failed to generate a valid response.");
-        console.error(ajv.errors);
-        res.status(500).json(ajv.errors);
-    }
-});
+}
 
 // Run the server
 app.listen(port, () => {
