@@ -5,12 +5,6 @@
     "title": "Autour Maps Preprocessor",
     "description": "Information on the contents of a place on a map",
     "properties": {
-        "url": {
-            "type": "string",
-            "title": "URL",
-            "description": "The URL of the map",
-            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,}\\.[a-z]{2,}\\b(\\S*)$"
-        },
         "lat": {
             "type": "number",
             "title": "Latitude",
@@ -81,5 +75,5 @@
             }
         }
     },
-    "required": ["url", "lat", "lon", "api_request", "places"]
+    "required": ["lat", "lon", "api_request", "places"]
 }
