@@ -205,5 +205,16 @@ services:
         labels:
             ca.mcgill.a11y.image.handler: enable
 
+    audio-haptic-segment-handler:
+        build:
+            context: ./handlers/audio-haptic-segment-handler
+            dockerfile: Dockerfile
+        image: "audio-haptic-segment-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
 volumes:
     sc-store:
