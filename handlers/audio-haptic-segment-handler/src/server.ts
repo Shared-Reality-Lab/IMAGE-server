@@ -31,7 +31,7 @@ import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
 import descriptionJSON from "./schemas/services/supercollider/tts-description.schema.json";
 import segmentJSON from "./schemas/services/supercollider/tts-segment.schema.json";
 import rendererDefJSON from "./schemas/renderers/definitions.json";
-import segmentAudioHapticsJSON from "./schemas/renderers/segmentaudiohaptics.schema.json";
+import segmentAudioHapticsJSON from "./segmentaudiohapticscombined.schema.json";
 
 import * as utils from "./utils";
 
@@ -86,24 +86,24 @@ app.post("/handler", async (req, res) => {
     // *******************************************************
     // Check for renderer availability
     // *******************************************************
-    const hasSegmentAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SegmentAudioHaptics");
-    if (!hasSegmentAudioHaptic) {
-        console.warn("Segment audio-haptic renderers not supported!");
-        const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
-            res.json(response);
-        } else {
-            console.error("Failed to generate a valid empty response!");
-            console.error(ajv.errors);
-            res.status(500).json(ajv.errors);
-        }
-        return;
-    }
+    // const hasSegmentAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SegmentAudioHaptics");
+    // if (!hasSegmentAudioHaptic) {
+    //     console.warn("Segment audio-haptic renderers not supported!");
+    //     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+    //     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
+    //         res.json(response);
+    //     } else {
+    //         console.error("Failed to generate a valid empty response!");
+    //         console.error(ajv.errors);
+    //         res.status(500).json(ajv.errors);
+    //     }
+    //     return;
+    // }
 
     //const hapticInfo: any = [];//: ({ centroids: number[]; coordinates: number[]; }[] | { text: string; centroids: number[]; coords: number[]; }[])[] = []; //: { centroids: number[]; coordinates: number[]; }[] = [];
-    let hapticInfo = [];
-    let hapticObjInfo = [];
-    let hapticSegInfo = [];
+    const hapticInfo = [];
+    const hapticObjInfo = [];
+    const hapticSegInfo = [];
     let audioInfo;
 
     // *******************************************************
@@ -135,14 +135,35 @@ app.post("/handler", async (req, res) => {
         // *******************************************************
         // Call TTS service for segment info
         // *******************************************************
+        // let ttsResponse;
+        // try {
+        //     ttsResponse = await getTTS(ttsText);
+        // } catch (e) {
+        //     console.error(e);
+        //     res.status(500).json({"error": (e as Error).message});
+        // }
+        // ttsResponse = ttsResponse as Record<string, unknown>;
+
         let ttsResponse;
+        // Get the TTS file for each audio plus snippet info
         try {
-            ttsResponse = await getTTS(ttsText);
+            ttsResponse = await fetch("http://espnet-tts/service/tts/segments", {
+                "method": "POST",
+                "headers": {
+                    "Content-Type": "application/json",
+                },
+                "body": JSON.stringify({
+                    "segments": ttsText
+                })
+            }).then(resp => {
+                return resp.json();
+            });
+            ttsResponse = ttsResponse as Record<string, unknown>;
         } catch (e) {
             console.error(e);
             res.status(500).json({"error": (e as Error).message});
+            return;
         }
-        ttsResponse = ttsResponse as Record<string, unknown>;
 
         let runningOffset = 0;
         const durations = ttsResponse["durations"] as number[];
@@ -195,8 +216,8 @@ app.post("/handler", async (req, res) => {
 
             // For haptics
             const data = {
-                "centroids": centroid,
-                "coords": dimensions
+                "centroid": centroid,
+                "coordinates": dimensions
             }
             hapticObjInfo.push(data)
         }
@@ -250,14 +271,34 @@ app.post("/handler", async (req, res) => {
             ttsSegments.push(`${num.toString()} ${pType}`);
         }
 
+        // let ttsResponse;
+        // try {
+        //     ttsResponse = await getTTS(ttsSegments);
+        // } catch (e) {
+        //     console.error(e);
+        //     res.status(500).json({"error": (e as Error).message});
+        // }
+        // ttsResponse = ttsResponse as Record<string, unknown>;
         let ttsResponse;
+        // Get the TTS file for each audio plus snippet info
         try {
-            ttsResponse = await getTTS(ttsSegments);
+            ttsResponse = await fetch("http://espnet-tts/service/tts/segments", {
+                "method": "POST",
+                "headers": {
+                    "Content-Type": "application/json",
+                },
+                "body": JSON.stringify({
+                    "segments": ttsSegments
+                })
+            }).then(resp => {
+                return resp.json();
+            });
+            ttsResponse = ttsResponse as Record<string, unknown>;
         } catch (e) {
             console.error(e);
             res.status(500).json({"error": (e as Error).message});
+            return;
         }
-        ttsResponse = ttsResponse as Record<string, unknown>;
 
         const durations = (ttsResponse as Record<string, unknown>)["durations"] as number[];
         const joining: Record<string, unknown> = {};
@@ -309,7 +350,7 @@ app.post("/handler", async (req, res) => {
 
     //TODO: require image?
     const image = req.body.image;
-    let r = {
+    const r = {
          "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudioHaptics",
         "confidence": 50, // TODO magic number
         "description": "Navigable segment sonifications and tracing detected in the image.",
@@ -341,10 +382,10 @@ app.post("/handler", async (req, res) => {
     }
 });
 
+
 /** Returns TTS json. */
 async function getTTS(ttsText: string[]) {
-    let ttsResponse;
-    ttsResponse = fetch("http://espnet-tts/service/tts/segments", {
+    return fetch("http://espnet-tts/service/tts/segments", {
         "method": "POST",
         "headers": {
             "Content-Type": "application/json",
@@ -352,10 +393,8 @@ async function getTTS(ttsText: string[]) {
         "body": JSON.stringify({
             "segments": ttsText
         })
-    })
-    return ttsResponse.json();
+    }).then(response => response.json() as Promise<{ audio: string, durations: number[] }>);
 }
-
 /** Pushes SuperCollider audio data to passed audioArray. */
 async function pushAudioInfo(ttsResponse: any, scData: any, audioArray: any) {
 
