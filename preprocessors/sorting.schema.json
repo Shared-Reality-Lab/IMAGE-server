@@ -1,0 +1,31 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/sorting.schema.json",
+    "type": "object",
+    "title": "Objects detected using Object detection model are sorted using different ordering schemes",
+    "description": "Object detected by the Object Detection model are sorted from left to right, top to bottom and also in terms of their size.",
+    "properties": {
+        "leftToRight": {
+            "description": "The objects are sorted from left to right in this section. The IDs of the object are presented starting with the left most object first",
+            "type": "array",
+            "items": {
+               "type":"number"
+        }
+    },
+        "topToBottom": {
+            "description": "The objects are sorted from top to bottom in this section. The IDs of the object are presented starting with the top most object first",
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
+        "smallToBig": {
+            "description": "The objects are sorted in terms of their size from small to big. The IDs of the object are presented starting with the smallest object first",
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        }
+    },
+    "required": ["leftToRight", "topToBottom", "smallToBig"]
+}

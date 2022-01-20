@@ -9,11 +9,11 @@
             "description": "The locations of the introduction phrase and filler words in the TTS audio.",
             "type": "object",
             "properties": {
-                "intro": { "$ref": "../../definitions.json#/definitions/segmentOffset" },
+                "intro": { "$ref": "../../definitions.json#/definitions/segmentOffsetSamples" },
                 "joining": {
                     "description": "Joining words",
                     "type": "object",
-                    "additionalProperties": { "$ref": "../../definitions.json#/definitions/segmentOffset" }
+                    "additionalProperties": { "$ref": "../../definitions.json#/definitions/segmentOffsetSamples" }
                 }
             },
             "required": [ "intro" ]
@@ -39,7 +39,7 @@
                     {
                         "type": "object",
                         "properties": {
-                            "offset": { "$ref": "../../definitions.json#/definitions/segmentOffset" }
+                            "offset": { "$ref": "../../definitions.json#/definitions/segmentOffsetSamples" }
                         }
                     }
                 ]

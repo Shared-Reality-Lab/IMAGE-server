@@ -4,10 +4,25 @@
     "title": "Renderer definitions",
     "description": "Common definitions used in renderers.",
     "definitions": {
+        "segmentOffsetSeconds": {
+        "description": "Data on the offset of an audio segment in the file and its duration. Both are reported in seconds.",
+            "type": "object",
+            "properties": {
+                "offset": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "duration": {
+                    "type": "number",
+                    "minimum": 0
+                }
+            },
+            "required": [ "offset", "duration" ]
+        },
         "remoteAudioFile": {
             "description": "HTTP(S) URL to an audio file.",
             "type": "string",
-            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)$"
+            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,}\\.[a-z]{2,}\\b(\\S*)$"
         },
         "localAudioFile": {
             "description": "Data URI of an encoded audio file.",
