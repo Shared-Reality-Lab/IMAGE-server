@@ -66,7 +66,6 @@ def get_map_data():
         return "", 204
 
     # Build Autour request
-    url = content['url']
     coords = get_coordinates(content)
 
     if coords is None:
@@ -94,7 +93,6 @@ def get_map_data():
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
     data = {
-        'url': url,
         'lat': coords['latitude'],
         'lon': coords['longitude'],
         'api_request': api_request,
