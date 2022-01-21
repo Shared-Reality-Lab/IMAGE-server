@@ -2,7 +2,7 @@
   "name": "photo-audio-handler",
   "version": "1.0.0",
   "description": "Audio renderings for probable photographs.",
-  "main": "dist/server.ts",
+  "main": "dist/server.js",
   "scripts": {
     "prebuild": "eslint src --ext .ts",
     "build": "tsc",
