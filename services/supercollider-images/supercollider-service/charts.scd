@@ -74,7 +74,7 @@ pieChart = { |json, outPath, addr|
         sampleRate: 48000,
         headerFormat: "WAV",
         sampleFormat: "int16",
-        options: ServerOptions.new.numOutputBusChannels_(2),
+        options: ServerOptions.new.numOutputBusChannels_(2).verbosity_(-1),
         action: {
             // Check for written file
             if(File.exists(outPath),
