@@ -53,11 +53,12 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
     data.push({"value": "contains the following outlines of regions:", "type": "text"});
     data.push(...segments.map(segment => {
         const newSeg = segment;
-        newSeg["value"] = newSeg["nameOfSegment"] as string;
+        newSeg["value"] = (newSeg["nameOfSegment"] as string) + ",";
         newSeg["type"] = "segment";
         return newSeg as TTSSegment;
     }));
-    data[data.length - 1]["value"] += ".";
+    data[data.length-1]["value"] = data[data.length - 1]["value"].replace(",", ".");
+    data[data.length-1]["value"] = "and " + data[data.length-1]["value"];
     return data;
 }
 
@@ -71,7 +72,7 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[]
         const object = {
             "type": "object",
             "objects": objs,
-            "value": objs.length.toString() + " " + pType
+            "value": objs.length.toString() + " " + pType + ","
         };
         objects.push(object);
     }
@@ -81,9 +82,11 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[]
             objects.push({
                 "type": "object",
                 "objects": [obj],
-                "value": Articles.articlize(obj["type"].trim()) as string
+                "value": (Articles.articlize(obj["type"].trim()) as string) + ","
             } as TTSSegment);
         }
     }
+    objects[objects.length-1]["value"] = objects[objects.length - 1]["value"].replace(",", ".");
+    objects[objects.length-1]["value"] = "and " + objects[objects.length-1]["value"];
     return objects;
 }
