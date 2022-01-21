@@ -246,7 +246,8 @@ app.post("/handler", async (req, res) => {
         const oscPort = new osc.UDPPort({
             "remoteAddress": "supercollider",
             "remotePort": scPort,
-            "localAddress": "0.0.0.0"
+            "localAddress": "0.0.0.0",
+            "localPort": 0  // This will request a free port
         });
         return Promise.race<string>([
             new Promise<string>((resolve, reject) => {
