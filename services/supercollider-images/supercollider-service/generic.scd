@@ -210,7 +210,7 @@ renderGeneric = { |json, ttsData, outPath, addr|
         sampleRate: 48000,
         headerFormat: "WAV",
         sampleFormat: "int16",
-        options: ServerOptions.new.numOutputBusChannels_(2),
+        options: ServerOptions.new.numOutputBusChannels_(2).verbosity_(-1),
         action: {
             // Check for successful write (file exists)
             if(File.exists(outPath),
@@ -228,28 +228,30 @@ renderGeneric = { |json, ttsData, outPath, addr|
 OSCdef.newMatching(\genericObject, { |msg, time, addr, recvPort|
     var json = nil, ttsData = nil;
     "Received a message at /render/genericObject...".postln;
-    # json, ttsData = IMAGE.loadTTSJSON(msg.at(1).asString);
-    if(json.notNil && ttsData.notNil,
-        {
-            try {
-                "Trying to render...".postln;
-                renderGeneric.(
-                    json: json,
-                    ttsData: ttsData,
-                    outPath: msg.at(2).asString,
-                    addr: addr
-                );
-            } { |error|
-                error.what.postln;
+    {
+        # json, ttsData = IMAGE.loadTTSJSON(msg.at(1).asString);
+        if(json.notNil && ttsData.notNil,
+            {
+                try {
+                    "Trying to render...".postln;
+                    renderGeneric.(
+                        json: json,
+                        ttsData: ttsData,
+                        outPath: msg.at(2).asString,
+                        addr: addr
+                    );
+                } { |error|
+                    error.what.postln;
+                    addr.sendMsg(\status, \fail);
+                    error.throw;
+                }
+            },
+            {
+                "JSON or TTS data nil!".postln;
+                if(json.isNil, { "JSON is nil.".postln; });
+                if(ttsData.isNil, { "TTS data is nil.".postln; });
                 addr.sendMsg(\status, \fail);
-                error.throw;
             }
-        },
-        {
-            "JSON or TTS data nil!".postln;
-            if(json.isNil, { "JSON is nil.".postln; });
-            if(ttsData.isNil, { "TTS data is nil.".postln; });
-            addr.sendMsg(\status, \fail);
-        }
-    );
+        );
+    }.fork;
 }, '/render/genericObject', nil);

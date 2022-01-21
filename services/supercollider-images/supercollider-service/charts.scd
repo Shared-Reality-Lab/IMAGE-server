@@ -92,25 +92,27 @@ pieChart = { |json, outPath, addr|
 OSCdef.newMatching(\piechart, { |msg, time, addr, recvPort|
     var json = nil;
     "Received as message at /render/charts/pie...".postln;
-    json = IMAGE.loadJSON(msg.at(1).asString);
-    if(json.notNil,
-        {
-            try {
-                "Trying to render...".postln;
-                pieChart.(
-                    json: json,
-                    outPath: msg.at(2).asString,
-                    addr: addr
-                );
-            } { |error|
-                error.what.postln;
+    {
+        json = IMAGE.loadJSON(msg.at(1).asString);
+        if(json.notNil,
+            {
+                try {
+                    "Trying to render...".postln;
+                    pieChart.(
+                        json: json,
+                        outPath: msg.at(2).asString,
+                        addr: addr
+                    );
+                } { |error|
+                    error.what.postln;
+                    addr.sendMsg(\status, \fail);
+                    error.throw;
+                }
+            },
+            {
+                "JSON data nil!".postln;
                 addr.sendMsg(\status, \fail);
-                error.throw;
             }
-        },
-        {
-            "JSON data nil!".postln;
-            addr.sendMsg(\status, \fail);
-        }
-    );
+        );
+    }.fork;
 }, '/render/charts/pie', nil);
