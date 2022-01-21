@@ -17,6 +17,8 @@
 import Ajv from "ajv";
 import express from "express";
 import fetch from "node-fetch";
+import fs from "fs/promises";
+import { v4 as uuidv4 } from "uuid";
 
 import * as utils from "./utils";
 
@@ -38,6 +40,8 @@ const ajv = new Ajv({
 
 const app = express();
 const port = 80;
+const scPort = 57120;
+const filePrefix = "/tmp/sc-store/photo-audio-handler-";
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
@@ -111,6 +115,76 @@ app.post("/handler", async (req, res) => {
     }
 
     // TODO audio
+    if (hasSimple || hasSegment) {
+        try {
+            // Do TTS
+            const ttsResponse = await utils.getTTS(ttsData.map(x => x["value"]));
+            // Add offset values to data
+            for (let i = 0, offset = 0; i < ttsData.length; i++) {
+                ttsData[i]["audio"] = {
+                    "offset": offset,
+                    "duration": ttsResponse.durations[i]
+                };
+                offset += ttsResponse.durations[i];
+            }
+
+            const scData = {
+                "data": ttsData,
+                "ttsFileName": ""
+            };
+
+            // Write to file
+            let inFile: string, outFile: string, jsonFile: string;
+            await fetch(ttsResponse["audio"]).then(resp => {
+                return resp.arrayBuffer();
+            }).then(async (buf) => {
+                inFile = filePrefix + req.body["request_uuid"] + ".wav";
+                await fs.writeFile(inFile, Buffer.from(buf));
+                scData["ttsFileName"] = inFile;
+                jsonFile = filePrefix + req.body["request_uuid"] + ".json";
+                await fs.writeFile(jsonFile, JSON.stringify(scData));
+                outFile = filePrefix + uuidv4() + ".flac";
+                await fs.writeFile(outFile, "");
+                await fs.chmod(outFile, 0o664);
+
+                console.log("Forming OSC...");
+                return utils.sendOSC(jsonFile, outFile, "supercollider", scPort);
+            }).then(async (segArray) => {
+                const buffer = await fs.readFile(outFile);
+                // TODO detect mime type from file
+                const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
+                if (hasSimple) {
+                    const rendering = {
+                        "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
+                        "confidence": 50,
+                        "description": "Regions, things, and people",
+                        "data": {
+                            "audio": dataURL
+                        }
+                    };
+                    if (ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", rendering["data"])) {
+                        renderings.push(rendering);
+                    } else {
+                        console.error(ajv.errors);
+                    }
+                }
+            }).finally(() => {
+                // Delete our files if they exist on the disk
+                if (inFile !== undefined) {
+                    fs.access(inFile).then(() => { return fs.unlink(inFile); }).catch(() => { /* noop */ });
+                }
+                if (jsonFile !== undefined) {
+                    fs.access(jsonFile).then(() => { return fs.unlink(jsonFile); }).catch(() => { /* noop */ });
+                }
+                if (outFile !== undefined) {
+                    fs.access(outFile).then(() => { return fs.unlink(outFile); }).catch(() => { /* noop */ });
+                }
+            });
+        } catch(e) {
+            console.error("Failed to generate audio!");
+            console.error(e);
+        }
+    }
 
     // Send response
 
