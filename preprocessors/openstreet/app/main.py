@@ -1,5 +1,7 @@
 from typing import Optional
 from fastapi import FastAPI
+from app.osm_service import query_osmdata, transform_osmdata
+
 
 app = FastAPI()
 
@@ -9,10 +11,8 @@ def health():
     return {"Hello": "World"}
 
 
-@app.get("/location/{lat}/{lon}")
-def get_location(lat: float,lon: float):
-      # Connect to openmap street
-      # Get the data
-      # transform the data
-      # return a response
-    return {"lat": lat, "long": lon}
+@app.get("/location/{radius}/{lat}/{lon}")
+def get_location(radius:float,lat:float, lon:float):
+  raw_osmdata=query_osmdata(radius, lat, lon)
+  response= transform_osmdata(raw_osmdata)
+  return (response)

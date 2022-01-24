@@ -6,10 +6,10 @@ This service basically involves automatic communication with the openstreetmap (
 
 ## Instruction (Docker Setup) - Recommended
 
-1. Ensure you're in the directory `services/openstreet`
+1. Ensure you're in the directory `preprocessors/openstreet`
 
 ```
-$ cd  /project-path/services/openstreet
+$ cd  /project-path/preprocessors/openstreet
 
 ```
 2. Build the service (Only reguired for the first time)
@@ -30,10 +30,10 @@ $ docker-compose up
 ## Instructions (Without Docker Setup)
 Follow the instructions to run this service locally.
 
-1. Ensure you're in the directory `services/openstreet`
+1. Ensure you're in the directory `preprocessors/openstreet`
 
 ```
-$ cd  /project-path/services/openstreet
+$ cd  /project-path/preprocessors/openstreet
 
 ```
 2. Create a python virtual environment with the command. This is require if you're starting the project for the first time.
