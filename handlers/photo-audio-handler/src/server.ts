@@ -96,13 +96,16 @@ app.post("/handler", async (req, res) => {
         ttsData.push(...utils.generateObjDet(objDet, objGroup));
     }
 
+    // Generate rendering title
+    const renderingTitle = utils.renderingTitle(semseg, objDet, objGroup);
+
     // Construct Text (if requested)
     if (hasText) {
         const textString = ttsData.map(x => x["value"]).join(" ");
         const rendering = {
             "type_id": "ca.mcgill.a11y.image.renderer.Text",
             "confidence": 50,
-            "description": "Regions, things, and people (text only)",
+            "description": renderingTitle + " (text only)",
             "data": { "text": textString }
         };
         if (ajv.validate("https://image.a11y.mcgill.ca/renderers/text.schema.json", rendering["data"])) {
@@ -159,7 +162,7 @@ app.post("/handler", async (req, res) => {
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
                         "confidence": 50,
-                        "description": "Regions, things, and people",
+                        "description": renderingTitle,
                         "data": {
                             "audio": dataURL
                         }
