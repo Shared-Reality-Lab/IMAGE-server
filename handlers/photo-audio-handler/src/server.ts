@@ -88,7 +88,9 @@ app.post("/handler", async (req, res) => {
         // Use all segments returned for now.
         // Filtering may be helpful later.
         ttsData.push(...utils.generateSemSeg(semseg));
-        ttsData.push({"value": "It also", "type": "text"});
+        if (objDet && objGroup) {
+            ttsData.push({"value": "It also", "type": "text"});
+        }
     }
     if (objDet && objGroup) {
         ttsData.push(...utils.generateObjDet(objDet, objGroup));

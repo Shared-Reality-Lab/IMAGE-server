@@ -53,10 +53,12 @@ export function generateEmptyResponse(requestUUID: string): { "request_uuid": st
     };
 }
 
-export function generateIntro(secondCatData: { "category": string }): string {
-    const category = secondCatData["category"];
-    if (category === "indoor" || category === "outdoor") {
-        return "This " + category + " photo";
+export function generateIntro(secondCatData: { "category": string } | undefined): string {
+    if (secondCatData) {
+        const category = secondCatData["category"];
+        if (category === "indoor" || category === "outdoor") {
+            return "This " + category + " photo";
+        }
     }
     return "This photo";
 }
