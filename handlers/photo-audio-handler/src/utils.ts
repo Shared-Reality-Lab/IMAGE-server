@@ -22,6 +22,7 @@ import osc from "osc";
 export type TTSSegment = {
     value: string;
     type: string;
+    label?: string;
     audio?: { offset: number, duration: number }
 }
 
@@ -71,6 +72,7 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
         const newSeg = segment;
         newSeg["value"] = (newSeg["nameOfSegment"] as string) + ",";
         newSeg["type"] = "segment";
+        newSeg["label"] = newSeg["nameOfSegment"] as string;
         return newSeg as TTSSegment;
     }));
     data[data.length-1]["value"] = data[data.length - 1]["value"].replace(",", ".");
@@ -88,6 +90,7 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[]
         const object = {
             "type": "object",
             "objects": objs,
+            "label": pType,
             "value": objs.length.toString() + " " + pType + ","
         };
         objects.push(object);
@@ -98,6 +101,7 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[]
             objects.push({
                 "type": "object",
                 "objects": [obj],
+                "label": obj["type"].trim(),
                 "value": (Articles.articlize(obj["type"].trim()) as string) + ","
             } as TTSSegment);
         }
@@ -132,6 +136,8 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
                     const arg = oscMsg["args"] as osc.Argument[];
                     if (arg[0] === "done") {
                         const respArry: SoundSegments = [];
+                        console.log(respArry);
+                        console.log(respArry.length);
                         if ((arg.length) > 1 && ((arg.length - 1) % 3 == 0)) {
                             for (let i = 1; i < arg.length; i += 3) {
                                 respArry.push({

@@ -33,14 +33,13 @@ renderPhoto = { |json, ttsData, outPath, addr|
         [\b_allocRead, 210, ttsData.path, 0, 0]
     ]);
 
-    // TODO the rendering
     json.postln;
     parts = json.at("data");
     parts.do({ |item|
         var type = item.at("type"), audio = item.at("audio");
         switch(type.asSymbol,
             \text, {
-                var duration = (audio.at("duration").asInteger / ttsData.sampleRate);
+                var duration = (audio.at("duration").asInteger / ttsData.sampleRate), initialTiming=timing;
                 "Text".postln;
                 // Play non-spatialized audio
                 score.add([
@@ -48,9 +47,20 @@ renderPhoto = { |json, ttsData, outPath, addr|
                     [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, audio.at("offset").asInteger, \duration, duration, \gain, baseGain]
                 ]);
                 timing = timing + duration;
+
+                if(item.at("label").notNil,
+                    {
+                        segmentInfo = segmentInfo.add(item.at("label").asString);
+                    },
+                    {
+                        segmentInfo = segmentInfo.add("Text");
+                    }
+                );
+                segmentInfo = segmentInfo.add(initialTiming);
+                segmentInfo = segmentInfo.add(timing);
             },
             \object, {
-                var duration = (audio.at("duration").asInteger / ttsData.sampleRate), objects = item.at("objects");
+                var duration = (audio.at("duration").asInteger / ttsData.sampleRate), objects = item.at("objects"), initialTiming=timing;
                 // Play TTS label (spatialized) and ping(s)
                 "Object".postln;
                 score.add([
@@ -94,9 +104,20 @@ renderPhoto = { |json, ttsData, outPath, addr|
                     );
                 });
                 timing = timing + 2.25;
+
+                if(item.at("label").notNil,
+                    {
+                        segmentInfo = segmentInfo.add(item.at("label").asString);
+                    },
+                    {
+                        segmentInfo = segmentInfo.add("Text");
+                    }
+                );
+                segmentInfo = segmentInfo.add(initialTiming);
+                segmentInfo = segmentInfo.add(timing);
             },
             \segment, {
-                var duration = (audio.at("duration").asInteger / ttsData.sampleRate), coord = item.at("coord"), area = item.at("area").asFloat, maxTime=25, totalTime=maxTime*area, pingDur=0.001, midinote;
+                var duration = (audio.at("duration").asInteger / ttsData.sampleRate), coord = item.at("coord"), area = item.at("area").asFloat, maxTime=25, totalTime=maxTime*area, pingDur=0.001, midinote, initialTiming=timing;
                 // TTS and then segment outline
                 "segment".postln;
                 score.add([
@@ -124,12 +145,24 @@ renderPhoto = { |json, ttsData, outPath, addr|
                 });
                 score.add([timing, [\n_set, 1003, \gain, 0.0]]);
                 score.add([timing, [\n_free, 1003]]);
+
+                if(item.at("label").notNil,
+                    {
+                        segmentInfo = segmentInfo.add(item.at("label").asString);
+                    },
+                    {
+                        segmentInfo = segmentInfo.add("Text");
+                    }
+                );
+                segmentInfo = segmentInfo.add(initialTiming);
+                segmentInfo = segmentInfo.add(timing);
             },
             { ("Unknown input of type '" + type.asString + "'! Skipping.").postln; }
         );
     });
 
     // Add one last noop message
+    segmentInfo.postln;
     score.add([timing, [0]]);
     score.saveToFile("/tmp/sc-store/score.txt");
 

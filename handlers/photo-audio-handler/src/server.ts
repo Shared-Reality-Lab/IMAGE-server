@@ -96,6 +96,14 @@ app.post("/handler", async (req, res) => {
         ttsData.push(...utils.generateObjDet(objDet, objGroup));
     }
 
+    // Concatenate adjacent text entries
+    for (let i = 0; i < ttsData.length - 1; i++) {
+        if (ttsData[i].type === "text" && ttsData[i+1].type === "text") {
+            ttsData[i].value += " " + ttsData[i+1].value;
+            ttsData.splice(i+1, 1);
+        }
+    }
+
     // Generate rendering title
     const renderingTitle = utils.renderingTitle(semseg, objDet, objGroup);
 
@@ -119,7 +127,6 @@ app.post("/handler", async (req, res) => {
         console.debug("Skipped text rendering.");
     }
 
-    // TODO audio
     if (hasSimple || hasSegment) {
         try {
             // Do TTS
@@ -155,6 +162,7 @@ app.post("/handler", async (req, res) => {
                 console.log("Forming OSC...");
                 return utils.sendOSC(jsonFile, outFile, "supercollider", scPort);
             }).then(async (segArray) => {
+                console.log(segArray);
                 const buffer = await fs.readFile(outFile);
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
