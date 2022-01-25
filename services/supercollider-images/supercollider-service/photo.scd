@@ -33,7 +33,6 @@ renderPhoto = { |json, ttsData, outPath, addr|
         [\b_allocRead, 210, ttsData.path, 0, 0]
     ]);
 
-    json.postln;
     parts = json.at("data");
     parts.do({ |item|
         var type = item.at("type"), audio = item.at("audio");
@@ -162,7 +161,6 @@ renderPhoto = { |json, ttsData, outPath, addr|
     });
 
     // Add one last noop message
-    segmentInfo.postln;
     score.add([timing, [0]]);
     score.saveToFile("/tmp/sc-store/score.txt");
 
