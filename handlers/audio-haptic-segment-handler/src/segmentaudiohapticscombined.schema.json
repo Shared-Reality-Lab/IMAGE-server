@@ -23,17 +23,14 @@
                 "maximum": 1
             }
         },
-        "contourPoints":{
-            "type":"array",
+        "contourPoints": {
+            "type": "array",
             "items": {
                 "allOf": [
                     {
-                        "$ref": "#/definitions/coordinates" 
+                        "$ref": "#/definitions/coordinates"
                     }
-
                 ]
-
-
             }
         }
     },
@@ -43,48 +40,53 @@
         },
         "audioInfo": {
             "type": "array",
-            "items": {
-                "allOf": [
-                    {
-                        "type": "object",
-                        "properties": {
-                            "audioFile": {
-                                "$ref": "./definitions.json#/definitions/audioFile"
-                            },
-                            "audioInfo": {
-                                "type": "array",
-                                "items": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "./definitions.json#/definitions/segmentOffsetSeconds"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "name": {
-                                                    "description": "A short name assigned to the segment.",
-                                                    "type": "string",
-                                                    "maxLength": 300
+            "properties": {
+                "semSeg": {
+                    "type": "array",
+                    "items": {
+                        "allOf": [
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "audioFile": {
+                                        "$ref": "./definitions.json#/definitions/audioFile"
+                                    },
+                                    "audioInfo": {
+                                        "type": "array",
+                                        "items": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "./definitions.json#/definitions/segmentOffsetSeconds"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "name": {
+                                                            "description": "A short name assigned to the segment.",
+                                                            "type": "string",
+                                                            "maxLength": 300
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name"
+                                                    ]
                                                 }
-                                            },
-                                            "required": [
-                                                "name"
                                             ]
                                         }
-                                    ]
+                                    }
                                 }
                             }
-                        }
-                    },
-                    {
-                        "type": "object",
-                        "properties": {
-                            "audioFile": {
-                                "$ref": "./definitions.json#/definitions/audioFile"
-                            }
+                        ]
+                    }
+                },
+                "objDet": {
+                    "type": "object",
+                    "properties": {
+                        "audioFile": {
+                            "$ref": "./definitions.json#/definitions/audioFile"
                         }
                     }
-                ]
+                }
             }
         },
         "hapticInfo": {
@@ -95,7 +97,7 @@
                     "items": {
                         "allOf": [
                             {
-                                "type":"object",
+                                "type": "object",
                                 "properties": {
                                     "centroid": {
                                         "$ref": "#/definitions/centroid"
@@ -106,7 +108,6 @@
                                 }
                             }
                         ]
-                       
                     }
                 },
                 "objDet": {
@@ -114,7 +115,7 @@
                     "items": {
                         "allOf": [
                             {
-                                "type":"object",
+                                "type": "object",
                                 "properties": {
                                     "centroid": {
                                         "$ref": "#/definitions/centroid"
@@ -122,15 +123,11 @@
                                     "coordinates": {
                                         "$ref": "#/definitions/coordinates"
                                     }
-
                                 }
                             }
-
                         ]
-                        
                     }
-                }                           
-                    
+                }
             }
         }
     },
