@@ -57,7 +57,7 @@ renderPhoto = { |json, ttsData, outPath, addr|
                     }
                 );
                 segmentInfo = segmentInfo.add(initialTiming);
-                segmentInfo = segmentInfo.add(timing);
+                segmentInfo = segmentInfo.add(timing - initialTiming);
             },
             \object, {
                 var duration = (audio.at("duration").asInteger / ttsData.sampleRate), objects = item.at("objects"), initialTiming=timing;
@@ -114,7 +114,7 @@ renderPhoto = { |json, ttsData, outPath, addr|
                     }
                 );
                 segmentInfo = segmentInfo.add(initialTiming);
-                segmentInfo = segmentInfo.add(timing);
+                segmentInfo = segmentInfo.add(timing - initialTiming);
             },
             \segment, {
                 var duration = (audio.at("duration").asInteger / ttsData.sampleRate), coord = item.at("coord"), area = item.at("area").asFloat, maxTime=25, totalTime=maxTime*area, pingDur=0.001, midinote, initialTiming=timing;
@@ -155,7 +155,7 @@ renderPhoto = { |json, ttsData, outPath, addr|
                     }
                 );
                 segmentInfo = segmentInfo.add(initialTiming);
-                segmentInfo = segmentInfo.add(timing);
+                segmentInfo = segmentInfo.add(timing - initialTiming);
             },
             { ("Unknown input of type '" + type.asString + "'! Skipping.").postln; }
         );
