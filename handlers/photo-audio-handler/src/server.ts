@@ -166,7 +166,23 @@ app.post("/handler", async (req, res) => {
                 const buffer = await fs.readFile(outFile);
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
-                if (hasSimple) {
+                if (hasSegment && segArray.length > 0) {
+                    const rendering = {
+                        "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
+                        "confidence": 50,
+                        "description": renderingTitle,
+                        "data": {
+                            "audioFile": dataURL,
+                            "audioInfo": segArray
+                        }
+                    };
+                    if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudio.schema.json", rendering["data"])) {
+                        renderings.push(rendering);
+                    } else {
+                        console.error(ajv.errors);
+                    }
+                }
+                else if (hasSimple) {
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
                         "confidence": 50,
