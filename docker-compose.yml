@@ -26,14 +26,14 @@ services:
             context: ./services/espnet-tts
             dockerfile: Dockerfile
         image: "espnet-tts:latest"
-        environment:
-            - TORCH_DEVICE=cuda
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                    - driver: nvidia
-                      capabilities: ["gpu", "utility", "compute"]
+        #        environment:
+        #            - TORCH_DEVICE=cuda
+        #        deploy:
+        #            resources:
+        #                reservations:
+        #                    devices:
+        #                    - driver: nvidia
+        #                      capabilities: ["gpu", "utility", "compute"]
     hello-preprocessor:
         build:
             context: ./preprocessors/hello-preprocessor
@@ -210,6 +210,17 @@ services:
             context: ./handlers/audio-haptic-segment-handler
             dockerfile: Dockerfile
         image: "audio-haptic-segment-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+    hello-haptics-handler:
+        build:
+            context: ./handlers/hello-haptics-handler
+            dockerfile: Dockerfile
+        image: "hello-haptics-handler:latest"
         env_file:
             - ./config/express-common.env
         labels:

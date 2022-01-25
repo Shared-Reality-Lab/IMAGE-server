@@ -35,6 +35,8 @@ import segmentAudioHapticsJSON from "./segmentaudiohapticscombined.schema.json";
 
 import * as utils from "./utils";
 
+// let audioInfo: {audioFile:string, audioInfo:any}[];
+const audioInfo:any = [];
 const ajv = new Ajv({
     "schemas": [ querySchemaJSON, 
         handlerResponseJSON, 
@@ -101,10 +103,11 @@ app.post("/handler", async (req, res) => {
     // }
 
     //const hapticInfo: any = [];//: ({ centroids: number[]; coordinates: number[]; }[] | { text: string; centroids: number[]; coords: number[]; }[])[] = []; //: { centroids: number[]; coordinates: number[]; }[] = [];
-    const hapticInfo = [];
+    // const hapticInfo = [];
     const hapticObjInfo = [];
     const hapticSegInfo = [];
-    let audioInfo;
+    
+
 
     // *******************************************************
     // Check that we have at least one segment
@@ -124,18 +127,18 @@ app.post("/handler", async (req, res) => {
             const center: number[] = segment["centroid"];
             const data = {
                 "centroid": center,
-                "coordinates": contourPoints 
+                "contourPoints": contourPoints 
             }
             hapticSegInfo.push(data);
         }
 
         // Array of arrays for semantic info
-        hapticInfo.push(hapticSegInfo);
+        // hapticInfo.push({"semSeg":hapticSegInfo});
 
         // *******************************************************
         // Call TTS service for segment info
         // *******************************************************
-        // let ttsResponse;
+        // let ttsResponse;  
         // try {
         //     ttsResponse = await getTTS(ttsText);
         // } catch (e) {
@@ -199,9 +202,14 @@ app.post("/handler", async (req, res) => {
             "ttsFileName": "",
         };
 
-        pushAudioInfo(ttsResponse, scData, audioInfo);
+        // const audiostuff = pushAudioInfo(ttsResponse, scData, audioInfo);
+        // console.log("audioInfo before function call:", audioInfo);
+         await pushAudioInfo(ttsResponse, scData, audioInfo)
+        // console.log("this is audio Info after function call:",audioInfo);
+        // console.log(audiostuff);
     } else {
         console.warn("No segments were detected, skipping to objection detection.");
+        // console.log(audioInfo);
     }
 
     // *******************************************************
@@ -221,7 +229,7 @@ app.post("/handler", async (req, res) => {
             }
             hapticObjInfo.push(data)
         }
-        hapticInfo.push(hapticObjInfo);
+        // hapticInfo.push({"objDet": hapticObjInfo});
 
         // *******************************************************
         // TTS for object detection
@@ -256,13 +264,14 @@ app.post("/handler", async (req, res) => {
         const staticSegments = [ttsIntro, "with", "and"];
         const ttsSegments = Array.from(staticSegments);
         const groupData = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
-        for (const object of objects["objects"]) {
+      
+        for (const object of objects) {
             const articled = Articles.articlize(object["type"].trim());
             ttsSegments.push(`${articled}`);
         }
         for (const group of groupData["grouped"]) {
             const exId = group["IDs"][0];
-            const exObjs = objects["objects"].filter((obj: Record<string, unknown>) => {
+            const exObjs = objects.filter((obj: Record<string, unknown>) => {
                 return obj["ID"] == exId;
             });
             const sType = (exObjs.length > 0) ? (exObjs[0]["type"]) : "object";
@@ -320,13 +329,14 @@ app.post("/handler", async (req, res) => {
                 "intro": intro,
                 "joining": joining
             },
-            "objects": objects["objects"],
+            "objects": objects,
             "groups": groupData["grouped"],
             "ordering": "leftToRight",
             "ttsFileName": ""
         };
 
         let durIdx = staticSegments.length;
+      
         for (const object of scData["objects"]) {
             object["audio"] = {
                 "offset": runningOffset,
@@ -343,7 +353,8 @@ app.post("/handler", async (req, res) => {
             runningOffset += durations[durIdx];
             durIdx += 1;
         }
-        pushAudioInfo(ttsResponse, scData, audioInfo);
+        await pushAudioInfo(ttsResponse, scData, audioInfo);
+        // console.log("this is audioInfo again:", audioInfo);
     } else {
         console.warn("No objects were detected, so we can't do anything!");
     }
@@ -351,27 +362,36 @@ app.post("/handler", async (req, res) => {
     //TODO: require image?
     const image = req.body.image;
     const r = {
-         "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudioHaptics",
+         "type_id": "ca.mcgill.a11y.image.renderer.segmentAudioHaptics", //segmentAudioHapticsJSON,
         "confidence": 50, // TODO magic number
         "description": "Navigable segment sonifications and tracing detected in the image.",
         "data": {
             "image": image,
-            "audio": audioInfo,
-            "haptic": hapticInfo
+            "audioInfo": audioInfo,
+            "hapticInfo": {
+                "semSeg": hapticSegInfo, 
+                "objDet" : hapticObjInfo
+            }
+
+             
         }       
     };
 
     const renderings: Record<string, unknown>[] = [];
-
-    if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudiohaptics.schema.json", r["data"])) {
+    console.log("this is r:");
+    // console.log(r);
+    console.log(r["data"]["hapticInfo"]["semSeg"][0]["contourPoints"]);
+    if (ajv.validate(segmentAudioHapticsJSON, r["data"])) {  //"https://image.a11y.mcgill.ca/renderers/segmentaudiohaptics.schema.json"
         renderings.push(r);
     } else {
+        console.log("failed to validate audiohaptic schema");
         console.error(ajv.errors);
         throw ajv.errors;
     }
 
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
     response["renderings"] = renderings;
+    console.log("the response is:", response);
 
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);
@@ -396,7 +416,9 @@ async function getTTS(ttsText: string[]) {
     }).then(response => response.json() as Promise<{ audio: string, durations: number[] }>);
 }
 /** Pushes SuperCollider audio data to passed audioArray. */
-async function pushAudioInfo(ttsResponse: any, scData: any, audioArray: any) {
+async function pushAudioInfo(ttsResponse: any, scData: any, audioArray:any) {
+
+    console.log("entering pushaudioInfo")
 
     let inFile: string, outFile: string, jsonFile: string;
     //const renderings: Record<string, unknown>[] = [];
@@ -405,6 +427,7 @@ async function pushAudioInfo(ttsResponse: any, scData: any, audioArray: any) {
     await fetch(dataURI).then(resp => {
         return resp.arrayBuffer();
     }).then(async (buf) => {
+        console.log("1");
         // Write files for SuperCollider
         inFile = filePrefix + Math.round(Date.now()) + ".wav";
         await fs.writeFile(inFile, Buffer.from(buf));
@@ -423,9 +446,11 @@ async function pushAudioInfo(ttsResponse: any, scData: any, audioArray: any) {
         });
 
         // Send response and receive reply or timeout
+
         return Promise.race<{"name": string, "offset": number, "duration": number}[]>([
             new Promise<{"name": string, "offset": number, "duration": number}[]>((resolve, reject) => {
                 try {
+                    console.log("trying in 1");
                     // Handle response from SuperCollider
                     oscPort.on("message", (oscMsg: osc.OscMessage) => {
                         const arg = oscMsg["args"] as osc.Argument[];
@@ -450,6 +475,7 @@ async function pushAudioInfo(ttsResponse: any, scData: any, audioArray: any) {
                     });
                     // Send command when able
                     oscPort.on("ready", () => {
+                        console.log("ready");
                         oscPort.send({
                             "address": "/render/semanticSegmentation",
                             "args": [
@@ -458,6 +484,7 @@ async function pushAudioInfo(ttsResponse: any, scData: any, audioArray: any) {
                             ]
                         });
                     });
+                    console.log('opening oscPort');
                     oscPort.open();
                 } catch (e) {
                     console.error(e);
@@ -468,6 +495,7 @@ async function pushAudioInfo(ttsResponse: any, scData: any, audioArray: any) {
             new Promise<{"name": string, "offset": number, "duration": number}[]>((resolve, reject) => {
                 setTimeout(() => {
                     try {
+                        console.log("closing oscPort");
                         oscPort.close();
                     } catch (_) { /* noop */ }
                     reject("Timeout");
@@ -475,16 +503,19 @@ async function pushAudioInfo(ttsResponse: any, scData: any, audioArray: any) {
             })
         ]);
     }).then(async (array) => {
+        console.log("2");
         const buffer = await fs.readFile(outFile);
         // TODO detect MIME type from file
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
-
+        // console.log("this is array:", array);
         if (array.length > 0) {
             const data = {
                 "audioFile": dataURL,
                 "audioInfo": array
             }
-            audioArray.push(data);
+            // console.log("this is data from audioInfo:",data);
+            // audioArray.push(data);
+            audioInfo.push(data);
         }
         }).catch(err => {
             console.error(err);
