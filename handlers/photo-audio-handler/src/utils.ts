@@ -76,7 +76,9 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
         return newSeg as TTSSegment;
     }));
     data[data.length-1]["value"] = data[data.length - 1]["value"].replace(",", ".");
-    data[data.length-1]["value"] = "and " + data[data.length-1]["value"];
+    if (data.length > 2) {
+        data[data.length-1]["value"] = "and " + data[data.length-1]["value"];
+    }
     return data;
 }
 
@@ -107,7 +109,9 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[]
         }
     }
     objects[objects.length-1]["value"] = objects[objects.length - 1]["value"].replace(",", ".");
-    objects[objects.length-1]["value"] = "and " + objects[objects.length-1]["value"];
+    if (objects.length > 2) {
+        objects[objects.length-1]["value"] = "and " + objects[objects.length-1]["value"];
+    }
     return objects;
 }
 
