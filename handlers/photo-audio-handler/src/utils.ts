@@ -186,9 +186,9 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
     ]);
 }
 
-export function renderingTitle(semseg: Record<string, unknown>, objDet: Record<string, unknown>, objGroup: Record<string, unknown>): string {
-    const hasSemseg = semseg !== undefined;
-    const hasObj = (objDet !== undefined) && (objGroup !== undefined);
+export function renderingTitle(semseg: { "segments": Record<string, unknown>[] }, objDet: ObjDet, objGroup: ObjGroup): string {
+    const hasSemseg = (semseg !== undefined) && (semseg["segments"].length > 0);
+    const hasObj = (objDet !== undefined) && (objGroup !== undefined) && (objDet["objects"].length > 0);
     if (hasSemseg && hasObj) {
         return "Regions, things, and people";
     }
