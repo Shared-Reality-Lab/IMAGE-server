@@ -1,4 +1,4 @@
-name: Segment Handler
+name: Photo Audio Handler
 on:
   push:
     branches: [ main ]
