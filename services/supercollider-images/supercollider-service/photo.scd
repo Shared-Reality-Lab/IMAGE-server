@@ -59,7 +59,7 @@ renderPhoto = { |json, ttsData, outPath, addr|
                 segmentInfo = segmentInfo.add(timing - initialTiming);
             },
             \object, {
-                var duration = (audio.at("duration").asInteger / ttsData.sampleRate), objects = item.at("objects"), initialTiming=timing;
+                var duration = (audio.at("duration").asInteger / ttsData.sampleRate), objects = item.at("objects"), initialTiming=timing, lastIndex=(-10), minDiff=0.1, totalDur=2;
                 // Play TTS label (spatialized) and ping(s)
                 "Object".postln;
                 score.add([
@@ -76,18 +76,22 @@ renderPhoto = { |json, ttsData, outPath, addr|
                     xa < xb
                 });
                 objects.do({ |point|
-                    var totalDur = 2;
                     if(point.at("centroid").notNil,
                         {
-                            var dur, theta, phi, volume;
+                            var dur, theta, phi, volume, start;
                             # theta, phi = IMAGE.mapCoords(
                                 point.at("centroid").at(0).asFloat,
                                 point.at("centroid").at(1).asFloat
                             );
                             dur = point.at("centroid").at(0).asFloat.linlin(0.0, 1.0, 0.0, totalDur);
+                            if(timing + dur - lastIndex > minDiff,
+                                { start = timing + dur; },
+                                { start = lastIndex + minDiff; totalDur = totalDur + minDiff; }
+                            );
+                            lastIndex = start;
                             volume = point.at("area").asFloat.linlin(0, 0.25, -5, 0);
                             score.add([
-                                (timing + dur),
+                                start,
                                 [\s_new, (\pingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
                                     \gain, baseGain * volume.dbamp,
                                     \room, 0.6,
@@ -102,7 +106,7 @@ renderPhoto = { |json, ttsData, outPath, addr|
                         { "No centroid on item :(".postln; }
                     );
                 });
-                timing = timing + 2.25;
+                timing = timing + totalDur + 0.25;
 
                 if(item.at("label").notNil,
                     {
@@ -116,7 +120,7 @@ renderPhoto = { |json, ttsData, outPath, addr|
                 segmentInfo = segmentInfo.add(timing - initialTiming);
             },
             \segment, {
-                var duration = (audio.at("duration").asInteger / ttsData.sampleRate), coord = item.at("coord"), area = item.at("area").asFloat, maxTime=25, totalTime=maxTime*area, pingDur=0.001, midinote, initialTiming=timing;
+                var duration = (audio.at("duration").asInteger / ttsData.sampleRate), coord = item.at("coord"), area = item.at("area").asFloat, maxTime=25, totalTime=maxTime*area, pingDur=0.0005, midinote, initialTiming=timing;
                 // TTS and then segment outline
                 "segment".postln;
                 score.add([
