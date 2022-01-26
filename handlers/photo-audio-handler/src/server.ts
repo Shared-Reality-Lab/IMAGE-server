@@ -68,6 +68,12 @@ app.post("/handler", async (req, res) => {
         res.json(response);
         return;
     }
+    else if (semseg["segments"].length === 0 && objDet["objects"].length === 0) {
+        console.debug("No segments or objects detected! Can't render.");
+        const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+        res.json(response);
+        return;
+    }
 
     // Check renderers
     const hasText = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.Text");
@@ -84,15 +90,15 @@ app.post("/handler", async (req, res) => {
     // This is variable depending on which preprocessor data is available.
     const ttsData: utils.TTSSegment[] = [];
     ttsData.push({"value": utils.generateIntro(secondCat), "type": "text"});
-    if (semseg) {
+    if (semseg && semseg["segments"].length > 0) {
         // Use all segments returned for now.
         // Filtering may be helpful later.
         ttsData.push(...utils.generateSemSeg(semseg));
-        if (objDet && objGroup) {
+        if (objDet && objGroup && objDet["objects"].length > 0) {
             ttsData.push({"value": "It also", "type": "text"});
         }
     }
-    if (objDet && objGroup) {
+    if (objDet && objGroup && objDet["objects"].length > 0) {
         ttsData.push(...utils.generateObjDet(objDet, objGroup));
     }
 
