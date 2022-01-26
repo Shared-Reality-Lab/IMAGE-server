@@ -131,7 +131,7 @@ def run_segmentation(url,
         if 'out of memory' in str(e):
             print("OOM detected")
             torch.cuda.empty_cache()
-            return jsonify("OOM detected"),500
+            return jsonify("OOM detected"), 500
     singleton_batch = {'img_data': img_data[None]}
     output_size = img_data.shape[1:]
     with torch.no_grad():
@@ -192,7 +192,7 @@ def segment():
         if 'out of memory' in str(e):
             print("OOM detected")
             torch.cuda.empty_cache()
-            return jsonify("OOM detected"),500
+            return jsonify("OOM detected"), 500
     pil_to_tensor = torchvision.transforms.Compose([
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize(
