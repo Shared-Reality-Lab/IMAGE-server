@@ -2,8 +2,8 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://image.a11y.mcgill.ca/preprocessors/ocr.schema.json",
     "type": "object",
-    "title": "Autour Maps Preprocessor",
-    "description": "Information on the contents of a place on a map",
+    "title": "OCR preprocessor",
+    "description": "Retreives the lines of text and their corresponding bounding boxes found in an image",
     "properties": {
         "lines": {
             "type": "array",
@@ -20,7 +20,7 @@
                     "bounding_box": {
                         "type": "array",
                         "title": "Bounding box",
-                        "description": "The bounding box of the text in pixels",
+                        "description": "The bounding box of the text in pixels: [X-TL, Y-TL, X-TR, Y-TR, X-BR, Y-BR, X-BL, Y-BL]",
                         "minItems": 8,
                         "maxItems": 8,
                         "items": {
