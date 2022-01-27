@@ -68,7 +68,7 @@ def get_ocr_text():
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
     # Get OCR text response
-    ocr_result = get_ocr_text(content['image'])
+    ocr_result = analyze_image(content['image'])
     
     if ocr_result is None:
         return jsonify("Could not retreive Azure results"), 400
@@ -101,7 +101,7 @@ def get_ocr_text():
 
     return response
 
-def get_ocr_text(source):
+def analyze_image(source):
     """
     Gets OCR text data from Azure API
     """
@@ -123,12 +123,17 @@ def get_ocr_text(source):
     # Grab the ID from the URL
     operation_id = read_operation_location.split("/")[-1]
 
-    # Call the "GET" API and wait for it to retrieve the results 
-    # Might get stuck here - need a break condition of some sort
+    # Call the "GET" API and wait for it to retrieve the results barring timeout
+    
+    start_time = time.time()
+
     while True:
         read_result = computervision_client.get_read_result(operation_id)
         if read_result.status not in ['notStarted', 'running']:
             break
+        if time.time() - start_time > 3:
+            logging.error("Azure request timed out")
+            return None
         time.sleep(1)
 
     # Check for success
