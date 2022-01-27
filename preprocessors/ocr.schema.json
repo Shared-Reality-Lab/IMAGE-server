@@ -32,5 +32,5 @@
             }
         }
     },
-    "required": ["lat", "lon", "api_request", "places"]
+    "required": ["lines"]
 }
