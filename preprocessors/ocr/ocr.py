@@ -76,8 +76,6 @@ def get_ocr_text():
     name = 'ca.mcgill.a11y.image.preprocessor.ocr'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
-    logging.error(ocr_result)
-    data = json.dumps(ocr_result)
 
     # try:
     #     validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
@@ -90,7 +88,9 @@ def get_ocr_text():
         'request_uuid': request_uuid,
         'timestamp': timestamp,
         'name': name,
-        'data': data
+        'data': {
+            'ocr_lines': ocr_result
+        }
     }
 
     try:
@@ -134,7 +134,15 @@ def get_ocr_text(source):
 
     # Check for success
     if read_result.status == OperationStatusCodes.succeeded:
-        return read_result.analyze_result.read_results
+        ocr_results = []
+        for analyzed_result in read_result.analyze_result.read_results:
+            for line in analyzed_result.lines:
+                line_data = {
+                    "text": line.text,
+                    "bounding_box": line.bounding_box
+                }
+                ocr_results.append(line_data)
+        return ocr_results
     else:
         logging.error("OCR text: {}".format(read_result.status))
         return None
