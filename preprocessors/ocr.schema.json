@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://image.a11y.mcgill.ca/preprocessors/autour.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/ocr.schema.json",
     "type": "object",
     "title": "Autour Maps Preprocessor",
     "description": "Information on the contents of a place on a map",
