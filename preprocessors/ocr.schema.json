@@ -1,0 +1,36 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/autour.schema.json",
+    "type": "object",
+    "title": "Autour Maps Preprocessor",
+    "description": "Information on the contents of a place on a map",
+    "properties": {
+        "lines": {
+            "type": "array",
+            "title": "Lines",
+            "description": "The lines of text found in an image",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "title": "Text",
+                        "description": "Text contained within the line"
+                    },
+                    "bounding_box": {
+                        "type": "array",
+                        "title": "Bounding box",
+                        "description": "The bounding box of the text in pixels",
+                        "minItems": 8,
+                        "maxItems": 8,
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "required": ["text", "bounding_box"]
+            }
+        }
+    },
+    "required": ["lat", "lon", "api_request", "places"]
+}
