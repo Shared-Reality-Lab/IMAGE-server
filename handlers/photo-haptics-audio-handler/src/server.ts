@@ -136,24 +136,24 @@ app.post("/handler", async (req, res) => {
     const renderingTitle = utils.renderingTitle(preSemSeg, preObjDet, preGroupData);
 
     // Construct text (if requested)
-    if (hasText) {
-        const textString = ttsData.map(x => x["value"]).join(" ");
-        const rendering = {
-            "type_id": "ca.mcgill.a11y.image.renderer.Text",
-            "confidence": 50,
-            "description": renderingTitle + " (text only)",
-            "data": { "text": textString }
-        };
-        if (ajv.validate("https://image.a11y.mcgill.ca/renderers/text.schema.json", rendering["data"])) {
-            renderings.push(rendering);
-        } else {
-            console.error("Failed to generate a valid text rendering!");
-            console.error(ajv.errors);
-            console.warn("Trying to continue...");
-        }
-    } else {
-        console.debug("Skipped text rendering.");
-    }
+    // if (hasText) {
+    //     const textString = ttsData.map(x => x["value"]).join(" ");
+    //     const rendering = {
+    //         "type_id": "ca.mcgill.a11y.image.renderer.Text",
+    //         "confidence": 50,
+    //         "description": renderingTitle + " (text only)",
+    //         "data": { "text": textString }
+    //     };
+    //     if (ajv.validate("https://image.a11y.mcgill.ca/renderers/text.schema.json", rendering["data"])) {
+    //         renderings.push(rendering);
+    //     } else {
+    //         console.error("Failed to generate a valid text rendering!");
+    //         console.error(ajv.errors);
+    //         console.warn("Trying to continue...");
+    //     }
+    // } else {
+    //     console.debug("Skipped text rendering.");
+    // }
 
     // *******************************************************
     // Haptic seg and obj coordinate data
@@ -247,7 +247,7 @@ app.post("/handler", async (req, res) => {
                             }   
                         }
                     };
-                    if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudio.schema.json", rendering["data"])) {
+                    if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudiohaptics.schema.json", rendering["data"])) {
                         renderings.push(rendering);
                     } else {
                         console.error(ajv.errors);

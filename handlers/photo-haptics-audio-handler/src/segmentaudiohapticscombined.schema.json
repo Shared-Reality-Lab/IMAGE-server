@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://image.a11y.mcgill.ca/renderers/segmentaudiohaptic.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/renderers/segmentaudiohaptics.schema.json",
     "title": "Segment Audio Haptic Renderer",
     "type": "object",
     "description": "Data for basic audio selection renderer ca.mcgill.a11y.image.renderer.SegmentAudioHaptic.",
