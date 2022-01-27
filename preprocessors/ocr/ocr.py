@@ -21,7 +21,8 @@ import logging
 import jsonschema
 import requests
 import os
-import cv2
+import io
+import base64
 from flask import Flask, request, jsonify
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
@@ -75,7 +76,8 @@ def get_ocr_text():
     name = 'ca.mcgill.a11y.image.preprocessor.ocr'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
-    data = ocr_result.json()
+    logging.error(ocr_result)
+    data = json.dumps(ocr_result)
 
     # try:
     #     validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
@@ -105,21 +107,25 @@ def get_ocr_text(source):
     Gets OCR text data from Azure API
     """
 
-    #Get image binary
-    img = None
+    # Convert URI to binary stream
+
+    image_b64 = source.split(",")[1]
+    binary = base64.b64decode(image_b64)
+    stream = io.BytesIO(binary)
 
     subscription_key = os.environ["AZURE_API_KEY"]
     endpoint = "https://image-cv.cognitiveservices.azure.com/"
     
     computervision_client = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
     
-    read_response = computervision_client.read(img,  raw=True)
+    read_response = computervision_client.read_in_stream(stream,  raw=True)
     
     read_operation_location = read_response.headers["Operation-Location"]
     # Grab the ID from the URL
     operation_id = read_operation_location.split("/")[-1]
 
     # Call the "GET" API and wait for it to retrieve the results 
+    # Might get stuck here - need a break condition of some sort
     while True:
         read_result = computervision_client.get_read_result(operation_id)
         if read_result.status not in ['notStarted', 'running']:
@@ -128,8 +134,7 @@ def get_ocr_text(source):
 
     # Check for success
     if read_result.status == OperationStatusCodes.succeeded:
-        logging.info("OCR text: {}".format(read_result.analyze_result.read_results[0].text))
-        return read_result
+        return read_result.analyze_result.read_results
     else:
         logging.error("OCR text: {}".format(read_result.status))
         return None
