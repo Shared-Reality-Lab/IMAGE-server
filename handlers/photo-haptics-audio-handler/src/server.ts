@@ -47,7 +47,7 @@ const ajv = new Ajv({
 const app = express();
 const port = 80;
 const scPort = 57120;
-const filePrefix = "/tmp/sc-store/photo-audio-haptic-handler-";
+const filePrefix = "/tmp/sc-store/photo-audio-haptics-handler-";
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
@@ -87,20 +87,20 @@ app.post("/handler", async (req, res) => {
     // *******************************************************
     // Check for renderer availability
     // *******************************************************
-    // const hasText = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.Text");
-    // const hasSegmentAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SegmentAudioHaptics");
-    // if (!hasSegmentAudioHaptic && !hasText) {
-    //     console.warn("Segment audio-haptic renderers not supported!");
-    //     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-    //     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
-    //         res.json(response);
-    //     } else {
-    //         console.error("Failed to generate a valid empty response!");
-    //         console.error(ajv.errors);
-    //         res.status(500).json(ajv.errors);
-    //     }
-    //     return;
-    // }
+    const hasText = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.Text");
+    const hasAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SegmentAudioHaptics");
+    if (!hasAudioHaptic && !hasText) {
+        console.warn("Segment audio-haptic renderers not supported!");
+        const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
+            res.json(response);
+        } else {
+            console.error("Failed to generate a valid empty response!");
+            console.error(ajv.errors);
+            res.status(500).json(ajv.errors);
+        }
+        return;
+    }
 
     const hapticObjInfo: { centroid: number[]; coordinates: number[]; }[] = [];
     const hapticSegInfo: { centroid: number[]; contourPoints: number[]; }[] = [];
@@ -194,7 +194,7 @@ app.post("/handler", async (req, res) => {
     //TODO: require image?
     const image = req.body.image;
 
-    if (hasSegment) {
+    if (hasAudioHaptic) {
         try {
             // Do TTS
             const ttsResponse = await utils.getTTS(ttsData.map(x => x["value"]));
@@ -232,7 +232,7 @@ app.post("/handler", async (req, res) => {
                 const buffer = await fs.readFile(outFile);
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
-                if (hasSegment && segArray.length > 0) {
+                if (hasAudioHaptic && segArray.length > 0) {
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
                         "confidence": 50,

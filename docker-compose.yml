@@ -44,16 +44,16 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 8080
-    autour-preprocessor:
-        build:
-            context: ./preprocessors/autour
-            dockerfile: Dockerfile
-        image: "autour:latest"
-        env_file:
-            - ./config/maps.env
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 2
-            ca.mcgill.a11y.image.port: 5000
+    # autour-preprocessor:
+    #     build:
+    #         context: ./preprocessors/autour
+    #         dockerfile: Dockerfile
+    #     image: "autour:latest"
+    #     env_file:
+    #         - ./config/maps.env
+    #     labels:
+    #         ca.mcgill.a11y.image.preprocessor: 2
+    #         ca.mcgill.a11y.image.port: 5000
     hello-handler:
         build:
             context: ./handlers/hello-handler
@@ -204,6 +204,17 @@ services:
             - ./config/express-common.env
         labels:
             ca.mcgill.a11y.image.handler: enable
+    photo-haptics-audio-handler:
+        build:
+            context: ./handlers/photo-haptics-audio-handler
+            dockerfile: Dockerfile
+        image: "photo-haptics-audio-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
 
 volumes:
     sc-store:

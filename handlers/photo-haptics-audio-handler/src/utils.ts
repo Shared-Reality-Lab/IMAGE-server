@@ -14,9 +14,10 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
  */
-import osc from "osc";
 import Articles from "articles";
 import pluralize from "pluralize";
+import fetch from "node-fetch";
+import osc from "osc";
 
 export type TTSSegment = {
     value: string;
@@ -194,3 +195,4 @@ export function renderingTitle(semseg: Record<string, unknown>, objDet: Record<s
     else {
         return "Things and people";
     }
+}
