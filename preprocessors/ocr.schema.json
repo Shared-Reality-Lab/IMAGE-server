@@ -24,7 +24,8 @@
                         "minItems": 8,
                         "maxItems": 8,
                         "items": {
-                            "type": "integer"
+                            "type": "integer",
+                            "minimum": 0
                         }
                     }
                 },
