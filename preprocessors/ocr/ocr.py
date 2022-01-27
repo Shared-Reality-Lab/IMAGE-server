@@ -19,14 +19,12 @@ import json
 import time
 import logging
 import jsonschema
-import requests
 import os
 import io
 import base64
 from flask import Flask, request, jsonify
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
-from azure.cognitiveservices.vision.computervision.models import VisualFeatureTypes
 from msrest.authentication import CognitiveServicesCredentials
 
 app = Flask(__name__)
