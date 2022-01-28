@@ -30,6 +30,12 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+          labels: |
+            org.opencontainers.image.title=SuperCollider
+            org.opencontainers.image.description=An unofficial containerization of SuperCollider
+            maintainer=IMAGE Project <image@cim.mcgill.ca>
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
