@@ -21,3 +21,4 @@ IMAGE.storeSynthDefs;
 "segmentation.scd".load;
 "charts.scd".load;
 "autour.scd".load;
+"photo.scd".load;
