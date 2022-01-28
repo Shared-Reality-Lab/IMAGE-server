@@ -1,4 +1,4 @@
-FROM supercollider:latest
+FROM ghcr.io/shared-reality-lab/supercollider:latest
 ARG VERSION=Version-3.11.1
 
 USER root

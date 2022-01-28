@@ -1,0 +1,41 @@
+name: Supercollider Extra
+on:
+  push:
+    branches: [ main ]
+    paths: [ "services/supercollider-images/supercollider-extra/**" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: shared-reality-lab/supercollider
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Get SC plugin version
+        run: echo "sc3_version=$(grep 'ARG VERSION' ./services/supercollider-images/supercollider-extra/Dockerfile | awk -F- '{ print $2 }')" >> $GITHUB_ENV
+      - name: Log into ghcr
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./services/supercollider-images/supercollider-extra/
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:extra-latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:extra-${{ env.sc3_version }}
+          labels: ${{ steps.meta.outputs.labels }}
