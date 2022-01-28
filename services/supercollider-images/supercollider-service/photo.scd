@@ -120,7 +120,7 @@ renderPhoto = { |json, ttsData, outPath, addr|
                 segmentInfo = segmentInfo.add(timing - initialTiming);
             },
             \segment, {
-                var duration = (audio.at("duration").asInteger / ttsData.sampleRate), coord = item.at("coord"), area = item.at("area").asFloat, maxTime=25, totalTime=maxTime*area, pingDur=0.0005, midinote, initialTiming=timing;
+                var duration = (audio.at("duration").asInteger / ttsData.sampleRate), coord = item.at("coord"), area = item.at("area").asFloat, maxTime=25, totalTime=maxTime*area, pingDur=0.01, midinote, initialTiming=timing;
                 // TTS and then segment outline
                 "segment".postln;
                 score.add([
