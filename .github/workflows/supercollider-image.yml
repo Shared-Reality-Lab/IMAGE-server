@@ -35,5 +35,7 @@ jobs:
         with:
           context: ./services/supercollider-images/supercollider/
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            sc-3.12.2
           labels: ${{ steps.meta.outputs.labels }}
