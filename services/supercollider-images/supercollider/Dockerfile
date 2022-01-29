@@ -1,5 +1,8 @@
 FROM fedora:35
 ARG VERSION=Version-3.12.2
+LABEL "org.opencontainers.image.title"="SuperCollider" \
+      "org.opencontainers.image.description"="An unofficial containerization of SuperCollider" \
+      "org.opencontainers.image.authors"="IMAGE Project <image@cim.mcgill.ca>"
 
 RUN dnf install -q -y pipewire git cmake gcc-c++ pipewire-jack-audio-connection-kit-devel fftw-devel libsndfile-devel avahi-devel readline-devel libatomic && \
     rm -rf /var/cache/dnf
