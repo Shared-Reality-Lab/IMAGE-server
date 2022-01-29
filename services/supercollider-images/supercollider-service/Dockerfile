@@ -1,8 +1,4 @@
 FROM ghcr.io/shared-reality-lab/supercollider:extra-3.11.1
-LABEL "org.opencontainers.image.title"="SuperCollider IMAGE Service" \
-      "org.opencontainers.image.description"="A SuperCollider Service for IMAGE" \
-      "org.opencontainers.image.authors"="IMAGE Project <image@cim.mcgill.ca>" \
-      "org.opencontainers.image.licenses"="AGPL-3.0-or-later"
 
 USER root
 

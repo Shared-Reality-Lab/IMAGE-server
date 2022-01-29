@@ -1,8 +1,5 @@
 FROM ghcr.io/shared-reality-lab/supercollider:latest
 ARG VERSION=Version-3.11.1
-LABEL "org.opencontainers.image.title"="SuperCollider Extra" \
-      "org.opencontainers.image.description"="SuperCollider built with plugins and bundled with resources for HOAs" \
-      "org.opencontainers.image.authors"="IMAGE Project <image@cim.mcgill.ca>"
 
 USER root
 
