@@ -4,42 +4,7 @@
   "type": "object",
   "title": "Segmentation Data",
   "description": "JSON containing pixel coordinates of different segments in an image",
-  "definitions": {
-    "normCoord": {
-      "description": "A pair of normalized coordinates.",
-      "type": "array",
-      "items": {
-        "type": "number",
-        "minimum": 0,
-        "maximum": 1
-      },
-      "minItems": 2,
-      "maxItems": 2
-    },
-    "contour": {
-      "type": "object",
-      "description": "A single contour of a segment as detected. Each contour is a separate region.",
-      "properties": {
-        "coordinates": {
-          "description": "The normalized coordinates forming the contour as returned by OpenCV.",
-          "type": "array",
-          "items": { "$ref": "#/definitions/normCoord" }
-        },
-        "centroid": {
-          "allOf": [
-            { "$ref": "#/definitions/normCoord" },
-            { "description": "The center of the contour with normalized coordinates." }
-          ]
-        },
-        "area": {
-          "description": "The area of the image taken by this contour",
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        }
-      }
-    }
-  },
+
   "properties": {
     "segments": {
       "type": "array",
@@ -55,11 +20,58 @@
           "contours": {
             "description": "The separate contours making up the segment.",
             "type": "array",
-            "items": { "$ref": "#/definitions/contour" }
+            "items": { 
+              "contour": {
+              "type": "object",
+              "description": "A single contour of a segment as detected. Each contour is a separate region.",
+              "properties": {
+                "coordinates": {
+                  "description": "The normalized coordinates forming the contour as returned by OpenCV.",
+                  "type": "array",
+                  "items": { "description": "A pair of normalized coordinates.",
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "minItems": 2,
+                    "maxItems": 2 }
+                },
+                "centroid": {
+                  "allOf": [
+                    { "description": "A pair of normalized coordinates.",
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "minItems": 2,
+                      "maxItems": 2 },
+                    { "description": "The center of the contour with normalized coordinates." }
+                  ]
+                },
+                "area": {
+                  "description": "The area of the image taken by this contour",
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              } }
+            }
           },
           "centroid": {
             "allOf": [
-              { "$ref": "#/definitions/normCoord" },
+              { "description": "A pair of normalized coordinates.",
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "minItems": 2,
+                "maxItems": 2},
               { "description": "The overall centroid of the segment with normalized coordinates." }
             ]
           },
