@@ -35,6 +35,7 @@ jobs:
           labels: |
             org.opencontainers.image.title=SuperCollider
             org.opencontainers.image.description=An unofficial containerization of SuperCollider
+            org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
             maintainer=IMAGE Project <image@cim.mcgill.ca>
       - name: Build and push
         uses: docker/build-push-action@v2

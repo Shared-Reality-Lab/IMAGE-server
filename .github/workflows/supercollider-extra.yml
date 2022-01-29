@@ -33,8 +33,9 @@ jobs:
           tags: |
             type=sha
           labels: |
-            org.opencontainers.image.title=SuperCollider-Extra
+            org.opencontainers.image.title=SuperCollider Extra
             org.opencontainers.image.description=SuperCollider built with plugins and including additional resources for higher-order ambisonics
+            org.opencontainers.authors=IMAGE Project<image@cim.mcgill.ca>
             maintainer=IMAGE Project <image@cim.mcgill.ca>
 
       - name: Build and push
