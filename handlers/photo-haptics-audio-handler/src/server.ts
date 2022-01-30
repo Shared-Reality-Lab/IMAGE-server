@@ -28,6 +28,7 @@ import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
 import descriptionJSON from "./schemas/services/supercollider/tts-description.schema.json";
 import segmentJSON from "./schemas/services/supercollider/tts-segment.schema.json";
 import rendererDefJSON from "./schemas/renderers/definitions.json";
+import textJSON from "./schemas/renderers/text.schema.json"
 import segmentAudioHapticsJSON from "./segmentaudiohapticscombined.schema.json";
 
 import * as utils from "./utils";
@@ -59,7 +60,7 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    const renderings = [];
+    const renderings:any = [];
 
     // *******************************************************
     // Check for preprocessor data
@@ -136,28 +137,42 @@ app.post("/handler", async (req, res) => {
     const renderingTitle = utils.renderingTitle(preSemSeg, preObjDet, preGroupData);
 
     // Construct text (if requested)
-    // if (hasText) {
-    //     const textString = ttsData.map(x => x["value"]).join(" ");
-    //     const rendering = {
-    //         "type_id": "ca.mcgill.a11y.image.renderer.Text",
-    //         "confidence": 50,
-    //         "description": renderingTitle + " (text only)",
-    //         "data": { "text": textString }
-    //     };
-    //     if (ajv.validate("https://image.a11y.mcgill.ca/renderers/text.schema.json", rendering["data"])) {
-    //         renderings.push(rendering);
-    //     } else {
-    //         console.error("Failed to generate a valid text rendering!");
-    //         console.error(ajv.errors);
-    //         console.warn("Trying to continue...");
-    //     }
-    // } else {
-    //     console.debug("Skipped text rendering.");
-    // }
+    if (hasText) {
+        const textString = ttsData.map(x => x["value"]).join(" ");
+        const rendering = {
+            "type_id": "ca.mcgill.a11y.image.renderer.Text",
+            "confidence": 50,
+            "description": renderingTitle + " (text only)",
+            "data": { "text": textString }
+        };
+        // console.log(rendering["data"]);
+        if (ajv.validate(textJSON, rendering["data"])) { //"https://image.a11y.mcgill.ca/renderers/text.schema.json"
+            renderings.push(rendering);
+            console.log("pushed text rendering!");
+        } else {
+            console.error("Failed to generate a valid text rendering!");
+            console.error(ajv.errors);
+            console.warn("Trying to continue...");
+        }
+    } else {
+        console.debug("Skipped text rendering.");
+    }
 
+    // for (const group of preGroupData["grouped"]) {
+    //     const objsByGroup = preObjDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"]));
+    //     for (const objGroup in objsByGroup) {
+    //         console.log(objGroup);
+    //         // for (const obj in objGroup) {
+    //         //     console.log(obj);
+    //         // }
+    //     }
+    // }
     // *******************************************************
     // Haptic seg and obj coordinate data
     // *******************************************************
+    const groupCentroidArray: Array<Array<number>> = [];
+    const groupCoordArray: Array<Array<number>> = [];
+
     const segments = preSemSeg["segments"];
     if (segments.length !== 0) {
         for (const segment of segments) {
@@ -177,6 +192,32 @@ app.post("/handler", async (req, res) => {
     const objects = preObjDet["objects"]
     if (objects.length !== 0) {
 
+        // const groupCentroidArray = [];
+        // const groupCoordArray = [];
+        for (const group of preGroupData["grouped"]) {
+            const objsByGroup = preObjDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"]));
+
+            const centroidArray = [];
+            const coordArray = [];
+             for (let i = 0; i < objsByGroup.length; i++) {
+               const centroid = objsByGroup[i]["centroid"]
+               const coords = objsByGroup[i]["dimensions"]
+               centroidArray.push(centroid)
+               coordArray.push(coords)
+             }
+             groupCentroidArray.push(centroidArray);
+             groupCoordArray.push(coordArray);
+            }
+        for (const idx of preGroupData["ungrouped"]) {
+            const obj = preObjDet["objects"].find((x: { "ID": number }) => x["ID"] === idx);
+            const centroid = obj["centroid"]
+            const coords = obj["dimensions"]         
+            groupCentroidArray.push(centroid);
+            groupCoordArray.push(coords);
+        }
+
+        console.log("first group centorid array: ", groupCentroidArray);
+
         for (const obj of objects) {
             const centroid: number[] = obj["centroid"]
             const dimensions: number[] = obj["dimensions"]
@@ -195,6 +236,7 @@ app.post("/handler", async (req, res) => {
     const image = req.body.image;
 
     if (hasAudioHaptic) {
+        console.log('has audio haptic');
         try {
             // Do TTS
             const ttsResponse = await utils.getTTS(ttsData.map(x => x["value"]));
@@ -204,6 +246,7 @@ app.post("/handler", async (req, res) => {
                     "offset": offset,
                     "duration": ttsResponse.durations[i]
                 };
+                //console.log(hapticSegInfo[i]);
                 offset += ttsResponse.durations[i];
             }
 
@@ -228,19 +271,58 @@ app.post("/handler", async (req, res) => {
 
                 console.log("Forming OSC...");
                 return utils.sendOSC(jsonFile, outFile, "supercollider", scPort);
-            }).then(async (segArray) => {
+            }).then(async (segArray:any) => {
                 const buffer = await fs.readFile(outFile);
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
-                if (hasAudioHaptic && segArray.length > 0) {
+                if (hasAudioHaptic && segArray.length > 0 
+                    && segArray.length > hapticSegInfo.length) {
+                        const s = [...segArray]
+
+                    for (let i = 1; i <= hapticSegInfo.length; i++) {
+
+                        s[i] = {...s[i], 
+                            centroid: [hapticSegInfo?.[i - 1]?.['centroid']],
+                            contourPoints: [hapticSegInfo?.[i - 1]?.['contourPoints']],
+                            // size: 1 
+                        };    
+                    }
+                    const j = 1 + hapticSegInfo.length + 1;
+                    // const s = [...segArray]
+                    // for (let i = 1; i <= hapticSegInfo.length; i++) {
+                    //     s[i] = {...s[i], 
+                    //         centroid: [hapticSegInfo?.[i - 1]?.['centroid']],
+                    //         contourPoints: [hapticSegInfo?.[i - 1]?.['contourPoints']],
+                    //         size: 1 };    
+                    // } 
+                    console.log("group centroid array:" ,groupCentroidArray);
+                    for (let i = 0; i < hapticObjInfo.length; i++) {
+                        s[i + j] = {...s[i + j], centroid: groupCentroidArray[i],
+                        contourPoints: groupCoordArray[i],
+                        // size: 1
+                    };
+                    }
+                    // console.log("object",hapticObjInfo);
+                    // console.log("segment", hapticSegInfo);
+                    // console.log(s);
+                    // console.log(s[7]);
+                    for (let i = 0; i < s.length; i++){
+                        console.log("s[",i,"]: ", s[i]);
+                    }
+             
+                    // }
+                    // console.log(segArray);
+
                     const rendering = {
-                        "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
+                        "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudioHaptics",
                         "confidence": 50,
                         "description": renderingTitle,
                         "data": {
                             "image": image,
-                            "audioFile": dataURL,
-                            "audioInfo": segArray,
+                            "audioInfo":{
+                                "audioFile": dataURL,
+                                "audioInfo": segArray,
+                            },
                             "hapticInfo": {
                                 "semSeg": hapticSegInfo, 
                                 "objDet" : hapticObjInfo
@@ -248,13 +330,16 @@ app.post("/handler", async (req, res) => {
                         }
                     };
                     if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudiohaptics.schema.json", rendering["data"])) {
+                        console.log("validated audio haptics!");
                         renderings.push(rendering);
+                        // console.log(renderings);
                     } else {
                         console.error(ajv.errors);
                     }
                 }
             }).finally(() => {
                 // Delete our files if they exist on the disk
+                console.log("doing final step!");
                 if (inFile !== undefined) {
                     fs.access(inFile).then(() => { return fs.unlink(inFile); }).catch(() => { /* noop */ });
                 }
@@ -269,6 +354,16 @@ app.post("/handler", async (req, res) => {
             console.error("Failed to generate audio!");
             console.error(e);
         }
+    }
+
+    const response = utils.generateEmptyResponse(req.body["request_uuid"]);
+    response["renderings"] = renderings;
+    if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
+        res.json(response);
+    } else {
+        console.error("Failed to generate a valid response.");
+        console.error(ajv.errors);
+        res.status(500).json(ajv.errors);
     }
 });
 

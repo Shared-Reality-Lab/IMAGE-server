@@ -46,6 +46,13 @@ export type SoundSegments = {
     duration: number;
 }[];
 
+export type ObjectInfo = {
+    name: string;
+    offset: number;
+    duration: number;
+    centroid: Array<number>;
+    coordinates: Array<number>;
+}[];
 export function generateEmptyResponse(requestUUID: string): { "request_uuid": string, "timestamp": number, "renderings": Record<string, unknown>[] } {
     return {
         "request_uuid": requestUUID,
