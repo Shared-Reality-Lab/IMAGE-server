@@ -29,7 +29,7 @@ import descriptionJSON from "./schemas/services/supercollider/tts-description.sc
 import segmentJSON from "./schemas/services/supercollider/tts-segment.schema.json";
 import rendererDefJSON from "./schemas/renderers/definitions.json";
 import textJSON from "./schemas/renderers/text.schema.json"
-import segmentAudioHapticsJSON from "./segmentaudiohapticscombined.schema.json";
+import photoAudioHapticsJSON from "./photoaudiohaptics.schema.json";
 
 import * as utils from "./utils";
 
@@ -42,7 +42,7 @@ const ajv = new Ajv({
         descriptionJSON, 
         segmentJSON, 
         rendererDefJSON, 
-        segmentAudioHapticsJSON ]
+        photoAudioHapticsJSON ]
 });
 
 const app = express();
@@ -89,7 +89,7 @@ app.post("/handler", async (req, res) => {
     // Check for renderer availability
     // *******************************************************
     const hasText = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.Text");
-    const hasAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.SegmentAudioHaptics");
+    const hasAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.PhotoAudioHaptics");
     if (!hasAudioHaptic && !hasText) {
         console.warn("Segment audio-haptic renderers not supported!");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
@@ -103,7 +103,7 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    const hapticObjInfo: { centroid: number[]; coordinates: number[]; }[] = [];
+    //const hapticObjInfo: { centroid: number[]; coordinates: number[]; }[] = [];
     const hapticSegInfo: { centroid: number[]; contourPoints: number[]; }[] = [];
 
     // *******************************************************
@@ -145,7 +145,6 @@ app.post("/handler", async (req, res) => {
             "description": renderingTitle + " (text only)",
             "data": { "text": textString }
         };
-        // console.log(rendering["data"]);
         if (ajv.validate(textJSON, rendering["data"])) { //"https://image.a11y.mcgill.ca/renderers/text.schema.json"
             renderings.push(rendering);
             console.log("pushed text rendering!");
@@ -158,15 +157,6 @@ app.post("/handler", async (req, res) => {
         console.debug("Skipped text rendering.");
     }
 
-    // for (const group of preGroupData["grouped"]) {
-    //     const objsByGroup = preObjDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"]));
-    //     for (const objGroup in objsByGroup) {
-    //         console.log(objGroup);
-    //         // for (const obj in objGroup) {
-    //         //     console.log(obj);
-    //         // }
-    //     }
-    // }
     // *******************************************************
     // Haptic seg and obj coordinate data
     // *******************************************************
@@ -192,8 +182,6 @@ app.post("/handler", async (req, res) => {
     const objects = preObjDet["objects"]
     if (objects.length !== 0) {
 
-        // const groupCentroidArray = [];
-        // const groupCoordArray = [];
         for (const group of preGroupData["grouped"]) {
             const objsByGroup = preObjDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"]));
 
@@ -215,19 +203,6 @@ app.post("/handler", async (req, res) => {
             groupCentroidArray.push(centroid);
             groupCoordArray.push(coords);
         }
-
-        console.log("first group centorid array: ", groupCentroidArray);
-
-        for (const obj of objects) {
-            const centroid: number[] = obj["centroid"]
-            const dimensions: number[] = obj["dimensions"]
-
-            const data = {
-                "centroid": centroid,
-                "coordinates": dimensions
-            }
-            hapticObjInfo.push(data)
-        }
     } else {
         console.warn("No objects were detected.");
     }
@@ -236,7 +211,6 @@ app.post("/handler", async (req, res) => {
     const image = req.body.image;
 
     if (hasAudioHaptic) {
-        console.log('has audio haptic');
         try {
             // Do TTS
             const ttsResponse = await utils.getTTS(ttsData.map(x => x["value"]));
@@ -246,7 +220,6 @@ app.post("/handler", async (req, res) => {
                     "offset": offset,
                     "duration": ttsResponse.durations[i]
                 };
-                //console.log(hapticSegInfo[i]);
                 offset += ttsResponse.durations[i];
             }
 
@@ -277,59 +250,43 @@ app.post("/handler", async (req, res) => {
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
                 if (hasAudioHaptic && segArray.length > 0 
                     && segArray.length > hapticSegInfo.length) {
-                        const s = [...segArray]
+                        
+                    const s = [...segArray];
+
+                    s[0] = { ...s[0], 
+                            centroid: [[]],
+                            contourPoints: [[]]};
+
+                    s[1 + hapticSegInfo.length] = { ...s[1 + hapticSegInfo.length], 
+                                centroid: [[]],
+                                contourPoints: [[]]};                            
 
                     for (let i = 1; i <= hapticSegInfo.length; i++) {
-
                         s[i] = {...s[i], 
                             centroid: [hapticSegInfo?.[i - 1]?.['centroid']],
                             contourPoints: [hapticSegInfo?.[i - 1]?.['contourPoints']],
-                            // size: 1 
                         };    
                     }
                     const j = 1 + hapticSegInfo.length + 1;
-                    // const s = [...segArray]
-                    // for (let i = 1; i <= hapticSegInfo.length; i++) {
-                    //     s[i] = {...s[i], 
-                    //         centroid: [hapticSegInfo?.[i - 1]?.['centroid']],
-                    //         contourPoints: [hapticSegInfo?.[i - 1]?.['contourPoints']],
-                    //         size: 1 };    
-                    // } 
-                    console.log("group centroid array:" ,groupCentroidArray);
-                    for (let i = 0; i < hapticObjInfo.length; i++) {
+                    for (let i = 0; i < objects.length; i++) {
                         s[i + j] = {...s[i + j], centroid: groupCentroidArray[i],
                         contourPoints: groupCoordArray[i],
-                        // size: 1
-                    };
+                        };
                     }
-                    // console.log("object",hapticObjInfo);
-                    // console.log("segment", hapticSegInfo);
-                    // console.log(s);
-                    // console.log(s[7]);
-                    for (let i = 0; i < s.length; i++){
-                        console.log("s[",i,"]: ", s[i]);
-                    }
-             
-                    // }
-                    // console.log(segArray);
 
                     const rendering = {
-                        "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudioHaptics",
+                        "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
                         "confidence": 50,
                         "description": renderingTitle,
                         "data": {
                             "image": image,
-                            "audioInfo":{
+                            "info": {
                                 "audioFile": dataURL,
-                                "audioInfo": segArray,
+                                "entityInfo": s,
                             },
-                            "hapticInfo": {
-                                "semSeg": hapticSegInfo, 
-                                "objDet" : hapticObjInfo
-                            }   
                         }
                     };
-                    if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudiohaptics.schema.json", rendering["data"])) {
+                    if (ajv.validate("https://image.a11y.mcgill.ca/renderers/photoaudiohaptics.schema.json", rendering["data"])) {
                         console.log("validated audio haptics!");
                         renderings.push(rendering);
                         // console.log(renderings);

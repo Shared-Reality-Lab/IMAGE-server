@@ -1,0 +1,92 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/renderers/photoaudiohaptics.schema.json",
+    "title": "Photo Audio Haptic Renderer",
+    "type": "object",
+    "description": "Data for basic audio selection renderer ca.mcgill.a11y.image.renderer.PhotoAudioHaptics.",
+    "definitions": {
+        "centroid": {
+            "type": "array",
+            "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+            },
+            "minItems": 2,
+            "maxItems": 2
+        },
+        "coordinates": {
+            "type": "array",
+            "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+            }
+        },
+        "contourPoints": {
+            "type": "array",
+            "items": {
+                "allOf": [
+                    {
+                        "$ref": "#/definitions/coordinates"
+                    }
+                ]
+            }
+        }
+    },
+    "properties": {
+        "image": {
+            "type": "string"
+        },
+        "info": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "allOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "audioFile": {
+                                    "$ref": "./definitions.json#/definitions/audioFile"
+                                },
+                                "entityInfo": {
+                                    "type": "array",
+                                    "items": {
+                                        "allOf": [
+                                            {
+                                                "$ref": "./definitions.json#/definitions/segmentOffsetSeconds"
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "description": "A short name assigned to the segment.",
+                                                        "type": "string",
+                                                        "maxLength": 300
+                                                    }
+                                                },
+                                                "required": [
+                                                    "name"
+                                                ]
+                                            },
+                                            {
+                                                "$ref": "./definitions.json#/definitions/centroid"
+                                            },
+                                            {
+                                                "$ref": "./definitions.json#/definitions/contourPoints"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "required": [
+        "audioFile",
+        "audioInfo"
+    ]
+}
