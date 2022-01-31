@@ -1,7 +1,7 @@
-FROM fedora:34
-ARG VERSION=develop
+FROM fedora:35
+ARG VERSION=Version-3.12.2
 
-RUN dnf install -q -y pipewire git cmake gcc-c++ pipewire-jack-audio-connection-kit-devel fftw-devel libsndfile-devel avahi-devel readline-devel && \
+RUN dnf install -q -y pipewire git cmake gcc-c++ pipewire-jack-audio-connection-kit-devel fftw-devel libsndfile-devel avahi-devel readline-devel libatomic && \
     rm -rf /var/cache/dnf
 
 # Despite the files being present, the cmake script fails to find them without this
@@ -13,7 +13,7 @@ WORKDIR temp
 # Build with fewer features for a smaller install
 RUN git clone --branch $VERSION --recursive --depth=1 --shallow-submodules https://github.com/supercollider/supercollider.git && \
     cd supercollider && \
-    cmake -DCMAKE_BUILD_TYPE="Release" -DBUILD_TESTING=OFF -DENABLE_TESTSUITE=OFF -DSUPERNOVA=OFF -DNATIVE=OFF -DNO_X11=ON -DSC_EL=OFF -DSC_VIM=OFF -DSC_QT=OFF -DSC_HIDAPI=OFF -DSC_IDE=OFF -DSC_ED=OFF -DINSTALL_HELP=OFF && \
+    cmake -DCMAKE_BUILD_TYPE="Release" -DBUILD_TESTING=OFF -DENABLE_TESTSUITE=OFF -DSUPERNOVA=ON -DNATIVE=OFF -DNO_X11=ON -DSC_EL=OFF -DSC_VIM=OFF -DSC_QT=OFF -DSC_HIDAPI=OFF -DSC_IDE=OFF -DSC_ED=OFF -DINSTALL_HELP=OFF && \
     make -j $(nproc) && \
     make install && \
     rm -rf /temp

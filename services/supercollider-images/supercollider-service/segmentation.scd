@@ -40,7 +40,7 @@ renderSegments = { |json, ttsData, outPath, addr|
     // Load segments from file
     segments = json.at("segments");
     segments.do({ |segment, i|
-        var audio, duration, centroid, theta, phi, midinote, pingDur, area, totalTime;
+        var audio, duration, centroid, theta, phi, midinote, pingDur=0.01, area, totalTime, pts;
         audio = segment.at("audio");
         duration = (audio.at("duration").asInteger / ttsData.sampleRate);
         centroid = segment.at("centroid");
@@ -48,7 +48,7 @@ renderSegments = { |json, ttsData, outPath, addr|
 
         // Calculate pingDur from area of the contours
         totalTime = area * 40;
-        pingDur = totalTime / segment.at("coord").size;
+        pts = segment.at("coord").resamp0((totalTime / pingDur).asInteger);
 
         // Add segment info to array
         segmentInfo = segmentInfo.add(segment.at("nameOfSegment").asString);
@@ -80,7 +80,7 @@ renderSegments = { |json, ttsData, outPath, addr|
             timing,
             [\n_set, 1003, \gain, 0.1]
         ]);
-        segment.at("coord").do({ |item, i|
+        pts.do({ |item, i|
             var x, y, theta, phi;
             x = item.at(0).asFloat;
             y = item.at(1).asFloat;
@@ -115,7 +115,7 @@ renderSegments = { |json, ttsData, outPath, addr|
         sampleRate: 48000,
         headerFormat: "WAV",
         sampleFormat: "int16",
-        options: ServerOptions.new.numOutputBusChannels_(2),
+        options: ServerOptions.new.numOutputBusChannels_(2).verbosity_(-1),
         action: {
             // Check for written file
             if(File.exists(outPath),

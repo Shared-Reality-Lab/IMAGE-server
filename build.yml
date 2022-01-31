@@ -6,7 +6,7 @@ services:
         build:
             context: ./services/supercollider-images/supercollider
             dockerfile: Dockerfile
-        image: "supercollider:latest"
+        image: "supercollider:3.12.2"
     
     # Supercollider on Alpine Linux (smaller image)
     supercollider-alpine:

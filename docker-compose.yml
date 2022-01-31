@@ -204,11 +204,23 @@ services:
             - ./config/express-common.env
         labels:
             ca.mcgill.a11y.image.handler: enable
-    photo-haptics-audio-handler:
+    autour-handler:
         build:
-            context: ./handlers/photo-haptics-audio-handler
+            context: ./handlers/autour-handler
             dockerfile: Dockerfile
-        image: "photo-haptics-audio-handler:latest"
+        image: "autour-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+
+    photo-audio-handler:
+        build:
+            context: ./handlers/photo-audio-handler
+            dockerfile: Dockerfile
+        image: "photo-audio-handler:latest"
         env_file:
             - ./config/express-common.env
         labels:

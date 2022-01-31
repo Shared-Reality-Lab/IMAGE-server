@@ -1,27 +1,10 @@
-/*
- * Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- * You should have received a copy of the GNU Affero General Public License
- * and our Additional Terms along with this program.
- * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
- */
 import express from "express";
 import Ajv from "ajv";
 import fetch from "node-fetch";
 import fs from "fs/promises";
 import osc from "osc";
 import { v4 as uuidv4 } from "uuid";
-import Articles from "articles";
-import pluralize from "pluralize"
+import { LatLonVectors as LatLon } from "geodesy";
 
 // JSON imports
 import querySchemaJSON from "./schemas/request.schema.json";
@@ -40,18 +23,9 @@ const ajv = new Ajv({
 const app = express();
 const port = 80;
 const scPort = 57120;
-const filePrefix = "/tmp/sc-store/generic-tts-handler-";
+const filePrefix = "/tmp/sc-store/autour-handler-";
 
 app.use(express.json({limit: process.env.MAX_BODY}));
-
-function calcConfidence(objects: Record<string, unknown>[]): number {
-    let confidence = objects.reduce((acc, cur) => {
-        acc += cur["confidence"] as number;
-        return acc;
-    }, 0);
-    confidence /= objects.length;
-    return confidence;
-}
 
 app.post("/handler", async (req, res) => {
     // Check for good data
@@ -62,10 +36,7 @@ app.post("/handler", async (req, res) => {
     }
     // Check for the preprocessor data we need
     const preprocessors = req.body["preprocessors"];
-    if (!(
-        preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
-        && preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
-    )) {
+    if (!preprocessors["ca.mcgill.a11y.image.preprocessor.autour"]) {
         console.warn("Not enough data to generate a rendering.");
         const response = {
             "request_uuid": req.body["request_uuid"],
@@ -82,9 +53,9 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    const objectData = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
-    if (objectData["objects"].length === 0) {
-        console.warn("No objects detected despite running.");
+    const autourData = preprocessors["ca.mcgill.a11y.image.preprocessor.autour"];
+    if (autourData["places"].length === 0) {
+        console.warn("No places detected despite running.");
         const response = {
             "request_uuid": req.body["request_uuid"],
             "timestamp": Math.round(Date.now() / 1000),
@@ -117,48 +88,23 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    // Form TTS segments
-    // const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
-    // Removing scenes due to server#167.
-    const sceneData: any = undefined;
-    const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.secondCategoriser"];
-    let ttsIntro;
-    if (sceneData && sceneData["categories"].length > 0) {
-        let sceneName = sceneData["categories"][0]["name"] as string;
-        // '/' is used to have more specific categories
-        if (sceneName.includes("/")) {
-            sceneName = sceneName.split("/")[0]
-        }
-        sceneName = sceneName.replace("_", " ").trim();
-        const articled = Articles.articlize(sceneName);
-        ttsIntro = `This picture of ${articled} contains`;
-    } else if (secondClassifierData) {
-        const category: string = secondClassifierData["category"];
-        if (category === "indoor" || category === "outdoor") {
-            ttsIntro = `This ${category} picture contains`;
-        } else {
-            ttsIntro = "This picture contains";
-        }
-    } else {
-        ttsIntro = "This picture contains";
+    // Sort and filter POIs
+    // Do this before since TTS is time consuming
+    const places = autourData["places"];
+    const source = new LatLon(autourData["lat"], autourData["lon"]);
+    for (const place of places) {
+        const dest = new LatLon(place["ll"][0], place["ll"][1]);
+        place["dist"] = source.distanceTo(dest);
+        place["azimuth"] = source.bearingTo(dest) * Math.PI / 180;
     }
+    places.sort((a: { dist: number }, b: { dist: number }) => a["dist"] - b["dist"]);
+    places.splice(20);  // Cut off at 20 for now
 
-    const staticSegments = [ttsIntro, "with", "and"];
-    const segments = Array.from(staticSegments);
-    const groupData = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
-    for (const object of objectData["objects"]) {
-        const articled = Articles.articlize(object["type"].trim());
-        segments.push(`${articled}`);
-    }
-    for (const group of groupData["grouped"]) {
-        const exId = group["IDs"][0];
-        const exObjs = objectData["objects"].filter((obj: Record<string, unknown>) => {
-            return obj["ID"] == exId;
-        });
-        const sType = (exObjs.length > 0) ? (exObjs[0]["type"]) : "object";
-        const pType = pluralize(sType.trim());
-        const num = group["IDs"].length;
-        segments.push(`${num.toString()} ${pType}`);
+    // Form TTS segments
+    const ttsIntro = "From due north moving clockwise, there are the following";
+    const segments = [ttsIntro];
+    for (const place of autourData["places"]) {
+        segments.push(place["title"]);
     }
 
     let ttsResponse;
@@ -182,42 +128,19 @@ app.post("/handler", async (req, res) => {
     }
 
     const durations = (ttsResponse as Record<string, unknown>)["durations"] as number[];
-    const joining: Record<string, unknown> = {};
-    const intro = {
-        "offset": 0,
-        "duration": durations[0]
-    };
-    let runningOffset = durations[0];
-    for (let i = 1; i < staticSegments.length; i++) {
-        joining[staticSegments[i]] = {
-            "offset": runningOffset,
-            "duration": durations[i]
-        };
-        runningOffset += durations[i];
-    }
+    let runningOffset = 0;
+    const scData = autourData;
+    scData["ttsFileName"] = "";
 
-    const scData = {
-        "audioTemplate": {
-            "intro": intro,
-            "joining": joining
-        },
-        "objects": objectData["objects"],
-        "groups": groupData["grouped"],
-        "ordering": "leftToRight",
-        "ttsFileName": ""
+    let durIdx = 0;
+    scData["intro"] = {
+        "offset": runningOffset,
+        "duration": durations[durIdx]
     };
-
-    let durIdx = staticSegments.length;
-    for (const object of scData["objects"]) {
-        object["audio"] = {
-            "offset": runningOffset,
-            "duration": durations[durIdx]
-        };
-        runningOffset += durations[durIdx];
-        durIdx += 1;
-    }
-    for (const group of scData["groups"]) {
-        group["audio"] = {
+    runningOffset += durations[durIdx];
+    durIdx += 1;
+    for (const place of scData["places"]) {
+        place["audio"] = {
             "offset": runningOffset,
             "duration": durations[durIdx]
         };
@@ -246,8 +169,7 @@ app.post("/handler", async (req, res) => {
         const oscPort = new osc.UDPPort({
             "remoteAddress": "supercollider",
             "remotePort": scPort,
-            "localAddress": "0.0.0.0",
-            "localPort": 0  // This will request a free port
+            "localAddress": "0.0.0.0"
         });
         return Promise.race<string>([
             new Promise<string>((resolve, reject) => {
@@ -266,7 +188,7 @@ app.post("/handler", async (req, res) => {
                     oscPort.on("ready", () => {
                         oscPort.send({
                             // TODO update this once the function is ready
-                            "address": "/render/genericObject",
+                            "address": "/render/map/autourPOI",
                             "args": [
                                 { "type": "s", "value": jsonFile },
                                 { "type": "s", "value": outFile }
@@ -298,8 +220,8 @@ app.post("/handler", async (req, res) => {
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
         renderings.push({
             "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-            "confidence": calcConfidence(objectData["objects"]),
-            "description": "An audio description of elements in the image with non-speech effects.",
+            "confidence": 100,
+            "description": "Points of interest around the location in the map.",
             "data": {
                 "audio": dataURL
             }

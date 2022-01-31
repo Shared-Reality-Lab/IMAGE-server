@@ -66,7 +66,6 @@ def get_map_data():
         return "", 204
 
     # Build Autour request
-    url = content['url']
     coords = get_coordinates(content)
 
     if coords is None:
@@ -81,7 +80,7 @@ def get_map_data():
             lat={coords['latitude']}&\
             lon={coords['longitude']}&\
             condensed=0&\
-            from=foursquare&\
+            from=transit|osmxing|osmsegments|foursquare&\
             as=json&\
             fsqmulti=1&\
             font=9&\
@@ -94,7 +93,6 @@ def get_map_data():
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
     data = {
-        'url': url,
         'lat': coords['latitude'],
         'lon': coords['longitude'],
         'api_request': api_request,

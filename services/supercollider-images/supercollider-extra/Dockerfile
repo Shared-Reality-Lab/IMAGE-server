@@ -1,4 +1,4 @@
-FROM supercollider:latest
+FROM ghcr.io/shared-reality-lab/supercollider:latest
 ARG VERSION=Version-3.11.1
 
 USER root
@@ -11,7 +11,7 @@ RUN dnf install -q -y lame vorbis-tools unzip which && \
 WORKDIR /temp
 RUN git clone --depth=1 --shallow-submodules --recursive --branch $VERSION https://github.com/supercollider/sc3-plugins.git && \
     cd sc3-plugins && \
-    cmake -DCMAKE_BUILD_TYPE="Release" -DSUPERNOVA=OFF -DLADSPA=ON && \
+    cmake -DCMAKE_BUILD_TYPE="Release" -DSUPERNOVA=ON -DLADSPA=ON && \
     make -j $(nproc) && \
     make install && \
     rm -rf /temp

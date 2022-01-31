@@ -1,0 +1,48 @@
+name: Supercollider Image
+on:
+  push:
+    branches: [ main ]
+    paths: [ "services/supercollider-images/supercollider/**" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: Shared-Reality-Lab/supercollider
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Get SuperCollider Version
+        run: echo "sc_version=$(grep 'ARG VERSION' ./services/supercollider-images/supercollider/Dockerfile | awk -F- '{ print $2 }')" >> $GITHUB_ENV
+      - name: Log into container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+          labels: |
+            org.opencontainers.image.title=SuperCollider
+            org.opencontainers.image.description=An unofficial containerization of SuperCollider
+            org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
+            maintainer=IMAGE Project <image@cim.mcgill.ca>
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./services/supercollider-images/supercollider/
+          push: true
+          tags: |
+            ghcr.io/shared-reality-lab/supercollider:latest
+            ghcr.io/shared-reality-lab/supercollider:${{ env.sc_version }}
+          labels: ${{ steps.meta.outputs.labels }}
