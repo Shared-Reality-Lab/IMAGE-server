@@ -38,51 +38,49 @@
             "type": "string",
             "description": "A base64 encoding of the image as a string.",
             "pattern": "data:image\/[^;]+;base64[^\"]+"
-        }
-    },
-    "info": {
-        "type": "object",
-        "properties": {
-            "items": {
-                "type": "object",
-                "properties": {
-                    "audioFile": {
-                        "$ref": "./definitions.json#/definitions/audioFile"
-                    },
-                    "entityInfo": {
-                        "type": "array",
-                        "description":  "An entity contains the relevant audio-haptic information to locate each segment or object.",
-                        "items": {
-                            "allOf": [
-                                {
-                                    "$ref": "./definitions.json#/definitions/segmentOffsetSeconds"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "name": {
-                                            "description": "A short name assigned to the entity.",
-                                            "type": "string"
-                                        }
+        },
+        "info": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "audioFile": {
+                            "$ref": "./definitions.json#/definitions/audioFile"
+                        },
+                        "entityInfo": {
+                            "type": "array",
+                            "description":  "An entity contains the relevant audio-haptic information to locate each segment or object.",
+                            "items": {
+                                "allOf": [
+                                    {
+                                        "$ref": "./definitions.json#/definitions/segmentOffsetSeconds"
                                     },
-                                    "required": [
-                                        "name"
-                                    ]
-                                },
-                                {
-                                    "$ref": "#/definitions/centroid"
-                                },
-                                {
-                                    "$ref": "#/definitions/contourPoints"
-                                }
-                            ]
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "description": "A short name assigned to the entity.",
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "name"
+                                        ]
+                                    },
+                                    {
+                                        "$ref": "#/definitions/centroid"
+                                    },
+                                    {
+                                        "$ref": "#/definitions/contourPoints"
+                                    }
+                                ]
+                            }
                         }
                     }
                 }
             }
         }
     },
-"required": [
-    "info"
-]
+    "required": ["info"]
 }
