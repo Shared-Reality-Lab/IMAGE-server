@@ -7,6 +7,7 @@
     "definitions": {
         "centroid": {
             "type": "array",
+            "description": "The normalized geometric center of the entity.",
             "items": {
                 "type": "number",
                 "minimum": 0,
@@ -17,6 +18,7 @@
         },
         "coordinates": {
             "type": "array",
+            "description": "The normalized coordinates for each entity.",
             "items": {
                 "type": "number",
                 "minimum": 0,
@@ -25,67 +27,63 @@
         },
         "contourPoints": {
             "type": "array",
+            "description": "An array containing an array of normalized coordinates representing a point on the segment or point on the bounding box."
             "items": {
-                "allOf": [
-                    {
-                        "$ref": "#/definitions/coordinates"
-                    }
-                ]
+                "$ref": "#/definitions/coordinates"
             }
         }
     },
     "properties": {
         "image": {
-            "type": "string"
-        },
-        "info": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "type": "object",
-                            "properties": {
-                                "audioFile": {
-                                    "$ref": "./definitions.json#/definitions/audioFile"
+            "type": "string",
+            "description": "A base64 encoding of the image as a string.",
+            "pattern": "data:image\/[^;]+;base64[^\"]+"
+        }
+    },
+    "info": {
+        "type": "object",
+        "properties": {
+            "items": {
+                "type": "object",
+                "properties": {
+                    "audioFile": {
+                        "$ref": "./definitions.json#/definitions/audioFile"
+                    },
+                    "entityInfo": {
+                        "type": "array",
+                        "description":  "An entity contains the relevant audio-haptic information to locate each segment or object.",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "$ref": "./definitions.json#/definitions/segmentOffsetSeconds"
                                 },
-                                "entityInfo": {
-                                    "type": "array",
-                                    "items": {
-                                        "allOf": [
-                                            {
-                                                "$ref": "./definitions.json#/definitions/segmentOffsetSeconds"
-                                            },
-                                            {
-                                                "type": "object",
-                                                "properties": {
-                                                    "name": {
-                                                        "description": "A short name assigned to the segment.",
-                                                        "type": "string",
-                                                        "maxLength": 300
-                                                    }
-                                                },
-                                                "required": [
-                                                    "name"
-                                                ]
-                                            },
-                                            {
-                                                "$ref": "#/definitions/centroid"
-                                            },
-                                            {
-                                                "$ref": "#/definitions/contourPoints"
-                                            }
-                                        ]
-                                    }
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "description": "A short name assigned to the entity.",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "name"
+                                    ]
+                                },
+                                {
+                                    "$ref": "#/definitions/centroid"
+                                },
+                                {
+                                    "$ref": "#/definitions/contourPoints"
                                 }
-                            }
+                            ]
                         }
-                    ]
+                    }
                 }
             }
         }
-    },
-    "required": [
-        "info"
-    ]
+    }
+},
+"required": [
+    "info"
+]
 }
