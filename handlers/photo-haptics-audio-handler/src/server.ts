@@ -60,7 +60,7 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    const renderings:any = [];
+    const renderings: any = [];
 
     // *******************************************************
     // Check for preprocessor data
@@ -103,9 +103,6 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    //const hapticObjInfo: { centroid: number[]; coordinates: number[]; }[] = [];
-    const hapticSegInfo: { centroid: number[]; contourPoints: number[]; }[] = [];
-
     // *******************************************************
     // Audio TTS
     // *******************************************************
@@ -145,9 +142,8 @@ app.post("/handler", async (req, res) => {
             "description": renderingTitle + " (text only)",
             "data": { "text": textString }
         };
-        if (ajv.validate(textJSON, rendering["data"])) { //"https://image.a11y.mcgill.ca/renderers/text.schema.json"
+        if (ajv.validate(textJSON, rendering["data"])) {
             renderings.push(rendering);
-            console.log("pushed text rendering!");
         } else {
             console.error("Failed to generate a valid text rendering!");
             console.error(ajv.errors);
@@ -160,13 +156,14 @@ app.post("/handler", async (req, res) => {
     // *******************************************************
     // Haptic seg and obj coordinate data
     // *******************************************************
+    const hapticSegInfo: { centroid: number[]; contourPoints: number[]; }[] = [];
     const groupCentroidArray: Array<Array<number>> = [];
     const groupCoordArray: Array<Array<number>> = [];
 
     const segments = preSemSeg["segments"];
     if (segments.length !== 0) {
         for (const segment of segments) {
-            // Grab coordinates for haptic
+            // Grab coordinates
             const contourPoints: number[] = segment["coord"];
             const center: number[] = segment["centroid"];
             const data = {
@@ -207,7 +204,6 @@ app.post("/handler", async (req, res) => {
         console.warn("No objects were detected.");
     }
 
-    //TODO: require image?
     const image = req.body.image;
 
     if (hasAudioHaptic) {
@@ -253,6 +249,7 @@ app.post("/handler", async (req, res) => {
                         
                     const s = [...segArray];
 
+                    // Empty for text fields
                     if (preObjDet || preSemSeg)
                     s[0] = { ...s[0], 
                             centroid: [[]],
@@ -263,6 +260,7 @@ app.post("/handler", async (req, res) => {
                                 centroid: [[]],
                                 contourPoints: [[]]};                            
 
+                    // Add coordinate info to entity
                     for (let i = 1; i <= hapticSegInfo.length; i++) {
                         s[i] = {...s[i], 
                             centroid: [hapticSegInfo?.[i - 1]?.['centroid']],
@@ -289,16 +287,13 @@ app.post("/handler", async (req, res) => {
                         }
                     };
                     if (ajv.validate("https://image.a11y.mcgill.ca/renderers/photoaudiohaptics.schema.json", rendering["data"])) {
-                        console.log("validated audio haptics!");
-                        renderings.push(rendering);
-                        // console.log(renderings);
+                        renderings.push(rendering);;
                     } else {
                         console.error(ajv.errors);
                     }
                 }
             }).finally(() => {
                 // Delete our files if they exist on the disk
-                console.log("doing final step!");
                 if (inFile !== undefined) {
                     fs.access(inFile).then(() => { return fs.unlink(inFile); }).catch(() => { /* noop */ });
                 }
