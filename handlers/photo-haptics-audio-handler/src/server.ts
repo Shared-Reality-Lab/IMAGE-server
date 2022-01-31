@@ -253,11 +253,13 @@ app.post("/handler", async (req, res) => {
                         
                     const s = [...segArray];
 
+                    if (preObjDet || preSemSeg)
                     s[0] = { ...s[0], 
                             centroid: [[]],
                             contourPoints: [[]]};
 
-                    s[1 + hapticSegInfo.length] = { ...s[1 + hapticSegInfo.length], 
+                    if (preObjDet && preSemSeg)
+                        s[1 + hapticSegInfo.length] = { ...s[1 + hapticSegInfo.length], 
                                 centroid: [[]],
                                 contourPoints: [[]]};                            
 
@@ -268,7 +270,7 @@ app.post("/handler", async (req, res) => {
                         };    
                     }
                     const j = 1 + hapticSegInfo.length + 1;
-                    for (let i = 0; i < objects.length; i++) {
+                    for (let i = 0; i < groupCentroidArray.length; i++) {
                         s[i + j] = {...s[i + j], centroid: groupCentroidArray[i],
                         contourPoints: groupCoordArray[i],
                         };
