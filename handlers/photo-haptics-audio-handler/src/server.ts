@@ -273,7 +273,7 @@ app.post("/handler", async (req, res) => {
                         contourPoints: groupCoordArray[i],
                         };
                     }
-
+                    //TO DO: change image tag name
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
                         "confidence": 50,
