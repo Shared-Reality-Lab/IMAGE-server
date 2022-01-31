@@ -3,7 +3,7 @@
     "$id": "https://image.a11y.mcgill.ca/renderers/photoaudiohaptics.schema.json",
     "title": "Photo Audio Haptic Renderer",
     "type": "object",
-    "description": "Data for basic audio selection renderer ca.mcgill.a11y.image.renderer.PhotoAudioHaptics.",
+    "description": "Data for basic audio haptics selection renderer ca.mcgill.a11y.image.renderer.PhotoAudioHaptics.",
     "definitions": {
         "centroid": {
             "type": "array",
