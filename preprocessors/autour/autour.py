@@ -80,7 +80,7 @@ def get_map_data():
             lat={coords['latitude']}&\
             lon={coords['longitude']}&\
             condensed=0&\
-            from=foursquare&\
+            from=transit|osmxing|osmsegments|foursquare&\
             as=json&\
             fsqmulti=1&\
             font=9&\
