@@ -5,12 +5,6 @@
     "title": "Autour Maps Preprocessor",
     "description": "Information on the contents of a place on a map",
     "properties": {
-        "url": {
-            "type": "string",
-            "title": "URL",
-            "description": "The URL of the map",
-            "pattern": "^https?://.*"
-        },
         "lat": {
             "type": "number",
             "title": "Latitude",
@@ -29,7 +23,7 @@
             "type": "string",
             "title": "API Request",
             "description": "The API request to be made to the map",
-            "pattern": "^https?://.*"
+            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,}\\.[a-z]{2,}\\b(\\S*)$"
         },
         "places": {
             "type": "array",
@@ -37,14 +31,11 @@
             "description": "The places on the map",
             "items": {
                 "type": "object",
-                "title": "Place",
-                "description": "Information on a place on the map",
                 "properties": {
                     "id": {
                         "type": "string",
-                        "title": "Name",
-                        "description": "The name of the place",
-                        "minLength": 1
+                        "title": "ID",
+                        "description": "The ID of the place"
                     },
                     "ll": {
                         "type": "array",
@@ -84,5 +75,5 @@
             }
         }
     },
-    "required": ["url", "lat", "lon", "api_request", "places"]
+    "required": ["lat", "lon", "api_request", "places"]
 }
