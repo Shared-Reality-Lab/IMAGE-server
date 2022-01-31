@@ -125,7 +125,13 @@ def run_segmentation(url,
     img = pil_image
     img_original = numpy.array(img)
     img_data = pil_to_tensor(img)
-    img_data = img_data.cuda()
+    try:
+        img_data = img_data.cuda()
+    except RuntimeError as e:
+        if 'out of memory' in str(e):
+            print("OOM detected")
+            torch.cuda.empty_cache()
+            return jsonify("OOM detected"), 500
     singleton_batch = {'img_data': img_data[None]}
     output_size = img_data.shape[1:]
     with torch.no_grad():
@@ -180,7 +186,13 @@ def segment():
     crit = torch.nn.NLLLoss(ignore_index=-1)
     segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)
     segmentation_module.eval()
-    segmentation_module.cuda()
+    try:
+        segmentation_module.cuda()
+    except RuntimeError as e:
+        if 'out of memory' in str(e):
+            print("OOM detected")
+            torch.cuda.empty_cache()
+            return jsonify("OOM detected"), 500
     pil_to_tensor = torchvision.transforms.Compose([
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize(
@@ -238,6 +250,7 @@ def segment():
                                    segmentation_module,
                                    dictionary,
                                    pil_to_tensor)
+    torch.cuda.empty_cache()
     try:
         validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
         validator.validate(segment)
