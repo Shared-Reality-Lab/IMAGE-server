@@ -204,6 +204,17 @@ services:
             - ./config/express-common.env
         labels:
             ca.mcgill.a11y.image.handler: enable
+    autour-handler:
+        build:
+            context: ./handlers/autour-handler
+            dockerfile: Dockerfile
+        image: "autour-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
 
     photo-audio-handler:
         build:
