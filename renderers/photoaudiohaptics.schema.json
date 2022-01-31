@@ -27,7 +27,7 @@
         },
         "contourPoints": {
             "type": "array",
-            "description": "An array containing an array of normalized coordinates representing a point on the segment or point on the bounding box."
+            "description": "An array containing an array of normalized coordinates representing a point on the segment or point on the bounding box.",
             "items": {
                 "$ref": "#/definitions/coordinates"
             }
@@ -81,8 +81,7 @@
                 }
             }
         }
-    }
-},
+    },
 "required": [
     "info"
 ]
