@@ -60,7 +60,7 @@ def extract_nodes_list(result):
       list2=(result[j]["nodes"])
 
       intersection=extract_intersection(list1,list2)
-      str_record={"street_name":result[i]["street_name"],"street_type":result[i]["street_type"],"intersection_sets":intersection} 
+      str_record={"street_name":result[i]["street_name"],"street_type":result[i]["street_type"],"surface":result[i]["surface"], "sidewalk":result[i]["sidewalk"],"oneway":result[i]["oneway"],"intersection_sets":intersection} 
       intersection_sets.append(str_record)
   return(intersection_sets)
 
