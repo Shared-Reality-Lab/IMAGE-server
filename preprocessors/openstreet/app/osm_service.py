@@ -47,24 +47,51 @@ def merge_street_by_name(transformed_osmdata:List[dict]):
       merged_street = list(output.values())
   return(merged_street)
 
-def return_intersection(merged_street_data:List[dict]):
-  street_intersection=[]
-  for i,items in enumerate (merged_street_data):
-    nodes_object=items["nodes"]
-    intersection=process_intersection(nodes_object)
-    total_coordinates_sets=len(intersection)
-    intersection_records={"street_name":items["street_name"],"street_type":items["street_type"],"surface":items["surface"], "sidewalk":items["sidewalk"],"oneway":items["oneway"],"total_coordinates_sets":total_coordinates_sets,"intersection_coordinates":intersection}
-    street_intersection.append(intersection_records)
-  return(street_intersection)
+def extract_intersection(list1, list2):
+  computed_intersection=[x for x in list1 if x in list2]  
+  return(computed_intersection)
 
-def process_intersection(nodes_object):
-  intersection_list=[]
-  for i, items in enumerate (nodes_object):
-    number_of_nodes=len(nodes_object)
-    if i<number_of_nodes:
-      nom=i+1
-      for j in range (nom,number_of_nodes):
-        if nodes_object[i]==nodes_object[j]:
-          shared_nodes=nodes_object[i]
-          intersection_list.append(shared_nodes)
-  return(intersection_list)
+
+def extract_nodes_list(result):
+  intersection_sets=[]
+  for i in range(len(result)):
+    for j in range(i + 1, len(result)):
+      list1=(result[i]["nodes"])
+      list2=(result[j]["nodes"])
+
+      intersection=extract_intersection(list1,list2)
+      str_record={"street_name":result[i]["street_name"],"street_type":result[i]["street_type"],"intersection_sets":intersection} 
+      intersection_sets.append(str_record)
+  return(intersection_sets)
+
+
+
+
+
+
+
+
+
+
+
+#def return_intersection(merged_street_data:List[dict]):
+ # street_intersection=[]
+  #for i,items in enumerate (merged_street_data):
+   # nodes_object=items["nodes"]
+    #intersection=process_intersection(nodes_object)
+    #total_coordinates_sets=len(intersection)
+    #intersection_records={"street_name":items["street_name"],"street_type":items["street_type"],"surface":items["surface"], "sidewalk":items["sidewalk"],"oneway":items["oneway"],"total_coordinates_sets":total_coordinates_sets,"intersection_coordinates":intersection}
+    #street_intersection.append(intersection_records)
+  #return(street_intersection)
+
+#def process_intersection(nodes_object):
+  #intersection_list=[]
+  #for i, items in enumerate (nodes_object):
+   # number_of_nodes=len(nodes_object)
+    #if i<number_of_nodes:
+     # nom=i+1
+     # for j in range (nom,number_of_nodes):
+      #  if nodes_object[i]==nodes_object[j]:
+       #   shared_nodes=nodes_object[i]
+        #  intersection_list.append(shared_nodes)
+  #return(intersection_list)
