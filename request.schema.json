@@ -3,17 +3,17 @@
     "$id": "https://image.a11y.mcgill.ca/request.schema.json",
     "title": "IMAGE Request",
     "type": "object",
-    "description": "Request for renderings of an image or a map given certain conditions.",
+    "description": "Request for renderings of a graphic or a map given certain conditions.",
     "properties": {
         "request_uuid": { "$ref": "definitions.json#/definitions/request_uuid" },
         "timestamp": { "$ref": "definitions.json#/definitions/timestamp" },
-        "image": {
-            "description": "Data URL of the base 64 image being handled.",
+        "graphic": {
+            "description": "Data URL of the base 64 graphic being handled.",
             "type": "string",
             "pattern": "^data:image/[^;]+;base64,[a-zA-Z0-9+/=]+$"
         },
         "dimensions": {
-            "description": "The width and height of the image as requested in pixels.",
+            "description": "The width and height of the graphic as requested in pixels.",
             "type": "array",
             "items": [
                 { "type": "integer", "exclusiveMinimum": 0 },
@@ -44,7 +44,7 @@
             "type": "string"
         },
         "context": {
-            "description": "Serialized XML of the image node and possibly related nodes.",
+            "description": "Serialized XML of the source node and possibly related nodes.",
             "type": "string"
         },
         "URL": {
@@ -88,7 +88,7 @@
                 "request_uuid",
                 "language",
                 "timestamp",
-                "image",
+                "graphic",
                 "dimensions",
                 "context",
                 "capabilities",

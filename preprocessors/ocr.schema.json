@@ -3,12 +3,12 @@
     "$id": "https://image.a11y.mcgill.ca/preprocessors/ocr.schema.json",
     "type": "object",
     "title": "OCR preprocessor",
-    "description": "Retreives the lines of text and their corresponding bounding boxes found in an image",
+    "description": "Retreives the lines of text and their corresponding bounding boxes found in a photograph",
     "properties": {
         "lines": {
             "type": "array",
             "title": "Lines",
-            "description": "The lines of text found in an image",
+            "description": "The lines of text found in a photograph",
             "items": {
                 "type": "object",
                 "properties": {

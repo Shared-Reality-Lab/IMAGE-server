@@ -3,7 +3,7 @@
     "$id": "https://image.a11y.mcgill.ca/services/supercollider/tts-segment.schema.json",
     "type": "object",
     "title": "SuperCollider SemSeg",
-    "description": "Communication to SuperCollider of semantic segments extracted from the image.",
+    "description": "Communication to SuperCollider of semantic segments extracted from the photograph.",
     "definitions": {
         "normalizedCoordinates": {
             "description": "x- and y- coordinates normalized between 0 and 1",
@@ -37,7 +37,7 @@
                     ]
                 },
                 "area": {
-                    "description": "Total area occupied by the segment with image area normalized to 1.",
+                    "description": "Total area occupied by the segment with total area normalized to 1.",
                     "type": "number",
                     "minimum": 0,
                     "maximum": 1

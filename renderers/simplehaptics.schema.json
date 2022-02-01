@@ -5,7 +5,7 @@
     "type": "object",
     "description": "Data for the haptic roundtrip testing ca.mcgill.a11y.image.renderer.SimpleHaptics. renderer sends the coordinate and centroid information ",
     "properties": {
-        "image": {
+        "graphic": {
             "type": "string"
         },
         "data":{

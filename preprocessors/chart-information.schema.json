@@ -42,7 +42,7 @@
                     "maxItems": 2
                 },
                 "area": {
-                    "description": "The area of the image that is filled by the label",
+                    "description": "The area of the graphic that is filled by the label",
                     "type": "number",
                     "minimum": 0,
                     "maximum": 1

@@ -3,7 +3,7 @@
     "$id": "https://image.a11y.mcgill.ca/response.schema.json",
     "title": "IMAGE Response",
     "type": "object",
-    "description": "Response of renderings of an image given certain conditions.",
+    "description": "Response of renderings of a graphic given certain conditions.",
     "properties": {
         "request_uuid": { "$ref": "definitions.json#/definitions/request_uuid" },
         "timestamp": { "$ref": "definitions.json#/definitions/timestamp" },
