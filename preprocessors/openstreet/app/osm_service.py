@@ -60,9 +60,38 @@ def extract_nodes_list(result):
       list2=(result[j]["nodes"])
 
       intersection=extract_intersection(list1,list2)
-      str_record={"street_name":result[i]["street_name"],"street_type":result[i]["street_type"],"surface":result[i]["surface"], "sidewalk":result[i]["sidewalk"],"oneway":result[i]["oneway"],"intersection_sets":intersection} 
-      intersection_sets.append(str_record)
+      if len(intersection):
+        str_record={"street_name":result[i]["street_name"],"street_type":result[i]["street_type"],"surface":result[i]["surface"], "sidewalk":result[i]["sidewalk"],"oneway":result[i]["oneway"],"intersection_sets":intersection} 
+        intersection_sets.append(str_record)
+        str_record={"street_name":result[j]["street_name"],"street_type":result[j]["street_type"],"surface":result[j]["surface"], "sidewalk":result[j]["sidewalk"],"oneway":result[j]["oneway"],"intersection_sets":intersection} 
+        intersection_sets.append(str_record)
   return(intersection_sets)
+
+def merge_street_intersection_by_name(response:List[dict]):
+  output={}
+  for obj in response:
+    str_name=obj["street_name"]
+    if str_name not in output:
+      assert obj["intersection_sets"] is not None
+      record={"street_name":obj["street_name"],"street_type":obj["street_type"],"surface":obj["surface"], "sidewalk":obj["sidewalk"],"oneway":obj["oneway"],"intersection_sets": obj["intersection_sets"]} 
+      output[str_name]= record
+    else:
+      existing_record = output[str_name]
+      existing_intersection = existing_record["intersection_sets"]
+      assert existing_intersection is not None
+      new_intersection = obj["intersection_sets"]
+      assert new_intersection is not None
+      merged_intersection = existing_intersection + new_intersection
+      existing_record["intersection_sets"] = merged_intersection
+      output[str_name] = existing_record
+      merged_intersection = list(output.values())
+
+      #remove duplicate objects if any
+      cleaned_intersection_data_list=[]
+      for obj in merged_intersection:
+        if obj not in cleaned_intersection_data_list:
+          cleaned_intersection_data_list.append(obj)
+  return(cleaned_intersection_data_list)
 
 
 
