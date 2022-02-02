@@ -1,0 +1,2 @@
+*/10 * * * * for f in $(find /var/log/IMAGE/temporary/ -mindepth 1 -maxdepth 1 -type d); do if [ $(($(date +%s) - $(date +%s -r $f))) -gt 3600 ]; then rm -r $f; echo "Removed $f" >> /proc/1/fd/1; fi; done;
+
