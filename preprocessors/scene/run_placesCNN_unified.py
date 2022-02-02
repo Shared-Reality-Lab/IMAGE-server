@@ -152,10 +152,10 @@ def scenePredictor():
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
     content = request.get_json()
-    if "image" not in content:
+    if "graphic" not in content:
         logging.info("Not image content! Skipping...")
         return "", 204
-    img_url = content["image"]
+    img_url = content["graphic"]
     with urlopen(img_url) as response:
         data = response.read()
     stream = BytesIO(data)

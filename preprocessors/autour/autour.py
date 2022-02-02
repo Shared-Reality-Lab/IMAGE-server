@@ -61,7 +61,7 @@ def get_map_data():
         return validated
 
     # Check if request is for a map
-    if 'image' in content:
+    if 'graphic' in content:
         logging.info("Not map content. Skipping...")
         return "", 204
 

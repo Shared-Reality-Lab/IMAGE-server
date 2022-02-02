@@ -191,7 +191,7 @@ def run(weights='yolov5x.pt',
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 400
-        if "image" not in content:
+        if "graphic" not in content:
             logging.info("No image content. Skipping...")
             return "", 204
         preprocess_output = content["preprocessors"]
@@ -200,7 +200,7 @@ def run(weights='yolov5x.pt',
         name = "ca.mcgill.a11y.image.preprocessor.objectDetection"
         # Following 4 lines are refered from
         # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
-        source = content["image"]
+        source = content["graphic"]
         image_b64 = source.split(",")[1]
         binary = base64.b64decode(image_b64)
         image = np.asarray(bytearray(binary), dtype="uint8")
@@ -211,7 +211,7 @@ def run(weights='yolov5x.pt',
         if classifier_1 in preprocess_output:
             classifier_1_output = preprocess_output[classifier_1]
             classifier_1_label = classifier_1_output["category"]
-            if classifier_1_label != "image":
+            if classifier_1_label != "photograph":
                 logging.info("Not image content. Skipping...")
                 return "", 204
             if classifier_2 in preprocess_output:

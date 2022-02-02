@@ -51,7 +51,7 @@ class Net(pl.LightningModule):
 @app.route("/preprocessor", methods=['POST', ])
 def categorise():
     # load the schema
-    labels_dict = {"0": "chart", "1": "image", "2": "other", "3": "text"}
+    labels_dict = {"0": "chart", "1": "photograph", "2": "other", "3": "text"}
     with open('./schemas/preprocessors/categoriser.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
@@ -77,8 +77,8 @@ def categorise():
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
     # check for image
-    if "image" not in content:
-        logging.info("Request is not an image. Skipping...")
+    if "graphic" not in content:
+        logging.info("Request is not a graphic. Skipping...")
         return "", 204  # No content
     request_uuid = content["request_uuid"]
     timestamp = time.time()
@@ -88,7 +88,7 @@ def categorise():
     # Following 4 lines of code
     # refered form
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
-    source = content["image"]
+    source = content["graphic"]
     image_b64 = source.split(",")[1]
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
