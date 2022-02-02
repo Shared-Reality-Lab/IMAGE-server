@@ -180,8 +180,9 @@ app.post("/handler", async (req, res) => {
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
                 if (hasAudioHaptic && entities.length > 0
                     && entities.length > segGeometryData.length) {
-
-                    // Add the geometry and contour point information to each returned entity from SC.
+                    
+                    // Add the point and contour location information to each returned entity.
+                    // An entity could be either an object or segment.
                     // Ordered by segment text, segments, object text, and then objects for now.
                     // For the segments...
                     for (let i = 1; i <= segGeometryData.length; i++) {
