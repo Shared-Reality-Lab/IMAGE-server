@@ -86,7 +86,7 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
 
     // TTS
     const ttsData: TTSSegment[] = [];
-    // Location data
+    // Point location and contour data
     const posData: segGeometryInfo[] = [];
     ttsData.push({ "value": "contains the following outlines of regions:", "type": "text" });
     for (const segment of segments) {
@@ -97,24 +97,21 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
 
         const coord = segment["coord"] as [number, number, number, number];
         const centroid = segment["centroid"] as [number, number];
-        const geoSeg = {
+        const locSeg = {
             "centroid": centroid,
             "contourPoints": coord
         };
         ttsData.push(newSeg as TTSSegment);
-        posData.push(geoSeg as segGeometryInfo);
-    }
+        posData.push(locSeg as segGeometryInfo);
+    };
     ttsData[ttsData.length - 1]["value"] = ttsData[ttsData.length - 1]["value"].replace(",", ".");
     ttsData[ttsData.length - 1]["value"] = "and " + ttsData[ttsData.length - 1]["value"];
     return [ttsData, posData];
 }
 
-export function generateObjDet(objDet: any, objGroup: ObjGroup): [TTSSegment[], objGeometryInfo[]] {
+export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): [TTSSegment[], objGeometryInfo[]] {
     const objects: TTSSegment[] = [];
-
     const hapticObjInfo: objGeometryInfo[] = [];
-    const groupCentroidArray: Array<Array<number>> = [];
-    const groupCoordArray: Array<Array<number>> = [];
 
     objects.push({ "type": "text", "value": "contains the following objects or people:" });
     for (const group of objGroup["grouped"]) {
@@ -129,17 +126,18 @@ export function generateObjDet(objDet: any, objGroup: ObjGroup): [TTSSegment[], 
         };
         objects.push(object);
 
-        const centroidArray: [number, number][] = [];
-        const coordArray: [number, number, number, number][] = [];
-        objs.map((obj: { [x: string]: any; }) => {
+        // Push point and location info by object group
+        const centroids: [number, number][] = [];
+        const coordinates: [number, number, number, number][] = [];
+        objs.map(obj => {
             const centroid = obj["centroid"];
             const coords = obj["dimensions"];
-            centroidArray.push(centroid)
-            coordArray.push(coords)
+            centroids.push(centroid)
+            coordinates.push(coords)
         })
         const geoObjSeg = {
-            "centroid": centroidArray,
-            "contourPoints": coordArray
+            "centroid": centroids,
+            "contourPoints": coordinates
         }
         hapticObjInfo.push(geoObjSeg);
     }
@@ -154,17 +152,12 @@ export function generateObjDet(objDet: any, objGroup: ObjGroup): [TTSSegment[], 
             } as TTSSegment);
 
             const geoObjSeg = {
-                "centroid": obj["centroid"],
-                "contourPoints": obj["dimensions"]
-            }
+                "centroid": [obj["centroid"]],
+                "contourPoints": [obj["dimensions"]]
+            };
             hapticObjInfo.push(geoObjSeg);
-            // const centroid = obj["centroid"]
-            // const coords = obj["dimensions"]         
-            // groupCentroidArray.push(centroid);
-            // groupCoordArray.push(coords);
         }
     }
-    //hapticObjInfo.push(groupCentroidArray)
     objects[objects.length - 1]["value"] = objects[objects.length - 1]["value"].replace(",", ".");
     objects[objects.length - 1]["value"] = "and " + objects[objects.length - 1]["value"];
     return [objects, hapticObjInfo];
