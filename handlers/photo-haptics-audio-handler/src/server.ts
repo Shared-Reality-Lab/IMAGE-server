@@ -106,7 +106,7 @@ app.post("/handler", async (req, res) => {
     // *******************************************************
     // Audio TTS
     // *******************************************************
-    // Begin forming text...
+    // Begin forming text and grab coordinate information for each segment and object.
     // This is variable depending on which preprocessor data is available.
     const ttsData: utils.TTSSegment[] = [];
     const segGeometryData: utils.segGeometryInfo[] = [];
@@ -115,7 +115,6 @@ app.post("/handler", async (req, res) => {
     if (preSemSeg) {
         // Use all segments returned for now.
         // Filtering may be helpful later.
-        // ttsData.push(...utils.generateSemSeg(preSemSeg));
         let [ttsInfo, geometryInfo] = utils.generateSemSeg(preSemSeg);
         ttsData.push(...ttsInfo);
         segGeometryData.push(...geometryInfo);
@@ -125,11 +124,9 @@ app.post("/handler", async (req, res) => {
         }
     }
     if (preObjDet && preGroupData) {
-        //ttsData.push(...utils.generateObjDet(preObjDet, preGroupData));
         let [ttsInfo, geometryInfo] = utils.generateObjDet(preObjDet, preGroupData);
         ttsData.push(...ttsInfo);
         objGeometryData.push(...geometryInfo);
-        //console.log("obj geo data: ", objGeometryData);
     }
 
     // Concatenate adjacent text entries
@@ -142,28 +139,6 @@ app.post("/handler", async (req, res) => {
 
     // Generate rendering title
     const renderingTitle = utils.renderingTitle(preSemSeg, preObjDet, preGroupData);
-
-    // Construct text (if requested)
-    if (hasText) {
-        const textString = ttsData.map(x => x["value"]).join(" ");
-        const rendering = {
-            "type_id": "ca.mcgill.a11y.image.renderer.Text",
-            "confidence": 50,
-            "description": renderingTitle + " (text only)",
-            "data": { "text": textString }
-        };
-        if (ajv.validate(textJSON, rendering["data"])) {
-            renderings.push(rendering);
-        } else {
-            console.error("Failed to generate a valid text rendering!");
-            console.error(ajv.errors);
-            console.warn("Trying to continue...");
-        }
-    } else {
-        console.debug("Skipped text rendering.");
-    }
-
-    const image = req.body.image;
 
     if (hasAudioHaptic) {
         try {
@@ -199,57 +174,54 @@ app.post("/handler", async (req, res) => {
 
                 console.log("Forming OSC...");
                 return utils.sendOSC(jsonFile, outFile, "supercollider", scPort);
-            }).then(async (segArray: any) => {
+            }).then(async (entities: any) => {
                 const buffer = await fs.readFile(outFile);
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
-                if (hasAudioHaptic && segArray.length > 0
-                    && segArray.length > segGeometryData.length) {
+                if (hasAudioHaptic && entities.length > 0
+                    && entities.length > segGeometryData.length) {
 
-                    const s = [...segArray];
+                    // Add the geometry and contour point information to each returned entity from SC.
+                    // Ordered by segment text, segments, object text, and then objects for now.
+                    // For the segments...
+                    for (let i = 1; i <= segGeometryData.length; i++) {
+                        entities[i] = {
+                            ...entities[i],
+                            centroid: [segGeometryData?.[i - 1]?.['centroid']],
+                            contourPoints: [segGeometryData?.[i - 1]?.['contourPoints']],
+                        };
+                    }
+                    // For the objects...
+                    for (let i = 0, j = 1 + segGeometryData.length + 1; i < objGeometryData.length; i++) {
+                        entities[i + j] = {
+                            ...entities[i + j], centroid: objGeometryData[i]['centroid'],
+                            contourPoints: objGeometryData[i]['contourPoints']
+                        };
+                    }
 
-                    // Empty for text fields
+                    // Keep empty point location information for static text fields.
                     if (preObjDet || preSemSeg)
-                        s[0] = {
-                            ...s[0],
+                        entities[0] = {
+                            ...entities[0],
                             centroid: [[]],
                             contourPoints: [[]]
                         };
 
                     if (preObjDet && preSemSeg)
-                        s[1 + segGeometryData.length] = {
-                            ...s[1 + segGeometryData.length],
+                        entities[1 + segGeometryData.length] = {
+                            ...entities[1 + segGeometryData.length],
                             centroid: [[]],
                             contourPoints: [[]]
                         };
 
-                    // Add coordinate info to entity
-                    for (let i = 1; i <= segGeometryData.length; i++) {
-                        s[i] = {
-                            ...s[i],
-                            centroid: [segGeometryData?.[i - 1]?.['centroid']],
-                            contourPoints: [segGeometryData?.[i - 1]?.['contourPoints']],
-                        };
-                    }
-                    const j = 1 + segGeometryData.length + 1;
-                    for (let i = 0; i < objGeometryData.length; i++) {
-                        s[i + j] = {
-                            ...s[i + j], centroid: objGeometryData[i]['centroid'],
-                            contourPoints: objGeometryData[i]['contourPoints']
-                            //groupCentroidArray[i],
-                            //contourPoints: groupCoordArray[i],
-                        };
-                    }
-                    //TO DO: change image tag name
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
                         "confidence": 50,
                         "description": renderingTitle,
                         "data": {
-                            "image": image,
                             "info": {
                                 "audioFile": dataURL,
-                                "entityInfo": s,
+                                "entityInfo": entities,
                             },
                         }
                     };
