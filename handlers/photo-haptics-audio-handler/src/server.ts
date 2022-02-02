@@ -34,15 +34,15 @@ import photoAudioHapticsJSON from "./photoaudiohaptics.schema.json";
 import * as utils from "./utils";
 
 const ajv = new Ajv({
-    "schemas": [ querySchemaJSON, 
-        handlerResponseJSON, 
-        definitionsJSON, 
-        ttsRequestJSON, 
-        ttsResponseJSON, 
-        descriptionJSON, 
-        segmentJSON, 
-        rendererDefJSON, 
-        photoAudioHapticsJSON ]
+    "schemas": [querySchemaJSON,
+        handlerResponseJSON,
+        definitionsJSON,
+        ttsRequestJSON,
+        ttsResponseJSON,
+        descriptionJSON,
+        segmentJSON,
+        rendererDefJSON,
+        photoAudioHapticsJSON]
 });
 
 const app = express();
@@ -50,7 +50,7 @@ const port = 80;
 const scPort = 57120;
 const filePrefix = "/tmp/sc-store/photo-audio-haptics-handler-";
 
-app.use(express.json({limit: process.env.MAX_BODY}));
+app.use(express.json({ limit: process.env.MAX_BODY }));
 
 app.post("/handler", async (req, res) => {
     // Validate the request data (just in case)
@@ -109,26 +109,36 @@ app.post("/handler", async (req, res) => {
     // Begin forming text...
     // This is variable depending on which preprocessor data is available.
     const ttsData: utils.TTSSegment[] = [];
-    ttsData.push({"value": utils.generateIntro(preSecondCat), "type": "text"});
+    const segGeometryData: utils.segGeometryInfo[] = [];
+    const objGeometryData: utils.objGeometryInfo[] = [];
+    ttsData.push({ "value": utils.generateIntro(preSecondCat), "type": "text" });
     if (preSemSeg) {
         // Use all segments returned for now.
         // Filtering may be helpful later.
-        ttsData.push(...utils.generateSemSeg(preSemSeg));
+        // ttsData.push(...utils.generateSemSeg(preSemSeg));
+        let [ttsInfo, geometryInfo] = utils.generateSemSeg(preSemSeg);
+        ttsData.push(...ttsInfo);
+        segGeometryData.push(...geometryInfo);
+
         if (preObjDet && preGroupData) {
-            ttsData.push({"value": "It also", "type": "text"});
+            ttsData.push({ "value": "It also", "type": "text" });
         }
     }
     if (preObjDet && preGroupData) {
-        ttsData.push(...utils.generateObjDet(preObjDet, preGroupData));
+        //ttsData.push(...utils.generateObjDet(preObjDet, preGroupData));
+        let [ttsInfo, geometryInfo] = utils.generateObjDet(preObjDet, preGroupData);
+        ttsData.push(...ttsInfo);
+        objGeometryData.push(...geometryInfo);
+        //console.log("obj geo data: ", objGeometryData);
     }
 
-        // Concatenate adjacent text entries
-        for (let i = 0; i < ttsData.length - 1; i++) {
-            if (ttsData[i].type === "text" && ttsData[i+1].type === "text") {
-                ttsData[i].value += " " + ttsData[i+1].value;
-                ttsData.splice(i+1, 1);
-            }
+    // Concatenate adjacent text entries
+    for (let i = 0; i < ttsData.length - 1; i++) {
+        if (ttsData[i].type === "text" && ttsData[i + 1].type === "text") {
+            ttsData[i].value += " " + ttsData[i + 1].value;
+            ttsData.splice(i + 1, 1);
         }
+    }
 
     // Generate rendering title
     const renderingTitle = utils.renderingTitle(preSemSeg, preObjDet, preGroupData);
@@ -151,57 +161,6 @@ app.post("/handler", async (req, res) => {
         }
     } else {
         console.debug("Skipped text rendering.");
-    }
-
-    // *******************************************************
-    // Haptic seg and obj coordinate data
-    // *******************************************************
-    const hapticSegInfo: { centroid: number[]; contourPoints: number[]; }[] = [];
-    const groupCentroidArray: Array<Array<number>> = [];
-    const groupCoordArray: Array<Array<number>> = [];
-
-    const segments = preSemSeg["segments"];
-    if (segments.length !== 0) {
-        for (const segment of segments) {
-            // Grab coordinates
-            const contourPoints: number[] = segment["coord"];
-            const center: number[] = segment["centroid"];
-            const data = {
-                "centroid": center,
-                "contourPoints": contourPoints 
-            }
-            hapticSegInfo.push(data);
-        }
-    } else {
-        console.warn("No segments were detected.");
-    }
-
-    const objects = preObjDet["objects"]
-    if (objects.length !== 0) {
-
-        for (const group of preGroupData["grouped"]) {
-            const objsByGroup = preObjDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"]));
-
-            const centroidArray = [];
-            const coordArray = [];
-             for (let i = 0; i < objsByGroup.length; i++) {
-               const centroid = objsByGroup[i]["centroid"]
-               const coords = objsByGroup[i]["dimensions"]
-               centroidArray.push(centroid)
-               coordArray.push(coords)
-             }
-             groupCentroidArray.push(centroidArray);
-             groupCoordArray.push(coordArray);
-            }
-        for (const idx of preGroupData["ungrouped"]) {
-            const obj = preObjDet["objects"].find((x: { "ID": number }) => x["ID"] === idx);
-            const centroid = obj["centroid"]
-            const coords = obj["dimensions"]         
-            groupCentroidArray.push(centroid);
-            groupCoordArray.push(coords);
-        }
-    } else {
-        console.warn("No objects were detected.");
     }
 
     const image = req.body.image;
@@ -240,37 +199,45 @@ app.post("/handler", async (req, res) => {
 
                 console.log("Forming OSC...");
                 return utils.sendOSC(jsonFile, outFile, "supercollider", scPort);
-            }).then(async (segArray:any) => {
+            }).then(async (segArray: any) => {
                 const buffer = await fs.readFile(outFile);
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
-                if (hasAudioHaptic && segArray.length > 0 
-                    && segArray.length > hapticSegInfo.length) {
-                        
+                if (hasAudioHaptic && segArray.length > 0
+                    && segArray.length > segGeometryData.length) {
+
                     const s = [...segArray];
 
                     // Empty for text fields
                     if (preObjDet || preSemSeg)
-                    s[0] = { ...s[0], 
+                        s[0] = {
+                            ...s[0],
                             centroid: [[]],
-                            contourPoints: [[]]};
+                            contourPoints: [[]]
+                        };
 
                     if (preObjDet && preSemSeg)
-                        s[1 + hapticSegInfo.length] = { ...s[1 + hapticSegInfo.length], 
-                                centroid: [[]],
-                                contourPoints: [[]]};                            
+                        s[1 + segGeometryData.length] = {
+                            ...s[1 + segGeometryData.length],
+                            centroid: [[]],
+                            contourPoints: [[]]
+                        };
 
                     // Add coordinate info to entity
-                    for (let i = 1; i <= hapticSegInfo.length; i++) {
-                        s[i] = {...s[i], 
-                            centroid: [hapticSegInfo?.[i - 1]?.['centroid']],
-                            contourPoints: [hapticSegInfo?.[i - 1]?.['contourPoints']],
-                        };    
+                    for (let i = 1; i <= segGeometryData.length; i++) {
+                        s[i] = {
+                            ...s[i],
+                            centroid: [segGeometryData?.[i - 1]?.['centroid']],
+                            contourPoints: [segGeometryData?.[i - 1]?.['contourPoints']],
+                        };
                     }
-                    const j = 1 + hapticSegInfo.length + 1;
-                    for (let i = 0; i < groupCentroidArray.length; i++) {
-                        s[i + j] = {...s[i + j], centroid: groupCentroidArray[i],
-                        contourPoints: groupCoordArray[i],
+                    const j = 1 + segGeometryData.length + 1;
+                    for (let i = 0; i < objGeometryData.length; i++) {
+                        s[i + j] = {
+                            ...s[i + j], centroid: objGeometryData[i]['centroid'],
+                            contourPoints: objGeometryData[i]['contourPoints']
+                            //groupCentroidArray[i],
+                            //contourPoints: groupCoordArray[i],
                         };
                     }
                     //TO DO: change image tag name
@@ -304,7 +271,7 @@ app.post("/handler", async (req, res) => {
                     fs.access(outFile).then(() => { return fs.unlink(outFile); }).catch(() => { /* noop */ });
                 }
             });
-        } catch(e) {
+        } catch (e) {
             console.error("Failed to generate audio!");
             console.error(e);
         }
