@@ -34,10 +34,10 @@
         }
     },
     "properties": {
-        "image": {
+        "graphic": {
             "type": "string",
-            "description": "A base64 encoding of the image as a string.",
-            "pattern": "data:image\/[^;]+;base64[^\"]+"
+            "description": "A base64 encoding of the graphic as a string.",
+            "pattern": "data:graphic\/[^;]+;base64[^\"]+"
         },
         "info": {
             "type": "object",
@@ -61,7 +61,8 @@
                                         "properties": {
                                             "name": {
                                                 "description": "A short name assigned to the entity.",
-                                                "type": "string"
+                                                "type": "string",
+                                                "maxLength": 100
                                             }
                                         },
                                         "required": [
