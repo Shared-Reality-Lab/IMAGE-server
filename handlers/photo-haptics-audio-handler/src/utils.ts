@@ -32,13 +32,28 @@ export type TTSResponse = {
 }
 
 type ObjDet = {
-    objects: { ID: number, type: string }[];
+    objects: {
+        ID: number,
+        type: string,
+        centroid: [number, number],
+        dimensions: [number, number, number, number],
+    }[];
 };
 
 type ObjGroup = {
     grouped: { IDs: number[] }[];
     ungrouped: number[];
 };
+
+export type segGeometryInfo = {
+    centroid: [number, number];
+    contourPoints: [number, number, number, number];
+}
+
+export type objGeometryInfo = {
+    centroid: [number, number][];
+    contourPoints: [number, number, number, number][];
+}
 
 export type SoundSegments = {
     name: string;
@@ -64,25 +79,42 @@ export function generateIntro(secondCatData: { "category": string } | undefined)
     return "This photo";
 }
 
-export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }): TTSSegment[] {
+export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }): [TTSSegment[], segGeometryInfo[]] {
     const segments = semSeg["segments"];
-    const data: TTSSegment[] = [];
-    data.push({"value": "contains the following outlines of regions:", "type": "text"});
-    data.push(...segments.map(segment => {
+
+    // TTS
+    const ttsData: TTSSegment[] = [];
+    // Location data
+    const posData: segGeometryInfo[] = [];
+    ttsData.push({ "value": "contains the following outlines of regions:", "type": "text" });
+    for (const segment of segments) {
         const newSeg = segment;
         newSeg["value"] = (newSeg["nameOfSegment"] as string) + ",";
         newSeg["type"] = "segment";
         newSeg["label"] = newSeg["nameOfSegment"] as string;
-        return newSeg as TTSSegment;
-    }));
-    data[data.length-1]["value"] = data[data.length - 1]["value"].replace(",", ".");
-    data[data.length-1]["value"] = "and " + data[data.length-1]["value"];
-    return data;
+
+        const coord = segment["coord"] as [number, number, number, number];
+        const centroid = segment["centroid"] as [number, number];
+        const geoSeg = {
+            "centroid": centroid,
+            "contourPoints": coord
+        };
+        ttsData.push(newSeg as TTSSegment);
+        posData.push(geoSeg as segGeometryInfo);
+    };
+    ttsData[ttsData.length - 1]["value"] = ttsData[ttsData.length - 1]["value"].replace(",", ".");
+    ttsData[ttsData.length - 1]["value"] = "and " + ttsData[ttsData.length - 1]["value"];
+    return [ttsData, posData];
 }
 
-export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[] {
+export function generateObjDet(objDet: any, objGroup: ObjGroup): [TTSSegment[], objGeometryInfo[]] {
     const objects: TTSSegment[] = [];
-    objects.push({"type": "text", "value": "contains the following objects or people:"});
+
+    const hapticObjInfo: objGeometryInfo[] = [];
+    const groupCentroidArray: Array<Array<number>> = [];
+    const groupCoordArray: Array<Array<number>> = [];
+
+    objects.push({ "type": "text", "value": "contains the following objects or people:" });
     for (const group of objGroup["grouped"]) {
         const objs = objDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"]));
         const sType = (objs.length > 0) ? objs[0]["type"] : "object";
@@ -94,6 +126,20 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[]
             "value": objs.length.toString() + " " + pType + ","
         };
         objects.push(object);
+
+        const centroidArray: [number, number][] = [];
+        const coordArray: [number, number, number, number][] = [];
+        objs.map((obj: { [x: string]: any; }) => {
+            const centroid = obj["centroid"];
+            const coords = obj["dimensions"];
+            centroidArray.push(centroid)
+            coordArray.push(coords)
+        })
+        const geoObjSeg = {
+            "centroid": centroidArray,
+            "contourPoints": coordArray
+        }
+        hapticObjInfo.push(geoObjSeg);
     }
     for (const idx of objGroup["ungrouped"]) {
         const obj = objDet["objects"].find((x: { "ID": number }) => x["ID"] === idx);
@@ -104,11 +150,22 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[]
                 "label": obj["type"].trim(),
                 "value": (Articles.articlize(obj["type"].trim()) as string) + ","
             } as TTSSegment);
+
+            const geoObjSeg = {
+                "centroid": obj["centroid"],
+                "contourPoints": obj["dimensions"]
+            }
+            hapticObjInfo.push(geoObjSeg);
+            // const centroid = obj["centroid"]
+            // const coords = obj["dimensions"]         
+            // groupCentroidArray.push(centroid);
+            // groupCoordArray.push(coords);
         }
     }
-    objects[objects.length-1]["value"] = objects[objects.length - 1]["value"].replace(",", ".");
-    objects[objects.length-1]["value"] = "and " + objects[objects.length-1]["value"];
-    return objects;
+    //hapticObjInfo.push(groupCentroidArray)
+    objects[objects.length - 1]["value"] = objects[objects.length - 1]["value"].replace(",", ".");
+    objects[objects.length - 1]["value"] = "and " + objects[objects.length - 1]["value"];
+    return [objects, hapticObjInfo];
 }
 
 export async function getTTS(text: string[]): Promise<TTSResponse> {
@@ -143,8 +200,8 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
                             for (let i = 1; i < arg.length; i += 3) {
                                 respArry.push({
                                     "name": arg[i] as string,
-                                    "offset": arg[i+1] as number,
-                                    "duration": arg[i+2] as number
+                                    "offset": arg[i + 1] as number,
+                                    "duration": arg[i + 2] as number
                                 });
                             }
                         }
