@@ -45,11 +45,13 @@ type ObjGroup = {
     ungrouped: number[];
 };
 
+// Geometry information for locating points and contours
 export type segGeometryInfo = {
     centroid: [number, number];
     contourPoints: [number, number, number, number];
 }
 
+// Can contain more than one item when objects are grouped
 export type objGeometryInfo = {
     centroid: [number, number][];
     contourPoints: [number, number, number, number][];
