@@ -17,6 +17,8 @@
 import express from "express";
 import fetch from "node-fetch";
 import Ajv2020 from "ajv";
+import fs from "fs/promises";
+import path from "path";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
@@ -31,6 +33,8 @@ const ajv = new Ajv2020({
 });
 
 const PREPROCESSOR_TIME_MS = 15000;
+
+const BASE_LOG_PATH = path.join("/var", "log", "IMAGE");
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
@@ -143,6 +147,28 @@ app.post("/render", (req, res) => {
             } else {
                 console.debug("Failed to generate a valid response (did the schema change?)");
                 res.status(500).send(ajv.errors);
+            }
+
+            if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {
+                const requestPath = path.join(BASE_LOG_PATH, req.body.request_uuid);
+                fs.mkdir(
+                    requestPath,
+                    { recursive: true }
+                ).then(_ => {
+                    return fs.writeFile(
+                        path.join(requestPath, "request.json"),
+                        JSON.stringify(req.body)
+                    );
+                }).then(_ => {
+                    return fs.writeFile(
+                        path.join(requestPath, "response.json"),
+                        JSON.stringify(response)
+                    );
+                }).then(_ => { console.debug("Wrote temporary files to " + requestPath); })
+                .catch(e => {
+                    console.error("Error occurred while logging to " + requestPath);
+                    console.error(e);
+                });
             }
         }).catch(e => {
             console.error(e);
