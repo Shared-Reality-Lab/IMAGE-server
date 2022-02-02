@@ -1,7 +1,7 @@
 {
-  "name": "photo-haptics-audio-handler",
-  "version": "1.0.0",
-  "description": "Audio renderings for probable photographs.",
+  "name": "photo-audio-haptics-handler",
+  "version": "0.0.1",
+  "description": "Audio-haptics renderings for probable photographs.",
   "main": "dist/server.js",
   "scripts": {
     "prebuild": "eslint src --ext .ts",

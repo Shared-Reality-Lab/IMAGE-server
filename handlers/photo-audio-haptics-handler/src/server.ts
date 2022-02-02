@@ -115,7 +115,7 @@ app.post("/handler", async (req, res) => {
     if (preSemSeg) {
         // Use all segments returned for now.
         // Filtering may be helpful later.
-        let [ttsInfo, geometryInfo] = utils.generateSemSeg(preSemSeg);
+        const [ttsInfo, geometryInfo] = utils.generateSemSeg(preSemSeg);
         ttsData.push(...ttsInfo);
         segGeometryData.push(...geometryInfo);
 
@@ -124,7 +124,7 @@ app.post("/handler", async (req, res) => {
         }
     }
     if (preObjDet && preGroupData) {
-        let [ttsInfo, geometryInfo] = utils.generateObjDet(preObjDet, preGroupData);
+        const [ttsInfo, geometryInfo] = utils.generateObjDet(preObjDet, preGroupData);
         ttsData.push(...ttsInfo);
         objGeometryData.push(...geometryInfo);
     }
@@ -226,7 +226,7 @@ app.post("/handler", async (req, res) => {
                         }
                     };
                     if (ajv.validate("https://image.a11y.mcgill.ca/renderers/photoaudiohaptics.schema.json", rendering["data"])) {
-                        renderings.push(rendering);;
+                        renderings.push(rendering);
                     } else {
                         console.error(ajv.errors);
                     }
