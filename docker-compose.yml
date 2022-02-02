@@ -8,11 +8,14 @@ services:
         image: "orchestrator:latest"
         env_file:
             - ./config/express-common.env
+        environment:
+            - STORE_IMAGE_DATA=ON
         group_add:
             # This should be set in an environment variable or .env
             - ${DOCKER_GID}
         volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - user-logs:/var/log/IMAGE
     supercollider:
         build:
             context: ./services/supercollider-images/supercollider-service
@@ -230,3 +233,4 @@ services:
 
 volumes:
     sc-store:
+    user-logs:

@@ -34,7 +34,7 @@ const ajv = new Ajv2020({
 
 const PREPROCESSOR_TIME_MS = 15000;
 
-const BASE_LOG_PATH = path.join("/var", "log", "IMAGE");
+const BASE_LOG_PATH = path.join("/var", "log", "IMAGE", "temporary");
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
@@ -101,7 +101,7 @@ app.post("/render", (req, res) => {
 
             // TODO do things with these services
             // Preprocessors run in order
-            let data = req.body;
+            let data = JSON.parse(JSON.stringify(req.body));
             data = await runPreprocessors(data, preprocessors);
 
             // Handlers
@@ -134,7 +134,7 @@ app.post("/render", (req, res) => {
             });
 
             return Promise.all(promises);
-        }).then(results => {
+        }).then(async (results) => {
             const renderings = results.reduce((a, b) => a.concat(b), []);
             const response = {
                 "request_uuid": req.body.request_uuid,
@@ -154,17 +154,17 @@ app.post("/render", (req, res) => {
                 fs.mkdir(
                     requestPath,
                     { recursive: true }
-                ).then(_ => {
+                ).then(() => {
                     return fs.writeFile(
                         path.join(requestPath, "request.json"),
                         JSON.stringify(req.body)
                     );
-                }).then(_ => {
+                }).then(() => {
                     return fs.writeFile(
                         path.join(requestPath, "response.json"),
                         JSON.stringify(response)
                     );
-                }).then(_ => { console.debug("Wrote temporary files to " + requestPath); })
+                }).then(() => { console.debug("Wrote temporary files to " + requestPath); })
                 .catch(e => {
                     console.error("Error occurred while logging to " + requestPath);
                     console.error(e);
