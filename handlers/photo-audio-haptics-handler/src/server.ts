@@ -28,8 +28,7 @@ import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
 import descriptionJSON from "./schemas/services/supercollider/tts-description.schema.json";
 import segmentJSON from "./schemas/services/supercollider/tts-segment.schema.json";
 import rendererDefJSON from "./schemas/renderers/definitions.json";
-import textJSON from "./schemas/renderers/text.schema.json";
-import photoAudioHapticsJSON from "./schemas/renderers/photoaudiohaptics.schema.json";//"./photoaudiohaptics.schema.json";
+import photoAudioHapticsJSON from "./schemas/renderers/photoaudiohaptics.schema.json";
 
 import * as utils from "./utils";
 
@@ -88,10 +87,9 @@ app.post("/handler", async (req, res) => {
     // *******************************************************
     // Check for renderer availability
     // *******************************************************
-    const hasText = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.Text");
     const hasAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.PhotoAudioHaptics");
-    if (!hasAudioHaptic && !hasText) {
-        console.warn("Segment audio-haptic renderers not supported!");
+    if (!hasAudioHaptic) {
+        console.warn("Photo audio-haptic renderer not supported!");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
         if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
             res.json(response);
@@ -178,8 +176,7 @@ app.post("/handler", async (req, res) => {
                 const buffer = await fs.readFile(outFile);
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
-                if (hasAudioHaptic && entities.length > 0
-                    && entities.length > segGeometryData.length) {
+                if (hasAudioHaptic && entities.length > segGeometryData.length) {
                     
                     // Add the point and contour location information to each returned entity.
                     // An entity could be either an object or segment.
