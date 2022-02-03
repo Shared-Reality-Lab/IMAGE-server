@@ -139,7 +139,13 @@ def run_segmentation(url,
     img = pil_image
     img_original = numpy.array(img)
     img_data = pil_to_tensor(img)
-    img_data = img_data.cuda()
+    try:
+        img_data = img_data.cuda()
+    except RuntimeError as e:
+        if 'out of memory' in str(e):
+            print("OOM detected")
+            torch.cuda.empty_cache()
+            return jsonify("OOM detected"), 500
     singleton_batch = {'img_data': img_data[None]}
     output_size = img_data.shape[1:]
     with torch.no_grad():
