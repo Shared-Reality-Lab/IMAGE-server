@@ -28,8 +28,8 @@ import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
 import descriptionJSON from "./schemas/services/supercollider/tts-description.schema.json";
 import segmentJSON from "./schemas/services/supercollider/tts-segment.schema.json";
 import rendererDefJSON from "./schemas/renderers/definitions.json";
-import textJSON from "./schemas/renderers/text.schema.json"
-import photoAudioHapticsJSON from "./photoaudiohaptics.schema.json";
+import textJSON from "./schemas/renderers/text.schema.json";
+import photoAudioHapticsJSON from "./schemas/renderers/photoaudiohaptics.schema.json";//"./photoaudiohaptics.schema.json";
 
 import * as utils from "./utils";
 
