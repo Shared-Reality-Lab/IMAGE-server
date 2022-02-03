@@ -5,8 +5,7 @@ FROM node:alpine
 # Set up permissions for logging
 WORKDIR /var/log/IMAGE
 RUN apk add supercronic
-RUN mkdir temporary authorized
-RUN chmod o+wx /var/log/IMAGE/temporary
+RUN chmod o+wx .
 
 WORKDIR /usr/src/app
 # Apparently splittig this up is good for layers
