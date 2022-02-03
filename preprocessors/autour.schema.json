@@ -22,7 +22,8 @@
         "api_request": {
             "type": "string",
             "title": "API Request",
-            "description": "The API request to be made to the map"
+            "description": "The API request to be made to the map",
+            "pattern": "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,}\\.[a-z]{2,}\\b(\\S*)$"
         },
         "places": {
             "type": "array",
