@@ -4,53 +4,75 @@
   "type": "object",
   "title": "Segmentation Data",
   "description": "JSON containing pixel coordinates of different segments in an image",
+  "definitions": {
+    "normCoord": {
+      "description": "A pair of normalized coordinates.",
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "contour": {
+      "type": "object",
+      "description": "A single contour of a segment as detected. Each contour is a separate region.",
+      "properties": {
+        "coordinates": {
+          "description": "The normalized coordinates forming the contour as returned by OpenCV.",
+          "type": "array",
+          "items": { "$ref": "#/definitions/normCoord" }
+        },
+        "centroid": {
+          "allOf": [
+            { "$ref": "#/definitions/normCoord" },
+            { "description": "The center of the contour with normalized coordinates." }
+          ]
+        },
+        "area": {
+          "description": "The area of the image taken by this contour",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    }
+  },
   "properties": {
     "segments": {
       "type": "array",
       "description": "Divides the entire image into different segments where each segment indicates a noteworthy region or structure. For example a park image would be divided into sections that contain grass, sections that contain trees etc.",
       "items": {
         "type": "object",
-        "description": "Contains information about each individual segment in an image. Information such as area, centre of segment etc are included in this section",
+        "description": "Contains information about each individual segment in an image. Information such as area, centre of segment etc are included in this section.",
         "properties": {
-          "nameOfSegment": {
-            "description": "This section contains the name of the segment",
+          "name": {
+            "description": "The name of the segment.",
             "type": "string"
           },
-          "coord": {
-            "description": "This section contains the normalised coordinates for each segment. A maximum of 101 coordinate values are passed in the json to limit the size of json",
+          "contours": {
+            "description": "The separate contours making up the segment.",
             "type": "array",
-            "items": {
-              "type": "array",
-              "items": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 1
-              },
-              "minItems": 2,
-              "maxItems": 2
-            }
+            "items": { "$ref": "#/definitions/contour" }
           },
           "centroid": {
-            "description": "This section contains the centroid for a segment. It represents the centre value of the entire segment. The centroid coordinates are normalised between 0 and 1",
-            "type": "array",
-            "items": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 1
-            },
-            "minItems": 2,
-            "maxItems": 2
+            "allOf": [
+              { "$ref": "#/definitions/normCoord" },
+              { "description": "The overall centroid of the segment with normalized coordinates." }
+            ]
           },
           "area": {
-            "description": "Total area occupied by the segment in a given image. the area is normalised between 0 and 1",
+            "description": "Total area occupied by the segment in a given image, normalized between 0 and 1.",
             "type": "number",
             "minimum": 0,
             "maximum": 1
           }
         },
         "required": [
-          "coord",
-          "nameOfSegment",
+          "name",
+          "contours",
           "centroid",
           "area"
         ]
