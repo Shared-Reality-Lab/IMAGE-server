@@ -103,7 +103,7 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
         };
         ttsData.push(newSeg as TTSSegment);
         posData.push(locSeg as segGeometryInfo);
-    };
+    }
     ttsData[ttsData.length - 1]["value"] = ttsData[ttsData.length - 1]["value"].replace(",", ".");
     ttsData[ttsData.length - 1]["value"] = "and " + ttsData[ttsData.length - 1]["value"];
     return [ttsData, posData];
