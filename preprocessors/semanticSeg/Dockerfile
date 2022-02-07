@@ -1,4 +1,3 @@
-FROM schemas:latest AS schemas
 FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
 
 
@@ -9,14 +8,14 @@ RUN adduser --disabled-password python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 
-COPY ./requirements.txt /app/requirements.txt
+COPY /preprocessors/semanticSeg/requirements.txt /app/requirements.txt
 
 RUN pip3 install --upgrade pip
 RUN pip install -r /app/requirements.txt
 
 
-COPY --from=schemas /schemas /app/schemas
-COPY . /app
+COPY /schemas /app/schemas
+COPY /preprocessors/semanticSeg/ /app
 
 RUN wget https://image.a11y.mcgill.ca/models/semanticSegmentation/decoder_epoch_20.pth
 RUN wget https://image.a11y.mcgill.ca/models/semanticSegmentation/encoder_epoch_20.pth

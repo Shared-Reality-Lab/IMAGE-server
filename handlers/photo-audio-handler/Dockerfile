@@ -1,11 +1,10 @@
-FROM schemas:latest as schemas
 FROM node:alpine
 
 RUN addgroup -g 4322 storage && addgroup node storage
 WORKDIR /usr/src/app
-COPY . /usr/src/app
+COPY /handlers/photo-audio-handler/ /usr/src/app
 RUN npm ci
-COPY --from=schemas /schemas src/schemas
+COPY /schemas src/schemas
 RUN npm run build
 
 ENV NODE_ENV=production

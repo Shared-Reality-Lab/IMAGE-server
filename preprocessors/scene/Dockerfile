@@ -1,5 +1,3 @@
-FROM schemas:latest AS schemas
-
 FROM python:3.7
 
 RUN apt-get update && apt-get install -y python3-opencv && rm -rf /var/lib/apt/lists/*
@@ -12,13 +10,13 @@ RUN wget http://places2.csail.mit.edu/models_places365/wideresnet18_places365.pt
 
 RUN pip3 install --upgrade pip
 
-COPY ./requirements.txt /app/requirements.txt
+COPY /preprocessors/scene/requirements.txt /app/requirements.txt
 
 RUN pip install -r requirements.txt
 
-COPY --from=schemas /schemas /app/schemas
+COPY /schemas /app/schemas
 
-COPY . /app
+COPY /preprocessors/scene /app
 
 EXPOSE 5000
 

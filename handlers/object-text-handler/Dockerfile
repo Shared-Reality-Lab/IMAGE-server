@@ -1,14 +1,12 @@
-FROM schemas:latest AS schemas
-
 FROM node:alpine
 
 WORKDIR /usr/src/app
 
-COPY *.js* ./
+COPY /handlers/object-text-handler/*.js* ./
 RUN npm ci
-COPY src ./src
-COPY types ./types
-COPY --from=schemas /schemas src/schemas
+COPY /handlers/object-text-handler/src ./src
+COPY /handlers/object-text-handler/types ./types
+COPY /schemas src/schemas
 RUN npm run build
 
 ENV NODE_ENV=production
