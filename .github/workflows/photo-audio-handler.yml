@@ -7,6 +7,9 @@ on:
     branches: [ main ]
     paths: [ "handlers/photo-audio-handler/**" ]
   workflow_dispatch:
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: shared-reality-lab/image-handler-photo-audio
 jobs:
   lint:
     name: Basic linting and type checking.
@@ -27,3 +30,47 @@ jobs:
       - name: Check with tsc
         working-directory: ./handlers/photo-audio-handler
         run: npx tsc --noEmit
+  build-and-push-image:
+    name: Build and Push to Registry
+    needs: lint
+    if: ${{ github.event_name != 'pull_request' && success() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Log into GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+          labels: |
+            org.opencontainers.image.title=IMAGE Handler Photo Audio
+            org.opencontainers.image.description=Handler using multiple preprocessors to generate text or audio renderings for photographs.
+            org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
+            org.opencontainers.image.licenses=AGPL-3.0-or-later
+            maintainer=IMAGE Project <image@cim.mcgill.ca>
+      - name: Get timestamp
+        run: echo "timestamp=$(date -u +'%Y-%m-%dT%H.%M')" >> $GITHUB_ENV
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./handlers/photo-audio-handler/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:unstable
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.timestamp }}
+          labels: ${{ steps.meta.outputs.labels }}
