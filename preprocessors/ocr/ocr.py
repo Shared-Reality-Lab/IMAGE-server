@@ -35,6 +35,7 @@ def get_ocr_text():
     """
     Gets data on locations nearby a map from the Autour API
     """
+    
     # Load schemas
     with open('./schemas/preprocessors/ocr.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
@@ -48,6 +49,12 @@ def get_ocr_text():
         definition_schema['$id']: definition_schema
     }
     content = request.get_json()
+    
+    # Check if request is for a map
+    if 'image' not in content:
+        logging.info("Map request. Skipping...")
+        return "", 204
+    
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
     # Validate incoming request
