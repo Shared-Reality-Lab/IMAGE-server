@@ -66,7 +66,7 @@ def get_ocr_text():
     resolver = jsonschema.RefResolver.from_schema(
             schema, store=schema_store)
     # Get OCR text response
-    ocr_result = analyze_image(content['image'])
+    ocr_result = analyze_image(content['graphic'])
     
     if ocr_result is None:
         return jsonify("Could not retreive Azure results"), 400
