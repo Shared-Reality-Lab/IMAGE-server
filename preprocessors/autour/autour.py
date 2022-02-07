@@ -86,6 +86,8 @@ def get_map_data():
             font=9&\
             pad=0"
 
+    api_request = ''.join(api_request.split())
+
     response = requests.get(api_request).json()
     results = response['results']
 
