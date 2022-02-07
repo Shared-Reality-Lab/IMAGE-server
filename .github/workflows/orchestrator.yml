@@ -62,7 +62,7 @@ jobs:
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
       - name: Get timestamp
-        run: echo "iso8601=$(date -Iminutes -u)" >> $GITHUB_ENV
+        run: echo "timestamp=$(date -u +'%Y-%m-%dT%H.%M')" >> $GITHUB_ENV
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
@@ -71,5 +71,5 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:unstable
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.iso8601 }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.timestamp}}
           labels: ${{ steps.meta.outputs.labels }}
