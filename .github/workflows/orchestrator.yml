@@ -33,6 +33,7 @@ jobs:
   build-and-push-image:
     name: Build and Push to Registry
     needs: lint
+    if: ${{ github.event_name != 'pull_request' && success() }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
