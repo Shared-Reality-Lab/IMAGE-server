@@ -70,9 +70,9 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
     data.push({"value": "contains the following outlines of regions:", "type": "text"});
     data.push(...segments.map(segment => {
         const newSeg = segment;
-        newSeg["value"] = (newSeg["nameOfSegment"] as string) + ",";
+        newSeg["value"] = (newSeg["name"] as string) + ",";
         newSeg["type"] = "segment";
-        newSeg["label"] = newSeg["nameOfSegment"] as string;
+        newSeg["label"] = newSeg["name"] as string;
         return newSeg as TTSSegment;
     }));
     data[data.length-1]["value"] = data[data.length - 1]["value"].replace(",", ".");
