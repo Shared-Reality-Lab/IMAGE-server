@@ -233,10 +233,13 @@ IMAGE {
             // Play klank for segmentations
             SynthDef((\playKlankNoise4SegmentHOA++(i+1)).asSymbol, { |midinote = 60,
                                                                       theta = 0.0pi, phi = 0.0pi, radius = 2.5,
-                                                                      out = 2, gain = 0, lag = 0.1|
-            var sig, encoded;
-                sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!18, {|i| 1/(i+1) }!18, {|i| 2/(i+1) }!18], BrownNoise.ar(0.001) + Dust.ar(50, 0.5) , midinote.midicps  ) * AmpComp.kr(midinote.midicps, 300);
-                encoded = HoaEncodeDirection.ar(sig * gain.lag(lag), theta.lag(lag),
+                                                                      out = 2, gain = 0, lag = 0.1, release=0.5, gate=1|
+            var sig, encoded, env, envGen;
+                env = Env.asr(releaseTime: release);
+                envGen = EnvGen.ar(env, gate);
+                sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!18, {|i| 1/(i+1) }!18, {|i| 2/(i+1) }!18], BrownNoise.ar(0.001) + Dust.ar(50, 0.5) , midinote.midicps  ) * envGen * AmpComp.kr(midinote.midicps, 300);
+                DetectSilence.ar(sig, doneAction: Done.freeSelf);
+                encoded = HoaEncodeDirection.ar(sig* gain.lag(lag), theta.lag(lag),
                                                      phi.lag(lag),
                                                      radius.lag(lag),
                                                      order.asInteger);

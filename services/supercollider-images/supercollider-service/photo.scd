@@ -120,8 +120,8 @@ renderPhoto = { |json, ttsData, outPath, addr|
                 segmentInfo = segmentInfo.add(timing - initialTiming);
             },
             \segment, {
-                var duration = (audio.at("duration").asInteger / ttsData.sampleRate), coord = item.at("coord"), area = item.at("area").asFloat, maxTime=25, totalTime=maxTime*area, pingDur=0.01, midinote, initialTiming=timing;
-                // TTS and then segment outline
+                var contours = item.at("contours"), duration = (audio.at("duration").asInteger / ttsData.sampleRate), initialTiming=timing;
+                // TTS and then segment outlines
                 "segment".postln;
                 score.add([
                     timing,
@@ -129,25 +129,31 @@ renderPhoto = { |json, ttsData, outPath, addr|
                 ]);
                 timing = timing + duration;
 
-                coord = coord.resamp0((totalTime / pingDur).asInteger);
-                midinote = item.at("centroid").at(1).asFloat.linlin(0.0, 1.0, 57, 45).round;
-                score.add([
-                    timing,
-                    [\s_new, (\playKlankNoise4SegmentHOA++order.asSymbol).asSymbol, 1003, 2, 1001, \midinote, midinote, \lag, pingDur, \gain, baseGain * -20.dbamp]
-                ]);
-                coord.do({ |point|
-                    var x, y, theta, phi;
-                    x = point.at(0).asFloat;
-                    y = point.at(1).asFloat;
-                    # theta, phi = IMAGE.mapCoords(x, y);
+                contours.do({ |contour, i|
+                    var coord = contour.at("coordinates"), area = contour.at("area").asFloat, centroid = contour.at("centroid"), maxTime=25, pingDur=0.01, contourTime = area*maxTime, midinote;
+
+                    coord = coord.resamp0((contourTime / pingDur).asInteger);
+                    midinote = item.at("centroid").at(1).asFloat.linlin(0.0, 1.0, 57, 45).round;
                     score.add([
                         timing,
-                        [\n_set, 1003, \theta, theta, \phi, phi]
+                        [\s_new, (\playKlankNoise4SegmentHOA++order.asSymbol).asSymbol, 1003, 2, 1001, \midinote, midinote, \lag, pingDur, \gain, baseGain * -20.dbamp]
                     ]);
-                    timing = timing + pingDur;
+                    coord.do({ |point|
+                        var x, y, theta, phi;
+                        x = point.at(0).asFloat;
+                        y = point.at(1).asFloat;
+                        # theta, phi = IMAGE.mapCoords(x, y);
+                        score.add([
+                            timing,
+                            [\n_set, 1003, \theta, theta, \phi, phi]
+                        ]);
+                        timing = timing + pingDur;
+                    });
+                    score.add([timing, [\n_set, 1003, \gate, 0.0]]);
+                    timing = timing + 0.5; // Pause between contours
+                    score.add([timing, [\n_free, 1003]]);
                 });
-                score.add([timing, [\n_set, 1003, \gain, 0.0]]);
-                score.add([timing, [\n_free, 1003]]);
+
 
                 if(item.at("label").notNil,
                     {
