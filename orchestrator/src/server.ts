@@ -17,6 +17,10 @@
 import express from "express";
 import fetch from "node-fetch";
 import Ajv2020 from "ajv";
+import fs from "fs/promises";
+import path from "path";
+import hash from "object-hash";
+import { validate, version } from "uuid";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
@@ -31,6 +35,8 @@ const ajv = new Ajv2020({
 });
 
 const PREPROCESSOR_TIME_MS = 15000;
+
+const BASE_LOG_PATH = path.join("/var", "log", "IMAGE");
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
@@ -97,7 +103,7 @@ app.post("/render", (req, res) => {
 
             // TODO do things with these services
             // Preprocessors run in order
-            let data = req.body;
+            let data = JSON.parse(JSON.stringify(req.body));
             data = await runPreprocessors(data, preprocessors);
 
             // Handlers
@@ -130,7 +136,7 @@ app.post("/render", (req, res) => {
             });
 
             return Promise.all(promises);
-        }).then(results => {
+        }).then(async (results) => {
             const renderings = results.reduce((a, b) => a.concat(b), []);
             const response = {
                 "request_uuid": req.body.request_uuid,
@@ -143,6 +149,28 @@ app.post("/render", (req, res) => {
             } else {
                 console.debug("Failed to generate a valid response (did the schema change?)");
                 res.status(500).send(ajv.errors);
+            }
+
+            if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {
+                const requestPath = path.join(BASE_LOG_PATH, req.body.request_uuid);
+                fs.mkdir(
+                    requestPath,
+                    { recursive: true }
+                ).then(() => {
+                    return fs.writeFile(
+                        path.join(requestPath, "request.json"),
+                        JSON.stringify(req.body)
+                    );
+                }).then(() => {
+                    return fs.writeFile(
+                        path.join(requestPath, "response.json"),
+                        JSON.stringify(response)
+                    );
+                }).then(() => { console.debug("Wrote temporary files to " + requestPath); })
+                .catch(e => {
+                    console.error("Error occurred while logging to " + requestPath);
+                    console.error(e);
+                });
             }
         }).catch(e => {
             console.error(e);
@@ -174,6 +202,46 @@ app.post("/render/preprocess", (req, res) => {
         });
     } else {
         res.status(400).send(ajv.errors);
+    }
+});
+
+app.get("/authenticate/:uuid/:check", async (req, res) => {
+    if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {
+        // Check for valid uuidv4 path
+        const uuid = req.params.uuid;
+        const check = req.params.check;
+        if (!(validate(uuid) && version(uuid) == 4)) {
+            console.log("Submitted id " + uuid + " was not UUID-v4.");
+            res.status(400).end();
+            return;
+        }
+
+        // Check if ID exists
+        await fs.readFile(path.join(BASE_LOG_PATH, uuid, "request.json"), { encoding: "utf-8" }).then(async (contents) => {
+            let sourceCheck: string;
+            try {
+                const obj = JSON.parse(contents);
+                sourceCheck = hash.sha1(obj);
+            } catch (e) {
+                console.error(e);
+                res.status(500).end();
+                return
+            }
+            if (sourceCheck === check) {
+                await fs.writeFile(path.join(BASE_LOG_PATH, uuid, "auth"), "");
+                res.status(200).end();
+                return;
+            }
+        }).catch(e => {
+            if (e.code !== "ENOENT") {
+                console.error(e);
+            }
+        });
+
+        res.status(401).end();
+    } else {
+        console.warn("Auth endpoint hit while off!");
+        res.status(503).end();
     }
 });
 
