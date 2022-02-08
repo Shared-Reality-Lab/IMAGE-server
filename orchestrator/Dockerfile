@@ -14,7 +14,7 @@ COPY orchestrator/src ./src
 COPY schemas src/schemas
 RUN npm run build
 
-COPY clean-cron ./clean-cron
+COPY orchestrator/clean-cron ./clean-cron
 RUN chown node:node clean-cron
 RUN chmod 644 clean-cron
 
