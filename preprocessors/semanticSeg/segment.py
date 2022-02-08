@@ -77,6 +77,7 @@ def findContour(pred_color, width, height):
     centres = []
     area = []
     totArea = 0
+    send_contour = []
     flag = False
     for i in range(len(contours)):
         moments = cv2.moments(contours[i])
@@ -90,6 +91,19 @@ def findContour(pred_color, width, height):
         centres.append(
             (int(moments['m10'] / moments['m00']),
              int(moments['m01'] / moments['m00'])))
+        area_indi = cv2.contourArea(contours[i])
+        centre_indi = (int(moments['m10'] / moments['m00']),
+                       int(moments['m01'] / moments['m00']))
+        contour_indi = [list(x) for x in contours[i]]
+        contour_indi = np.squeeze(contour_indi)
+        centre_down = [centre_indi[0] / width, centre_indi[1] / height]
+        area_down = area_indi / (width * height)
+        contour_indi = contour_indi.tolist()
+        for j in range(len(contour_indi)):
+            contour_indi[j][0] = float(float(contour_indi[j][0]) / width)
+            contour_indi[j][1] = float(float(contour_indi[j][1]) / height)
+        send_contour.append({"coordinates": contour_indi,
+                            "centroid": centre_down, "area": area_down})
     if not area:
         flag = True
     else:
@@ -107,8 +121,8 @@ def findContour(pred_color, width, height):
     result = np.swapaxes(result, 0, 1)
     result[0] = result[0] / float(width)
     result[1] = result[1] / float(height)
-    send = np.swapaxes(result, 0, 1).tolist()
-    return send, centre, totArea
+#    send = np.swapaxes(result, 0, 1).tolist()
+    return send_contour, centre, totArea
 
 
 def run_segmentation(url,
@@ -122,6 +136,9 @@ def run_segmentation(url,
     image = np.asarray(bytearray(binary), dtype="uint8")
     pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     height, width, channels = pil_image.shape
+    if(height > 1500 or width > 1500):
+        pil_image = cv2.resize(pil_image, (1500, 1500),
+                               interpolation=cv2.INTER_AREA)
     img = pil_image
     img_original = numpy.array(img)
     img_data = pil_to_tensor(img)
@@ -147,7 +164,7 @@ def run_segmentation(url,
         if(area == 0):
             continue
         dictionary.append(
-            {"nameOfSegment": name, "coord": send,
+            {"name": name, "contours": send,
              "centroid": center, "area": area})
     return {"segments": dictionary}
 
@@ -252,7 +269,7 @@ def segment():
                                    pil_to_tensor)
     torch.cuda.empty_cache()
     try:
-        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+        validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(segment)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
