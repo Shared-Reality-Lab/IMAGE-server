@@ -124,14 +124,6 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 5
             ca.mcgill.a11y.image.port: 5000
-    scene-detection:
-        build:
-            context: .
-            dockerfile: ./preprocessors/scene/Dockerfile
-        image: "scene-detection:latest"
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 5000
     semantic-segmentation:
         build:
             context: .
