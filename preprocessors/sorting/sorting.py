@@ -19,9 +19,7 @@ import json
 import time
 import jsonschema
 import logging
-import collections
 from math import sqrt
-from operator import itemgetter
 
 
 app = Flask(__name__)
@@ -37,9 +35,9 @@ def readImage():
     object_type = []
     dimensions = []
     area = []
-    left2right =[]
-    top2bottom =[]
-    small2big=[]
+    left2right = []
+    top2bottom = []
+    small2big = []
     top_id = []
     left_id = []
     small_id = []
@@ -58,7 +56,7 @@ def readImage():
         definition_schema['$id']: definition_schema
     }
     resolver = jsonschema.RefResolver.from_schema(
-            schema, store=schema_store)
+        schema, store=schema_store)
     content = request.get_json()
     try:
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
@@ -80,9 +78,9 @@ def readImage():
         dimensions.append(objects[i]["dimensions"])
         area.append(objects[i]["area"])
     for i in range(len(objects)):
-        left2right.append([objects[i]["ID"],dimensions[i][2]])
-        top2bottom.append([objects[i]["ID"],dimensions[i][1]])
-        small2big.append([objects[i]["ID"],area[i]])
+        left2right.append([objects[i]["ID"], dimensions[i][2]])
+        top2bottom.append([objects[i]["ID"], dimensions[i][1]])
+        small2big.append([objects[i]["ID"], area[i]])
     top2bottom = sorted(top2bottom, key=lambda x: x[1])
     left2right = sorted(left2right, key=lambda x: x[1])
     small2big = sorted(small2big, key=lambda x: x[1])
@@ -93,7 +91,8 @@ def readImage():
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.sorting"
-    data = {"leftToRight": left_id, "topToBottom": top_id,"smallToBig":small_id}
+    data = {"leftToRight": left_id,
+            "topToBottom": top_id, "smallToBig": small_id}
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(data)
@@ -105,7 +104,7 @@ def readImage():
         "timestamp": int(timestamp),
         "name": name,
         "data": data
-        }
+    }
     try:
         validator = jsonschema.Draft7Validator(
             schema, resolver=resolver)

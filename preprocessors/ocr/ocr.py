@@ -24,7 +24,7 @@ import io
 import base64
 from flask import Flask, request, jsonify
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
-from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
+from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes # noqa
 from msrest.authentication import CognitiveServicesCredentials
 
 app = Flask(__name__)
@@ -35,7 +35,7 @@ def get_ocr_text():
     """
     Gets data on locations nearby a map from the Autour API
     """
-    
+
     # Load schemas
     with open('./schemas/preprocessors/ocr.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
@@ -49,17 +49,17 @@ def get_ocr_text():
         definition_schema['$id']: definition_schema
     }
     content = request.get_json()
-    
+
     # Check if request is for a map
     if 'image' not in content:
         logging.info("Map request. Skipping...")
         return "", 204
-    
+
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
     # Validate incoming request
     resolver = jsonschema.RefResolver.from_schema(
-            request_schema, store=schema_store)
+        request_schema, store=schema_store)
     try:
         validator = jsonschema.Draft7Validator(
             request_schema,
@@ -71,10 +71,10 @@ def get_ocr_text():
         return jsonify("Invalid Request JSON format"), 400
     # Use response schema to validate response
     resolver = jsonschema.RefResolver.from_schema(
-            schema, store=schema_store)
+        schema, store=schema_store)
     # Get OCR text response
     ocr_result = analyze_image(content['image'])
-    
+
     if ocr_result is None:
         return jsonify("Could not retreive Azure results"), 400
 
@@ -106,6 +106,7 @@ def get_ocr_text():
 
     return response
 
+
 def analyze_image(source):
     """
     Gets OCR text data from Azure API
@@ -119,17 +120,19 @@ def analyze_image(source):
 
     subscription_key = os.environ["AZURE_API_KEY"]
     endpoint = "https://image-cv.cognitiveservices.azure.com/"
-    
-    computervision_client = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
-    
+
+    computervision_client = ComputerVisionClient(
+        endpoint, CognitiveServicesCredentials(subscription_key))
+
     read_response = computervision_client.read_in_stream(stream,  raw=True)
-    
+
     read_operation_location = read_response.headers["Operation-Location"]
     # Grab the ID from the URL
     operation_id = read_operation_location.split("/")[-1]
 
-    # Call the "GET" API and wait for it to retrieve the results barring timeout
-    
+    # Call the "GET" API and wait for it to
+    # retrieve the results barring timeout
+
     start_time = time.time()
 
     while True:
@@ -155,7 +158,6 @@ def analyze_image(source):
     else:
         logging.error("OCR text: {}".format(read_result.status))
         return None
-    
 
 
 if __name__ == "__main__":
