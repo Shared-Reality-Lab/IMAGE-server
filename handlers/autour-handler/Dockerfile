@@ -1,16 +1,14 @@
-FROM schemas:latest AS schemas
-
 FROM node:alpine
 
 RUN addgroup -g 4322 storage && addgroup node storage
 
 WORKDIR /usr/src/app
 
-COPY *.js* ./
+COPY /handlers/autour-handler/*.js* ./
 RUN npm ci
-COPY src ./src
-COPY types ./types
-COPY --from=schemas /schemas src/schemas
+COPY /handlers/autour-handler/src ./src
+COPY /handlers/autour-handler/types ./types
+COPY /schemas src/schemas
 RUN npm run build
 
 ENV NODE_ENV=production

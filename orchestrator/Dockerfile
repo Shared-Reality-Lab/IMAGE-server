@@ -1,5 +1,3 @@
-FROM schemas:latest AS schemas
-
 FROM node:alpine
 
 # Set up permissions for logging
@@ -10,13 +8,13 @@ RUN chmod o+wx .
 WORKDIR /usr/src/app
 # Apparently splittig this up is good for layers
 # Docker images are onions
-COPY *.js* ./
+COPY orchestrator/*.js* ./
 RUN npm ci
-COPY src ./src
-COPY --from=schemas /schemas src/schemas
+COPY orchestrator/src ./src
+COPY schemas src/schemas
 RUN npm run build
 
-COPY clean-cron ./clean-cron
+COPY orchestrator/clean-cron ./clean-cron
 RUN chown node:node clean-cron
 RUN chmod 644 clean-cron
 

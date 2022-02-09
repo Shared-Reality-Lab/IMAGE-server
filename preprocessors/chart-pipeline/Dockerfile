@@ -1,20 +1,19 @@
-FROM schemas:latest AS schemas
 FROM continuumio/miniconda3
 
-COPY --from=schemas /schemas /chart-pipeline/schemas
+COPY /schemas /chart-pipeline/schemas
 
 WORKDIR /chart-pipeline
 
 RUN apt-get update && apt-get install unzip && apt-get install -y g++
 RUN pip install gdown
 
-COPY environment.yml environment.yml
+COPY /preprocessors/chart-pipeline/environment.yml environment.yml
 RUN conda env create -f environment.yml
 RUN echo "source activate chartenv" > ~/.bashrc
 
 ENV PATH /opt/conda/envs/chartenv/bin:$PATH
 
-COPY . .
+COPY /preprocessors/chart-pipeline .
 
 WORKDIR /chart-pipeline/models/kp_models/_cpool_layers
 ENV CXX g++

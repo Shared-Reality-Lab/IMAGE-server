@@ -1,21 +1,122 @@
 version: "3"
 
 services:
-    # Supercollider on Fedora 34
+    orchestrator:
+        image: orchestrator:latest
+        build:
+            context: .
+            dockerfile: ./orchestrator/Dockerfile
     supercollider:
+        build:
+            context: ./services/supercollider-images/supercollider-service
+            dockerfile: Dockerfile
+        image: "supercollider-service:latest"
+    espnet-tts:
+        build:
+            context: .
+            dockerfile: services/espnet-tts/Dockerfile
+        image: "espnet-tts:latest"
+    hello-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/hello-preprocessor/Dockerfile
+        image: "hello-preprocessor:latest"
+    autour-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/autour/Dockerfile
+        image: "autour:latest"
+    ocr-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/ocr/Dockerfile
+        image: "ocr:latest"
+    hello-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/hello-handler/Dockerfile
+        image: "hello-handler:latest"
+    object-detection:
+        build:
+            context: .
+            dockerfile: ./preprocessors/yolo/Dockerfile
+        image: "object-detection:latest"
+    first-categoriser:
+        build:
+            context: .
+            dockerfile: ./preprocessors/categoriser/Dockerfile
+        image: "first-categoriser:latest"
+    second-categoriser:
+        build:
+            context: .
+            dockerfile: ./preprocessors/categoriser2/Dockerfile
+        image: "second-categoriser:latest"
+    object-grouping:
+        build:
+            context: .
+            dockerfile: ./preprocessors/grouping/Dockerfile
+        image: "object-grouping:latest"
+    object-sorting:
+        build:
+            context: .
+            dockerfile: ./preprocessors/sorting/Dockerfile
+        image: "object-sorting:latest"
+    semantic-segmentation:
+        build:
+            context: .
+            dockerfile: ./preprocessors/semanticSeg/./Dockerfile
+        image: "semantic-segmentation:latest"
+    chart-pipeline:
+        build:
+            context: .
+            dockerfile: ./preprocessors/chart-pipeline/Dockerfile
+        image: "chart-pipeline:latest"
+        command: --mode=1 --empty_cache=True
+    hello-tts-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/hello-tts-handler/Dockerfile
+        image: "hello-tts-handler:latest"
+    generic-tts-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/generic-tts-handler/Dockerfile
+        image: "generic-tts-handler:latest"
+    semantic-segmentation-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/segment-handler/Dockerfile
+        image: "segmentation-handler:latest"
+    pie-chart-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/pie-chart-handler/Dockerfile
+        image: "pie-chart-handler:latest"
+    object-text-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/object-text-handler/Dockerfile
+        image: "object-text-handler:latest"
+    autour-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/autour-handler/Dockerfile
+        image: "autour-handler:latest"
+    photo-audio-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/photo-audio-handler/Dockerfile
+        image: "photo-audio-handler:latest"
+    photo-audio-haptics-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/photo-audio-haptics-handler/Dockerfile
+    # Supercollider on Fedora 34
+    supercollider-base:
         build:
             context: ./services/supercollider-images/supercollider
             dockerfile: Dockerfile
         image: "supercollider:3.12.2"
-    
-    # Supercollider on Alpine Linux (smaller image)
-    supercollider-alpine:
-        build:
-            context: ./services/supercollider-images/supercollider-alpine
-            dockerfile: Dockerfile
-        image: "supercollider:alpine"
-    
-    # Supercollider on Alpine with extra UGens and Quarks
     supercollider-extra:
         build:
             context: ./services/supercollider-images/supercollider-extra

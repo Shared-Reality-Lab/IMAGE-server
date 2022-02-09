@@ -1,7 +1,6 @@
-FROM schemas:latest AS schemas
 FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
 
-COPY ./requirements.txt /app/requirements.txt
+COPY /preprocessors/categoriser/requirements.txt /app/requirements.txt
 
 RUN apt-get update && apt-get install -y python3-opencv wget && rm -rf /var/lib/apt/lists/*
 
@@ -12,9 +11,8 @@ ENV PATH="/home/python/.local/bin:${PATH}"
 RUN pip3 install --upgrade pip
 RUN pip install -r /app/requirements.txt
 
-COPY --from=schemas /schemas /app/schemas
-COPY . /app
-
+COPY /schemas /app/schemas
+COPY /preprocessors/categoriser/ /app
 
 RUN wget https://image.a11y.mcgill.ca/models/categoriser/latest-0.ckpt
 RUN wget https://download.pytorch.org/models/densenet121-a639ec97.pth

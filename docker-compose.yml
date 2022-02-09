@@ -2,10 +2,7 @@ version: "3"
 
 services:
     orchestrator:
-        build:
-            context: ./orchestrator
-            dockerfile: Dockerfile
-        image: "orchestrator:latest"
+        image: ghcr.io/shared-reality-lab/image-orchestrator:unstable
         env_file:
             - ./config/express-common.env
         environment:
@@ -16,19 +13,14 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro
             - user-logs:/var/log/IMAGE
+    # Services
     supercollider:
-        build:
-            context: ./services/supercollider-images/supercollider-service
-            dockerfile: Dockerfile
-        image: "supercollider-service:latest"
+        image: ghcr.io/shared-reality-lab/image-service-supercollider:unstable
         command: sclang -D ./loader.scd
         volumes:
             - sc-store:/tmp/sc-store
     espnet-tts:
-        build:
-            context: ./services/espnet-tts
-            dockerfile: Dockerfile
-        image: "espnet-tts:latest"
+        image: ghcr.io/shared-reality-lab/image-service-espnet-tts:unstable
         environment:
             - TORCH_DEVICE=cuda
         deploy:
@@ -37,50 +29,23 @@ services:
                     devices:
                     - driver: nvidia
                       capabilities: ["gpu", "utility", "compute"]
-    hello-preprocessor:
-        build:
-            context: ./preprocessors/hello-preprocessor
-            dockerfile: Dockerfile
-        image: "hello-preprocessor:latest"
-        env_file:
-            - ./config/express-common.env
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 1
-            ca.mcgill.a11y.image.port: 8080
+    # Preprocessors
     autour-preprocessor:
-        build:
-            context: ./preprocessors/autour
-            dockerfile: Dockerfile
-        image: "autour:latest"
+        image: ghcr.io/shared-reality-lab/image-preprocessor-autour:unstable
         env_file:
             - ./config/maps.env
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
     ocr-preprocessor:
-        build:
-            context: ./preprocessors/ocr
-            dockerfile: Dockerfile
-        image: "ocr:latest"
+        image: ghcr.io/shared-reality-lab/image-preprocessor-ocr:unstable
         env_file:
             - ./config/azure-api.env
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
-    hello-handler:
-        build:
-            context: ./handlers/hello-handler
-            dockerfile: Dockerfile
-        image: "hello-handler:latest"
-        env_file:
-            - ./config/express-common.env
-        labels:
-            ca.mcgill.a11y.image.handler: enable
     object-detection:
-        build:
-            context: ./preprocessors/yolo
-            dockerfile: Dockerfile
-        image: "object-detection:latest"
+        image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
@@ -91,52 +56,29 @@ services:
         #             - driver: nvidia
         #               capabilities: ["gpu", "utility", "compute"]
     first-categoriser:
-        build:
-            context: ./preprocessors/categoriser
-            dockerfile: Dockerfile
-        image: "first-categoriser:latest"
+        image: ghcr.io/shared-reality-lab/image-preprocessor-first-categoriser:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
     second-categoriser:
-        build:
-            context: ./preprocessors/categoriser2
-            dockerfile: Dockerfile
-        image: "second-categoriser:latest"
+        image: ghcr.io/shared-reality-lab/image-preprocessor-second-categoriser:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
         env_file:
             - ./config/azure-api.env
     object-grouping:
-        build:
-            context: ./preprocessors/grouping
-            dockerfile: Dockerfile
-        image: "object-grouping:latest"
+        image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 4
             ca.mcgill.a11y.image.port: 5000
     object-sorting:
-        build:
-            context: ./preprocessors/sorting
-            dockerfile: Dockerfile
-        image: "object-sorting:latest"
+        image: ghcr.io/shared-reality-lab/image-preprocessor-sorting:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 5
             ca.mcgill.a11y.image.port: 5000
-    scene-detection:
-        build:
-            context: ./preprocessors/scene
-            dockerfile: Dockerfile
-        image: "scene-detection:latest"
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 5000
     semantic-segmentation:
-        build:
-            context: ./preprocessors/semanticSeg
-            dockerfile: ./Dockerfile
-        image: "semantic-segmentation:latest"
+        image: ghcr.io/shared-reality-lab/image-preprocessor-semantic-segmentation:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
@@ -146,105 +88,31 @@ services:
                     devices:
                     - driver: nvidia
                       capabilities: ["gpu", "utility", "compute"]
-    chart-pipeline:
-        build:
-            context: ./preprocessors/chart-pipeline
-            dockerfile: Dockerfile
-        image: "chart-pipeline:latest"
-        command: --mode=1 --empty_cache=True
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 2
-            ca.mcgill.a11y.image.port: 5000
-        # deploy:
-        #     resources:
-        #         reservations:
-        #             devices:
-        #             - driver: nvidia
-        #               device_ids: ['0']
-        #               capabilities: ["gpu", "utility", "compute"]
-        env_file:
-            - ./config/chart.env
-    hello-tts-handler:
-        build:
-            context: ./handlers/hello-tts-handler
-            dockerfile: Dockerfile
-        image: "hello-tts-handler:latest"
-        env_file:
-            - ./config/express-common.env
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-        volumes:
-            - sc-store:/tmp/sc-store
-    generic-tts-handler:
-        build:
-            context: ./handlers/generic-tts-handler
-            dockerfile: Dockerfile
-        image: "generic-tts-handler:latest"
-        env_file:
-            - ./config/express-common.env
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-        volumes:
-            - sc-store:/tmp/sc-store
-    semantic-segmentation-handler:
-        build:
-            context: ./handlers/segment-handler
-            dockerfile: Dockerfile
-        image: "segmentation-handler:latest"
-        env_file:
-            - ./config/express-common.env
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-        volumes:
-            - sc-store:/tmp/sc-store
-    pie-chart-handler:
-        build:
-            context: ./handlers/pie-chart-handler
-            dockerfile: Dockerfile
-        image: "pie-chart-handler:latest"
-        env_file:
-            - ./config/express-common.env
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-        volumes:
-            - sc-store:/tmp/sc-store
-    object-text-handler:
-        build:
-            context: ./handlers/object-text-handler
-            dockerfile: Dockerfile
-        image: "object-text-handler:latest"
-        env_file:
-            - ./config/express-common.env
-        labels:
-            ca.mcgill.a11y.image.handler: enable
+    # Handlers
     autour-handler:
-        build:
-            context: ./handlers/autour-handler
-            dockerfile: Dockerfile
-        image: "autour-handler:latest"
+        image: ghcr.io/shared-reality-lab/image-handler-autour:unstable
         env_file:
             - ./config/express-common.env
         labels:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
-
     photo-audio-handler:
-        build:
-            context: ./handlers/photo-audio-handler
-            dockerfile: Dockerfile
-        image: "photo-audio-handler:latest"
+        image: ghcr.io/shared-reality-lab/image-handler-photo-audio:unstable
         env_file:
             - ./config/express-common.env
         labels:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+    hello-haptics-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-hello-haptics:unstable
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
     photo-audio-haptics-handler:
-        build:
-            context: ./handlers/photo-audio-haptics-handler
-            dockerfile: Dockerfile
-        image: "photo-audio-haptics-handler:latest"
+        image: ghcr.io/shared-reality-lab/image-handler-photo-audio-haptics:unstable
         env_file:
             - ./config/express-common.env
         labels:

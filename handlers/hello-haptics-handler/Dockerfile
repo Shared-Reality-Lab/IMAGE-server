@@ -1,17 +1,15 @@
-FROM schemas:latest AS schemas
-
 FROM node:alpine
 
 WORKDIR /usr/src/app
 
 # Apparently splittig this up is good for layers
 # Docker images are onions
-COPY package*.json ./
+COPY /handlers/hello-haptics-handler/package*.json ./
 RUN npm ci
-COPY *.json ./
-COPY .eslintrc.js ./
-COPY src ./src
-COPY --from=schemas /schemas src/schemas
+COPY /handlers/hello-haptics-handler/*.json ./
+COPY /handlers/hello-haptics-handler/.eslintrc.js ./
+COPY /handlers/hello-haptics-handler/src ./src
+COPY /schemas src/schemas
 RUN npm run build
 
 ENV NODE_ENV=production

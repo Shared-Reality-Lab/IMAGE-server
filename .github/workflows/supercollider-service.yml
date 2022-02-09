@@ -1,38 +1,15 @@
-name: Hello HapticsHandler
+name: Supercollider Service
 on:
   push:
     branches: [ main ]
-    paths: [ "handlers/hello-haptics-handler/**" ]
-  pull_request:
-    branches: [ main ]
-    paths: [ "handlers/hello-haptics-handler/**" ]
+    paths: [ "services/supercollider-images/supercollider-service/**" ]
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: shared-reality-lab/image-handler-hello-haptics
+  IMAGE_NAME: shared-reality-lab/image-service-supercollider
 jobs:
-  lint:
-    name: Basic linting and type checking.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-      - name: Copy schemas
-        working-directory: ./handlers/hello-haptics-handler
-        run: cp -R ../../schemas src/
-      - name: Install dependencies
-        working-directory: ./handlers/hello-haptics-handler
-        run: npm ci
-      - name: Check with tsc
-        working-directory: ./handlers/hello-haptics-handler
-        run: npx tsc --noEmit
   build-and-push-image:
     name: Build and Push to Registry
-    needs: lint
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -56,8 +33,8 @@ jobs:
           tags: |
             type=sha
           labels: |
-            org.opencontainers.image.title=IMAGE Handler Hello Haptics
-            org.opencontainers.image.description=Example haptics handler for IMAGE using the Haply.
+            org.opencontainers.image.title=IMAGE Service Supercollider
+            org.opencontainers.image.description=Supercollider-based service for audio synthesis used in IMAGE.
             org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
@@ -67,8 +44,8 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./handlers/hello-haptics-handler/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          file: ./services/supercollider-images/supercollider-service/Dockerfile
+          push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:unstable
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.timestamp }}
