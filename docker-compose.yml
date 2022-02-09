@@ -240,6 +240,17 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+    photo-audio-haptics-handler:
+        build:
+            context: ./handlers/photo-audio-haptics-handler
+            dockerfile: Dockerfile
+        image: "photo-audio-haptics-handler:latest"
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
 
 volumes:
     sc-store:
