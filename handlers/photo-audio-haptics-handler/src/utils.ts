@@ -91,9 +91,9 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
     ttsData.push({ "value": "contains the following outlines of regions:", "type": "text" });
     for (const segment of segments) {
         const newSeg = segment;
-        newSeg["value"] = (newSeg["nameOfSegment"] as string) + ",";
+        newSeg["value"] = (newSeg["name"] as string) + ",";
         newSeg["type"] = "segment";
-        newSeg["label"] = newSeg["nameOfSegment"] as string;
+        newSeg["label"] = newSeg["name"] as string;
 
         const coord = segment["coord"] as [number, number, number, number];
         const centroid = segment["centroid"] as [number, number];
@@ -239,12 +239,15 @@ export function renderingTitle(semseg: Record<string, unknown>, objDet: Record<s
     const hasSemseg = semseg !== undefined;
     const hasObj = (objDet !== undefined) && (objGroup !== undefined);
     if (hasSemseg && hasObj) {
-        return "Regions, things, and people";
+        return "A navigable audio-haptic scene of segments and objects detected in the image";
     }
     else if (hasSemseg) {
-        return "Outlines of regions";
+        return "A navigable audio-haptic scene of segments detected in the image";
+    }
+    else if(hasObj) {
+        return "A navigable audio-haptic scene of objects detected in the image";
     }
     else {
-        return "Things and people";
+        return "A navigable audio-haptic scene";
     }
 }
