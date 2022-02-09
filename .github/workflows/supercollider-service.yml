@@ -43,8 +43,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: ./services/supercollider-images/supercollider-service
-          file: Dockerfile
+          context: ./services/supercollider-images/supercollider-service/
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:unstable
