@@ -1,4 +1,4 @@
-name: Grouping
+name: Sorting
 on:
   push:
     branches: [ main ]
