@@ -107,6 +107,11 @@ services:
             context: .
             dockerfile: ./handlers/photo-audio-handler/Dockerfile
         image: "photo-audio-handler:latest"
+    hello-haptics-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/hello-haptics-handler/Dockerfile
+        image: "hello-haptics-handler:latest"
     photo-audio-haptics-handler:
         build:
             context: .
