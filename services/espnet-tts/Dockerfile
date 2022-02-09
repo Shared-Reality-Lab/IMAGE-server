@@ -9,11 +9,8 @@ USER python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip install --upgrade pip
-RUN pip install espnet==0.10.0
-RUN pip install parallel_wavegan==0.4.8
-RUN pip install espnet_model_zoo
-RUN pip install Flask gunicorn
-RUN pip install jsonschema
+COPY /services/espnet-tts/requirements.txt .
+RUN pip install -r requirements.txt
 
 COPY /services/espnet-tts/src/predownload.py .
 RUN python predownload.py
