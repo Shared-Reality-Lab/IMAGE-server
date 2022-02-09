@@ -107,6 +107,10 @@ services:
             context: .
             dockerfile: ./handlers/photo-audio-handler/Dockerfile
         image: "photo-audio-handler:latest"
+    photo-audio-haptics-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/photo-audio-haptics-handler/Dockerfile
     # Supercollider on Fedora 34
     supercollider-base:
         build:
