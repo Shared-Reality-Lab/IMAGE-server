@@ -1,6 +1,4 @@
-FROM python:3.7
-
-RUN apt-get update && apt-get install -y python3-opencv && rm -rf /var/lib/apt/lists/*
+FROM python:3.7-alpine
 
 RUN adduser --disabled-password python
 WORKDIR /app
