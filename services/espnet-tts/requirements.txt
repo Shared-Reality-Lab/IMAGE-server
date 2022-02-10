@@ -1,6 +1,6 @@
-espnet>=0.10.0
-espnet_model_zoo>=0.1.7
-Flask>=2.0.2
-gunicorn>=20.1.0
-jsonschema>=4.4.0
-parallel_wavegan>=0.4.8
+espnet==0.10.0
+espnet_model_zoo==0.1.7
+Flask==2.0.2
+gunicorn==20.1.0
+jsonschema==4.4.0
+parallel_wavegan==0.4.8
