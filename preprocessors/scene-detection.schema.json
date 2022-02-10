@@ -11,7 +11,7 @@
             "enum": [ "indoor", "outdoor" ]
         },
         "categories": {
-            "description": "Categories of scene detected in the image.",
+            "description": "Categories of scene detected in the photograph.",
             "type": "array",
             "items": {
                 "type": "object",
@@ -21,7 +21,7 @@
                         "type": "string"
                     },
                     "confidence": {
-                        "description": "Confidence that this scene is present in the image.",
+                        "description": "Confidence that this scene is present in the photograph.",
                         "type": "number",
                         "minimum": 0,
                         "maximum": 100
@@ -31,7 +31,7 @@
             }
         },
         "attributes": {
-            "description": "Text attributes describing the image and scene therein.",
+            "description": "Text attributes describing the photograph and scene therein.",
             "type": "array",
             "items": {
                 "type": "string"

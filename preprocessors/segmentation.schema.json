@@ -3,7 +3,7 @@
   "$id": "https://image.a11y.mcgill.ca/preprocessors/segmentation.schema.json",
   "type": "object",
   "title": "Segmentation Data",
-  "description": "JSON containing pixel coordinates of different segments in an image",
+  "description": "JSON containing pixel coordinates of different segments in an photograph",
   "definitions": {
     "normCoord": {
       "description": "A pair of normalized coordinates.",
@@ -43,10 +43,10 @@
   "properties": {
     "segments": {
       "type": "array",
-      "description": "Divides the entire image into different segments where each segment indicates a noteworthy region or structure. For example a park image would be divided into sections that contain grass, sections that contain trees etc.",
+      "description": "Divides the entire photograph into different segments where each segment indicates a noteworthy region or structure. For example a park photograph would be divided into sections that contain grass, sections that contain trees etc.",
       "items": {
         "type": "object",
-        "description": "Contains information about each individual segment in an image. Information such as area, centre of segment etc are included in this section.",
+        "description": "Contains information about each individual segment in an photograph. Information such as area, centre of segment etc are included in this section",
         "properties": {
           "name": {
             "description": "The name of the segment.",
@@ -64,7 +64,7 @@
             ]
           },
           "area": {
-            "description": "Total area occupied by the segment in a given image, normalized between 0 and 1.",
+            "description": "Total area occupied by the segment in a given photograph. the area is normalised between 0 and 1",
             "type": "number",
             "minimum": 0,
             "maximum": 1

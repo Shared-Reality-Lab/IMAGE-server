@@ -29,7 +29,7 @@
                     "additionalItems": false
                 },
                 "area": {
-                    "description": "The area of the image that is filled by the object. Currently, this is the area of the bounding box.",
+                    "description": "The area of the photograph that is filled by the object. Currently, this is the area of the bounding box.",
                     "type": "number",
                     "minimum": 0,
                     "maximum": 1
@@ -45,7 +45,7 @@
                     "additionalItems": false
                 },
                 "area": {
-                    "description": "The area of the image that is filled by the object. Currently, this is the area of the bounding box.",
+                    "description": "The area of the photograph that is filled by the object. Currently, this is the area of the bounding box.",
                     "type": "number",
                     "minimum": 0,
                     "maximum": 1
@@ -62,7 +62,7 @@
     },
     "properties": {
         "objects": {
-            "description": "The set of objects detected in the image.",
+            "description": "The set of objects detected in the photograph.",
             "type": "array",
             "items": {
                 "$ref": "#/definitions/object"

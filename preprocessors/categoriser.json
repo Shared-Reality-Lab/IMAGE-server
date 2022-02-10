@@ -3,9 +3,9 @@
     "$id": "https://image.a11y.mcgill.ca/preprocessors/categoriser.schema.json",
     "type": "object",
     "title": "First level Categoriser",
-    "description": "Information on the category of the image",
+    "description": "Information on the category of the graphic",
     "properties": {
-        "category": { "enum": ["chart", "image", "other","text"] }
+        "category": { "enum": ["chart", "photograph", "other","text"] }
     },
     "required": [ "category"]
 }
