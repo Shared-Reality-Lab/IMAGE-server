@@ -1,35 +1,28 @@
-name: Hello HapticsHandler
+name: Sorting
 on:
   push:
     branches: [ main ]
-    paths: [ "handlers/hello-haptics-handler/**" ]
+    paths: [ "preprocessors/sorting/**" ]
   pull_request:
     branches: [ main ]
-    paths: [ "handlers/hello-haptics-handler/**" ]
+    paths: [ "preprocessors/sorting/**" ]
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: shared-reality-lab/image-handler-hello-haptics
+  IMAGE_NAME: shared-reality-lab/image-preprocessor-sorting
 jobs:
   lint:
-    name: Basic linting and type checking.
+    name: PEP 8 style check.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
-          submodules: true
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-      - name: Copy schemas
-        working-directory: ./handlers/hello-haptics-handler
-        run: cp -R ../../schemas src/
-      - name: Install dependencies
-        working-directory: ./handlers/hello-haptics-handler
-        run: npm ci
-      - name: Check with tsc
-        working-directory: ./handlers/hello-haptics-handler
-        run: npx tsc --noEmit
+          python-version: '3.x'
+      - name: Install flake8
+        run: pip install flake8
+      - name: Check with flake8
+        run: python -m flake8 ./preprocessors/sorting --show-source
   build-and-push-image:
     name: Build and Push to Registry
     needs: lint
@@ -56,8 +49,8 @@ jobs:
           tags: |
             type=sha
           labels: |
-            org.opencontainers.image.title=IMAGE Handler Hello Haptics
-            org.opencontainers.image.description=Example haptics handler for IMAGE using the Haply.
+            org.opencontainers.image.title=IMAGE Preprocessor Sorting
+            org.opencontainers.image.description=Sorting of detected objects.
             org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
@@ -67,7 +60,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./handlers/hello-haptics-handler/Dockerfile
+          file: ./preprocessors/sorting/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:unstable

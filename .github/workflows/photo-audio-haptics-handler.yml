@@ -1,15 +1,15 @@
-name: Hello HapticsHandler
+name: Photo Audio Haptics Handler
 on:
   push:
     branches: [ main ]
-    paths: [ "handlers/hello-haptics-handler/**" ]
+    paths: [ "handlers/photo-audio-haptics-handler/**" ]
   pull_request:
     branches: [ main ]
-    paths: [ "handlers/hello-haptics-handler/**" ]
+    paths: [ "handlers/photo-audio-haptics-handler/**" ]
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: shared-reality-lab/image-handler-hello-haptics
+  IMAGE_NAME: shared-reality-lab/image-handler-photo-audio-haptics
 jobs:
   lint:
     name: Basic linting and type checking.
@@ -22,13 +22,13 @@ jobs:
         with:
           node-version: '16'
       - name: Copy schemas
-        working-directory: ./handlers/hello-haptics-handler
+        working-directory: ./handlers/photo-audio-haptics-handler
         run: cp -R ../../schemas src/
       - name: Install dependencies
-        working-directory: ./handlers/hello-haptics-handler
+        working-directory: ./handlers/photo-audio-haptics-handler
         run: npm ci
       - name: Check with tsc
-        working-directory: ./handlers/hello-haptics-handler
+        working-directory: ./handlers/photo-audio-haptics-handler
         run: npx tsc --noEmit
   build-and-push-image:
     name: Build and Push to Registry
@@ -56,8 +56,8 @@ jobs:
           tags: |
             type=sha
           labels: |
-            org.opencontainers.image.title=IMAGE Handler Hello Haptics
-            org.opencontainers.image.description=Example haptics handler for IMAGE using the Haply.
+            org.opencontainers.image.title=IMAGE Handler Photo Audio Haptics
+            org.opencontainers.image.description=Handler using multiple preprocessors to generate audio-haptic renderings for photographs.
             org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
@@ -67,7 +67,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./handlers/hello-haptics-handler/Dockerfile
+          file: ./handlers/photo-audio-haptics-handler/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:unstable
