@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.8.1-cuda10.2-cudnn7-runtime
+FROM python:3.9-alpine
 
 RUN adduser --disabled-password python
 WORKDIR /app
