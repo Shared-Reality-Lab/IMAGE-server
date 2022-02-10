@@ -54,7 +54,7 @@ app.use(express.json({ limit: process.env.MAX_BODY }));
 app.post("/handler", async (req, res) => {
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.log("Request validated");
-        if (!req.body.image) {
+        if (!req.body.graphic) {
             console.log("Not an image request! Skipping...");
             res.status(204);
             return;
@@ -63,7 +63,7 @@ app.post("/handler", async (req, res) => {
         const renderers = req.body.renderers as string[];
         const rendering = [];
         if (renderers.includes("ca.mcgill.a11y.image.renderer.Text")) {
-            const dims = await extractDimensions(req.body.image);
+            const dims = await extractDimensions(req.body.graphic);
             const r: Record<string, unknown> = generateRendering(dims[0], dims[1]);
             if (ajv.validate("https://image.a11y.mcgill.ca/renderers/text.schema.json", r["data"])) {
                 rendering.push(r);

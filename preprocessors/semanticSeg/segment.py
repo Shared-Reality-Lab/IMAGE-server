@@ -223,7 +223,7 @@ def segment():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
-    if "image" not in content:
+    if "graphic" not in content:
         logging.info("Not image content. Skipping...")
         return "", 204
     request_uuid = content["request_uuid"]
@@ -236,8 +236,9 @@ def segment():
     if classifier_1 in preprocess_output:
         classifier_1_output = preprocess_output[classifier_1]
         classifier_1_label = classifier_1_output["category"]
-        if classifier_1_label != "image":
-            logging.info("Not image content. Skipping...")
+        if classifier_1_label != "photograph":
+            logging.info("Not photograph content. Skipping...")
+
             return "", 204
         if classifier_2 in preprocess_output:
             # classifier_2_output = preprocess_output[classifier_2]
@@ -245,7 +246,7 @@ def segment():
             # if classifier_2_label != "outdoor":
             #     logging.info("Cannot process image")
             #     return "", 204
-            segment = run_segmentation(content["image"],
+            segment = run_segmentation(content["graphic"],
                                        segmentation_module,
                                        dictionary,
                                        pil_to_tensor)
@@ -254,7 +255,7 @@ def segment():
             even when the second classifier is absent, however it is
             recommended to the run the semantic segmentation
             model in conjunction with the second classifier."""
-            segment = run_segmentation(content["image"],
+            segment = run_segmentation(content["graphic"],
                                        segmentation_module,
                                        dictionary,
                                        pil_to_tensor)
@@ -263,7 +264,7 @@ def segment():
         even when the first classifier is absent, however it is
         recommended to the run the semantic segmentation
         model in conjunction with the first classifier."""
-        segment = run_segmentation(content["image"],
+        segment = run_segmentation(content["graphic"],
                                    segmentation_module,
                                    dictionary,
                                    pil_to_tensor)

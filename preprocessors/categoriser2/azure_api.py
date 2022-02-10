@@ -129,7 +129,7 @@ def categorise():
     preprocess_output = content["preprocessors"]
     classifier_1 = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
     # convert the uri to processable image
-    if content["image"] is None:
+    if content["graphic"] is None:
         return "", 204
     else:
         if classifier_1 in preprocess_output:
@@ -137,22 +137,22 @@ def categorise():
                 preprocess_output[classifier_1]
             classifier_1_label = \
                 classifier_1_output["category"]
-            if classifier_1_label == "image":
-                source = content["image"]
+            if classifier_1_label == "photograph":
+                source = content["graphic"]
                 image_b64 = source.split(",")[1]
                 binary = base64.b64decode(image_b64)
                 pred = process_image(image=binary, labels=labels)
                 type = {"category": pred}
             else:
-                """If the first classifier does not detect an image
+                """If the first classifier does not detect a photograph
                 the second classifier should not process the request"""
                 return "", 204
         else:
-            """We are providing the user the ability to process an image
+            """We are providing the user the ability to process a photograph
             even when the first classifier is absent, however it is
             recommended that the second classifier be used in conjunction
             with the first classifier."""
-            source = content["image"]
+            source = content["graphic"]
             image_b64 = source.split(",")[1]
             binary = base64.b64decode(image_b64)
             pred = process_image(image=binary, labels=labels)
