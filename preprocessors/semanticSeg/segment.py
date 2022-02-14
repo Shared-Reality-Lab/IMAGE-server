@@ -38,7 +38,7 @@ import gc
 
 
 app = Flask(__name__)
-
+logging.basicConfig(level=logging.NOTSET)
 # assigns different colors to different segments. This helps in
 # determining contour or different segments. Refer Line 136 to see how
 # unique color helps in contour determination
@@ -158,6 +158,7 @@ def run_segmentation(url,
     pred = pred.cpu()[0].numpy()
     color, name = visualize_result(img_original, pred, 0)
     predicted_classes = numpy.bincount(pred.flatten()).argsort()[::-1]
+    logging.info("Segments detected, Runnning contour code")
     for c in predicted_classes[:5]:
         color, name = visualize_result(img_original, pred, c)
         send, center, area = findContour(color, width, height)
@@ -190,6 +191,7 @@ def segment():
     }
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
+    logging.info("Schemas loaded")
     net_encoder = ModelBuilder.build_encoder(
         arch='resnet50dilated',
         fc_dim=2048,
@@ -287,7 +289,7 @@ def segment():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
-
+    logging.info("Valid response generated")
     return response
 
 
