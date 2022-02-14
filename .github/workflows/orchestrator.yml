@@ -50,7 +50,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Get Correct Tags
         run: |
-          if [[ ${{ github.ref }} =~ "^orchestrator-[0-9]+\.[0-9]+\.[0-9]+$" ]]; then
+          if [[ ${{ github.ref }} =~ "^refs/tags/orchestrator-[0-9]+\.[0-9]+\.[0-9]+$" ]]; then
             echo "TAGGED=true" >> $GITHUB_ENV
           else
             echo "TAGGED=false" >> $GITHUB_ENV
