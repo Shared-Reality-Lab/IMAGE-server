@@ -2,6 +2,7 @@ name: Orchestrator
 on:
   push:
     branches: [ main ]
+    tags: [ "orchestrator-[0-9]+.[0-9]+.[0-9]+" ]
     paths: [ "orchestrator/**" ]
   pull_request:
     branches: [ main ]
