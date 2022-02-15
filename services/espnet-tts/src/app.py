@@ -41,6 +41,7 @@ app = Flask(__name__)
 
 @app.route("/service/tts/simple", methods=["POST"])
 def perform_tts():
+    logger.debug("Received request")
     data = request.get_json()
     if data is None or "text" not in data:
         return {"error": "Missing key \"text\"."}, 400
@@ -53,6 +54,7 @@ def perform_tts():
         sf.write(f, wav, fs, format="WAV")
         f.seek(0)
         wrapper = FileWrapper(f)
+        logger.debug("Sending response")
         return Response(wrapper, mimetype="audio/wav", direct_passthrough=True)
     except Exception as e:
         logger.error(e)
@@ -63,6 +65,7 @@ def perform_tts():
 
 @app.route("/service/tts/segments", methods=["POST"])
 def segment_tts():
+    logger.debug("Received request")
     data = request.get_json()
 
     # Validate request
@@ -97,6 +100,7 @@ def segment_tts():
         }
 
         validate(response, segment_response)
+        logger.debug("Sending response")
         return response
     except Exception as e:
         logger.error(e)

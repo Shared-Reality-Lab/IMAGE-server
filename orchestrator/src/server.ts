@@ -52,6 +52,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
 
         let resp;
         try {
+            console.debug("Sending to preprocessor \"" + preprocessor[0] "\"");
             resp = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
                 "method": "POST",
                 "headers": {
@@ -95,6 +96,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
 }
 
 app.post("/render", (req, res) => {
+    console.debug("Received request");
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
@@ -135,6 +137,7 @@ app.post("/render", (req, res) => {
                 });
             });
 
+            console.debug("Waiting for handlers...");
             return Promise.all(promises);
         }).then(async (results) => {
             const renderings = results.reduce((a, b) => a.concat(b), []);
