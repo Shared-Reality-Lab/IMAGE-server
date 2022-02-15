@@ -1,0 +1,16 @@
+name: Schemas (Trigger)
+on:
+  push:
+    branches: [ main ]
+    paths: [ "schemas" ] 
+  pull_request:
+    branches: [ main ]
+    paths: [ "schemas" ] 
+  workflow_dispatch:
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hello, action
+        run: echo "Hello, action"
