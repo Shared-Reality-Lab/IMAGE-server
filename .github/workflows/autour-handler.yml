@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [ main ]
     paths: [ "handlers/autour-handler/**" ]
+  workflow_run:
+    workflows: [ "Schemas (Trigger)" ]
+    types:
+      - completed
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io

@@ -1,0 +1,22 @@
+name: Schemas (Trigger)
+on:
+  push:
+    branches: [ main ]
+    paths: [ "schemas" ]
+  pull_request:
+    branches: [ main ]
+    paths: [ "schemas" ]
+  workflow_dispatch:
+jobs:
+  compile:
+    name: Compile Schemas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-node@v2
+      - name: Install ajv-cli
+        run: npm i -g ajv-cli
+      - name: Compile schemas
+        run: ajv compile -s "schemas/**/*.json"
