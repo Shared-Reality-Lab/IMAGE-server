@@ -52,7 +52,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
 
         let resp;
         try {
-            console.debug("Sending to preprocessor \"" + preprocessor[0] "\"");
+            console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
             resp = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
                 "method": "POST",
                 "headers": {
