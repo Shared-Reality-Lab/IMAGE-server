@@ -99,6 +99,7 @@ def process_image(image, labels):
 
 @app.route("/preprocessor", methods=['POST', ])
 def categorise():
+    logging.debug("Received request")
     # load the schema
     labels = ["other", "indoor", "outdoor", "people"]
     with open('./schemas/preprocessors/classifier-l2.schema.json') as jsonfile:
@@ -176,6 +177,7 @@ def categorise():
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
         return response
 
 
