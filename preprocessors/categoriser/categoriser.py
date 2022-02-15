@@ -50,6 +50,7 @@ class Net(pl.LightningModule):
 
 @app.route("/preprocessor", methods=['POST', ])
 def categorise():
+    logging.debug("Received request")
     # load the schema
     labels_dict = {"0": "chart", "1": "photograph", "2": "other", "3": "text"}
     with open('./schemas/preprocessors/categoriser.json') as jsonfile:
@@ -122,6 +123,7 @@ def categorise():
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
     torch.cuda.empty_cache()
+    logging.debug("Sending response")
     return response
 
 

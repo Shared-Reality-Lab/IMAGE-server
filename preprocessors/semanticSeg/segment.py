@@ -171,6 +171,7 @@ def run_segmentation(url,
 
 @app.route("/preprocessor", methods=['POST', 'GET'])
 def segment():
+    logging.debug("Received request")
     gc.collect()
     torch.cuda.empty_cache()
     dictionary = []
@@ -288,6 +289,7 @@ def segment():
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
 
+    logging.debug("Sending response")
     return response
 
 

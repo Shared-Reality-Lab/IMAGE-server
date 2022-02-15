@@ -157,6 +157,7 @@ def run(weights='yolov5x.pt',
         hide_conf=False,
         half=False,
         ):
+    logging.debug("Received request")
     save_img = not nosave and not source.endswith('.txt')
     set_logging()
     device = select_device(device)
@@ -303,6 +304,7 @@ def run(weights='yolov5x.pt',
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
         return response
 
 
