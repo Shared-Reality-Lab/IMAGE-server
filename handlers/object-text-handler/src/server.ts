@@ -35,6 +35,7 @@ const port = 80;
 app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/handler", async (req, res) => {
+    console.debug("Sending request");
     // Check for good data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
@@ -164,6 +165,7 @@ app.post("/handler", async (req, res) => {
         ]
     };
 
+    console.debug("Sending response");
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response) &&
        ajv.validate("https://image.a11y.mcgill.ca/renderers/text.schema.json", response["renderings"][0]["data"])) {
         res.json(response);
