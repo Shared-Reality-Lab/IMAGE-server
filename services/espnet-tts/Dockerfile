@@ -3,6 +3,7 @@ FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
 RUN apt-get update && apt-get install -y libsndfile1 build-essential && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /run/tts
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 RUN adduser --disabled-password python
 RUN chown python:python .
 USER python
@@ -14,6 +15,9 @@ RUN pip install -r requirements.txt
 
 COPY /services/espnet-tts/src/predownload.py .
 RUN python predownload.py
+RUN mkdir -p /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2
+RUN wget https://image.a11y.mcgill.ca/models/espnet/train_nodev_ljspeech_full_band_melgan.v2.tar.gz -O /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2.tar.gz
+RUN tar xzvf /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2.tar.gz -C /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2/
 
 COPY /services/espnet-tts/src/* ./
 COPY /schemas/services/tts/* ./
