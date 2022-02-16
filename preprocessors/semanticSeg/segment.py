@@ -139,6 +139,8 @@ def run_segmentation(url,
     if(height > 1500 or width > 1500):
         pil_image = cv2.resize(pil_image, (1500, 1500),
                                interpolation=cv2.INTER_AREA)
+        width = 1500
+        height = 1500
     img = pil_image
     img_original = numpy.array(img)
     img_data = pil_to_tensor(img)
