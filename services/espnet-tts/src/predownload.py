@@ -15,7 +15,7 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
 
 from espnet_model_zoo.downloader import ModelDownloader
-from parallel_wavegan.utils import download_pretrained_model
+# from parallel_wavegan.utils import download_pretrained_model
 
 d = ModelDownloader()
 d.download_and_unpack("kan-bayashi/ljspeech_conformer_fastspeech2")
