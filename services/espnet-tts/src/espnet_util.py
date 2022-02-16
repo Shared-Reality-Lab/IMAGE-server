@@ -26,8 +26,8 @@ from parallel_wavegan.utils import load_model
 
 fs = 22050
 tag = "kan-bayashi/ljspeech_conformer_fastspeech2"
-vocoder_tag = "ljspeech_parallel_wavegan.v3"
-# vocoder_tag = "ljspeech_full_band_melgan.v2"
+# vocoder_tag = "ljspeech_parallel_wavegan.v3"
+vocoder_tag = "ljspeech_full_band_melgan.v2"
 
 logging.basicConfig(format="%(asctime)s %(message)s")
 logger = logging.getLogger(__name__)
