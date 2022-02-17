@@ -119,6 +119,10 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+    ocr-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-ocr:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
 
 volumes:
     sc-store:
