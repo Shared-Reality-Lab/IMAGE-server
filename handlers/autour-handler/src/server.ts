@@ -105,7 +105,7 @@ app.post("/handler", async (req, res) => {
     // Form TTS segments
     const ttsIntro = "From due north moving clockwise, there are the following";
     const segments = [ttsIntro];
-    for (const place of autourData["places"]) {
+    for (const place of places) {
         segments.push(place["title"]);
     }
 
@@ -131,7 +131,8 @@ app.post("/handler", async (req, res) => {
 
     const durations = (ttsResponse as Record<string, unknown>)["durations"] as number[];
     let runningOffset = 0;
-    const scData = autourData;
+    const scData = JSON.parse(JSON.stringify(autourData));
+    scData["places"] = places;
     scData["ttsFileName"] = "";
 
     let durIdx = 0;
