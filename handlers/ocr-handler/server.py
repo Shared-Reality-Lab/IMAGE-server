@@ -19,9 +19,6 @@ import json
 import time
 import logging
 import jsonschema
-import os
-import io
-import base64
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -47,8 +44,10 @@ def render_ocr():
         schema['$id']: schema,
         definition_schema['$id']: definition_schema
     }
+    
     # Get request data
     content = request.get_json()
+    
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
     # Validate incoming request
@@ -63,3 +62,89 @@ def render_ocr():
     except jsonschema.exceptions.ValidationError as error:
         logging.error(error)
         return jsonify("Invalid Request JSON format"), 400
+    
+    # Check preprocessor data
+    preprocessors = content['preprocessors']
+    
+    # No OCR preprocessor
+    if 'ca.mcgill.a11y.image.preprocessor.ocr' not in preprocessors:
+        logging.error("No OCR preprocessor found")
+        response = {
+            "request_uuid": content["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": []
+        }
+        try:
+            validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+            logging.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
+        return response
+    
+    ocr_data = preprocessors['ca.mcgill.a11y.image.preprocessor.ocr']
+    
+    # OCR lines empty
+    if len(ocr_data['lines']) == 0:
+        logging.error("OCR lines empty")
+        response = {
+            "request_uuid": content["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": []
+        }
+        try:
+            validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+            logging.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
+        return response
+
+    # Text renderer not supported
+    if 'ca.mcgill.a11y.image.renderer.Tsext' not in content['renderers']:
+        logging.error("Text renderer not supported")
+        response = {
+            "request_uuid": content["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": []
+        }
+        try:
+            validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+            logging.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
+        return response
+    
+    # Get text renderer data
+    text = 'This following lines of text were found in the image: '
+    for i, line in enumerate(ocr_data['lines']):
+        line_text = 'start of ' + str(i+1) + 'th line :' + line['text'] + '. End of ' + str(i+1) + 'th line. '
+        text += line_text
+    
+    response = {
+        "request_uuid": content["request_uuid"],
+        "timestamp": int(time.time()),
+        "renderings": [
+            {
+                "type_id": "ca.mcgill.a11y.image.renderer.Text",
+                "confidence": 50,
+                "description": "The text found in an image.",
+                "data": {
+                    "text": text
+                }
+            }
+        ]
+    }
+    try:
+        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+        validator.validate(response)
+    except jsonschema.exceptions.ValidationError as error:
+        logging.error(error)
+        return jsonify("Invalid Preprocessor JSON format"), 500
+    logging.debug("Sending response")
+    return response
+    
