@@ -92,7 +92,7 @@ app.post("/handler", async (req, res) => {
 
     // Sort and filter POIs
     // Do this before since TTS is time consuming
-    const places = autourData["places"].filter(p => !filterCategories.contains(p));
+    const places = autourData["places"].filter((p: { "cat": number }) => !filterCategories.includes(p["cat"]));
     const source = new LatLon(autourData["lat"], autourData["lon"]);
     for (const place of places) {
         const dest = new LatLon(place["ll"][0], place["ll"][1]);
