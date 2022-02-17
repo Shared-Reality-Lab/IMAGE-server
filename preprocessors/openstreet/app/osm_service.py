@@ -2,12 +2,20 @@ from typing import List
 import overpy
 import json
 from copy import deepcopy
+import haversine as hs
+
+
 #Send request to get map data from OSM
 def query_osmdata(radius:float, lat:float, lon:float):
   api = overpy.Overpass()
-  result = api.query (f'way(around:{radius},{lat},{lon})["highway"="residential"];(._;>;);out body;')
+  result = api.query (f'way(around:{radius},{lat},{lon})["highway"=""];(._;>;);out body;')
+  #[highway~"^(residential|service|footway)$"];(._;>;);out body;')
   return (result)
-
+#Send request to get points of interests (POIs)
+def get_points_of_interest(radius:float, lat:float, lon:float):
+  api = overpy.Overpass()
+  result1 = api.query (f'node(around:{radius},{lat},{lon})["amenity" = ""];(._;>;);out body;')
+  return (result1)
 
 #Retrieve inteterested street information from the requested OSM data
 def transform_osmdata(raw_osmdata: List[dict]):
@@ -182,3 +190,50 @@ def merge_street_points_by_name(my_str_data):
       #merged_data_structure=cleaned_node_data_list
 
   return(merged_street_data)
+  # Seive out the desired features of POIs
+def process_points_of_interest(amenities):
+  point_of_interest=[]
+  for node in amenities.nodes:
+    if node.tags.get("amenity") is not None:
+      #print("Name: %s" % node.tags.get("name", "n/a"))
+      #print("Amenity: %s" % node.tags.get("amenity", "n/a"))
+      #print("Nodes:")
+      #print("    node: %d, Lat: %f, Lon: %f" % (node.id, node.lat, node.lon))
+      node_record={"id":str(node.id),"lat":str(node.lat),"lon":str(node.lon)}
+
+      amenity_record ={ "name":node.tags.get("name"),"cat":node.tags.get("amenity"),"nodes":node_record}
+      point_of_interest.append(amenity_record)
+  return(point_of_interest)
+
+#Match/connect POIs to the streets
+def align_points_of_interest(point_of_interest, merged_street_data):
+  street_data_cpy = deepcopy(merged_street_data)
+  for poi in range (len(point_of_interest)):
+    distance_list = []
+    street_data = merged_street_data
+    for obj in range (len(street_data)):
+      nodes = street_data[obj]["nodes"]
+      for node_items in range (len(nodes)):
+        lat1 = nodes[node_items]["lat"]
+        lon1 = nodes[node_items]["lon"]
+        lat2 = point_of_interest[poi]["nodes"]["lat"]
+        lon2 = point_of_interest[poi]["nodes"]["lon"]
+        location1 = (float(lat1), float(lon1))
+        location2 = (float(lat2), float(lon2))
+        distance = hs.haversine(location1, location2)
+        if (len(distance_list))==0:
+          distance_list.append(distance)
+          #print("distance:",distance)
+          street_record = {"street_name":street_data[obj]["street_name"],"poi":point_of_interest[poi],"node_index":node_items}
+        else:
+          if distance < distance_list[0]:
+            distance_list[0] = distance
+            #print("distance:",distance)
+            street_record = {"street_name":street_data[obj]["street_name"],"poi":point_of_interest[poi],"node_index":node_items + 1} 
+      
+    for str_obj in range (len(street_data_cpy)):
+      if street_data_cpy[str_obj]["street_name"] == street_record["street_name"]:
+        nodes = street_data_cpy[str_obj]["nodes"]
+        nodes.insert(street_record["node_index"], street_record["poi"])
+
+  return (street_data_cpy)

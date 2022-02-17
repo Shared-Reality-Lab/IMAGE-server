@@ -1,8 +1,11 @@
 from typing import Optional
 from copy import deepcopy
 from fastapi import FastAPI
+import haversine as hs
 from app.osm_service import query_osmdata, transform_osmdata,extract_nodes_list,extract_intersection,merge_street_intersection_by_name
 from app.osm_service import create_new_intersection_sets, my_final_data_structure, merge_street_points_by_name,merge_street_by_name
+from app.osm_service import get_points_of_interest, process_points_of_interest, align_points_of_interest
+
 
 app = FastAPI()
 
@@ -15,6 +18,8 @@ def health():
 @app.get("/location/{radius}/{lat}/{lon}")
 def get_location(radius:float, lat:float, lon:float):
   raw_osmdata = query_osmdata(radius, lat, lon)
+
+  amenities = get_points_of_interest(radius, lat, lon)
 
   transformed = transform_osmdata(raw_osmdata)
 
@@ -33,6 +38,10 @@ def get_location(radius:float, lat:float, lon:float):
   my_str_data = my_final_data_structure(merged_street, modified_new_intersection_list, merged_intersection)
 
   merged_street_data = merge_street_points_by_name(my_str_data)
-  response = merged_street_data
+
+  point_of_interest = process_points_of_interest(amenities)
+
+  response = align_points_of_interest(point_of_interest, merged_street_data)
+  #response = merged_street_data
   
   return (response)
