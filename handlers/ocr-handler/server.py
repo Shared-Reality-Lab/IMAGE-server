@@ -24,10 +24,6 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
-
-
 @app.route('/handler', methods=['POST', 'GET'])
 def render_ocr():
     """
@@ -147,4 +143,7 @@ def render_ocr():
         return jsonify("Invalid Preprocessor JSON format"), 500
     logging.debug("Sending response")
     return response
-    
+
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=80, debug=True)

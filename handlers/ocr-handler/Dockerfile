@@ -14,8 +14,8 @@ COPY /schemas /app/schemas
 
 COPY /handlers/ocr-handler/ /app
 
-EXPOSE 5000
+EXPOSE 80
 
-ENV FLASK_APP=src/server.py
+ENV FLASK_APP=server.py
 USER python
 CMD [ "flask", "run", "--host=0.0.0.0" ]
