@@ -137,7 +137,7 @@ def run_segmentation(url,
     pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     height, width, channels = pil_image.shape
     scale_size = np.float(1500.0 / np.float(max(height,width)))
-    if(scale_size<1.0):
+    if(scale_size<=1.0):
         height = np.int(height * scale_size)
         width = np.int(width * scale_size)
         pil_image = cv2.resize(pil_image, (width, height),
