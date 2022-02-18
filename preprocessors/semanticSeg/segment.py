@@ -137,45 +137,11 @@ def run_segmentation(url,
     pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     height, width, channels = pil_image.shape
     scale_size = np.float(1500.0 / np.float(max(height,width)))
-    if(height>1500 or width >1500):
+    if(scale_size<1.0):
         height = np.int(height * scale_size)
         width = np.int(width * scale_size)
         pil_image = cv2.resize(pil_image, (width, height),
                             interpolation=cv2.INTER_AREA)
-    # if(scale_size < 1.0):    # graphic too big! it needs to be scaled down
-    #     height = np.int(height * scale_size)
-    #     width = np.int(width * scale_size)
-    #     pil_image = cv2.resize(pil_image, (width, height),
-    #                         interpolation=cv2.INTER_AREA)
-    #safer and probably faster to just get new dimensions
-    #  from the actual new image, e.g., avoids rounding differences
-    # height, width, channels = pil_image.shape
-    # if(height > 1500 or width > 1500):
-    #     if(height > 1500 and width < 1500):
-    #         scale_size = np.float(1500.0 / np.float(height))
-    #         height = np.int(height * scale_size)
-    #         width = np.int(width * scale_size)
-    #         pil_image = cv2.resize(pil_image, (width, height),
-    #                                interpolation=cv2.INTER_AREA)
-    #     elif(width > 1500 and height < 1500):
-    #         scale_size = np.float(1500.0 / np.float(width))
-    #         height = np.int(height * scale_size)
-    #         width = np.int(width * scale_size)
-    #         pil_image = cv2.resize(pil_image, (width, height),
-    #                                interpolation=cv2.INTER_AREA)
-    #     else:
-    #         if(height > width):
-    #             scale_size = np.float(1500.0 / np.float(height))
-    #             height = np.int(height * scale_size)
-    #             width = np.int(width * scale_size)
-    #             pil_image = cv2.resize(pil_image, (width, height),
-    #                                    interpolation=cv2.INTER_AREA)
-    #         else:
-    #             scale_size = np.float(1500.0 / np.float(width))
-    #             height = np.int(height * scale_size)
-    #             width = np.int(width * scale_size)
-    #             pil_image = cv2.resize(pil_image, (width, height),
-    #                                    interpolation=cv2.INTER_AREA)
     img = pil_image
     img_original = numpy.array(img)
     img_data = pil_to_tensor(img)
