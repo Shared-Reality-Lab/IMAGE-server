@@ -130,8 +130,10 @@ def categorise():
     preprocess_output = content["preprocessors"]
     classifier_1 = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
     # convert the uri to processable image
-    if content["graphic"] is None:
+    if "graphic" not in content.keys():
         return "", 204
+    # if content["graphic"] is None:
+    #     return "", 204
     else:
         if classifier_1 in preprocess_output:
             classifier_1_output = \
