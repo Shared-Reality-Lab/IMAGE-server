@@ -143,6 +143,7 @@ def run_segmentation(url,
         pil_image = cv2.resize(pil_image, (width, height),
                                interpolation=cv2.INTER_AREA)
     img = pil_image
+    height, width, channels = img.shape
     img_original = numpy.array(img)
     img_data = pil_to_tensor(img)
     try:
