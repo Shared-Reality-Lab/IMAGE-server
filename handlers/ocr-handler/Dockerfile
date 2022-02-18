@@ -18,4 +18,4 @@ EXPOSE 80
 
 ENV FLASK_APP=server.py
 USER python
-CMD [ "flask", "run", "--host=0.0.0.0" ]
+CMD [ "gunicorn", "server:app", "-b", "0.0.0.0:80", "--capture-output", "--log-level=debug" ]

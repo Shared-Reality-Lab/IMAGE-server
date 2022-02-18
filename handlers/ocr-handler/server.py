@@ -99,7 +99,7 @@ def render_ocr():
         return response
 
     # Text renderer not supported
-    if 'ca.mcgill.a11y.image.renderer.Tsext' not in content['renderers']:
+    if 'ca.mcgill.a11y.image.renderer.Text' not in content['renderers']:
         logging.error("Text renderer not supported")
         response = {
             "request_uuid": content["request_uuid"],
@@ -116,9 +116,9 @@ def render_ocr():
         return response
     
     # Get text renderer data
-    text = 'This following lines of text were found in the image: '
+    text = 'The following ' + str(len(ocr_data['lines'])) + ' lines of text were found in the image: '
     for i, line in enumerate(ocr_data['lines']):
-        line_text = 'start of ' + str(i+1) + 'th line :' + line['text'] + '. End of ' + str(i+1) + 'th line. '
+        line_text = 'Start of line ' + str(i+1) + ': ' + line['text'] + '. End of line ' + str(i+1) + '. '
         text += line_text
     
     response = {
