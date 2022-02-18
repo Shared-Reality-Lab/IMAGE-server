@@ -136,12 +136,14 @@ def run_segmentation(url,
     image = np.asarray(bytearray(binary), dtype="uint8")
     pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     height, width, channels = pil_image.shape
-    if(height > 1500 or width > 1500):
-        pil_image = cv2.resize(pil_image, (1500, 1500),
+    scale_size = np.float(1500.0 / np.float(max(height, width)))
+    if(scale_size <= 1.0):
+        height = np.int(height * scale_size)
+        width = np.int(width * scale_size)
+        pil_image = cv2.resize(pil_image, (width, height),
                                interpolation=cv2.INTER_AREA)
-        width = 1500
-        height = 1500
     img = pil_image
+    height, width, channels = img.shape
     img_original = numpy.array(img)
     img_data = pil_to_tensor(img)
     try:
