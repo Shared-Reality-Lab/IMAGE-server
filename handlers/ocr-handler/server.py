@@ -40,10 +40,10 @@ def render_ocr():
         schema['$id']: schema,
         definition_schema['$id']: definition_schema
     }
-    
+
     # Get request data
     content = request.get_json()
-    
+
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
     # Validate incoming request
@@ -58,10 +58,10 @@ def render_ocr():
     except jsonschema.exceptions.ValidationError as error:
         logging.error(error)
         return jsonify("Invalid Request JSON format"), 400
-    
+
     # Check preprocessor data
     preprocessors = content['preprocessors']
-    
+
     # No OCR preprocessor
     if 'ca.mcgill.a11y.image.preprocessor.ocr' not in preprocessors:
         logging.debug("No OCR preprocessor found")
@@ -80,7 +80,7 @@ def render_ocr():
         return response
     
     ocr_data = preprocessors['ca.mcgill.a11y.image.preprocessor.ocr']
-    
+
     # OCR lines empty
     if len(ocr_data['lines']) == 0:
         logging.debug("OCR lines empty")
@@ -114,13 +114,14 @@ def render_ocr():
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
-    
+
     # Get text renderer data
-    text = 'The following ' + str(len(ocr_data['lines'])) + ' lines of text were found in the graphic: '
+    text = 'The following ' + str(len(ocr_data['lines']))
+    text += ' lines were found in the image: '
     for i, line in enumerate(ocr_data['lines']):
         line_text = line['text'] + '\n'
         text += line_text
-    
+
     response = {
         "request_uuid": content["request_uuid"],
         "timestamp": int(time.time()),
