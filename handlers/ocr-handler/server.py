@@ -64,7 +64,7 @@ def render_ocr():
     
     # No OCR preprocessor
     if 'ca.mcgill.a11y.image.preprocessor.ocr' not in preprocessors:
-        logging.error("No OCR preprocessor found")
+        logging.debug("No OCR preprocessor found")
         response = {
             "request_uuid": content["request_uuid"],
             "timestamp": int(time.time()),
@@ -83,7 +83,7 @@ def render_ocr():
     
     # OCR lines empty
     if len(ocr_data['lines']) == 0:
-        logging.error("OCR lines empty")
+        logging.debug("OCR lines empty")
         response = {
             "request_uuid": content["request_uuid"],
             "timestamp": int(time.time()),
@@ -100,7 +100,7 @@ def render_ocr():
 
     # Text renderer not supported
     if 'ca.mcgill.a11y.image.renderer.Text' not in content['renderers']:
-        logging.error("Text renderer not supported")
+        logging.debug("Text renderer not supported")
         response = {
             "request_uuid": content["request_uuid"],
             "timestamp": int(time.time()),
@@ -116,9 +116,9 @@ def render_ocr():
         return response
     
     # Get text renderer data
-    text = 'The following ' + str(len(ocr_data['lines'])) + ' lines of text were found in the image: '
+    text = 'The following ' + str(len(ocr_data['lines'])) + ' lines of text were found in the graphic: '
     for i, line in enumerate(ocr_data['lines']):
-        line_text = 'Start of line ' + str(i+1) + ': ' + line['text'] + '. End of line ' + str(i+1) + '. '
+        line_text = line['text'] + '\n'
         text += line_text
     
     response = {
@@ -128,7 +128,7 @@ def render_ocr():
             {
                 "type_id": "ca.mcgill.a11y.image.renderer.Text",
                 "confidence": 50,
-                "description": "The text found in an image.",
+                "description": "The text found in a graphic.",
                 "data": {
                     "text": text
                 }
