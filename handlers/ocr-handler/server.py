@@ -78,7 +78,7 @@ def render_ocr():
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
-    
+
     ocr_data = preprocessors['ca.mcgill.a11y.image.preprocessor.ocr']
 
     # OCR lines empty
