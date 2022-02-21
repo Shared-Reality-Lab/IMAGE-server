@@ -24,6 +24,7 @@ from espnet_util import tts, fs
 from flask import Flask, Response, request
 from io import BytesIO
 from jsonschema import validate
+from torch.cuda import empty_cache
 from werkzeug.wsgi import FileWrapper
 
 logging.basicConfig(format="%(asctime)s %(message)s")
@@ -61,6 +62,8 @@ def perform_tts():
         return {
             "error": "An error occurred while performing text-to-speech"
         }, 500
+    finally:
+        empty_cache()
 
 
 @app.route("/service/tts/segments", methods=["POST"])
@@ -107,3 +110,5 @@ def segment_tts():
         return {
             "error": "An error occurred while performing text-to-speech"
         }, 500
+    finally:
+        empty_cache()
