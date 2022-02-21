@@ -3,12 +3,13 @@ import overpy
 import json
 from copy import deepcopy
 import haversine as hs
+import random
 
 
 #Send request to get map data from OSM
 def query_osmdata(radius:float, lat:float, lon:float):
   api = overpy.Overpass()
-  result = api.query (f'way(around:{radius},{lat},{lon})["highway"=""];(._;>;);out body;')
+  result = api.query (f'way(around:{radius},{lat},{lon})[highway~"^(primary|tertiary|residential|service|footway)$"];(._;>;);out body;')
   #[highway~"^(residential|service|footway)$"];(._;>;);out body;')
   return (result)
 #Send request to get points of interests (POIs)
@@ -44,7 +45,7 @@ def merge_street_by_name(transformed_osmdata: List[dict]):
     str_name=obj["street_name"]
     if str_name not in output:
       assert obj["nodes"] is not None
-      record={"street_name":obj["street_name"],"street_type":obj["street_type"],"surface":obj["surface"], "sidewalk":obj["sidewalk"],"oneway":obj["oneway"],"nodes": obj["nodes"]} 
+      record={"street_id":random.randint(10_000_000, 99_999_999),"street_name":obj["street_name"],"street_type":obj["street_type"],"surface":obj["surface"], "sidewalk":obj["sidewalk"],"oneway":obj["oneway"],"nodes": obj["nodes"]} 
       output[str_name]= record
     else:
       existing_record = output[str_name]
@@ -56,6 +57,14 @@ def merge_street_by_name(transformed_osmdata: List[dict]):
       existing_record["nodes"] = merged_node
       output[str_name] = existing_record
     merged_street = list(output.values())
+    # Clean nodes to remove duplicated nodes in any given street
+    for objs in range (len(merged_street)):
+      unique_nodes = []
+      nodes = merged_street[objs]["nodes"]
+      for node in range (len(nodes)):
+        if nodes[node] not in unique_nodes:
+          unique_nodes.append(nodes[node])
+          merged_street[objs]["nodes"] = unique_nodes
   return(merged_street)
 
 
@@ -168,7 +177,7 @@ def merge_street_points_by_name(my_str_data):
     str_name = obj["street_name"]
     if str_name not in output:
       assert obj["nodes"] is not None
-      record={"street_name":obj["street_name"],"street_type":obj["street_type"],"surface":obj["surface"], "sidewalk":obj["sidewalk"],"oneway":obj["oneway"],"nodes": obj["nodes"]} 
+      record={"street_id":random.randint(10_000_000, 99_999_999),"street_name":obj["street_name"],"street_type":obj["street_type"],"surface":obj["surface"], "sidewalk":obj["sidewalk"],"oneway":obj["oneway"],"nodes": obj["nodes"]} 
       output[str_name]= record
 
     else:
@@ -224,7 +233,7 @@ def align_points_of_interest(point_of_interest, merged_street_data):
         if (len(distance_list))==0:
           distance_list.append(distance)
           #print("distance:",distance)
-          street_record = {"street_name":street_data[obj]["street_name"],"poi":point_of_interest[poi],"node_index":node_items}
+          street_record = {"street_name":street_data[obj]["street_name"],"poi":point_of_interest[poi],"node_index":node_items + 1}
         else:
           if distance < distance_list[0]:
             distance_list[0] = distance
@@ -235,5 +244,111 @@ def align_points_of_interest(point_of_interest, merged_street_data):
       if street_data_cpy[str_obj]["street_name"] == street_record["street_name"]:
         nodes = street_data_cpy[str_obj]["nodes"]
         nodes.insert(street_record["node_index"], street_record["poi"])
-
   return (street_data_cpy)
+
+# Collect only all points of interest (pois) including intersections, restaurants, etc. street by street
+def collect_all_pois(align_pois):
+  collected_pois = deepcopy(align_pois)
+  for obj in range (len(collected_pois)):
+    nodes = collected_pois[obj]["nodes"]
+    poi_collection = []
+    for node in range (len(nodes)):
+      key_to_check = "cat"
+      if key_to_check in nodes[node]:
+        if nodes[node]["cat"]:
+          poi_collection.append(nodes[node])
+    collected_pois[obj]["nodes"] = poi_collection 
+    collected_pois[obj]["pois"] = collected_pois[obj].pop("nodes")
+  return(collected_pois)
+
+# Merge all points of interest from all the streets together in a single list
+def merge_all_collected_pois(all_pois):
+  pois_list = []
+  for obj in range (len(all_pois)):
+    pois = all_pois[obj]["pois"]
+    for poi in range (len(pois)):
+      pois_list.append(pois[poi])
+
+  return(pois_list)
+
+#this is the collection of all streets, nodes in streets that are adjacent to a POI
+#have an inter_link. The interlink is an array so it can hold more than one POI if needed.
+#each street has its unique ID, so we could look it up
+def new_poi_alignment_format (point_of_interest, merged_street_data):
+
+  id_list = []
+  new_node_tied_to_poi_list = []
+  street_data_cpy = deepcopy(merged_street_data)
+
+  for poi in range (len(point_of_interest)):
+    distance_list = []
+    poi_list = []
+    street_data = merged_street_data
+
+    for obj in range (len(street_data)):
+      nodes = street_data[obj]["nodes"]
+
+      for node_items in range (len(nodes)):
+        lat1 = nodes[node_items]["lat"]
+        lon1 = nodes[node_items]["lon"]
+        lat2 = point_of_interest[poi]["nodes"]["lat"]
+        lon2 = point_of_interest[poi]["nodes"]["lon"]
+        location1 = (float(lat1), float(lon1))
+        location2 = (float(lat2), float(lon2))
+        distance = hs.haversine(location1, location2)
+        
+        if (len(distance_list))==0:
+          distance_list.append(distance)
+          poi_list.append(point_of_interest[poi])
+          #print("distance:",distance)
+          street_record = {"street_name":street_data[obj]["street_name"],"poi":point_of_interest[poi],"node_index":node_items,"poi_list":poi_list}
+        else:
+          
+          if distance < distance_list[0]:
+            distance_list[0] = distance
+            #print("distance:",distance)
+            street_record = {"street_name":street_data[obj]["street_name"],"poi":point_of_interest[poi],"node_index":node_items,"poi_list":poi_list} 
+      
+
+    street_data_cpyy = deepcopy(street_data_cpy) 
+    #merge pois when we have multiple pois competeting for a node and assign it to key called slink
+    for str_obj in range (len(street_data_cpyy)):
+      
+      if street_data_cpyy[str_obj]["street_name"] == street_record["street_name"]:
+        index = street_record["node_index"]
+        node_tied_to_poi = street_data_cpyy[str_obj]["nodes"][index]
+        id = node_tied_to_poi["id"] # key
+
+        if id not in id_list:
+          id_list.append(id)
+          node_tied_to_poi["s_link"] =  street_record["poi_list"]  
+          new_node_tied_to_poi = {"key_id":id, "tied_node":node_tied_to_poi}
+          new_node_tied_to_poi_list.append(new_node_tied_to_poi)
+         
+        else:
+          
+          for item_s in range (len(new_node_tied_to_poi_list)):
+            
+            if new_node_tied_to_poi_list[item_s]["key_id"] == id:
+              existing_poi = new_node_tied_to_poi_list[item_s]["tied_node"]["s_link"]
+              new_poi = street_record["poi_list"]
+              merged_poi = existing_poi + new_poi
+              node_tied_to_poi["s_link"] = merged_poi
+              
+              if new_node_tied_to_poi_list[item_s]["key_id"] == id:
+                new_node_tied_to_poi_list[item_s]["tied_node"]["s_link"] = node_tied_to_poi["s_link"]
+
+
+  #match the pois in new_node_tied_to_poi_list to the concerned node in each street
+  for obj in range(len(new_node_tied_to_poi_list)):
+    key_id = new_node_tied_to_poi_list[obj]["key_id"]
+    
+    for objs in range (len(street_data_cpyy)):
+      nodes = street_data_cpyy[objs]["nodes"]
+      
+      for node in range (len(nodes)):
+        
+        if nodes[node]["id"] == key_id:
+          nodes[node] = new_node_tied_to_poi_list[obj]["tied_node"]
+    
+  return (street_data_cpyy)

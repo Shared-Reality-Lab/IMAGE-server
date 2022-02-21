@@ -4,7 +4,8 @@ from fastapi import FastAPI
 import haversine as hs
 from app.osm_service import query_osmdata, transform_osmdata,extract_nodes_list,extract_intersection,merge_street_intersection_by_name
 from app.osm_service import create_new_intersection_sets, my_final_data_structure, merge_street_points_by_name,merge_street_by_name
-from app.osm_service import get_points_of_interest, process_points_of_interest, align_points_of_interest
+from app.osm_service import get_points_of_interest, process_points_of_interest, align_points_of_interest, collect_all_pois
+from app.osm_service import merge_all_collected_pois, new_poi_alignment_format
 
 
 app = FastAPI()
@@ -41,7 +42,14 @@ def get_location(radius:float, lat:float, lon:float):
 
   point_of_interest = process_points_of_interest(amenities)
 
-  response = align_points_of_interest(point_of_interest, merged_street_data)
-  #response = merged_street_data
+  align_pois = align_points_of_interest(point_of_interest, merged_street_data)
+
+  all_pois = collect_all_pois(align_pois)
+
+  all_pois_merged = merge_all_collected_pois(all_pois)
+
+  new_poi_format = new_poi_alignment_format(point_of_interest, merged_street_data)
+
   
-  return (response)
+  
+  return (new_poi_format)
