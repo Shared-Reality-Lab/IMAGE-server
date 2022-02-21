@@ -102,7 +102,7 @@ def categorise():
     logging.debug("Received request")
     # load the schema
     labels = ["other", "indoor", "outdoor", "people"]
-    with open('./schemas/preprocessors/classifier-l2.schema.json') as jsonfile:
+    with open('./schemas/preprocessors/graphic-tagger.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)

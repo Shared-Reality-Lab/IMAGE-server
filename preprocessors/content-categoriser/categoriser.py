@@ -53,7 +53,7 @@ def categorise():
     logging.debug("Received request")
     # load the schema
     labels_dict = {"0": "chart", "1": "photograph", "2": "other", "3": "text"}
-    with open('./schemas/preprocessors/categoriser.json') as jsonfile:
+    with open('./schemas/preprocessors/content-content-categoriser.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
