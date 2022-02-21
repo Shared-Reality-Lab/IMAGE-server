@@ -74,6 +74,12 @@
                                     },
                                     {
                                         "$ref": "#/definitions/contourPoints"
+                                    },
+                                    {
+                                        "entityType":{
+                                            "type": "string",
+                                            "description": "a description of entity type; segment, object, or static text"
+                                        }
                                     }
                                 ]
                             }
