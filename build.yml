@@ -44,12 +44,12 @@ services:
     first-categoriser:
         build:
             context: .
-            dockerfile: preprocessors/content-categoriser/Dockerfile
+            dockerfile: ./preprocessors/content-categoriser/Dockerfile
         image: "first-categoriser:latest"
     second-categoriser:
         build:
             context: .
-            dockerfile: preprocessors/graphic-tagger/Dockerfile
+            dockerfile: ./preprocessors/graphic-tagger/Dockerfile
         image: "second-categoriser:latest"
     object-grouping:
         build:
