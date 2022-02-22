@@ -68,7 +68,7 @@ jobs:
             type=raw,priority=100,value=${{ env.timestamp }}
           labels: |
             org.opencontainers.image.title=IMAGE Handler OCR
-            org.opencontainers.image.description=Optical character recognition using Azure for the IMAGE project.
+            org.opencontainers.image.description=Handler to create renderings from Optical Character Recognition data.
             org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
