@@ -56,12 +56,12 @@ services:
         #             - driver: nvidia
         #               capabilities: ["gpu", "utility", "compute"]
     first-categoriser:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-first-content-categoriser:unstable
+        image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
     second-categoriser:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-second-content-categoriser:unstable
+        image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
