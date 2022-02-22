@@ -1,4 +1,4 @@
 [submodule "docker/schemas"]
 	path = schemas
-	url = https://git@github.com/Shared-Reality-Lab/IMAGE-server.git
+	url = git@github.com:Shared-Reality-Lab/IMAGE-server.git
 	branch = schemas
