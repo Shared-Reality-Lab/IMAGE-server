@@ -19,4 +19,4 @@ EXPOSE 5000
 
 ENV FLASK_APP=autour.py
 USER python
-CMD [ "flask", "run", "--host=0.0.0.0" ]
+CMD [ "gunicorn", "autour:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
