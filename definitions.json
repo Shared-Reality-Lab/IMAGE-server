@@ -56,7 +56,7 @@
             "properties": {
                 "type_id": { "$ref": "#/definitions/renderer" },
                 "confidence": {
-                    "description": "Estimated percent confidence in the correctness of the rendering.",
+                    "description": "DEPRECATED: Estimated percent confidence in the correctness of the rendering.",
                     "type": "number",
                     "minimum": 0,
                     "maximum": 100
@@ -73,7 +73,7 @@
                     "type": "object"
                 }
             },
-            "required": [ "type_id", "confidence", "description", "data" ]
+            "required": [ "type_id", "description", "data" ]
         },
         "segmentOffsetSamples": {
             "description": "Data on the offset of an audio segment in the file and its duration. Both are reported in samples.",
