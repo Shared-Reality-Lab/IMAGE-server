@@ -18,6 +18,8 @@ import Articles from "articles";
 import pluralize from "pluralize";
 import fetch from "node-fetch";
 import osc from "osc";
+import hull from "hull.js";
+
 
 export type TTSSegment = {
     value: string;
@@ -40,6 +42,7 @@ type ObjDet = {
     }[];
 };
 
+
 type ObjGroup = {
     grouped: { IDs: number[] }[];
     ungrouped: number[];
@@ -49,12 +52,14 @@ type ObjGroup = {
 export type segGeometryInfo = {
     centroid: [number, number];
     contourPoints: [number, number, number, number];
+    hullPoints: number[][] |object [];
 }
 
 // Can contain more than one item when objects are grouped
 export type objGeometryInfo = {
     centroid: [number, number][];
     contourPoints: [number, number, number, number][];
+    hullPoints: number[][] |object [];
 }
 
 export type SoundSegments = {
@@ -97,9 +102,11 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
 
         const coord = segment["contours"] as [number, number, number, number];
         const centroid = segment["centroid"] as [number, number];
+        const hullPoints:number[][] |object [] =[[]];
         const locSeg = {
             "centroid": centroid,
-            "contourPoints": coord
+            "contourPoints": coord,
+            "hullPoints": hullPoints
         };
         ttsData.push(newSeg as TTSSegment);
         posData.push(locSeg as segGeometryInfo);
@@ -116,13 +123,23 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): [TTSSegment[
     objects.push({ "type": "text", "value": "contains the following objects or people:" });
     for (const group of objGroup["grouped"]) {
         const objs = objDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"]));
+     
+        const preHull =[];
+        for (let i =0; i<objs.length; i++){
+            // console.log("adding point: ", objs[i]["centroid"]);
+            preHull.push(objs[i]["centroid"]);
+        }
+        // console.log("preHull array: " ,preHull)
+        const  hullPoints:number[][] |object [] = hull(preHull, objs.length);
+        // console.log("the hull output is: ", hullPoints)
         const sType = (objs.length > 0) ? objs[0]["type"] : "object";
         const pType = pluralize(sType.trim());
         const object = {
             "type": "object",
             "objects": objs,
             "label": pType,
-            "value": objs.length.toString() + " " + pType + ","
+            "value": objs.length.toString() + " " + pType + ",",
+            "hull": hullPoints
         };
         objects.push(object);
 
@@ -137,29 +154,35 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): [TTSSegment[
         })
         const geoObjSeg = {
             "centroid": centroids,
-            "contourPoints": coordinates
+            "contourPoints": coordinates,
+            "hullPoints": hullPoints
         }
         hapticObjInfo.push(geoObjSeg);
     }
     for (const idx of objGroup["ungrouped"]) {
         const obj = objDet["objects"].find((x: { "ID": number }) => x["ID"] === idx);
+        const hullPoints:number[][] |object [] = [[]];
         if (obj !== undefined) {
             objects.push({
                 "type": "object",
                 "objects": [obj],
                 "label": obj["type"].trim(),
-                "value": (Articles.articlize(obj["type"].trim()) as string) + ","
+                "value": (Articles.articlize(obj["type"].trim()) as string) + ",",
+                "hullPoints": hullPoints
             } as TTSSegment);
 
             const geoObjSeg = {
                 "centroid": [obj["centroid"]],
-                "contourPoints": [obj["dimensions"]]
+                "contourPoints": [obj["dimensions"]],
+                "hullPoints": hullPoints
             };
             hapticObjInfo.push(geoObjSeg);
         }
     }
     objects[objects.length - 1]["value"] = objects[objects.length - 1]["value"].replace(",", ".");
     objects[objects.length - 1]["value"] = "and " + objects[objects.length - 1]["value"];
+    // console.log("objects: ", objects);
+    // console.log("haptic Object Info: ", hapticObjInfo);
     return [objects, hapticObjInfo];
 }
 

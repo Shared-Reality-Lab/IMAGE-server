@@ -19,6 +19,7 @@ import express from "express";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
+import hull from "hull.js";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseJSON from "./schemas/handler-response.schema.json";
@@ -114,9 +115,10 @@ app.post("/handler", async (req, res) => {
         // Use all segments returned for now.
         // Filtering may be helpful later.
         const [ttsInfo, geometryInfo] = utils.generateSemSeg(preSemSeg);
+        // console.log(geometryInfo);
         ttsData.push(...ttsInfo);
         segGeometryData.push(...geometryInfo);
-
+        console.log("seggeodata: ", segGeometryData);
         if (preObjDet && preGroupData) {
             ttsData.push({ "value": "It also", "type": "text" });
         }
@@ -173,7 +175,7 @@ app.post("/handler", async (req, res) => {
                 console.log("Forming OSC...");
                 return utils.sendOSC(jsonFile, outFile, "supercollider", scPort);
             }).then(async (entities: any) => {
-                console.log("first entities: ", entities);
+                // console.log("first entities: ", entities);
                 const buffer = await fs.readFile(outFile);
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
@@ -183,19 +185,25 @@ app.post("/handler", async (req, res) => {
                     // An entity could be either an object or segment.
                     // Ordered by segment text, segments, object text, and then objects for now.
                     // For the segments...
+                    
                     for (let i = 1; i <= segGeometryData.length; i++) {
+                        const hullPoints:any = [segGeometryData?.[i - 1]?.['hullPoints']]
                         entities[i] = {
                             ...entities[i],
                             centroid: [segGeometryData?.[i - 1]?.['centroid']],
                             contourPoints: [segGeometryData?.[i - 1]?.['contourPoints']],
+                            // hullPoints: hullPoints,
                             entityType: "segment"
                         };
                     }
                     // For the objects...
+                    
                     for (let i = 0, j = 1 + segGeometryData.length + 1; i < objGeometryData.length; i++) {
                         entities[i + j] = {
-                            ...entities[i + j], centroid: objGeometryData[i]['centroid'],
+                            ...entities[i + j], 
+                            centroid: objGeometryData[i]['centroid'],
                             contourPoints: objGeometryData[i]['contourPoints'],
+                            hullPoints: objGeometryData[i]['hullPoints'],
                             entityType: "object"
                         };
                     }
@@ -206,6 +214,7 @@ app.post("/handler", async (req, res) => {
                             ...entities[0],
                             centroid: [[]],
                             contourPoints: [[]],
+                            // hullPoints: [],
                             entityType:"static"
                         };
 
@@ -214,9 +223,10 @@ app.post("/handler", async (req, res) => {
                             ...entities[1 + segGeometryData.length],
                             centroid: [[]],
                             contourPoints: [[]],
+                            // hullPoints: [],
                             entityType: "static"
                         };
-                    console.log("second time: ", entities[0]);
+                    // console.log("second time: ", entities[0]);
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
                         "confidence": 50,
