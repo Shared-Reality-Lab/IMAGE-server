@@ -11,6 +11,7 @@ def query_osmdata(radius:float, lat:float, lon:float):
   api = overpy.Overpass()
   result = api.query (f'way(around:{radius},{lat},{lon})[highway~"^(primary|tertiary|residential|service|footway)$"];(._;>;);out body;')
   #[highway~"^(residential|service|footway)$"];(._;>;);out body;')
+  #
   return (result)
 #Send request to get points of interests (POIs)
 def get_points_of_interest(radius:float, lat:float, lon:float):
@@ -45,7 +46,7 @@ def merge_street_by_name(transformed_osmdata: List[dict]):
     str_name=obj["street_name"]
     if str_name not in output:
       assert obj["nodes"] is not None
-      record={"street_id":random.randint(10_000_000, 99_999_999),"street_name":obj["street_name"],"street_type":obj["street_type"],"surface":obj["surface"], "sidewalk":obj["sidewalk"],"oneway":obj["oneway"],"nodes": obj["nodes"]} 
+      record={"street_id":random.randint(10_000_000, 99_999_999),"street_name":obj["street_name"],"nodes": obj["nodes"]} 
       output[str_name]= record
     else:
       existing_record = output[str_name]
@@ -86,11 +87,11 @@ def extract_nodes_list(result):
       list2 = (result[j]["nodes"])
       intersection = extract_intersection(list1,list2)
       if len(intersection):
-        str_record={"street_name":result[i]["street_name"],"street_type":result[i]["street_type"],"surface":result[i]["surface"], "sidewalk":result[i]["sidewalk"],"oneway":result[i]["oneway"],"intersection_sets":intersection} 
+        str_record={"street_name":result[i]["street_name"],"intersection_sets":intersection} 
         str_link.append(str_record)
         #intersection_sets.append(str_record)
         #str_record={"street_name":result[j]["street_name"],"street_type":result[j]["street_type"],"surface":result[j]["surface"], "sidewalk":result[j]["sidewalk"],"oneway":result[j]["oneway"],"intersection_sets":intersection} 
-        str_record={"street_name":result[j]["street_name"],"street_type":result[j]["street_type"],"surface":result[j]["surface"], "sidewalk":result[j]["sidewalk"],"oneway":result[j]["oneway"],"intersection_sets":intersection} 
+        str_record={"street_name":result[j]["street_name"],"intersection_sets":intersection} 
         str_link.append(str_record)
         intersection_sets.append(intersection)
   return(intersection_sets, str_link)
@@ -103,7 +104,7 @@ def merge_street_intersection_by_name(str_link):
     str_name=obj["street_name"]
     if str_name not in output:
       assert obj["intersection_sets"] is not None
-      record={"street_name":obj["street_name"],"street_type":obj["street_type"],"surface":obj["surface"], "sidewalk":obj["sidewalk"],"oneway":obj["oneway"],"intersection_sets": obj["intersection_sets"]} 
+      record={"street_name":obj["street_name"],"intersection_sets": obj["intersection_sets"]} 
       output[str_name]= record
     else:
       existing_record = output[str_name]
@@ -148,7 +149,7 @@ def my_final_data_structure(merged_street, modified_intersection_set, merged_int
         node = nodes[i]
         #node["inter_link"] = "nil"
         alist.append(node)
-        str_info={"street_name":merged_street[obj]["street_name"],"street_type":merged_street[obj]["street_type"],"surface":merged_street[obj]["surface"], "sidewalk":merged_street[obj]["sidewalk"],"oneway":merged_street[obj]["oneway"],"nodes":alist} 
+        str_info={"street_name":merged_street[obj]["street_name"],"nodes":alist} 
         str_records.append(str_info)
       else:
         for ob_items in range (len(merged_intersection)):
@@ -165,7 +166,7 @@ def my_final_data_structure(merged_street, modified_intersection_set, merged_int
                 alist.append(node)
                 node["name"]= "intersection "+ merged_street_name +" and "+ intersected_street_name
                 blist.append(node)
-                str_info={"street_name":merged_street[obj]["street_name"],"street_type":merged_street[obj]["street_type"],"surface":merged_street[obj]["surface"], "sidewalk":merged_street[obj]["sidewalk"],"oneway":merged_street[obj]["oneway"],"nodes":alist}
+                str_info={"street_name":merged_street[obj]["street_name"],"nodes":alist}
                 str_records.append(str_info)
   return(str_records)
 
@@ -177,7 +178,7 @@ def merge_street_points_by_name(my_str_data):
     str_name = obj["street_name"]
     if str_name not in output:
       assert obj["nodes"] is not None
-      record={"street_id":random.randint(10_000_000, 99_999_999),"street_name":obj["street_name"],"street_type":obj["street_type"],"surface":obj["surface"], "sidewalk":obj["sidewalk"],"oneway":obj["oneway"],"nodes": obj["nodes"]} 
+      record={"street_id":random.randint(10_000_000, 99_999_999),"street_name":obj["street_name"],"nodes": obj["nodes"]} 
       output[str_name]= record
 
     else:
@@ -246,6 +247,8 @@ def align_points_of_interest(point_of_interest, merged_street_data):
         nodes.insert(street_record["node_index"], street_record["poi"])
   return (street_data_cpy)
 
+
+
 # Collect only all points of interest (pois) including intersections, restaurants, etc. street by street
 def collect_all_pois(align_pois):
   collected_pois = deepcopy(align_pois)
@@ -264,14 +267,32 @@ def collect_all_pois(align_pois):
 # Merge all points of interest from all the streets together in a single list
 def merge_all_collected_pois(all_pois):
   pois_list = []
+  id_record = []
+  all_pois_merged_list = []
   for obj in range (len(all_pois)):
     pois = all_pois[obj]["pois"]
     for poi in range (len(pois)):
       pois_list.append(pois[poi])
 
-  return(pois_list)
+  #Remove duplicated pois
+  for unique_obj in range (len(pois_list)):
+    key_to_check = "nodes"
 
-#this is the collection of all streets, nodes in streets that are adjacent to a POI
+    if key_to_check in pois_list[unique_obj]:
+      if pois_list[unique_obj]["nodes"]["id"] not in id_record:
+        all_pois_merged_list.append(pois_list[unique_obj])
+        id_record.append(pois_list[unique_obj]["nodes"]["id"])
+
+    else:
+      
+      if pois_list[unique_obj]["id"] not in id_record:
+        all_pois_merged_list.append(pois_list[unique_obj])
+        id_record.append(pois_list[unique_obj]["id"])
+
+
+  return(all_pois_merged_list, pois_list)
+
+#FORMAT ONE:.......this is the collection of all streets, nodes in streets that are adjacent to a POI
 #have an inter_link. The interlink is an array so it can hold more than one POI if needed.
 #each street has its unique ID, so we could look it up
 def new_poi_alignment_format (point_of_interest, merged_street_data):
@@ -352,3 +373,259 @@ def new_poi_alignment_format (point_of_interest, merged_street_data):
           nodes[node] = new_node_tied_to_poi_list[obj]["tied_node"]
     
   return (street_data_cpyy)
+
+
+#FORMAT:TWO.......First collect all points of all categories (inter_section, restaurant, fast_food, etc) in an array 
+#and align them to the respective adjacent nodes
+def second_new_poi_alignment_format(all_pois_merged, merged_str_data):
+  #Remove duplicated POIs
+  
+  point_of_interest = all_pois_merged
+  merged_street_data = merged_str_data
+
+  id_list = []
+  new_node_tied_to_poi_list = []
+  street_data_cpy = deepcopy(merged_street_data)
+
+  for poi in range (len(point_of_interest)):
+    distance_list = []
+    poi_list = []
+    street_data = merged_street_data
+
+    for obj in range (len(street_data)):
+      nodes = street_data[obj]["nodes"]
+
+      for node_items in range (len(nodes)):
+        lat1 = nodes[node_items]["lat"]
+        lon1 = nodes[node_items]["lon"]
+        key_to_check = "nodes"
+        if key_to_check in point_of_interest[poi]:
+          lat2 = point_of_interest[poi]["nodes"]["lat"]
+          lon2 = point_of_interest[poi]["nodes"]["lon"]
+          location1 = (float(lat1), float(lon1))
+          location2 = (float(lat2), float(lon2))
+          distance = hs.haversine(location1, location2)
+        else:
+          lat2 = point_of_interest[poi]["lat"]
+          lon2 = point_of_interest[poi]["lon"]
+          location1 = (float(lat1), float(lon1))
+          location2 = (float(lat2), float(lon2))
+          distance = hs.haversine(location1, location2)
+  
+        if (len(distance_list))==0:
+          distance_list.append(distance)
+          poi_list.append(point_of_interest[poi])
+          #print("distance:",distance)
+          street_record = {"street_name":street_data[obj]["street_name"],"poi":point_of_interest[poi],"node_index":node_items,"poi_list":poi_list}
+        else:
+          
+          if distance < distance_list[0]:
+            distance_list[0] = distance
+            #print("distance:",distance)
+            street_record = {"street_name":street_data[obj]["street_name"],"poi":point_of_interest[poi],"node_index":node_items,"poi_list":poi_list} 
+      
+
+    street_data_cpyy = deepcopy(street_data_cpy) 
+    #merge pois when we have multiple pois competeting for a node and assign it to key called slink
+    for str_obj in range (len(street_data_cpyy)):
+      
+      if street_data_cpyy[str_obj]["street_name"] == street_record["street_name"]:
+        index = street_record["node_index"]
+        node_tied_to_poi = street_data_cpyy[str_obj]["nodes"][index]
+        id = node_tied_to_poi["id"] # key
+
+        if id not in id_list:
+          id_list.append(id)
+          node_tied_to_poi["pois_link"] =  street_record["poi_list"]  
+          new_node_tied_to_poi = {"key_id":id, "tied_node":node_tied_to_poi}
+          new_node_tied_to_poi_list.append(new_node_tied_to_poi)
+         
+        else:
+          
+          for item_s in range (len(new_node_tied_to_poi_list)):
+            
+            if new_node_tied_to_poi_list[item_s]["key_id"] == id:
+              existing_poi = new_node_tied_to_poi_list[item_s]["tied_node"]["pois_link"]
+              new_poi = street_record["poi_list"]
+              merged_poi = existing_poi + new_poi
+              node_tied_to_poi["pois_link"] = merged_poi
+              
+              if new_node_tied_to_poi_list[item_s]["key_id"] == id:
+                new_node_tied_to_poi_list[item_s]["tied_node"]["pois_link"] = node_tied_to_poi["pois_link"]
+
+
+  #match the pois in new_node_tied_to_poi_list to the concerned node in each street
+  for obj in range(len(new_node_tied_to_poi_list)):
+    key_id = new_node_tied_to_poi_list[obj]["key_id"]
+    
+    for objs in range (len(street_data_cpyy)):
+      nodes = street_data_cpyy[objs]["nodes"]
+      
+      for node in range (len(nodes)):
+        
+        if nodes[node]["id"] == key_id:
+          nodes[node] = new_node_tied_to_poi_list[obj]["tied_node"]
+    
+  return (street_data_cpyy)
+
+
+
+#FORMAT THREE:........First collect all points of all categories (inter_section, restaurant, fast_food, etc) in an array 
+#and align them to the respective adjacent nodes
+
+def third_new_poi_alignment_format(secon_poi_format):
+  second_poi_format = deepcopy(secon_poi_format)
+
+  for obj in range (len(second_poi_format)):
+    nodes = second_poi_format[obj]["nodes"]
+
+    for node in range (len(nodes)):
+      key_to_check = "pois_link"
+
+      if key_to_check in nodes[node]:
+        pois_link = nodes[node]["pois_link"]
+        
+        for items in range (len(pois_link)):
+          cat = pois_link[items]["cat"]
+
+          if "nodes" in pois_link[items]:
+            key_id = pois_link[items]["nodes"]["id"]
+            lat = pois_link[items]["nodes"]["lat"]
+            lon = pois_link[items]["nodes"]["lon"]
+            
+            pois_link[items] = {"id":key_id, "cat":cat, "lat":lat, "lon":lon}
+          else:
+            key_id = pois_link[items]["id"]
+            lat = pois_link[items]["lat"]
+            lon = pois_link[items]["lon"]
+            
+            pois_link[items] = {"id":key_id, "cat":cat, "lat":lat, "lon":lon}
+
+  third_poi_format = second_poi_format
+
+  return(third_poi_format)
+
+
+
+#FORMAT FOUR:........First collect all points of all categories (inter_section, restaurant, fast_food, etc) in an array 
+#and align them to the respective adjacent nodes
+def fourth_poi_alignment_format (all_pois_merged, merged):
+
+  point_of_interest = all_pois_merged
+
+  id_list = []
+  new_node_tied_to_poi_list = []
+  street_data_cpy = deepcopy(merged)
+
+  for poi in range (len(point_of_interest)):
+    distance_list = []
+    poi_list = []
+    
+    street_data = merged
+
+    for obj in range (len(street_data)):
+      nodes = street_data[obj]["nodes"]
+
+      for node_items in range (len(nodes)):
+        lat1 = nodes[node_items]["lat"]
+        lon1 = nodes[node_items]["lon"]
+        
+        key_to_check = "nodes"
+        if key_to_check in point_of_interest[poi]:
+          lat2 = point_of_interest[poi]["nodes"]["lat"]
+          lon2 = point_of_interest[poi]["nodes"]["lon"]
+          location1 = (float(lat1), float(lon1))
+          location2 = (float(lat2), float(lon2))
+          distance = hs.haversine(location1, location2)
+        else:
+          lat2 = point_of_interest[poi]["lat"]
+          lon2 = point_of_interest[poi]["lon"]
+          location1 = (float(lat1), float(lon1))
+          location2 = (float(lat2), float(lon2))
+          distance = hs.haversine(location1, location2)
+  
+        
+        if (len(distance_list))==0:
+          distance_list.append(distance)
+          poi_list.append(point_of_interest[poi])
+          #print("distance:",distance)
+          street_record = {"street_name":street_data[obj]["street_name"],"poi":point_of_interest[poi],"node_index":node_items,"poi_list":poi_list}
+        else:
+          
+          if distance < distance_list[0]:
+            distance_list[0] = distance
+            #print("distance:",distance)
+            street_record = {"street_name":street_data[obj]["street_name"],"poi":point_of_interest[poi],"node_index":node_items,"poi_list":poi_list} 
+      
+
+    street_data_cpyy = deepcopy(street_data_cpy) 
+    #merge pois when we have multiple pois competeting for a node and assign it to key called slink
+    for str_obj in range (len(street_data_cpyy)):
+      
+      if street_data_cpyy[str_obj]["street_name"] == street_record["street_name"]:
+        index = street_record["node_index"]
+        node_tied_to_poi = street_data_cpyy[str_obj]["nodes"][index]
+        key_id = node_tied_to_poi["id"] # key
+
+      
+        if key_id not in id_list:
+          id_list.append(key_id)
+
+          if "nodes" in point_of_interest[poi]:
+
+            poi_id = str(point_of_interest[poi]["nodes"]["id"])
+            cat = str(point_of_interest[poi]["cat"])
+            poi_items_list = poi_id +"("+ cat +")"
+            node_tied_to_poi["s_link"] =  [poi_items_list]
+
+          else:
+
+            poi_id = str(point_of_interest[poi]["id"])
+            cat = str(point_of_interest[poi]["cat"])
+            poi_items_list = poi_id +"("+ cat +")"
+            node_tied_to_poi["s_link"] =  [poi_items_list]
+
+          new_node_tied_to_poi = {"key_id":key_id, "tied_node":node_tied_to_poi}
+          new_node_tied_to_poi_list.append(new_node_tied_to_poi)
+         
+        else:
+          
+          for item_s in range (len(new_node_tied_to_poi_list)):
+            
+            if new_node_tied_to_poi_list[item_s]["key_id"] == key_id:
+              
+              if "nodes" in point_of_interest[poi]:
+
+                poi_id = str(point_of_interest[poi]["nodes"]["id"])
+                cat = str(point_of_interest[poi]["cat"])
+                poi_items_list = poi_id +"("+ cat +")"
+                
+              else:
+                poi_id = str(point_of_interest[poi]["id"])
+                cat = str(point_of_interest[poi]["cat"])
+                poi_items_list = poi_id +"("+ cat +")"
+            
+              existing_poi = new_node_tied_to_poi_list[item_s]["tied_node"]["s_link"]
+              new_poi = [poi_items_list]
+              merged_poi = existing_poi + new_poi
+              node_tied_to_poi["s_link"] = merged_poi
+              
+              if new_node_tied_to_poi_list[item_s]["key_id"] == key_id:
+                new_node_tied_to_poi_list[item_s]["tied_node"]["s_link"] = node_tied_to_poi["s_link"]
+
+
+  #match the pois in new_node_tied_to_poi_list to the concerned node in each street
+  for obj in range(len(new_node_tied_to_poi_list)):
+    key_idd = new_node_tied_to_poi_list[obj]["key_id"]
+    
+    for objs in range (len(street_data_cpyy)):
+      nodes = street_data_cpyy[objs]["nodes"]
+      
+      for node in range (len(nodes)):
+        
+        if nodes[node]["id"] == key_idd:
+          nodes[node] = new_node_tied_to_poi_list[obj]["tied_node"]
+    
+  return (street_data_cpyy)
+
+
