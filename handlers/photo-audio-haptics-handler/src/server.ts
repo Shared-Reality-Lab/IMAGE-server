@@ -187,13 +187,15 @@ app.post("/handler", async (req, res) => {
                             ...entities[i],
                             centroid: [segGeometryData?.[i - 1]?.['centroid']],
                             contourPoints: [segGeometryData?.[i - 1]?.['contourPoints']],
+                            type: "segment"
                         };
                     }
                     // For the objects...
                     for (let i = 0, j = 1 + segGeometryData.length + 1; i < objGeometryData.length; i++) {
                         entities[i + j] = {
                             ...entities[i + j], centroid: objGeometryData[i]['centroid'],
-                            contourPoints: objGeometryData[i]['contourPoints']
+                            contourPoints: objGeometryData[i]['contourPoints'],
+                            type: "object"
                         };
                     }
 
@@ -202,16 +204,18 @@ app.post("/handler", async (req, res) => {
                         entities[0] = {
                             ...entities[0],
                             centroid: [[]],
-                            contourPoints: [[]]
+                            contourPoints: [[]],
+                            type:"static"
                         };
 
                     if (preObjDet && preSemSeg)
                         entities[1 + segGeometryData.length] = {
                             ...entities[1 + segGeometryData.length],
                             centroid: [[]],
-                            contourPoints: [[]]
+                            contourPoints: [[]],
+                            type: "static"
                         };
-
+                    console.log(entities);
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
                         "confidence": 50,
@@ -219,7 +223,7 @@ app.post("/handler", async (req, res) => {
                         "data": {
                             "info": {
                                 "audioFile": dataURL,
-                                "entityInfo": entities,
+                                "entityInfo": entities
                             },
                         }
                     };
