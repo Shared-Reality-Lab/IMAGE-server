@@ -173,6 +173,7 @@ app.post("/handler", async (req, res) => {
                 console.log("Forming OSC...");
                 return utils.sendOSC(jsonFile, outFile, "supercollider", scPort);
             }).then(async (entities: any) => {
+                console.log("first entities: ", entities);
                 const buffer = await fs.readFile(outFile);
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
@@ -187,7 +188,7 @@ app.post("/handler", async (req, res) => {
                             ...entities[i],
                             centroid: [segGeometryData?.[i - 1]?.['centroid']],
                             contourPoints: [segGeometryData?.[i - 1]?.['contourPoints']],
-                            type: "segment"
+                            entityType: "segment"
                         };
                     }
                     // For the objects...
@@ -195,7 +196,7 @@ app.post("/handler", async (req, res) => {
                         entities[i + j] = {
                             ...entities[i + j], centroid: objGeometryData[i]['centroid'],
                             contourPoints: objGeometryData[i]['contourPoints'],
-                            type: "object"
+                            entityType: "object"
                         };
                     }
 
@@ -205,7 +206,7 @@ app.post("/handler", async (req, res) => {
                             ...entities[0],
                             centroid: [[]],
                             contourPoints: [[]],
-                            type:"static"
+                            entityType:"static"
                         };
 
                     if (preObjDet && preSemSeg)
@@ -213,9 +214,9 @@ app.post("/handler", async (req, res) => {
                             ...entities[1 + segGeometryData.length],
                             centroid: [[]],
                             contourPoints: [[]],
-                            type: "static"
+                            entityType: "static"
                         };
-                    console.log(entities);
+                    console.log("second time: ", entities[0]);
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
                         "confidence": 50,
