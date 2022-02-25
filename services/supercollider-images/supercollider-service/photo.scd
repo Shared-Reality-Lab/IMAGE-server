@@ -89,7 +89,7 @@ renderPhoto = { |json, ttsData, outPath, addr|
                                 { start = lastIndex + minDiff; totalDur = totalDur + minDiff; }
                             );
                             lastIndex = start;
-                            volume = point.at("area").asFloat.linlin(0, 0.25, -5, 0);
+                            volume = point.at("area").asFloat.linlin(0.01, 0.25, -5, 0);
                             score.add([
                                 start,
                                 [\s_new, (\pingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
