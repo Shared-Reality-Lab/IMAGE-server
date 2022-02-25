@@ -25,12 +25,16 @@
                 "maximum": 1
             }
         },
-        "contourPoints": {
+        "contours": {
             "type": "array",
             "description": "An array containing an array of normalized coordinates representing a point on the segment or point on the bounding box.",
             "items": {
                 "$ref": "#/definitions/coordinates"
             }
+        },
+        
+        "entityType":{
+            "type": "string"
         }
     },
     "properties": {
@@ -48,7 +52,7 @@
                         "audioFile": {
                             "$ref": "./definitions.json#/definitions/audioFile"
                         },
-                        "entityInfo": {
+                        "entities": {
                             "type": "array",
                             "description":  "An entity contains the relevant audio-haptic information to locate each segment or object.",
                             "items": {
@@ -73,14 +77,12 @@
                                         "$ref": "#/definitions/centroid"
                                     },
                                     {
-                                        "$ref": "#/definitions/contourPoints"
+                                        "$ref": "#/definitions/contours"
                                     },
                                     {
-                                        "entityType":{
-                                            "type": "string",
-                                            "description": "a description of entity type; segment, object, or static text"
-                                        }
+                                        "$ref": "#/definitions/entityType"
                                     }
+                                    
                                 ]
                             }
                         }
