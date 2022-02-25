@@ -54,6 +54,7 @@ function calcConfidence(objects: Record<string, unknown>[]): number {
 }
 
 app.post("/handler", async (req, res) => {
+    console.debug("Request received.");
     // Check for good data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
@@ -331,6 +332,7 @@ app.post("/handler", async (req, res) => {
         "renderings": renderings
     };
 
+    console.debug("Sending response.");
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);
     } else {

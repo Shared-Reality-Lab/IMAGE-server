@@ -30,6 +30,7 @@ def get_map_data():
     """
     Gets data on locations nearby a map from the Autour API
     """
+    logging.debug("Received request")
     # Load schemas
     with open('./schemas/preprocessors/autour.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
@@ -132,6 +133,7 @@ def get_map_data():
     if validated is not None:
         return validated
 
+    logging.debug("Sending response")
     return response
 
 

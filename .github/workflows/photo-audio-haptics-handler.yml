@@ -2,10 +2,15 @@ name: Photo Audio Haptics Handler
 on:
   push:
     branches: [ main ]
+    tags: [ "handler-photo-audio-haptics-[0-9]+.[0-9]+.[0-9]+" ]
     paths: [ "handlers/photo-audio-haptics-handler/**" ]
   pull_request:
     branches: [ main ]
     paths: [ "handlers/photo-audio-haptics-handler/**" ]
+  workflow_run:
+    workflows: [ "Schemas (Trigger)" ]
+    types:
+      - completed
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io
@@ -48,28 +53,37 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get Correct Tags
+        run: |
+          if [[ ${{ github.ref }} =~ ^refs/tags/handler-photo-audio-haptics-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "TAGGED=true" >> $GITHUB_ENV
+          else
+            echo "TAGGED=false" >> $GITHUB_ENV
+          fi
+      - name: Get timestamp
+        run: echo "timestamp=$(date -u +'%Y-%m-%dT%H.%M')" >> $GITHUB_ENV
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=${{ env.TAGGED }}
           tags: |
-            type=sha
+            type=match,enable=${{ env.TAGGED }},priority=300,pattern=handler-photo-audio-haptics-(\d+.\d+.\d+),group=1
+            type=raw,priority=200,value=unstable
+            type=raw,priority=100,value=${{ env.timestamp }}
           labels: |
             org.opencontainers.image.title=IMAGE Handler Photo Audio Haptics
             org.opencontainers.image.description=Handler using multiple preprocessors to generate audio-haptic renderings for photographs.
             org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
-      - name: Get timestamp
-        run: echo "timestamp=$(date -u +'%Y-%m-%dT%H.%M')" >> $GITHUB_ENV
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
           context: .
           file: ./handlers/photo-audio-haptics-handler/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:unstable
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.timestamp }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

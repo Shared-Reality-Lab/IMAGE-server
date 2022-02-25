@@ -52,6 +52,7 @@ function generateRendering(width: number, height: number) {
 app.use(express.json({ limit: process.env.MAX_BODY }));
 
 app.post("/handler", async (req, res) => {
+    console.debug("Received request");
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.log("Request validated");
         if (!req.body.graphic) {

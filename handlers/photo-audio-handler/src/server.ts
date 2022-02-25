@@ -46,10 +46,12 @@ const filePrefix = "/tmp/sc-store/photo-audio-handler-";
 app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/handler", async (req, res) => {
+    console.debug("Received request");
     // Validate the request data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
         res.status(400).json(ajv.errors);
+        return;
     }
 
     const renderings = [];
@@ -62,13 +64,13 @@ app.post("/handler", async (req, res) => {
     const objGroup = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
 
     // Ignore secondCat since it isn't useful on its own
-    if (!semseg && !objDet && !objGroup) {
+    if (!(semseg && semseg?.segments) && !(objDet && objDet?.objects) && !objGroup) {
         console.debug("No usable preprocessor data! Can't render.");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
         res.json(response);
         return;
     }
-    else if (semseg["segments"].length === 0 && objDet["objects"].length === 0) {
+    else if (semseg?.segments.length === 0 && objDet?.objects.length === 0) {
         console.debug("No segments or objects detected! Can't render.");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
         res.json(response);
@@ -224,6 +226,7 @@ app.post("/handler", async (req, res) => {
 
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
     response["renderings"] = renderings;
+    console.debug("Sending response");
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);
     } else {

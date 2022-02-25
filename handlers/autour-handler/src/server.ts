@@ -24,10 +24,12 @@ const app = express();
 const port = 80;
 const scPort = 57120;
 const filePrefix = "/tmp/sc-store/autour-handler-";
+const filterCategories = [89]; // Remove OSM way segments
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/handler", async (req, res) => {
+    console.debug("Request received!");
     // Check for good data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
@@ -90,7 +92,7 @@ app.post("/handler", async (req, res) => {
 
     // Sort and filter POIs
     // Do this before since TTS is time consuming
-    const places = autourData["places"];
+    const places = autourData["places"].filter((p: { "cat": number }) => !filterCategories.includes(p["cat"]));
     const source = new LatLon(autourData["lat"], autourData["lon"]);
     for (const place of places) {
         const dest = new LatLon(place["ll"][0], place["ll"][1]);
@@ -103,7 +105,7 @@ app.post("/handler", async (req, res) => {
     // Form TTS segments
     const ttsIntro = "From due north moving clockwise, there are the following";
     const segments = [ttsIntro];
-    for (const place of autourData["places"]) {
+    for (const place of places) {
         segments.push(place["title"]);
     }
 
@@ -129,7 +131,8 @@ app.post("/handler", async (req, res) => {
 
     const durations = (ttsResponse as Record<string, unknown>)["durations"] as number[];
     let runningOffset = 0;
-    const scData = autourData;
+    const scData = JSON.parse(JSON.stringify(autourData));
+    scData["places"] = places;
     scData["ttsFileName"] = "";
 
     let durIdx = 0;
@@ -253,6 +256,7 @@ app.post("/handler", async (req, res) => {
         "renderings": renderings
     };
 
+    console.debug("Sending response.");
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);
     } else {

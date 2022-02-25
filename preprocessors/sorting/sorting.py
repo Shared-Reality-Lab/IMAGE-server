@@ -32,6 +32,7 @@ def calculate_diagonal(x1, y1, x2, y2):
 
 @app.route("/preprocessor", methods=['POST', 'GET'])
 def readImage():
+    logging.debug("Received request")
     object_type = []
     dimensions = []
     area = []
@@ -112,6 +113,7 @@ def readImage():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
+    logging.debug("Sending response")
     return response
 
 

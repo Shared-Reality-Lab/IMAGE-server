@@ -52,6 +52,7 @@ const filePrefix = "/tmp/sc-store/photo-audio-haptics-handler-";
 app.use(express.json({ limit: process.env.MAX_BODY }));
 
 app.post("/handler", async (req, res) => {
+    console.debug("Received request");
     // Validate the request data (just in case)
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
@@ -177,7 +178,7 @@ app.post("/handler", async (req, res) => {
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
                 if (hasAudioHaptic && entities.length > segGeometryData.length) {
-                    
+
                     // Add the point and contour location information to each returned entity.
                     // An entity could be either an object or segment.
                     // Ordered by segment text, segments, object text, and then objects for now.
@@ -249,6 +250,7 @@ app.post("/handler", async (req, res) => {
 
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
     response["renderings"] = renderings;
+    console.debug("Sending response");
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);
     } else {

@@ -36,6 +36,7 @@ def get_ocr_text():
     Gets data on locations nearby a map from the Autour API
     """
 
+    logging.debug("Received request")
     # Load schemas
     with open('./schemas/preprocessors/ocr.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
@@ -51,7 +52,7 @@ def get_ocr_text():
     content = request.get_json()
 
     # Check if request is for a map
-    if 'image' not in content:
+    if 'graphic' not in content:
         logging.info("Map request. Skipping...")
         return "", 204
 
@@ -104,6 +105,7 @@ def get_ocr_text():
         logging.error(error)
         return jsonify("Invalid Preprocessor JSON format"), 500
 
+    logging.debug("Sending response")
     return response
 
 

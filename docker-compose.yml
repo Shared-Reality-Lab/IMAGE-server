@@ -93,6 +93,9 @@ services:
         image: ghcr.io/shared-reality-lab/image-handler-autour:unstable
         env_file:
             - ./config/express-common.env
+        depends_on:
+            - supercollider
+            - espnet-tts
         labels:
             ca.mcgill.a11y.image.handler: enable
         volumes:
@@ -101,6 +104,9 @@ services:
         image: ghcr.io/shared-reality-lab/image-handler-photo-audio:unstable
         env_file:
             - ./config/express-common.env
+        depends_on:
+            - supercollider
+            - espnet-tts
         labels:
             ca.mcgill.a11y.image.handler: enable
         volumes:
@@ -115,10 +121,17 @@ services:
         image: ghcr.io/shared-reality-lab/image-handler-photo-audio-haptics:unstable
         env_file:
             - ./config/express-common.env
+        depends_on:
+            - supercollider
+            - espnet-tts
         labels:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+    ocr-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-ocr:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
 
 volumes:
     sc-store:
