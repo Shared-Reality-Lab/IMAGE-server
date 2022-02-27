@@ -3,7 +3,7 @@
     "$id": "https://image.a11y.mcgill.ca/preprocessors/content-categoriser.schema.json",
     "type": "object",
     "title": "Content Categoriser",
-    "description": "Classifier for categorising the content into grapic, text, chart or other.",
+    "description": "Classifier for categorising the content into graphic, text, chart or other.",
     "properties": {
         "category": { "enum": ["chart", "photograph", "other","text"] }
     },
