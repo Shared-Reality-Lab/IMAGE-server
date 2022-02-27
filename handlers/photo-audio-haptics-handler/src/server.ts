@@ -29,7 +29,7 @@ import ttsResponseJSON from "./schemas/services/tts/segment.response.json";
 import descriptionJSON from "./schemas/services/supercollider/tts-description.schema.json";
 import segmentJSON from "./schemas/services/supercollider/tts-segment.schema.json";
 import rendererDefJSON from "./schemas/renderers/definitions.json";
-import photoAudioHapticsJSON from "./schemas/renderers/photoaudiohaptics.schema.json";
+import photoAudioHapticsJSON from "./schemas/renderers/photoaudiohapticshull.schema.json";
 
 import * as utils from "./utils";
 
@@ -88,7 +88,7 @@ app.post("/handler", async (req, res) => {
     // *******************************************************
     // Check for renderer availability
     // *******************************************************
-    const hasAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.PhotoAudioHaptics");
+    const hasAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.PhotoAudioHapticsHull");
     if (!hasAudioHaptic) {
         console.warn("Photo audio-haptic renderer not supported!");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
@@ -228,7 +228,7 @@ app.post("/handler", async (req, res) => {
                         };
                     // console.log("second time: ", entities[0]);
                     const rendering = {
-                        "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
+                        "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHapticsHull",
                         "confidence": 50,
                         "description": renderingTitle,
                         "data": {
@@ -238,7 +238,7 @@ app.post("/handler", async (req, res) => {
                             },
                         }
                     };
-                    if (ajv.validate("https://image.a11y.mcgill.ca/renderers/photoaudiohaptics.schema.json", rendering["data"])) {
+                    if (ajv.validate("https://image.a11y.mcgill.ca/renderers/photoaudiohapticshull.schema.json", rendering["data"])) {
                         renderings.push(rendering);
                     } else {
                         console.error(ajv.errors);
