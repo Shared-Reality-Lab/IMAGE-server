@@ -14,20 +14,18 @@ from app.osm_service import (
     my_final_data_structure,
     merge_street_points_by_name,
     merge_street_by_name,
+    compute_query_bounding_box,
 )
 from app.osm_service import (
-    get_points_of_interest,
-    process_points_of_interest,
+    get_amenities,
+    process_extracted_amenities,
     align_points_of_interest,
-    collect_all_pois,
+    retrieve_all_point_of_interest,
 )
 from app.osm_service import (
-    merge_all_collected_pois,
-    new_poi_alignment_format,
-    second_new_poi_alignment_format,
-    third_new_poi_alignment_format,
+    keep_in_list_all_retrieved_point_of_interest,
+    final_osm_data_format,
 )
-from app.osm_service import fourth_poi_alignment_format
 
 
 app = FastAPI()
@@ -38,53 +36,51 @@ def health():
     return {"Hello": "World"}
 
 
-@app.get("/location/{radius}/{lat}/{lon}")
-def get_location(radius: float, lat: float, lon: float):
-    raw_osmdata = query_osmdata(radius, lat, lon)
+@app.get("/location/{distance_in_metres}/{lat}/{lon}")
+def get_location(distance_in_metres: float, lat: float, lon: float):
+    coordinates = compute_query_bounding_box(distance_in_metres, lat, lon)
 
-    amenities = get_points_of_interest(radius, lat, lon)
+    queried_osm_data, bbox = query_osmdata(coordinates)
 
-    transformed = transform_osmdata(raw_osmdata)
+    transformed_osm_data = transform_osmdata(queried_osm_data)
+    merged_street = merge_street_by_name(transformed_osm_data)
 
-    merged = merge_street_by_name(transformed)
-
-    intersection, link = extract_nodes_list(merged)
+    intersection, street_intersection_sets = extract_nodes_list(merged_street)
 
     new_intersection_list = create_new_intersection_sets(intersection)
 
-    merged_intersection = merge_street_intersection_by_name(link)
+    merged_intersection = merge_street_intersection_by_name(street_intersection_sets)
 
-    merged_street = deepcopy(merged)
+    copy_of_merged_street = deepcopy(merged_street)
 
-    modified_new_intersection_list = deepcopy(new_intersection_list)
+    copy_of_new_intersection_list = deepcopy(new_intersection_list)
 
-    my_str_data = my_final_data_structure(
-        merged_street, modified_new_intersection_list, merged_intersection
+    street_records = my_final_data_structure(
+        copy_of_merged_street, copy_of_new_intersection_list, merged_intersection
     )
 
-    merged_street_data = merge_street_points_by_name(my_str_data)
+    merged_street_data = merge_street_points_by_name(street_records)
 
-    point_of_interest = process_points_of_interest(amenities)
+    amenities = get_amenities(coordinates)
 
-    align_pois = align_points_of_interest(point_of_interest, merged_street_data)
+    processed_amenities = process_extracted_amenities(amenities)
 
-    all_pois = collect_all_pois(align_pois)
-
-    all_pois_merged, revised_all_pois_merged = merge_all_collected_pois(all_pois)
-
-    new_poi_format = new_poi_alignment_format(point_of_interest, merged_street_data)
-
-    merged_str_data = deepcopy(merged)
-
-    second_poi_format = second_new_poi_alignment_format(
-        all_pois_merged, merged_str_data
+    copy_of_merged_street_data = align_points_of_interest(
+        processed_amenities, merged_street_data
     )
 
-    third_poi_format = third_new_poi_alignment_format(second_poi_format)
+    retrieved_point_of_interest = retrieve_all_point_of_interest(
+        copy_of_merged_street_data
+    )
 
-    fourth_poi_format = fourth_poi_alignment_format(all_pois_merged, merged)
+    (
+        unique_listed_point_of_interest,
+        listed_point_of_interest,
+    ) = keep_in_list_all_retrieved_point_of_interest(retrieved_point_of_interest)
 
-    comment1 = "//poi_collection:"
-    comment2 = "//streets:"
+    response = final_osm_data_format(unique_listed_point_of_interest, merged_street)
+    comment1 = "//map_area: [lat_min, lon_min, lat_max, lon_max]:"
+    comment2 = "//poi_collection:"
+    comment3 = "//streets:"
 
-    return (comment1, revised_all_pois_merged, comment2, third_poi_format)
+    return (comment1, bbox, comment2, listed_point_of_interest, comment3, response)
