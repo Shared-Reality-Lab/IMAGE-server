@@ -122,7 +122,7 @@ app.post("/handler", async (req, res) => {
     // const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
     // Removing scenes due to server#167.
     const sceneData: any = undefined;
-    const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.secondCategoriser"];
+    const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.graphicTagger"];
     let ttsIntro;
     if (sceneData && sceneData["categories"].length > 0) {
         let sceneName = sceneData["categories"][0]["name"] as string;

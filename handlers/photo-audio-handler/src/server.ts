@@ -58,7 +58,7 @@ app.post("/handler", async (req, res) => {
 
     // Get preprocessors
     const preprocessors = req.body["preprocessors"];
-    const secondCat = preprocessors["ca.mcgill.a11y.image.preprocessor.secondCategoriser"];
+    const secondCat = preprocessors["ca.mcgill.a11y.image.preprocessor.graphicTagger"];
     const semseg = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"];
     const objDet = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
     const objGroup = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];

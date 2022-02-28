@@ -103,7 +103,7 @@ app.post("/handler", async (req, res) => {
     // const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
     // Scene recognition dropped due to poor/horrible results.
     const sceneData: any = undefined;
-    const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.secondCategoriser"]
+    const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.graphicTagger"]
     let intro;
     if (sceneData && sceneData["categories"].length > 0) {
         let sceneName = sceneData["categories"][0]["name"] as string;
