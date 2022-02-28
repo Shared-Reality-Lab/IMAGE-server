@@ -128,9 +128,9 @@ def categorise():
         return jsonify("Invalid Preprocessor JSON format"), 400
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    name = "ca.mcgill.a11y.image.preprocessor.graphic-tagger"
+    name = "ca.mcgill.a11y.image.preprocessor.graphicTagger"
     preprocess_output = content["preprocessors"]
-    classifier_1 = "ca.mcgill.a11y.image.preprocessor.content-categoriser"
+    classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
     # convert the uri to processable image
     if "graphic" not in content.keys():
         return "", 204

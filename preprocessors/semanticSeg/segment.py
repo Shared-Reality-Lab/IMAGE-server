@@ -235,8 +235,8 @@ def segment():
     timestamp = time.time()
     preprocessorName = \
         "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
-    classifier_1 = "ca.mcgill.a11y.image.preprocessor.content-categoriser"
-    classifier_2 = "ca.mcgill.a11y.image.preprocessor.graphic-tagger"
+    classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
+    classifier_2 = "ca.mcgill.a11y.image.preprocessor.graphicTagger"
     preprocess_output = content["preprocessors"]
     if classifier_1 in preprocess_output:
         classifier_1_output = preprocess_output[classifier_1]
