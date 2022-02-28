@@ -121,7 +121,7 @@ app.post("/handler", async (req, res) => {
         // console.log(geometryInfo);
         ttsData.push(...ttsInfo);
         segGeometryData.push(...geometryInfo);
-        console.log("seggeodata: ", segGeometryData);
+        // console.log("seggeodata: ", segGeometryData);
         if (preObjDet && preGroupData) {
             ttsData.push({ "value": "It also", "type": "text" });
         }
