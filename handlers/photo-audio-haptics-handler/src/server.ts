@@ -19,7 +19,8 @@ import express from "express";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
-import hull from "hull.js";
+
+
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseJSON from "./schemas/handler-response.schema.json";
@@ -110,7 +111,9 @@ app.post("/handler", async (req, res) => {
     const ttsData: utils.TTSSegment[] = [];
     const segGeometryData: utils.segGeometryInfo[] = [];
     const objGeometryData: utils.objGeometryInfo[] = [];
+   
     ttsData.push({ "value": utils.generateIntro(preSecondCat), "type": "text" });
+   
     if (preSemSeg) {
         // Use all segments returned for now.
         // Filtering may be helpful later.
@@ -127,8 +130,10 @@ app.post("/handler", async (req, res) => {
         const [ttsInfo, geometryInfo] = utils.generateObjDet(preObjDet, preGroupData);
         ttsData.push(...ttsInfo);
         objGeometryData.push(...geometryInfo);
+        ttsData.push({ "value": "Moving to next segment", "type": "text" })
+        ttsData.push({ "value": "Starting next segment", "type": "text" })
     }
-
+    
     // Concatenate adjacent text entries
     for (let i = 0; i < ttsData.length - 1; i++) {
         if (ttsData[i].type === "text" && ttsData[i + 1].type === "text") {
@@ -136,6 +141,9 @@ app.post("/handler", async (req, res) => {
             ttsData.splice(i + 1, 1);
         }
     }
+
+   
+    
 
     // Generate rendering title
     const renderingTitle = utils.renderingTitle(preSemSeg, preObjDet, preGroupData);
@@ -215,17 +223,26 @@ app.post("/handler", async (req, res) => {
                             centroid: [[]],
                             contourPoints: [[]],
                             // hullPoints: [],
-                            entityType:"static"
+                            entityType:"staticSemSeg"
                         };
 
-                    if (preObjDet && preSemSeg)
+                    if (preObjDet && preSemSeg) {
                         entities[1 + segGeometryData.length] = {
                             ...entities[1 + segGeometryData.length],
                             centroid: [[]],
                             contourPoints: [[]],
                             // hullPoints: [],
-                            entityType: "static"
+                            entityType: "staticObjDet"
                         };
+                        entities[1 +  objGeometryData.length] = {
+                            ...entities[1 + objGeometryData.length],
+                            centroid: [[]],
+                            contourPoints: [[]],
+                            // hullPoints: [],
+                            entityType: "staticMove"
+                        };
+
+                    }
                     // console.log("second time: ", entities[0]);
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHapticsHull",
