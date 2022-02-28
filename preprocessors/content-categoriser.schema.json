@@ -1,0 +1,11 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/content-categoriser.schema.json",
+    "type": "object",
+    "title": "Content Categoriser",
+    "description": "Classifier for categorising the content into graphic, text, chart or other. Accessed as 'ca.mcgill.a11y.image.preprocessor.contentCategoriser'.",
+    "properties": {
+        "category": { "enum": ["chart", "photograph", "other","text"] }
+    },
+    "required": [ "category"]
+}

@@ -1,0 +1,11 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/graphic-tagger.schema.json",
+    "type": "object",
+    "title": "Graphic Tagger",
+    "description": "Preprocessor for obtaining tags for the content in the photo under 'ca.mcgill.a11y.image.preprocessor.graphicTagger'. Note that the most likely category is returned, so the indoor/outdoor labels only appear if they were rated higher than 'people'.",
+    "properties": {
+        "category": { "enum": ["other", "indoor", "outdoor", "people"] }
+    },
+    "required": [ "category"]
+}
