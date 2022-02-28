@@ -89,7 +89,8 @@ renderPhoto = { |json, ttsData, outPath, addr|
                                 { start = lastIndex + minDiff; totalDur = totalDur + minDiff; }
                             );
                             lastIndex = start;
-                            volume = point.at("area").asFloat.linlin(0.01, 0.25, -5, 0);
+                            // Attempt to map onto curve of observed object sizes
+                            volume = -15 * (point.at("area").asFloat * -130).exp;
                             score.add([
                                 start,
                                 [\s_new, (\pingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
