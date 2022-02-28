@@ -131,7 +131,7 @@ renderPhoto = { |json, ttsData, outPath, addr|
                 timing = timing + duration;
 
                 contours.do({ |contour, i|
-                    var coord = contour.at("coordinates"), area = contour.at("area").asFloat, centroid = contour.at("centroid"), maxTime=25, pingDur=0.01, contourTime = area*maxTime, midinote;
+                    var coord = contour.at("coordinates"), area = contour.at("area").asFloat, centroid = contour.at("centroid"), maxTime=15, pingDur=0.01, contourTime = area*maxTime, midinote;
 
                     coord = coord.resamp0((contourTime / pingDur).asInteger);
                     midinote = item.at("centroid").at(1).asFloat.linlin(0.0, 1.0, 57, 45).round;
