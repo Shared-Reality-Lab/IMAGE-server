@@ -52,7 +52,7 @@ def get_ocr_text():
     content = request.get_json()
 
     # Check if request is for a map
-    if 'image' not in content:
+    if 'graphic' not in content:
         logging.info("Map request. Skipping...")
         return "", 204
 
