@@ -19,6 +19,8 @@ import pluralize from "pluralize";
 import fetch from "node-fetch";
 import osc from "osc";
 
+const MIN_OBJ_AREA = 0.0005; // For ungrouped objects only, for grouped objects applies to whole group.
+
 export type TTSSegment = {
     value: string;
     type: string;
@@ -31,8 +33,10 @@ export type TTSResponse = {
     audio: string;
 }
 
+type Obj = { ID: number, type: string, area: number };
+
 type ObjDet = {
-    objects: { ID: number, type: string }[];
+    objects: Obj[];
 };
 
 type ObjGroup = {
@@ -82,30 +86,65 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
     return data;
 }
 
+export function filterObjectsBySize(objDet: ObjDet, objGroup: ObjGroup) {
+    const groupsToDelete: number[] = [];
+    for (const group of objGroup["grouped"]) {
+        const objs = objDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"])) as Obj[];
+        const totalArea = objs.map(a => a.area).reduce((a, b) => a+ b, 0);
+        if (totalArea < MIN_OBJ_AREA) {
+            groupsToDelete.push(objGroup["grouped"].indexOf(group));
+        }
+    }
+    for (const idx of groupsToDelete) {
+        for (const objId of objGroup["grouped"][idx]["IDs"]) {
+            objDet["objects"].splice(objDet["objects"].findIndex(obj => obj["ID"] === objId), 1);
+        }
+        delete objGroup["grouped"][idx];
+    }
+
+    const ungroupedToDelete: number[] = [];
+    for (const idx of objGroup["ungrouped"]) {
+        const obj = objDet["objects"].find((x: { "ID": number }) => x["ID"] === idx);
+        if (obj && obj.area < MIN_OBJ_AREA) {
+            ungroupedToDelete.push(idx);
+        }
+    }
+    for (const idx of ungroupedToDelete) {
+        objDet["objects"].splice(objDet["objects"].findIndex(obj => obj["ID"] === idx), 1);
+        objGroup["ungrouped"].splice(objGroup["ungrouped"].indexOf(idx), 1);
+    }
+}
+
+
 export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[] {
     const objects: TTSSegment[] = [];
     objects.push({"type": "text", "value": "contains the following objects or people:"});
     for (const group of objGroup["grouped"]) {
-        const objs = objDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"]));
-        const sType = (objs.length > 0) ? objs[0]["type"] : "object";
-        const pType = pluralize(sType.trim());
-        const object = {
-            "type": "object",
-            "objects": objs,
-            "label": pType,
-            "value": objs.length.toString() + " " + pType + ","
-        };
-        objects.push(object);
+        const objs = objDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"])) as Obj[];
+        const totalArea = objs.map(a => a.area).reduce((a, b) => a+ b, 0);
+        if (totalArea > MIN_OBJ_AREA) {
+            const sType = (objs.length > 0) ? objs[0]["type"] : "object";
+            const pType = pluralize(sType.trim());
+            const object = {
+                "type": "object",
+                "objects": objs,
+                "label": pType,
+                "value": objs.length.toString() + " " + pType + ","
+            };
+            objects.push(object);
+        }
     }
     for (const idx of objGroup["ungrouped"]) {
         const obj = objDet["objects"].find((x: { "ID": number }) => x["ID"] === idx);
         if (obj !== undefined) {
-            objects.push({
-                "type": "object",
-                "objects": [obj],
-                "label": obj["type"].trim(),
-                "value": (Articles.articlize(obj["type"].trim()) as string) + ","
-            } as TTSSegment);
+            if (obj["area"] > MIN_OBJ_AREA) {
+                objects.push({
+                    "type": "object",
+                    "objects": [obj],
+                    "label": obj["type"].trim(),
+                    "value": (Articles.articlize(obj["type"].trim()) as string) + ","
+                } as TTSSegment);
+            }
         }
     }
     objects[objects.length-1]["value"] = objects[objects.length - 1]["value"].replace(",", ".");
