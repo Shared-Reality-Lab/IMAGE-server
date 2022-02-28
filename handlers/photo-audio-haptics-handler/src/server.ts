@@ -66,7 +66,7 @@ app.post("/handler", async (req, res) => {
     // Check for preprocessor data
     // *******************************************************
     const preprocessors = req.body["preprocessors"];
-    const preSecondCat = preprocessors["ca.mcgill.a11y.image.preprocessor.secondCategoriser"];
+    const preSecondCat = preprocessors["ca.mcgill.a11y.image.preprocessor.graphicTagger"];
     const preSemSeg = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]
     const preObjDet = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
     const preGroupData = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];

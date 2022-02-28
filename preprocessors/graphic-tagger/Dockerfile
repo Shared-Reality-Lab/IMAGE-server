@@ -4,14 +4,14 @@ RUN adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
-COPY /preprocessors/categoriser2/requirements.txt /app/requirements.txt
+COPY /preprocessors/graphic-tagger/requirements.txt /app/requirements.txt
 
 RUN pip3 install --upgrade pip
 RUN pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
 WORKDIR /app
-COPY /preprocessors/categoriser2 /app
+COPY /preprocessors/graphic-tagger /app
 
 
 EXPOSE 5000

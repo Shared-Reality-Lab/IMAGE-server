@@ -53,9 +53,11 @@ def categorise():
     logging.debug("Received request")
     # load the schema
     labels_dict = {"0": "chart", "1": "photograph", "2": "other", "3": "text"}
-    with open('./schemas/preprocessors/categoriser.json') as jsonfile:
+    with open('./schemas/preprocessors/content-categoriser.schema.json') \
+            as jsonfile:
         data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+    with open('./schemas/preprocessor-response.schema.json') \
+            as jsonfile:
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
         definitionSchema = json.load(jsonfile)
@@ -83,7 +85,7 @@ def categorise():
         return "", 204  # No content
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    name = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
+    name = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
 
     # convert the uri to processable image
     # Following 4 lines of code

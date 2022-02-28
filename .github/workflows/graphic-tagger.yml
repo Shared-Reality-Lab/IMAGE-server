@@ -1,12 +1,12 @@
-name: First categoriser
+name: Graphic Tagger
 on:
   push:
     branches: [ main ]
-    tags: [ "preprocessor-first-categoriser-[0-9]+.[0-9]+.[0-9]+" ]
-    paths: [ "preprocessors/categoriser/**" ]
+    tags: [ "preprocessor-graphic-tagger-[0-9]+.[0-9]+.[0-9]+" ]
+    paths: [ "preprocessors/graphic-tagger/**" ]
   pull_request:
     branches: [ main ]
-    paths: [ "preprocessors/categoriser/**" ]
+    paths: [ "preprocessors/graphic-tagger/**" ]
   workflow_run:
     workflows: [ "Schemas (Trigger)" ]
     types:
@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: shared-reality-lab/image-preprocessor-first-categoriser
+  IMAGE_NAME: shared-reality-lab/image-preprocessor-graphic-tagger
 jobs:
   lint:
     name: PEP 8 style check.
@@ -27,7 +27,7 @@ jobs:
       - name: Install flake8
         run: pip install flake8
       - name: Check with flake8
-        run: python -m flake8 ./preprocessors/categoriser --show-source
+        run: python -m flake8 ./preprocessors/graphic-tagger --show-source
   build-and-push-image:
     name: Build and Push to Registry
     needs: lint
@@ -48,7 +48,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Get Correct Tags
         run: |
-          if [[ ${{ github.ref }} =~ ^refs/tags/preprocessor-first-categoriser-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ ${{ github.ref }} =~ ^refs/tags/preprocessor-graphic-tagger-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "TAGGED=true" >> $GITHUB_ENV
           else
             echo "TAGGED=false" >> $GITHUB_ENV
@@ -63,12 +63,12 @@ jobs:
           flavor: |
             latest=${{ env.TAGGED }}
           tags: |
-            type=match,enable=${{ env.TAGGED }},priority=300,pattern=preprocessor-first-categoriser-(\d+.\d+.\d+),group=1
+            type=match,enable=${{ env.TAGGED }},priority=300,pattern=preprocessor-graphic-tagger-(\d+.\d+.\d+),group=1
             type=raw,priority=200,value=unstable
             type=raw,priority=100,value=${{ env.timestamp }}
           labels: |
-            org.opencontainers.image.title=IMAGE Preprocessor First Categoriser
-            org.opencontainers.image.description=Categorizes graphic inputs as photographs or charts.
+            org.opencontainers.image.title=IMAGE Preprocessor Graphic Tagger
+            org.opencontainers.image.description=Classifies photographs as indoor, outdoor, of people, or other.
             org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
@@ -76,7 +76,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./preprocessors/categoriser/Dockerfile
+          file: ./preprocessors/graphic-tagger/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

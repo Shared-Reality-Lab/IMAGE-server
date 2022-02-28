@@ -207,8 +207,8 @@ def run(weights='yolov5x.pt',
         image = np.asarray(bytearray(binary), dtype="uint8")
         imgDim = cv2.imdecode(image, cv2.IMREAD_COLOR)
         height, width, channels = imgDim.shape
-        classifier_1 = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
-        classifier_2 = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
+        classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
+        classifier_2 = "ca.mcgill.a11y.image.preprocessor.graphicTagger"
         if classifier_1 in preprocess_output:
             classifier_1_output = preprocess_output[classifier_1]
             classifier_1_label = classifier_1_output["category"]

@@ -41,16 +41,16 @@ services:
             context: .
             dockerfile: ./preprocessors/yolo/Dockerfile
         image: "object-detection:latest"
-    first-categoriser:
+    content-categoriser:
         build:
             context: .
-            dockerfile: ./preprocessors/categoriser/Dockerfile
-        image: "first-categoriser:latest"
-    second-categoriser:
+            dockerfile: ./preprocessors/content-categoriser/Dockerfile
+        image: "content-categoriser:latest"
+    graphic-tagger:
         build:
             context: .
-            dockerfile: ./preprocessors/categoriser2/Dockerfile
-        image: "second-categoriser:latest"
+            dockerfile: ./preprocessors/graphic-tagger/Dockerfile
+        image: "graphic-tagger:latest"
     object-grouping:
         build:
             context: .

@@ -102,9 +102,11 @@ def categorise():
     logging.debug("Received request")
     # load the schema
     labels = ["other", "indoor", "outdoor", "people"]
-    with open('./schemas/preprocessors/classifier-l2.schema.json') as jsonfile:
+    with open('./schemas/preprocessors/graphic-tagger.schema.json') \
+            as jsonfile:
         data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+    with open('./schemas/preprocessor-response.schema.json') \
+            as jsonfile:
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
         definitionSchema = json.load(jsonfile)
@@ -126,9 +128,9 @@ def categorise():
         return jsonify("Invalid Preprocessor JSON format"), 400
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    name = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
+    name = "ca.mcgill.a11y.image.preprocessor.graphicTagger"
     preprocess_output = content["preprocessors"]
-    classifier_1 = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
+    classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
     # convert the uri to processable image
     if "graphic" not in content.keys():
         return "", 204
