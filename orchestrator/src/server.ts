@@ -140,7 +140,9 @@ app.post("/render", (req, res) => {
             console.debug("Waiting for handlers...");
             return Promise.all(promises);
         }).then(async (results) => {
-            const renderings = results.reduce((a, b) => a.concat(b), []);
+            // Hard code sorting so MOTD appears first...
+            const renderings = results.reduce((a, b) => a.concat(b), [])
+                .sort((a: { "description": string }, b: { "description": string }) => (a["description"] === "Server status message.") ? -1 : 0);
             const response = {
                 "request_uuid": req.body.request_uuid,
                 "timestamp": Math.round(Date.now() / 1000),
