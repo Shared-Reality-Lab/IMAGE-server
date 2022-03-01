@@ -132,6 +132,14 @@ services:
         image: ghcr.io/shared-reality-lab/image-handler-ocr:unstable
         labels:
             ca.mcgill.a11y.image.handler: enable
+    motd-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-motd:unstable
+        environment:
+            - MOTD=Hello, world!
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
 
 volumes:
     sc-store:

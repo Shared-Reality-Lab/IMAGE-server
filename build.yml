@@ -122,6 +122,11 @@ services:
             context: .
             dockerfile: ./handlers/ocr-handler/Dockerfile
         image: "ocr-handler:latest"
+    motd-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/motd/Dockerfile
+        image: "motd-handler:latest"
     # Supercollider on Fedora 34
     supercollider-base:
         build:
