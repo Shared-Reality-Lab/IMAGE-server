@@ -130,8 +130,7 @@ app.post("/handler", async (req, res) => {
         const [ttsInfo, geometryInfo] = utils.generateObjDet(preObjDet, preGroupData);
         ttsData.push(...ttsInfo);
         objGeometryData.push(...geometryInfo);
-        ttsData.push({ "value": "Moving to next segment", "type": "text" })
-        ttsData.push({ "value": "Starting next segment", "type": "text" })
+        
     }
     
     // Concatenate adjacent text entries
@@ -141,8 +140,11 @@ app.post("/handler", async (req, res) => {
             ttsData.splice(i + 1, 1);
         }
     }
+    if (preSemSeg) {
+            ttsData.push({ "value": "Moving to next region", "type": "text" })
+            ttsData.push({ "value": "Starting next region", "type": "text" })
 
-   
+    }
     
 
     // Generate rendering title
@@ -195,11 +197,11 @@ app.post("/handler", async (req, res) => {
                     // For the segments...
                     
                     for (let i = 1; i <= segGeometryData.length; i++) {
-                        const hullPoints:any = [segGeometryData?.[i - 1]?.['hullPoints']]
+                        const hulls:any = [segGeometryData?.[i - 1]?.['hullPoints']]
                         entities[i] = {
                             ...entities[i],
                             centroid: [segGeometryData?.[i - 1]?.['centroid']],
-                            contourPoints: [segGeometryData?.[i - 1]?.['contourPoints']],
+                            contours: [segGeometryData?.[i - 1]?.['contourPoints']],
                             // hullPoints: hullPoints,
                             entityType: "segment"
                         };
@@ -210,8 +212,8 @@ app.post("/handler", async (req, res) => {
                         entities[i + j] = {
                             ...entities[i + j], 
                             centroid: objGeometryData[i]['centroid'],
-                            contourPoints: objGeometryData[i]['contourPoints'],
-                            hullPoints: objGeometryData[i]['hullPoints'],
+                            contours: objGeometryData[i]['contourPoints'],
+                            hulls: objGeometryData[i]['hullPoints'],
                             entityType: "object"
                         };
                     }
@@ -221,7 +223,7 @@ app.post("/handler", async (req, res) => {
                         entities[0] = {
                             ...entities[0],
                             centroid: [[]],
-                            contourPoints: [[]],
+                            contours: [[]],
                             // hullPoints: [],
                             entityType:"staticSemSeg"
                         };
@@ -230,28 +232,36 @@ app.post("/handler", async (req, res) => {
                         entities[1 + segGeometryData.length] = {
                             ...entities[1 + segGeometryData.length],
                             centroid: [[]],
-                            contourPoints: [[]],
+                            contours: [[]],
                             // hullPoints: [],
                             entityType: "staticObjDet"
                         };
-                        entities[1 +  objGeometryData.length] = {
-                            ...entities[1 + objGeometryData.length],
+                        entities[2 +  objGeometryData.length+ segGeometryData.length] = {
+                            ...entities[2 + objGeometryData.length+ segGeometryData.length],
                             centroid: [[]],
-                            contourPoints: [[]],
+                            contours: [[]],
                             // hullPoints: [],
                             entityType: "staticMove"
                         };
+                        entities[3 +  objGeometryData.length+ segGeometryData.length] = {
+                            ...entities[3 + objGeometryData.length+ segGeometryData.length],
+                            centroid: [[]],
+                            contours: [[]],
+                            // hullPoints: [],
+                            entityType: "staticNext"
+                        };
+                        
 
                     }
-                    // console.log("second time: ", entities[0]);
+                    console.log("second time: ", entities);
                     const rendering = {
-                        "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHapticsHull",
+                        "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
                         "confidence": 50,
                         "description": renderingTitle,
                         "data": {
                             "info": {
                                 "audioFile": dataURL,
-                                "entityInfo": entities
+                                "entities": entities
                             },
                         }
                     };

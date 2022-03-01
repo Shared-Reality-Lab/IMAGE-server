@@ -262,15 +262,15 @@ export function renderingTitle(semseg: Record<string, unknown>, objDet: Record<s
     const hasSemseg = semseg !== undefined;
     const hasObj = (objDet !== undefined) && (objGroup !== undefined);
     if (hasSemseg && hasObj) {
-        return "TESTING HULL: A navigable audio-haptic scene of segments and objects detected in the image";
+        return "A navigable audio-haptic scene of segments and objects detected in the image";
     }
     else if (hasSemseg) {
-        return "TESTING HULL:A navigable audio-haptic scene of segments detected in the image";
+        return "A navigable audio-haptic scene of segments detected in the image";
     }
     else if(hasObj) {
-        return "TESTING HULL:A navigable audio-haptic scene of objects detected in the image";
+        return "A navigable audio-haptic scene of objects detected in the image";
     }
     else {
-        return "TESTING HULL:A navigable audio-haptic scene";
+        return "A navigable audio-haptic scene";
     }
 }
