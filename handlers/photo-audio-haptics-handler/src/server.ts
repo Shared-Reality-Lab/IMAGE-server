@@ -89,7 +89,7 @@ app.post("/handler", async (req, res) => {
     // *******************************************************
     // Check for renderer availability
     // *******************************************************
-    const hasAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.PhotoAudioHapticsHull");
+    const hasAudioHaptic = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.PhotoAudioHaptics");
     if (!hasAudioHaptic) {
         console.warn("Photo audio-haptic renderer not supported!");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
@@ -253,7 +253,7 @@ app.post("/handler", async (req, res) => {
                         
 
                     }
-                    console.log("second time: ", entities);
+                    // console.log("second time: ", entities);
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
                         "confidence": 50,
