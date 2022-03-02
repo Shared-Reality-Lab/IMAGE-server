@@ -128,7 +128,6 @@ def render_ocr():
         "renderings": [
             {
                 "type_id": "ca.mcgill.a11y.image.renderer.Text",
-                "confidence": 50,
                 "description": "The text found in a graphic.",
                 "data": {
                     "text": text

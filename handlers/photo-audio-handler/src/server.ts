@@ -123,7 +123,6 @@ app.post("/handler", async (req, res) => {
         const textString = ttsData.map(x => x["value"]).join(" ");
         const rendering = {
             "type_id": "ca.mcgill.a11y.image.renderer.Text",
-            "confidence": 50,
             "description": renderingTitle + " (text only)",
             "data": { "text": textString }
         };
@@ -179,7 +178,6 @@ app.post("/handler", async (req, res) => {
                 if (hasSegment && segArray.length > 0) {
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
-                        "confidence": 50,
                         "description": renderingTitle,
                         "data": {
                             "audioFile": dataURL,
@@ -195,7 +193,6 @@ app.post("/handler", async (req, res) => {
                 else if (hasSimple) {
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                        "confidence": 50,
                         "description": renderingTitle,
                         "data": {
                             "audio": dataURL

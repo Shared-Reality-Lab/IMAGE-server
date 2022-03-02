@@ -148,7 +148,6 @@ app.post("/handler", async (req, res) => {
             const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
             const r = {
                 "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                "confidence": 50,
                 "description": "A spatial sonification of a pie chart without label information.",
                 "data": {
                     "audio": dataURL

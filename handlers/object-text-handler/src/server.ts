@@ -156,7 +156,6 @@ app.post("/handler", async (req, res) => {
         "renderings": [
             {
                 "type_id": "ca.mcgill.a11y.image.renderer.Text",
-                "confidence": 50,
                 "description": "A description of the image and its objects.",
                 "data": {
                     "text": text

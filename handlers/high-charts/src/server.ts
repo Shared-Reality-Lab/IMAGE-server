@@ -116,7 +116,6 @@ app.post("/handler", async (req, res) => {
                         const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
                         const rendering = {
                             "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                            "confidence": 50,
                             "description": "Simple Line Chart",
                             "data": {
                                 "audio": dataURL

@@ -215,7 +215,6 @@ app.post("/handler", async (req, res) => {
 
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
-                        "confidence": 50,
                         "description": renderingTitle,
                         "data": {
                             "info": {

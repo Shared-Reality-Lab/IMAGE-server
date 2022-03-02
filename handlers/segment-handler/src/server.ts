@@ -240,7 +240,6 @@ app.post("/handler", async (req, res) => {
         if (hasSimple) {
             const r = {
                 "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                "confidence": 50, // TODO magic number
                 "description": "A sonification of segments detected in the image.",
                 "data": {
                     "audio": dataURL
@@ -256,7 +255,6 @@ app.post("/handler", async (req, res) => {
         if (segArray.length > 0 && hasSegment) {
             const r = {
                 "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
-                "confidence": 50, // TODO magic number
                 "description": "Navigable sonifications of segments detected in the image.",
                 "data": {
                     "audioFile": dataURL,
