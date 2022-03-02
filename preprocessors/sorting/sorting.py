@@ -22,6 +22,7 @@ import logging
 from math import sqrt
 
 
+logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
 
 

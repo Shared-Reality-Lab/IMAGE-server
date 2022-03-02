@@ -38,6 +38,7 @@ import gc
 
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 logging.basicConfig(level=logging.NOTSET)
 # assigns different colors to different segments. This helps in
 # determining contour or different segments. Refer Line 136 to see how

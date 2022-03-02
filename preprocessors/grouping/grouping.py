@@ -25,6 +25,7 @@ from operator import itemgetter
 
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def calculate_diagonal(x1, y1, x2, y2):

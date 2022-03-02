@@ -37,6 +37,7 @@ from utils.torch_utils import select_device, load_classifier
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def detect_objects(send,

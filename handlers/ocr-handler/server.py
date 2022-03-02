@@ -22,6 +22,7 @@ import jsonschema
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 @app.route('/handler', methods=['POST', 'GET'])

@@ -28,6 +28,7 @@ import os
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def process_results(response, labels):
