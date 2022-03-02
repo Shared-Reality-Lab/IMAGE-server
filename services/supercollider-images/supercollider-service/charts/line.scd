@@ -63,16 +63,18 @@ singleLineChart = { |json, ttsData, outPath, addr|
     miny = seriesData.flop[1].minItem;
     maxy = seriesData.flop[1].maxItem;
     seriesData.do({ |item, i|
-        score.add(
-            [   timing,
-                \snew, (\discreteRingzPingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
+        score.add([
+            timing,
+            [
+                \s_new, (\discreteRingzPingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
                 \theta, item.at(0).linlin(-1.0, 1.0, -0.5pi, 0.5pi),
                 \phi, item.at(1).linlin(miny, maxy, -0.4pi, 0.4pi),
                 \freq, item.at(1).linlin(miny, maxy, 100, 2000),
                 \decay, 0.0102,
-                \gain, baseGain
+                \radius, 2.0,
+                \gain, baseGain * 0.25
             ]
-        );
+        ]);
         timing = timing + 0.002;
     });
     timing = timing + 1;

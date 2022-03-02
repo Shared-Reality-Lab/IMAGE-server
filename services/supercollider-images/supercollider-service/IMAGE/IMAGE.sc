@@ -106,7 +106,7 @@ IMAGE {
                     encoded = HoaEncodeDirection.ar(sig * env * gain,
                                             theta,
                                             phi,
-                                            2.0,
+                                            radius,
                                             order.asInteger);
                 Out.ar(2,  encoded);
             }).store;
