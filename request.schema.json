@@ -12,6 +12,10 @@
             "type": "string",
             "pattern": "^data:image/[^;]+;base64,[a-zA-Z0-9+/=]+$"
         },
+        "highChartsData": {
+            "type": "object",
+            "description": "Chart data in the HighCharts format (https://api.highcharts.com/highcharts/)"
+        },
         "dimensions": {
             "description": "The width and height of the graphic as requested in pixels.",
             "type": "array",
@@ -113,6 +117,16 @@
                 "timestamp",
                 "placeID",
                 "context",
+                "capabilities",
+                "renderers"
+            ]
+        },
+        {
+            "required": [
+                "request_uuid",
+                "language",
+                "timestamp",
+                "highChartsData",
                 "capabilities",
                 "renderers"
             ]
