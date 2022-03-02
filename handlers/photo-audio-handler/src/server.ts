@@ -70,7 +70,10 @@ app.post("/handler", async (req, res) => {
         res.json(response);
         return;
     }
-    else if (semseg?.segments.length === 0 && objDet?.objects.length === 0) {
+    // Filter objects
+    utils.filterObjectsBySize(objDet, objGroup);
+
+    if (semseg?.segments.length === 0 && objDet?.objects.length === 0) {
         console.debug("No segments or objects detected! Can't render.");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
         res.json(response);
