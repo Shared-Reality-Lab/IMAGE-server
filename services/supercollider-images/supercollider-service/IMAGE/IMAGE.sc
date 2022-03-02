@@ -94,6 +94,23 @@ IMAGE {
                 Out.ar(2, encoded);
             }).store;
 
+            // Another point for line graphs
+            SynthDef((\discreteRingzPingHOA++(i+1)).asSymbol,{|freq = 200, phi = 0, theta = 0.0, radius = 1, gain = 0.1, decay = 0.02, imp = 48|
+                var  sig, encoded, env, excitation, reverb;
+                    // excitation =  Dust.ar(100);
+                    // partials =  ({|i|SinOsc.ar( (i+1) * freq.lag(0.5) )}!10).sum;
+                    env = EnvGen.ar(Env.perc(0.01, 0.01, 1.0, -4),1, doneAction: 2);
+                    sig =  Ringz.ar( WhiteNoise.ar(0.05), freq, 10) ;
+                    // sig =  Ringz.ar( PinkNoise.ar(0.05) * Decay.ar( Impulse.ar(imp), 0.01) , freq, decay, 0.01 );
+                    // reverb = FreeVerb.ar(sig, 0.1, 0.3, damp: 0.6, mul: 1);
+                    encoded = HoaEncodeDirection.ar(sig * env * gain,
+                                            theta,
+                                            phi,
+                                            radius,
+                                            order.asInteger);
+                Out.ar(2,  encoded);
+            }).store;
+
             // Continuous voice
             // For continuous line graphs
             SynthDef((\playVoiceContinuousHOA++(i+1)).asSymbol, {|freq = 200, blend = 0.0, bright = 1, phi = 0, theta = 0.0, radius = 1, gain = 0|
