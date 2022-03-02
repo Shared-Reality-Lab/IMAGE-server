@@ -48,7 +48,7 @@ type ObjGroup = {
 // Geometry information for locating points and contours
 export type segGeometryInfo = {
     centroid: [number, number];
-    contourPoints: [number, number, number, number];
+    contourPoints: [number, number];
 }
 
 // Can contain more than one item when objects are grouped
@@ -95,7 +95,7 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
         newSeg["type"] = "segment";
         newSeg["label"] = newSeg["name"] as string;
 
-        const coord = segment["coord"] as [number, number, number, number];
+        const coord = segment["contours"] as [number, number];
         const centroid = segment["centroid"] as [number, number];
         const locSeg = {
             "centroid": centroid,
