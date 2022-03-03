@@ -201,8 +201,10 @@ OSCdef.newMatching(\photoAudio, { |msg, time, addr, recvPort|
     var json = nil, ttsData = nil;
     "Received a message at /render/photo...".postln;
     # json, ttsData = IMAGE.loadTTSJSON(msg.at(1).asString);
+    "Extracted JSON and TTS data".postln;
     if(json.notNil && ttsData.notNil,
         {
+            "Not nil.".postln;
             try {
                 "Trying to render...".postln;
                 renderPhoto.(
