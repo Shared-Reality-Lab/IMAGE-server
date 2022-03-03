@@ -15,7 +15,7 @@
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
  */
 import express from "express";
-import fetch from "node-fetch";
+import fetch, { Response } from "node-fetch";
 import Ajv2020 from "ajv";
 import fs from "fs/promises";
 import path from "path";
@@ -39,6 +39,82 @@ const PREPROCESSOR_TIME_MS = 15000;
 const BASE_LOG_PATH = path.join("/var", "log", "IMAGE");
 
 app.use(express.json({limit: process.env.MAX_BODY}));
+
+async function runPreprocessorsParallel(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
+    if (data["preprocessors"] === undefined) {
+        data["preprocessors"] = {};
+    }
+    let currentPriorityGroup: number | undefined = undefined;
+    let promises: Promise<Response | void>[] = [];
+    for (const preprocessor of preprocessors) {
+        if (preprocessor[2] !== currentPriorityGroup) {
+            if (promises.length > 0) {
+                const responses = (await Promise.all(promises)).filter(a => a instanceof Response) as Response[];
+                for (const resp of responses) {
+                    // const resp = await promise;
+                    // OK data returned
+                    if (resp.status === 200) {
+                        try {
+                            const json = await resp.json();
+                            (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+                        } catch (err) {
+                            console.error("Error occured on fetch from " + resp.url);
+                            console.error(err);
+                        }
+                    }
+                    // No Content preprocessor not applicable
+                    else if (resp.status === 204) {
+                        continue;
+                    } else {
+                        try {
+                            const result = await resp.json();
+                            throw result;
+                        } catch (err) {
+                            console.error("Error occured on fetch from " + resp.url);
+                            console.error(err);
+                        }
+                    }
+                }
+            }
+            promises = [];
+            currentPriorityGroup = Number(preprocessor[2]);
+            console.log("Now on priority group " + currentPriorityGroup);
+        }
+
+        const promise = new Promise<Response | void>((resolve) => {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => {
+                controller.abort();
+            }, PREPROCESSOR_TIME_MS);
+            console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
+            try {
+                fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "body": JSON.stringify(data),
+                    "signal": controller.signal
+                }).then(r => {
+                    clearTimeout(timeout);
+                    resolve(r);
+                }).catch(err => {
+                    console.debug("Occurring in async...");
+                    console.error("Error occured fetching from " + preprocessor[0]);
+                    console.error(err);
+                    resolve();
+                });
+            } catch (err) {
+                // Most likely a timeout
+                console.error("Error occured fetching from " + preprocessor[0]);
+                console.error(err);
+                resolve();
+            }
+        });
+        promises.push(promise);
+    }
+    return data;
+}
 
 async function runPreprocessors(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
     if (data["preprocessors"] === undefined) {
@@ -103,10 +179,14 @@ app.post("/render", (req, res) => {
             const preprocessors = getPreprocessorServices(containers);
             const handlers = getHandlerServices(containers);
 
-            // TODO do things with these services
-            // Preprocessors run in order
+            // Preprocessors
             let data = JSON.parse(JSON.stringify(req.body));
-            data = await runPreprocessors(data, preprocessors);
+            if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
+                console.debug("Running preprocessors in parallel...");
+                data = await runPreprocessorsParallel(data, preprocessors);
+            } else {
+                data = await runPreprocessors(data, preprocessors);
+            }
 
             // Handlers
             const promises = handlers.map(handler => {
@@ -142,7 +222,7 @@ app.post("/render", (req, res) => {
         }).then(async (results) => {
             // Hard code sorting so MOTD appears first...
             const renderings = results.reduce((a, b) => a.concat(b), [])
-                .sort((a: { "description": string }, b: { "description": string }) => (a["description"] === "Server status message.") ? -1 : 0);
+                .sort((a: { "description": string }) => (a["description"] === "Server status message.") ? -1 : 0);
             const response = {
                 "request_uuid": req.body.request_uuid,
                 "timestamp": Math.round(Date.now() / 1000),
