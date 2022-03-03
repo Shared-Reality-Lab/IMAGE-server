@@ -41,6 +41,11 @@ services:
             context: .
             dockerfile: ./preprocessors/yolo/Dockerfile
         image: "object-detection:latest"
+    object-detection-azure:
+        build:
+            context: .
+            dockerfile: ./preprocessors/object-detection-azure/Dockerfile
+        image: "object-detection:latest"
     content-categoriser:
         build:
             context: .

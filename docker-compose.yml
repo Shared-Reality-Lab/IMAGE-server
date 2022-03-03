@@ -88,6 +88,11 @@ services:
                     devices:
                     - driver: nvidia
                       capabilities: ["gpu", "utility", "compute"]
+    object-detection-azure:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-azure:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 6
+            ca.mcgill.a11y.image.port: 5000
     # Handlers
     autour-handler:
         image: ghcr.io/shared-reality-lab/image-handler-autour:unstable
