@@ -87,29 +87,21 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                 controller.abort();
             }, PREPROCESSOR_TIME_MS);
             console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
-            try {
-                fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
-                    "method": "POST",
-                    "headers": {
-                        "Content-Type": "application/json"
-                    },
-                    "body": JSON.stringify(data),
-                    "signal": controller.signal
-                }).then(r => {
-                    clearTimeout(timeout);
-                    resolve(r);
-                }).catch(err => {
-                    console.debug("Occurring in async...");
-                    console.error("Error occured fetching from " + preprocessor[0]);
-                    console.error(err);
-                    resolve();
-                });
-            } catch (err) {
-                // Most likely a timeout
+            fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
+                "method": "POST",
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": JSON.stringify(data),
+                "signal": controller.signal
+            }).then(r => {
+                clearTimeout(timeout);
+                resolve(r);
+            }).catch(err => {
                 console.error("Error occured fetching from " + preprocessor[0]);
                 console.error(err);
                 resolve();
-            }
+            });
         });
         promises.push(promise);
     }
