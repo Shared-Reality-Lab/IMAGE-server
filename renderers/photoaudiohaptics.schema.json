@@ -36,7 +36,8 @@
         "entityType":{
             "type": "string",
             "description": "This describes whether the entity is a segment, object or static text",
-            "maxLength": 20
+            "enum": ["segment", "object", "staticText"]
+
         }
     },
     "properties": {
