@@ -185,6 +185,7 @@ app.post("/render", (req, res) => {
                 console.debug("Running preprocessors in parallel...");
                 data = await runPreprocessorsParallel(data, preprocessors);
             } else {
+                console.debug("Running preprocessors in series...");
                 data = await runPreprocessors(data, preprocessors);
             }
 
@@ -272,7 +273,13 @@ app.post("/render/preprocess", (req, res) => {
         docker.listContainers().then(async (containers) => {
             const preprocessors = getPreprocessorServices(containers);
             const data = req.body;
-            return runPreprocessors(data, preprocessors);
+            if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
+                console.debug("Running preprocessors in parallel...");
+                return runPreprocessorsParallel(data, preprocessors);
+            } else {
+                console.debug("Running preprocessors in series...");
+                return runPreprocessors(data, preprocessors);
+            }
         }).then(data => {
             if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", data)) {
                 console.debug("Valid response generated.");
