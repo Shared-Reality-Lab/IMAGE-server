@@ -34,7 +34,9 @@
         },
         
         "entityType":{
-            "type": "string"
+            "type": "string",
+            "description": "This describes whether the entity is a segment, object or static text",
+            "maxLength": 20
         }
     },
     "properties": {
