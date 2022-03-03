@@ -93,6 +93,8 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 6
             ca.mcgill.a11y.image.port: 5000
+        env_file:
+            - ./config/azure-api.env
     # Handlers
     autour-handler:
         image: ghcr.io/shared-reality-lab/image-handler-autour:unstable
