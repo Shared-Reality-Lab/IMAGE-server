@@ -45,6 +45,7 @@ export function getPreprocessorServices(containers: Docker.ContainerInfo[]) {
         return firstNum - secondNum;
     }).map(container => {
         const portLabel = container.Labels[_PORT_LABEL_];
+        const priorityLabel = Number(container.Labels[_PREPROCESSOR_LABEL_]);
         let port;
         if (portLabel !== undefined) {
             port = parseInt(portLabel, 10);
@@ -54,7 +55,7 @@ export function getPreprocessorServices(containers: Docker.ContainerInfo[]) {
         } else {
             port = 80;
         }
-        return [container.Labels["com.docker.compose.service"], port];
+        return [container.Labels["com.docker.compose.service"], port, priorityLabel];
     });
 }
 

@@ -7,6 +7,7 @@ services:
             - ./config/express-common.env
         environment:
             - STORE_IMAGE_DATA=ON
+            - PARALLEL_PREPROCESSORS=ON
         group_add:
             # This should be set in an environment variable or .env
             - ${DOCKER_GID}
