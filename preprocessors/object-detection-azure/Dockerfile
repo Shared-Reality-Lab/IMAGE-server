@@ -15,6 +15,6 @@ COPY /preprocessors/object-detection-azure /app
 
 
 EXPOSE 5000
-ENV FLASK_APP=azure_api.py
+ENV FLASK_APP=objdetect.py
 USER python
 CMD [ "gunicorn", "azure_api:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
