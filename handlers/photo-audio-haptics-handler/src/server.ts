@@ -19,7 +19,6 @@ import express from "express";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
-
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseJSON from "./schemas/handler-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
@@ -110,14 +109,15 @@ app.post("/handler", async (req, res) => {
     const ttsData: utils.TTSSegment[] = [];
     const segGeometryData: utils.segGeometryInfo[] = [];
     const objGeometryData: utils.objGeometryInfo[] = [];
+   
     ttsData.push({ "value": utils.generateIntro(preSecondCat), "type": "text" });
+   
     if (preSemSeg) {
         // Use all segments returned for now.
         // Filtering may be helpful later.
         const [ttsInfo, geometryInfo] = utils.generateSemSeg(preSemSeg);
         ttsData.push(...ttsInfo);
         segGeometryData.push(...geometryInfo);
-
         if (preObjDet && preGroupData) {
             ttsData.push({ "value": "It also", "type": "text" });
         }
@@ -127,7 +127,6 @@ app.post("/handler", async (req, res) => {
         ttsData.push(...ttsInfo);
         objGeometryData.push(...geometryInfo);
     }
-
     // Concatenate adjacent text entries
     for (let i = 0; i < ttsData.length - 1; i++) {
         if (ttsData[i].type === "text" && ttsData[i + 1].type === "text") {
@@ -135,7 +134,7 @@ app.post("/handler", async (req, res) => {
             ttsData.splice(i + 1, 1);
         }
     }
-
+   
     // Generate rendering title
     const renderingTitle = utils.renderingTitle(preSemSeg, preObjDet, preGroupData);
 
@@ -178,23 +177,28 @@ app.post("/handler", async (req, res) => {
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
                 if (hasAudioHaptic && entities.length > segGeometryData.length) {
-
+                    
                     // Add the point and contour location information to each returned entity.
                     // An entity could be either an object or segment.
                     // Ordered by segment text, segments, object text, and then objects for now.
                     // For the segments...
+                    
                     for (let i = 1; i <= segGeometryData.length; i++) {
                         entities[i] = {
                             ...entities[i],
                             centroid: [segGeometryData?.[i - 1]?.['centroid']],
-                            contourPoints: [segGeometryData?.[i - 1]?.['contourPoints']],
+                            contours: [segGeometryData?.[i - 1]?.['contourPoints']],
+                            entityType: "segment"
                         };
                     }
                     // For the objects...
+                    
                     for (let i = 0, j = 1 + segGeometryData.length + 1; i < objGeometryData.length; i++) {
                         entities[i + j] = {
-                            ...entities[i + j], centroid: objGeometryData[i]['centroid'],
-                            contourPoints: objGeometryData[i]['contourPoints']
+                            ...entities[i + j], 
+                            centroid: objGeometryData[i]['centroid'],
+                            contours: objGeometryData[i]['contourPoints'],
+                            entityType: "object"
                         };
                     }
 
@@ -203,28 +207,31 @@ app.post("/handler", async (req, res) => {
                         entities[0] = {
                             ...entities[0],
                             centroid: [[]],
-                            contourPoints: [[]]
+                            contours: [[]],
+                            entityType:"staticText"
                         };
 
-                    if (preObjDet && preSemSeg)
+                    if (preObjDet && preSemSeg) {
                         entities[1 + segGeometryData.length] = {
                             ...entities[1 + segGeometryData.length],
                             centroid: [[]],
-                            contourPoints: [[]]
-                        };
-
+                            contours: [[]],
+                            entityType: "staticText"
+                        };                   
+                    }
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
                         "description": renderingTitle,
                         "data": {
                             "info": {
                                 "audioFile": dataURL,
-                                "entityInfo": entities,
+                                "entities": entities
                             },
                         }
                     };
                     if (ajv.validate("https://image.a11y.mcgill.ca/renderers/photoaudiohaptics.schema.json", rendering["data"])) {
                         renderings.push(rendering);
+                        console.log("finished forming audio-haptics rendering");
                     } else {
                         console.error(ajv.errors);
                     }
