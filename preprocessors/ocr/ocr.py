@@ -16,11 +16,13 @@
 
 
 import json
+from operator import contains
 import time
 import logging
 import jsonschema
 import os
 import io
+import re
 import base64
 from flask import Flask, request, jsonify
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
@@ -151,11 +153,18 @@ def analyze_image(source):
         ocr_results = []
         for analyzed_result in read_result.analyze_result.read_results:
             for line in analyzed_result.lines:
+                text = line.text
                 line_data = {
-                    "text": line.text,
+                    "text": text,
                     "bounding_box": line.bounding_box
                 }
-                ocr_results.append(line_data)
+                line_confidence = 0
+                for word in line.words:
+                    line_confidence += word.confidence
+                line_confidence /= len(line.words)
+                contains_alphanum = re.search(r'[a-zA-Z0-9]', text)
+                if line_confidence > 0.85 and contains_alphanum:
+                    ocr_results.append(line_data)
         return ocr_results
     else:
         logging.error("OCR text: {}".format(read_result.status))
