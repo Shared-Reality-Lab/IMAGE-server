@@ -19,9 +19,6 @@ import express from "express";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
-
-
-
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseJSON from "./schemas/handler-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
@@ -54,6 +51,7 @@ const filePrefix = "/tmp/sc-store/photo-audio-haptics-handler-";
 app.use(express.json({ limit: process.env.MAX_BODY }));
 
 app.post("/handler", async (req, res) => {
+    console.debug("Received request");
     // Validate the request data (just in case)
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
@@ -118,10 +116,8 @@ app.post("/handler", async (req, res) => {
         // Use all segments returned for now.
         // Filtering may be helpful later.
         const [ttsInfo, geometryInfo] = utils.generateSemSeg(preSemSeg);
-        // console.log(geometryInfo);
         ttsData.push(...ttsInfo);
         segGeometryData.push(...geometryInfo);
-        // console.log("seggeodata: ", segGeometryData);
         if (preObjDet && preGroupData) {
             ttsData.push({ "value": "It also", "type": "text" });
         }
@@ -130,9 +126,7 @@ app.post("/handler", async (req, res) => {
         const [ttsInfo, geometryInfo] = utils.generateObjDet(preObjDet, preGroupData);
         ttsData.push(...ttsInfo);
         objGeometryData.push(...geometryInfo);
-        
     }
-    
     // Concatenate adjacent text entries
     for (let i = 0; i < ttsData.length - 1; i++) {
         if (ttsData[i].type === "text" && ttsData[i + 1].type === "text") {
@@ -140,13 +134,7 @@ app.post("/handler", async (req, res) => {
             ttsData.splice(i + 1, 1);
         }
     }
-    if (preSemSeg) {
-            ttsData.push({ "value": "Moving to next region", "type": "text" })
-            ttsData.push({ "value": "Starting next region", "type": "text" })
-
-    }
-    
-
+   
     // Generate rendering title
     const renderingTitle = utils.renderingTitle(preSemSeg, preObjDet, preGroupData);
 
@@ -185,7 +173,6 @@ app.post("/handler", async (req, res) => {
                 console.log("Forming OSC...");
                 return utils.sendOSC(jsonFile, outFile, "supercollider", scPort);
             }).then(async (entities: any) => {
-                // console.log("first entities: ", entities);
                 const buffer = await fs.readFile(outFile);
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
@@ -221,7 +208,7 @@ app.post("/handler", async (req, res) => {
                             ...entities[0],
                             centroid: [[]],
                             contours: [[]],
-                            entityType:"staticSemSeg"
+                            entityType:"staticText"
                         };
 
                     if (preObjDet && preSemSeg) {
@@ -229,24 +216,9 @@ app.post("/handler", async (req, res) => {
                             ...entities[1 + segGeometryData.length],
                             centroid: [[]],
                             contours: [[]],
-                            entityType: "staticObjDet"
-                        };
-                        entities[2 +  objGeometryData.length+ segGeometryData.length] = {
-                            ...entities[2 + objGeometryData.length+ segGeometryData.length],
-                            centroid: [[]],
-                            contours: [[]],
-                            entityType: "staticMove"
-                        };
-                        entities[3 +  objGeometryData.length+ segGeometryData.length] = {
-                            ...entities[3 + objGeometryData.length+ segGeometryData.length],
-                            centroid: [[]],
-                            contours: [[]],
-                            entityType: "staticNext"
-                        };
-                        
-
+                            entityType: "staticText"
+                        };                   
                     }
-                    // console.log("second time: ", entities);
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
                         "confidence": 50,
@@ -260,6 +232,7 @@ app.post("/handler", async (req, res) => {
                     };
                     if (ajv.validate("https://image.a11y.mcgill.ca/renderers/photoaudiohaptics.schema.json", rendering["data"])) {
                         renderings.push(rendering);
+                        console.log("finished forming audio-haptics rendering");
                     } else {
                         console.error(ajv.errors);
                     }
@@ -284,6 +257,7 @@ app.post("/handler", async (req, res) => {
 
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
     response["renderings"] = renderings;
+    console.debug("Sending response");
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);
     } else {
