@@ -133,17 +133,17 @@ def categorise():
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.objectDetectionAzure"
     preprocess_output = content["preprocessors"]
-    classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
+    content_class = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
     # convert the uri to processable image
     if "graphic" not in content.keys():
         return "", 204
     else:
-        if classifier_1 in preprocess_output:
-            classifier_1_output = \
-                preprocess_output[classifier_1]
-            classifier_1_label = \
-                classifier_1_output["category"]
-            if classifier_1_label == "photograph":
+        if content_class in preprocess_output:
+            content_class_op = \
+                preprocess_output[content_class]
+            content = \
+                content_class_op["category"]
+            if content == "photograph":
                 source = content["graphic"]
                 image_b64 = source.split(",")[1]
                 binary = base64.b64decode(image_b64)
