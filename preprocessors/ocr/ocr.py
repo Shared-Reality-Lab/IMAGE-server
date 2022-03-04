@@ -16,7 +16,6 @@
 
 
 import json
-from operator import contains
 import time
 import logging
 import jsonschema
