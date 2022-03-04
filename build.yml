@@ -45,7 +45,7 @@ services:
         build:
             context: .
             dockerfile: ./preprocessors/object-detection-azure/Dockerfile
-        image: "object-detection:latest"
+        image: "object-detection-azure:latest"
     content-categoriser:
         build:
             context: .
