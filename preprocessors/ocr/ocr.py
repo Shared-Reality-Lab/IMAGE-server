@@ -144,7 +144,7 @@ def analyze_image(source):
         if time.time() - start_time > 3:
             logging.error("Azure request timed out")
             return None
-        time.sleep(1)
+        time.sleep(0.01)
 
     # Check for success
     if read_result.status == OperationStatusCodes.succeeded:
