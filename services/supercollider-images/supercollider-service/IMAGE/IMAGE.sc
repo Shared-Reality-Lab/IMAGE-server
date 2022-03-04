@@ -266,41 +266,42 @@ IMAGE {
     }
 
     // load and parse a JSON file as a dictionary
-    *loadJSON { |path|
-        var res = nil;
-        if(File.exists(path.standardizePath),
-            {
-                File.use(path, "r", { |f|
-                    var jsonData;
-                    jsonData = f.readAllString;
-                    res = jsonData.parseYAML;
-                });
-            },
-            {
-                ("Could not open a JSON file at "++path++"!").postln;
-            }
-        );
-        ^res
-    }
+    // *loadJSON { |path|
+    //     var res = nil;
+    //     if(File.exists(path.standardizePath),
+    //         {
+    //             File.use(path, "r", { |f|
+    //                 var jsonData;
+    //                 jsonData = f.readAllString;
+    //                 res = jsonData.parseYAML;
+    //             });
+    //         },
+    //         {
+    //             ("Could not open a JSON file at "++path++"!").postln;
+    //         }
+    //     );
+    //     ^res
+    // }
 
-    *loadSound { |path|
-        var res = nil;
-        if(File.exists(path),
-            {
-                SoundFile.use(path, { |f|
-                    res = f;
-                });
-            },
-            {
-                ("Could not open a sound file at "++path++"!").postln;
-            }
-        );
-        ^res
-    }
+    // *loadSound { |path|
+    //     var res = nil;
+    //     if(File.exists(path),
+    //         {
+    //             SoundFile.use(path, { |f|
+    //                 res = f;
+    //             });
+    //         },
+    //         {
+    //             ("Could not open a sound file at "++path++"!").postln;
+    //         }
+    //     );
+    //     ^res
+    // }
 
     *loadTTSJSON { |path|
         var jsonData, soundFile;
-        jsonData = this.loadJSON(path);
+        //jsonData = this.loadJSON(path);
+        jsonData = path.standardizePath.parseJSONFile;
         if(jsonData.isNil,
             {
                 Error("Failed to load JSON file at %!".format(path)).throw;
@@ -313,7 +314,8 @@ IMAGE {
             }
         );
 
-        soundFile = this.loadSound(jsonData.at("ttsFileName"));
+        //soundFile = this.loadSound(jsonData.at("ttsFileName"));
+        soundFile = SoundFile.openRead(jsonData.at("ttsFileName").standardizePath);
         if(soundFile.isNil,
             {
                 Error("Failed to load sound file at %!".format(jsonData.at("ttsFileName"))).throw;
