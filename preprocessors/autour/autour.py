@@ -62,7 +62,7 @@ def get_map_data():
         return validated
 
     # Check if request is for a map
-    if 'graphic' in content:
+    if 'graphic' in content or 'highChartsData' in content:
         logging.info("Not map content. Skipping...")
         return "", 204
 
