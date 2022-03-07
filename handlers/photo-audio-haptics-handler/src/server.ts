@@ -31,6 +31,17 @@ import photoAudioHapticsJSON from "./schemas/renderers/photoaudiohaptics.schema.
 
 import * as utils from "./utils";
 
+const IMAGEURL = 'https://image.a11y.mcgill.ca/pages/tech.html';
+const cycleURL = ''
+const bearURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Grand_Tetons_black_bear.jpg/800px-Grand_Tetons_black_bear.jpg'
+enum renderDemo{
+    Bear,
+    Cycle,
+    None
+}
+
+let CSUNDemo: renderDemo = renderDemo.None;
+
 const ajv = new Ajv({
     "schemas": [querySchemaJSON,
         handlerResponseJSON,
@@ -51,6 +62,10 @@ const filePrefix = "/tmp/sc-store/photo-audio-haptics-handler-";
 app.use(express.json({ limit: process.env.MAX_BODY }));
 
 app.post("/handler", async (req, res) => {
+    
+    if (req.body["URL"] == IMAGEURL && req.body["image"]["context"]["src"]){
+        CSUNDemo = renderDemo.Bear
+    }
     console.debug("Received request");
     // Validate the request data (just in case)
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
@@ -138,6 +153,7 @@ app.post("/handler", async (req, res) => {
     // Generate rendering title
     const renderingTitle = utils.renderingTitle(preSemSeg, preObjDet, preGroupData);
 
+   
     if (hasAudioHaptic) {
         try {
             // Do TTS
@@ -252,6 +268,11 @@ app.post("/handler", async (req, res) => {
             console.error("Failed to generate audio!");
             console.error(e);
         }
+    }
+
+    if(CSUNdemo){
+        // get rid of unncessary segmets and objects and only return the best ones
+
     }
 
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
