@@ -241,8 +241,10 @@ app.post("/handler", async (req, res) => {
                     }
                     if(CSUNDemo == renderDemo.Cycle){
         
-                        const subEntities = {...entities[2]}// get rid of unncessary segmets and objects and only return the best ones
-                        returnEntities = subEntities;
+                        const customSegs = entities.slice(0,3);// get rid of unncessary segmets and objects and only return the best ones
+                        const customObjs = entities.slice(6)
+                        returnEntities = customSegs.concat(customObjs);
+                        // returnEntities = customSegs
                 
                     }
                     else{
