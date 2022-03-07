@@ -119,7 +119,7 @@ services:
         labels:
             ca.mcgill.a11y.image.handler: enable
     photo-audio-haptics-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-photo-audio-haptics:unstable
+        image: test-photo-audio-haptics-handler:latest
         env_file:
             - ./config/express-common.env
         depends_on:
