@@ -223,10 +223,12 @@ app.post("/handler", async (req, res) => {
         const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
         renderings.push({
             "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-            "confidence": 100,
             "description": "Points of interest around the location in the map.",
             "data": {
                 "audio": dataURL
+            },
+            "metadata": {
+                "homepage": "https://image.a11y.mcgill.ca/pages/howto.html#interpretations-maps"
             }
         });
         // Verify match of simple audio
