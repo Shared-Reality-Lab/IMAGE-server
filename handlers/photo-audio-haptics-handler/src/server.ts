@@ -32,8 +32,8 @@ import photoAudioHapticsJSON from "./schemas/renderers/photoaudiohaptics.schema.
 import * as utils from "./utils";
 
 const IMAGEURL = 'https://image.a11y.mcgill.ca/pages/tech.html';
-const cycleURL = ''
-const bearURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Grand_Tetons_black_bear.jpg/800px-Grand_Tetons_black_bear.jpg'
+const cycleURL = 'https://raw.githubusercontent.com/Shared-Reality-Lab/auditory-haptics-graphics-DotPad/main/preprocessor_JSON/photos/1_outdoor_cycling_scene/outdoor_cycling_scene.jpg?token=GHSAT0AAAAAABSDJP3YLWFDSNQZFX3F2CNEYROTYKQ';
+const bearURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Grand_Tetons_black_bear.jpg/800px-Grand_Tetons_black_bear.jpg';
 enum renderDemo{
     Bear,
     Cycle,
@@ -63,9 +63,12 @@ app.use(express.json({ limit: process.env.MAX_BODY }));
 
 app.post("/handler", async (req, res) => {
     
-    if (req.body["URL"] == IMAGEURL && req.body["image"]["context"]["src"]){
-        CSUNDemo = renderDemo.Bear
+    if (req.body["URL"] == cycleURL){
+        CSUNDemo = renderDemo.Cycle;
     }
+    // else if(req.body["URL"] == IMAGEURL){
+    //     CSUNDemo = renderDemo.Cycle;
+    // }
     console.debug("Received request");
     // Validate the request data (just in case)
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
@@ -189,6 +192,7 @@ app.post("/handler", async (req, res) => {
                 console.log("Forming OSC...");
                 return utils.sendOSC(jsonFile, outFile, "supercollider", scPort);
             }).then(async (entities: any) => {
+                let returnEntities:any;
                 const buffer = await fs.readFile(outFile);
                 // TODO detect mime type from file
                 const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
@@ -235,13 +239,22 @@ app.post("/handler", async (req, res) => {
                             entityType: "staticText"
                         };                   
                     }
+                    if(CSUNDemo == renderDemo.Cycle){
+        
+                        const subEntities = {...entities[2]}// get rid of unncessary segmets and objects and only return the best ones
+                        returnEntities = subEntities;
+                
+                    }
+                    else{
+                        returnEntities = entities;
+                    }
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
                         "description": renderingTitle,
                         "data": {
                             "info": {
                                 "audioFile": dataURL,
-                                "entities": entities
+                                "entities": returnEntities
                             },
                         }
                     };
@@ -270,10 +283,7 @@ app.post("/handler", async (req, res) => {
         }
     }
 
-    if(CSUNdemo){
-        // get rid of unncessary segmets and objects and only return the best ones
-
-    }
+   
 
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
     response["renderings"] = renderings;
