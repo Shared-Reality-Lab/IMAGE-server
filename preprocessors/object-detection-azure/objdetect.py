@@ -26,6 +26,18 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+# load the schema
+with open('./schemas/preprocessors/object-detection.schema.json') \
+        as jsonfile:
+    data_schema = json.load(jsonfile)
+with open('./schemas/preprocessor-response.schema.json') \
+        as jsonfile:
+    schema = json.load(jsonfile)
+with open('./schemas/definitions.json') as jsonfile:
+    definitionSchema = json.load(jsonfile)
+with open('./schemas/request.schema.json') as jsonfile:
+    first_schema = json.load(jsonfile)
+
 
 def process_results(result):
     send = []
@@ -106,17 +118,6 @@ def process_image(image):
 @app.route("/preprocessor", methods=['POST', ])
 def categorise():
     logging.debug("Received request")
-    # load the schema
-    with open('./schemas/preprocessors/object-detection.schema.json') \
-            as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') \
-            as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definitionSchema = json.load(jsonfile)
-    with open('./schemas/request.schema.json') as jsonfile:
-        first_schema = json.load(jsonfile)
     schema_store = {
         schema['$id']: schema,
         definitionSchema['$id']: definitionSchema
