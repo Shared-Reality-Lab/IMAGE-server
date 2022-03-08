@@ -20,7 +20,6 @@ import time
 import jsonschema
 
 import logging
-import traceback
 import base64
 import os
 from flask import Flask, request, jsonify
