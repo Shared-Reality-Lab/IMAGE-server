@@ -140,12 +140,15 @@ def render_ocr():
             # Remove lines already found
             for i in lines_to_remove:
                 retmaining_text.pop(i)
+        text += "The remaining text not contained in any object: \n"
+        for line in retmaining_text:
+            text += line['text'] + "\n"
 
     else:
         # Get text renderer data
         text += 'The following ' + str(len(ocr_data['lines']))
         text += ' lines were found in the image: '
-        for i, line in enumerate(ocr_data['lines']):
+        for line in ocr_data['lines']:
             line_text = line['text'] + '\n'
             text += line_text
 
