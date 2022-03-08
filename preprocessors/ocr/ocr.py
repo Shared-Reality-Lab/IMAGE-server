@@ -75,7 +75,9 @@ def get_ocr_text():
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
     # Get OCR text response
-    ocr_result = analyze_image(content['graphic'])
+    width = content['dimensions'][0]
+    height = content['dimensions'][1]
+    ocr_result = analyze_image(content['graphic'], width, height)
 
     if ocr_result is None:
         return jsonify("Could not retreive Azure results"), 400
@@ -110,7 +112,7 @@ def get_ocr_text():
     return response
 
 
-def analyze_image(source):
+def analyze_image(source, width, height):
     """
     Gets OCR text data from Azure API
     """
@@ -153,10 +155,20 @@ def analyze_image(source):
         for analyzed_result in read_result.analyze_result.read_results:
             for line in analyzed_result.lines:
                 text = line.text
+
+                # Normalize bounding box
+                norm_bounding_box = line.bounding_box
+                for i, cord in enumerate(norm_bounding_box):
+                    if i % 2 == 0:
+                        norm_bounding_box[i] = cord / width
+                    else:
+                        norm_bounding_box[i] = cord / height
                 line_data = {
                     "text": text,
-                    "bounding_box": line.bounding_box
+                    "bounding_box": norm_bounding_box
                 }
+
+                # Estimate line confidence to filer bad results
                 line_confidence = 0
                 for word in line.words:
                     line_confidence += word.confidence

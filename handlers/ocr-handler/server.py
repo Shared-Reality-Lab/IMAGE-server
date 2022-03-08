@@ -80,7 +80,7 @@ def render_ocr():
         return response
 
     ocr_data = preprocessors['ca.mcgill.a11y.image.preprocessor.ocr']
-
+    
     # OCR lines empty
     if len(ocr_data['lines']) == 0:
         logging.debug("OCR lines empty")
@@ -115,12 +115,39 @@ def render_ocr():
         logging.debug("Sending response")
         return response
 
-    # Get text renderer data
-    text = 'The following ' + str(len(ocr_data['lines']))
-    text += ' lines were found in the image: '
-    for i, line in enumerate(ocr_data['lines']):
-        line_text = line['text'] + '\n'
-        text += line_text
+    # Text to be returned
+    text = ""
+
+    #Object detection data is present
+    if 'ca.mcgill.a11y.image.preprocessor.objectDetection' in preprocessors:
+        object_data = preprocessors['ca.mcgill.a11y.image.preprocessor.objectDetection']
+        retmaining_text = ocr_data['lines']
+        remaining_objects = [{key: obj[key] for key
+                            in ['type', 'dimensions']}for
+                           obj in object_data['objects']]
+        text += "The following objects containing text were detected: \n"
+        for obj in remaining_objects:
+            obj_dims = get_obj_dims(obj)
+            obj_text = ""
+            for i, line in enumerate(retmaining_text):
+                lines_to_remove = []
+                text_dims = get_text_dims(line)
+                if is_contained(text_dims, obj_dims):
+                    obj_text += line['text'] + "\n"
+                    lines_to_remove.append(i)
+            text += get_article(obj['type']) + obj['type']
+            text += " containing: " + obj_text + "\n"
+            # Remove lines already found
+            for i in lines_to_remove:
+                retmaining_text.pop(i)
+
+    else:
+        # Get text renderer data
+        text += 'The following ' + str(len(ocr_data['lines']))
+        text += ' lines were found in the image: '
+        for i, line in enumerate(ocr_data['lines']):
+            line_text = line['text'] + '\n'
+            text += line_text
 
     response = {
         "request_uuid": content["request_uuid"],
@@ -143,6 +170,58 @@ def render_ocr():
         return jsonify("Invalid Preprocessor JSON format"), 500
     logging.debug("Sending response")
     return response
+
+
+def get_text_dims(line):
+    """
+    Returns a dict with [ulx, uly, lrx, lry]
+    of the text box
+    """
+    text_box = {
+        'ulx': line['bounding_box'][0],
+        'uly': line['bounding_box'][1],
+        'lrx': line['bounding_box'][6],
+        'lry': line['bounding_box'][7]
+    }
+    return text_box
+
+
+def get_obj_dims(obj):
+    """
+    Returns a dict with [ulx, uly, lrx, lry]
+    of the object box
+    """
+    obj_box = {
+        'ulx': obj['dimensions'][0],
+        'uly': obj['dimensions'][1],
+        'lrx': obj['dimensions'][2],
+        'lry': obj['dimensions'][3]
+    }
+    return obj_box
+
+
+def is_contained(text_dims, obj_dims):
+    """
+    Checks if text is contained in object
+    """
+    if text_dims['ulx'] < obj_dims['ulx']:
+        return False
+    if text_dims['uly'] < obj_dims['uly']:
+        return False
+    if text_dims['lrx'] > obj_dims['lrx']:
+        return False
+    if text_dims['lry'] > obj_dims['lry']:
+        return False
+    return True
+
+
+def get_article(word):
+    """
+    Returns the indefinite article of the word
+    """
+    if word[0] in ['a', 'e', 'i', 'o', 'u']:
+        return 'an '
+    return 'a '
 
 
 if __name__ == "__main__":
