@@ -119,6 +119,9 @@ app.post("/handler", async (req, res) => {
                             "description": "Simple Line Chart",
                             "data": {
                                 "audio": dataURL
+                            },
+                            "metadata": {
+                                "homepage": "https://image.a11y.mcgill.ca/pages/howto.html#interpretations-charts"
                             }
                         };
                         if (ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", rendering["data"])) {

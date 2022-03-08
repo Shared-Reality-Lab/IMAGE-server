@@ -182,6 +182,9 @@ app.post("/handler", async (req, res) => {
                         "data": {
                             "audioFile": dataURL,
                             "audioInfo": segArray
+                        },
+                        "metadata": {
+                            "homepage": "https://image.a11y.mcgill.ca/pages/howto.html#interpretations-photos"
                         }
                     };
                     if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudio.schema.json", rendering["data"])) {
@@ -196,6 +199,9 @@ app.post("/handler", async (req, res) => {
                         "description": renderingTitle,
                         "data": {
                             "audio": dataURL
+                        },
+                        "metadata": {
+                            "homepage": "https://image.a11y.mcgill.ca/pages/howto.html#interpretations-photos"
                         }
                     };
                     if (ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", rendering["data"])) {
