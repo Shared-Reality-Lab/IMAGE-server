@@ -131,7 +131,7 @@ def categorise():
         return jsonify("Invalid Preprocessor JSON format"), 400
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    name = "ca.mcgill.a11y.image.preprocessor.objectDetectionAzure"
+    name = "ca.mcgill.a11y.image.preprocessor.objectDetection"
     preprocess_output = content["preprocessors"]
     content_classifier = \
         "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
