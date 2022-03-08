@@ -15,10 +15,6 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
 
 import requests  # pip3 install requests
-from re import search
-import operator
-
-# import numpy as np
 import json
 import time
 import jsonschema
@@ -71,9 +67,10 @@ def process_image(image):
     params = {'visualFeatures': 'Objects'}
 
     # Make request and process response
+    add = "https://{}.api.cognitive.microsoft.com/vision/v1.0/analyze"
     response = requests.request(
         'post',
-        "https://{}.api.cognitive.microsoft.com/vision/v1.0/analyze".format(region),
+        add.format(region),
         data=image,
         headers=headers,
         params=params
@@ -98,7 +95,6 @@ def process_image(image):
         return "", 204
 
     return label
-
 
 
 @app.route("/preprocessor", methods=['POST', ])
