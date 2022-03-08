@@ -18,7 +18,9 @@ import requests  # pip3 install requests
 import json
 import time
 import jsonschema
+
 import logging
+import traceback
 import base64
 import os
 from flask import Flask, request, jsonify
@@ -55,7 +57,12 @@ def process_results(result):
 def process_image(image):
 
     region = "canadacentral"  # For example, "westus"
-    api_key = os.environ["AZURE_API_KEY"]
+
+    try:
+        api_key = os.environ["AZURE_API_KEY"]
+    except Exception as e:
+        logging.error(e)
+        return "", 500
 
     # Set request headers
     headers = dict()
