@@ -150,7 +150,9 @@ app.post("/handler", async (req, res) => {
                 const segmentNames: string[] = [];
                 for (const segment of data) {
                     if ("name" in segment) {
-                        segmentNames.push(segment["name"] as string);
+                        const name = String(segment["name"]);
+                        const value = (("y" in segment) ? String(segment["y"]) : "0") + " percent";
+                        segmentNames.push(name + ", " + value);
                     } else {
                         segmentNames.push("Unnamed data");
                     }
