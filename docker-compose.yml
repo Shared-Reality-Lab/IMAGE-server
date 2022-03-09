@@ -91,7 +91,7 @@ services:
     object-detection-azure:
         image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-azure:unstable
         labels:
-            ca.mcgill.a11y.image.preprocessor: 6
+            ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
         env_file:
             - ./config/azure-api.env

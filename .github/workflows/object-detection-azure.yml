@@ -68,7 +68,7 @@ jobs:
             type=raw,priority=100,value=${{ env.timestamp }}
           labels: |
             org.opencontainers.image.title=IMAGE Preprocessor Object Detection Azure
-            org.opencontainers.image.description=Classifies photographs as indoor, outdoor, of people, or other.
+            org.opencontainers.image.description=Object detection service from Azure for detecting objects in an image.
             org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
