@@ -97,7 +97,7 @@ def process_image(image):
 
         if 'content-length' in response.headers and \
                 int(response.headers['content-length']) == 0:
-            return "", 204
+            return "Invalid response from azure"
         elif 'content-type' in response.headers and \
                 isinstance(response.headers['content-type'], str):
             if 'application/json' in response.headers['content-type'].lower():
@@ -105,12 +105,12 @@ def process_image(image):
                     result = response.json()
                     label = process_results(result)
                 else:
-                    return "", 204
+                    return "Response content missing"
             else:
-                return "", 204
+                return "Azure response not in json format."
 
     else:
-        return "", 204
+        return response.status_code
 
     return label
 
