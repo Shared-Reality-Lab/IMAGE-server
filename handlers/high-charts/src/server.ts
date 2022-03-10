@@ -74,7 +74,7 @@ app.post("/handler", async (req, res) => {
         const serie = series[0] as { type: string, data: Record<string, unknown>[][] };
         if (serie["data"] && serie["data"].length > 0) {
             const data = serie["data"][0];
-            if (serie["type"] === "line") {
+            if (serie["type"] === "line" || serie["type"] === "area") {
                 // We can work with this
                 console.log("Length: " + data.length);
                 let title: string;
