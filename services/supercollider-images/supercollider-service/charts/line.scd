@@ -17,7 +17,7 @@
 var singleLineChart;
 "Single Line Chart".postln;
 singleLineChart = { |json, ttsData, outPath, addr|
-    var score, timing, order=5, baseGain=0.5, audio, seriesData, miny, maxy;
+    var score, timing, order=5, baseGain=(-8.dbamp), audio, seriesData, miny, maxy;
     timing = 0;
     score = IMAGE.newScore(order);
     // Set up b-format decoder
@@ -72,12 +72,12 @@ singleLineChart = { |json, ttsData, outPath, addr|
                 \freq, item.at(1).linlin(miny, maxy, 100, 2000),
                 \decay, 0.0102,
                 \radius, 2.0,
-                \gain, baseGain * 0.25
+                \gain, baseGain * 0.1
             ]
         ]);
         timing = timing + 0.002;
     });
-    timing = timing + 1;
+    timing = timing + 0.1;
     score.add([timing, [0]]);
 
     // Write file
