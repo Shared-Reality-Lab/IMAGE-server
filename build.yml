@@ -116,7 +116,7 @@ services:
         build:
             context: .
             dockerfile: ./handlers/photo-audio-haptics-handler/Dockerfile
-        image: "test-photo-audio-haptics-handler:latest"
+        image: "photo-audio-haptics-handler:latest"
     ocr-handler:
         build:
             context: .
