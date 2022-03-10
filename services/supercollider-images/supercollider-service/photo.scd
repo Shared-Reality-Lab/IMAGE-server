@@ -17,7 +17,7 @@
 var renderPhoto;
 "Photo Audio Rendering".postln;
 renderPhoto = { |json, ttsData, outPath, addr|
-    var score, timing, order=5, parts, segmentInfo=Array.new, baseGain=0.5;
+    var score, timing, order=5, parts, segmentInfo=Array.new, baseGain=(0.dbamp);
     timing = 0;
     score = IMAGE.newScore(order);
 
