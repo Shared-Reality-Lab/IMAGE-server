@@ -239,6 +239,6 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
 
 export function renderingTitle(semseg: Record<string, unknown>, objDet: Record<string, unknown>, objGroup: Record<string, unknown>): string {
   
-    return "Hand tweaked CSUN demonstration of audio-haptic experiences";
+    return "CSUN custom demos";
    
 }
