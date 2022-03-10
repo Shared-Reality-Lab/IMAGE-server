@@ -145,6 +145,76 @@ app.post("/handler", async (req, res) => {
                     console.error("Failed to generate audio!");
                     console.error(e);
                 }
+            } else if (serie["type"] === "pie") {
+                console.log("Pie chart");
+                const segmentNames: string[] = [];
+                for (const segment of data) {
+                    if ("name" in segment) {
+                        const name = String(segment["name"]);
+                        const value = (("y" in segment) ? String(segment["y"]) : "0") + " percent";
+                        segmentNames.push(name + ", " + value);
+                    } else {
+                        segmentNames.push("Unnamed data");
+                    }
+                }
+                try {
+                    const ttsResponse = await utils.getTTS(segmentNames);
+                    for (let offset=0, i = 0; i < data.length; i++) {
+                        data[i]["offset"] = offset;
+                        data[i]["duration"] = ttsResponse.durations[i];
+                        offset += ttsResponse.durations[i];
+                    }
+                    const scData = {
+                        "seriesData": data,
+                        "ttsFileName": ""
+                    };
+                    // Write to file
+                    let inFile: string, outFile:string, jsonFile: string;
+                    await fetch(ttsResponse["audio"]).then(resp => {
+                        return resp.arrayBuffer();
+                    }).then(async (buf) => {
+                        inFile = filePrefix + req.body["request_uuid"] + ".wav";
+                        await fs.writeFile(inFile, Buffer.from(buf));
+                        scData["ttsFileName"] = inFile;
+                        jsonFile = filePrefix + req.body["request_uuid"] + ".json";
+                        await fs.writeFile(jsonFile, JSON.stringify(scData));
+                        outFile = filePrefix + uuidv4() + ".flac";
+                        await fs.writeFile(outFile, "");
+                        await fs.chmod(outFile, 0o664);
+                        console.log("Forming OSC...");
+                        return utils.sendOSC(jsonFile, outFile, "supercollider", scPort, "/render/charts/pie");
+                    }).then(async () => {
+                        const buffer = await fs.readFile(outFile);
+                        const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
+                        const rendering = {
+                            "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
+                            "description": "Simple Pie Chart",
+                            "data": {
+                                "audio": dataURL
+                            },
+                            "metadata": { "homepage": "https://image.a11y.mcgill.ca/pages/howto.html#interpretations-charts" }
+                        };
+                        if (ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", rendering["data"])) {
+                            renderings.push(rendering);
+                        } else {
+                            console.error(ajv.errors);
+                        }
+                    }).finally(() => {
+                        // Delete our files if they exist on the disk
+                        if (inFile !== undefined) {
+                            fs.access(inFile).then(() => { return fs.unlink(inFile); }).catch(() => { /* noop */ });
+                        }
+                        if (jsonFile !== undefined) {
+                            fs.access(jsonFile).then(() => { return fs.unlink(jsonFile); }).catch(() => { /* noop */ });
+                        }
+                        if (outFile !== undefined) {
+                            fs.access(outFile).then(() => { return fs.unlink(outFile); }).catch(() => { /* noop */ });
+                        }
+                    });
+                } catch(e) {
+                    console.error("Failed to generate audio!");
+                    console.error(e);
+                }
             }
         }
     }

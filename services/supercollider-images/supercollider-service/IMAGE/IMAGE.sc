@@ -157,6 +157,20 @@ IMAGE {
                 );
                 Out.ar(2, encoded);
             }).store;
+
+            // Continuous noise for pie charts v2 from Florian
+            SynthDef((\playContinuousResonzNoiseHOA++(i+1)).asSymbol, { |freq = 200, phi = 0, theta = 0, radius = 2, gain = 0, decay = 0.02, imp = 48, lag = 10|
+              var sig, encoded, reverb;
+              sig = Ringz.ar(PinkNoise.ar(0.05) * Decay2.ar(Impulse.ar(imp), 0.03, 0.1), freq, decay, 0.01);
+              reverb = FreeVerb.ar(sig, 0.1, 0.3, damp: 0.6, mul: 500);
+              encoded = HoaEncodeDirection.ar(reverb * gain.lagud(lag, lag),
+                theta,
+                phi,
+                radius,
+                order.asInteger
+              );
+              Out.ar(2, encoded);
+            }).store;
         });
 
 
