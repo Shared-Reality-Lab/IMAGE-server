@@ -46,37 +46,40 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
     }
     let currentPriorityGroup: number | undefined = undefined;
     let promises: Promise<Response | void>[] = [];
+    const awaitResponses = async () => {
+        const responses = (await Promise.all(promises)).filter(a => a instanceof Response) as Response[];
+        for (const resp of responses) {
+            // const resp = await promise;
+            // OK data returned
+            if (resp.status === 200) {
+                try {
+                    const json = await resp.json();
+                    (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+                } catch (err) {
+                    console.error("Error occured on fetch from " + resp.url);
+                    console.error(err);
+                }
+            }
+            // No Content preprocessor not applicable
+            else if (resp.status === 204) {
+                continue;
+            } else {
+                try {
+                    const result = await resp.json();
+                    throw result;
+                } catch (err) {
+                    console.error("Error occured on fetch from " + resp.url);
+                    console.error(err);
+                }
+            }
+        }
+        promises = [];
+    };
     for (const preprocessor of preprocessors) {
         if (preprocessor[2] !== currentPriorityGroup) {
             if (promises.length > 0) {
-                const responses = (await Promise.all(promises)).filter(a => a instanceof Response) as Response[];
-                for (const resp of responses) {
-                    // const resp = await promise;
-                    // OK data returned
-                    if (resp.status === 200) {
-                        try {
-                            const json = await resp.json();
-                            (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
-                        } catch (err) {
-                            console.error("Error occured on fetch from " + resp.url);
-                            console.error(err);
-                        }
-                    }
-                    // No Content preprocessor not applicable
-                    else if (resp.status === 204) {
-                        continue;
-                    } else {
-                        try {
-                            const result = await resp.json();
-                            throw result;
-                        } catch (err) {
-                            console.error("Error occured on fetch from " + resp.url);
-                            console.error(err);
-                        }
-                    }
-                }
+                await awaitResponses();
             }
-            promises = [];
             currentPriorityGroup = Number(preprocessor[2]);
             console.log("Now on priority group " + currentPriorityGroup);
         }
@@ -104,6 +107,9 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             });
         });
         promises.push(promise);
+    }
+    if (promises.length > 0) {
+        await awaitResponses();
     }
     return data;
 }
