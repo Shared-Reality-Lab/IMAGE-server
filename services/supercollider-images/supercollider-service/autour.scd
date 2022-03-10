@@ -19,7 +19,7 @@ var autourStyle;
 "Autour-style Rendering".postln;
 
 autourStyle = { |json, ttsData, outPath, addr|
-    var dMeters, score, timing, order=5, length=5, nTones=3, earconList, places, lat, lon, poiDelay=0.5, endDelay=0.5, intro;
+    var dMeters, score, timing, order=5, length=5, nTones=3, earconList, places, lat, lon, poiDelay=0.5, endDelay=0.5, intro, baseGain=(-4.dbamp);
     timing = 0;
     score = IMAGE.newScore(order);
 
@@ -73,7 +73,8 @@ autourStyle = { |json, ttsData, outPath, addr|
                 \int4, ecPattern.at(4),
                 \theta, theta,
                 \phi, phi,
-                \gain, 0.1 * dist.linlin(0, 250, 0, -6)
+                //\gain, 0.1 * dist.linlin(0, 250, 0, -6)
+                \gain, baseGain * dist.linlin(0, 250, 0, -6).dbamp
             ]
         ]);
         timing = timing + 1.0; // TODO adjust based on length along with synthdef
@@ -87,7 +88,8 @@ autourStyle = { |json, ttsData, outPath, addr|
                 \duration, (audio.at("duration").asInteger / ttsData.sampleRate),
                 \theta, theta,
                 \phi, phi,
-                \gain, 0.2 * dist.linlin(0, 250, 0, -6)
+                //\gain, 0.2 * dist.linlin(0, 250, 0, -6)
+                \gain, baseGain * dist.linlin(0, 250, 0, -6).dbamp
             ]
         ]);
         timing = timing + (audio.at("duration").asInteger / ttsData.sampleRate);
