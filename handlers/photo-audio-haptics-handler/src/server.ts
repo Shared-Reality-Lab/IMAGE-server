@@ -31,16 +31,22 @@ import photoAudioHapticsJSON from "./schemas/renderers/photoaudiohaptics.schema.
 
 import * as utils from "./utils";
 
-const IMAGEURL = 'https://image.a11y.mcgill.ca/pages/tech.html';
-const cycleURL = 'https://raw.githubusercontent.com/Shared-Reality-Lab/auditory-haptics-graphics-DotPad/main/preprocessor_JSON/photos/1_outdoor_cycling_scene/outdoor_cycling_scene.jpg?token=GHSAT0AAAAAABSDJP3YLWFDSNQZFX3F2CNEYROTYKQ';
-const bearURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Grand_Tetons_black_bear.jpg/800px-Grand_Tetons_black_bear.jpg';
+//URL for IMAGE website:
+const IMAGEURL = 'https://image.a11y.mcgill.ca/pages/csun.html';
+
+//URL for Unicorn test website 
+const unicornURL ='https://unicorn.cim.mcgill.ca/image/pages/csun.html';
+
+//src URL for cycle photo on image webstie or test website 
+const cycleURL = 'imgs/outdoor_cycling_scene.jpg';
+
 enum renderDemo{
-    Bear,
     Cycle,
     None
 }
 
 let CSUNDemo: renderDemo = renderDemo.None;
+let img_src:string;
 
 const ajv = new Ajv({
     "schemas": [querySchemaJSON,
@@ -61,11 +67,25 @@ const filePrefix = "/tmp/sc-store/photo-audio-haptics-handler-";
 
 app.use(express.json({ limit: process.env.MAX_BODY }));
 
+
 app.post("/handler", async (req, res) => {
-    
-    if (req.body["URL"] == cycleURL){
+
+    // reg ex to parse the src of the image
+    const regexp = /src="([^"]+)"/;
+    const match = req.body["context"].match(regexp);
+    if (match.length > 1) {
+        console.log("matched");
+          img_src = match[1]; }
+
+         /*if it's the cycle picture either from image or unicorn for reduced demo: */
+    if ((req.body["URL"] == IMAGEURL ||req.body["URL"] ==unicornURL) &&  img_src == cycleURL){
         CSUNDemo = renderDemo.Cycle;
+        console.log("the cycle image was chosen!")
     }
+    else{
+        CSUNDemo =renderDemo.None;
+    }
+
     // else if(req.body["URL"] == IMAGEURL){
     //     CSUNDemo = renderDemo.Cycle;
     // }
@@ -152,7 +172,6 @@ app.post("/handler", async (req, res) => {
             ttsData.splice(i + 1, 1);
         }
     }
-   
     // Generate rendering title
     const renderingTitle = utils.renderingTitle(preSemSeg, preObjDet, preGroupData);
 
@@ -211,6 +230,7 @@ app.post("/handler", async (req, res) => {
                             entityType: "segment"
                         };
                     }
+
                     // For the objects...
                     
                     for (let i = 0, j = 1 + segGeometryData.length + 1; i < objGeometryData.length; i++) {
@@ -237,18 +257,19 @@ app.post("/handler", async (req, res) => {
                             centroid: [[]],
                             contours: [[]],
                             entityType: "staticText"
-                        };                   
+                        }; 
+                               
                     }
-                    if(CSUNDemo == renderDemo.Cycle){
+            
+                    if(CSUNDemo == renderDemo.Cycle){ //if cycle picture to be used for quicker demo
         
-                        const customSegs = entities.slice(0,3);// get rid of unncessary segmets and objects and only return the best ones
-                        const customObjs = entities.slice(6)
-                        returnEntities = customSegs.concat(customObjs);
-                        // returnEntities = customSegs
+                        const customSegs = entities.slice(0,3);// return first two segments
+                        const customObjs = entities.slice(6,entities.length-2) // return first two objects
+                        returnEntities = customSegs.concat(customObjs); // recombining segments & objects
                 
                     }
                     else{
-                        returnEntities = entities;
+                        returnEntities = entities; //any other image
                     }
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",

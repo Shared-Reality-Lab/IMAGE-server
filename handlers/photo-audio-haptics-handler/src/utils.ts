@@ -103,6 +103,8 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
         };
         ttsData.push(newSeg as TTSSegment);
         posData.push(locSeg as segGeometryInfo);
+        
+
     }
     ttsData[ttsData.length - 1]["value"] = ttsData[ttsData.length - 1]["value"].replace(",", ".");
     ttsData[ttsData.length - 1]["value"] = "and " + ttsData[ttsData.length - 1]["value"];
@@ -236,18 +238,7 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
 }
 
 export function renderingTitle(semseg: Record<string, unknown>, objDet: Record<string, unknown>, objGroup: Record<string, unknown>): string {
-    const hasSemseg = semseg !== undefined;
-    const hasObj = (objDet !== undefined) && (objGroup !== undefined);
-    if (hasSemseg && hasObj) {
-        return "A navigable audio-haptic scene of segments and objects detected in the image";
-    }
-    else if (hasSemseg) {
-        return "A navigable audio-haptic scene of segments detected in the image";
-    }
-    else if(hasObj) {
-        return "A navigable audio-haptic scene of objects detected in the image";
-    }
-    else {
-        return "A navigable audio-haptic scene";
-    }
+  
+    return "Hand tweaked CSUN demonstration of audio-haptic experiences";
+   
 }
