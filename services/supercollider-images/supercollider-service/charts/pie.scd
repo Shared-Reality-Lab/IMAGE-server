@@ -17,7 +17,7 @@
  var pieChart;
  "Simple Pie Chart".postln;
  pieChart = { |json, ttsData, outPath, addr|
-     var score, timing=0, order=5, baseGain=0.5, seriesData, wedgeStart = 0;
+     var score, timing=0, order=5, baseGain=(1.dbamp), seriesData, wedgeStart = 0;
      score = IMAGE.newScore(order);
      score.add([
          timing,
@@ -61,7 +61,7 @@
          // Play sonification of wedge
          score.add([
              timing,
-             [\n_set, 1002, \gain, baseGain]
+             [\n_set, 1002, \gain, baseGain * 12.dbamp]
          ]);
          score.add([
              timing,
