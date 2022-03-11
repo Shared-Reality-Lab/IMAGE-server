@@ -48,7 +48,11 @@ def process_results(response, labels):
 def process_image(image, labels):
 
     region = "canadacentral"  # For example, "westus"
-    api_key = os.environ["AZURE_API_KEY"]
+    try:
+        api_key = os.environ["AZURE_API_KEY"]
+    except Exception as e:
+        logging.error(e)
+        return "", 500
 
     # Set request headers
     headers = dict()
@@ -75,7 +79,7 @@ def process_image(image, labels):
 
         if 'content-length' in response.headers and \
                 int(response.headers['content-length']) == 0:
-            label = labels[0]
+            return "Invalid response from azure", 500
         elif 'content-type' in response.headers and \
                 isinstance(response.headers['content-type'], str):
             if 'application/json' in response.headers['content-type'].lower():
@@ -83,16 +87,12 @@ def process_image(image, labels):
                     result = response.json()
                     label = process_results(response=result, labels=labels)
                 else:
-                    label = labels[0]
+                    return "Response content missing", 500
             elif 'image' in response.headers['content-type'].lower():
-                result = response.content
+                return "Azure response not in json format", 500
 
     else:
-        label = labels[0]
-#         label = response.json()['message']
-#         print("Error code: %d" % response.status_code)
-#         print("Message: %s" % response.json())
-#     category = process_results(result, labels)
+        return response.status_code
 
     return label
 
@@ -130,19 +130,18 @@ def categorise():
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.graphicTagger"
     preprocess_output = content["preprocessors"]
-    classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
+    content_classifier\
+        = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
     # convert the uri to processable image
     if "graphic" not in content.keys():
         return "", 204
-    # if content["graphic"] is None:
-    #     return "", 204
     else:
-        if classifier_1 in preprocess_output:
-            classifier_1_output = \
-                preprocess_output[classifier_1]
-            classifier_1_label = \
-                classifier_1_output["category"]
-            if classifier_1_label == "photograph":
+        if content_classifier in preprocess_output:
+            content_classifier_output = \
+                preprocess_output[content_classifier]
+            content_label = \
+                content_classifier_output["category"]
+            if content_label == "photograph":
                 source = content["graphic"]
                 image_b64 = source.split(",")[1]
                 binary = base64.b64decode(image_b64)
