@@ -123,8 +123,8 @@ def render_ocr():
     if od in preprocessors and len(preprocessors[od]['objects']) > 0:
         object_data = preprocessors[od]
         retmaining_text = ocr_data['lines']
-        remaining_objects = [{key: obj[key] for key 
-                              in ['type', 'dimensions']} for 
+        remaining_objects = [{key: obj[key] for key
+                              in ['type', 'dimensions']} for
                              obj in object_data['objects']]
         text += "The following objects were detected: "
         for obj in remaining_objects:
