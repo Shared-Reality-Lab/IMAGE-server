@@ -139,6 +139,7 @@ def render_ocr():
                     lines_to_remove.append(i)
             text += get_article(obj['type']) + obj['type']
             if len(obj_text) > 0:
+                obj_text = obj_text[:-2]
                 text += " containing the text: " + obj_text + ". "
             # Remove lines already found
             for i in lines_to_remove:
