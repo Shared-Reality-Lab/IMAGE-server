@@ -119,8 +119,10 @@ def render_ocr():
     text = ""
 
     #Object detection data is present
-    if 'ca.mcgill.a11y.image.preprocessor.objectDetection' in preprocessors:
-        object_data = preprocessors['ca.mcgill.a11y.image.preprocessor.objectDetection']
+    od = 'ca.mcgill.a11y.image.preprocessor.objectDetection'
+    if (od in preprocessors
+        and len(preprocessors[od]['objects']) > 0):
+        object_data = preprocessors[od]
         retmaining_text = ocr_data['lines']
         remaining_objects = [{key: obj[key] for key
                             in ['type', 'dimensions']}for
