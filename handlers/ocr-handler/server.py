@@ -127,7 +127,7 @@ def render_ocr():
         remaining_objects = [{key: obj[key] for key
                             in ['type', 'dimensions']}for
                            obj in object_data['objects']]
-        text += "The following objects containing text were detected: "
+        text += "The following objects were detected: "
         for obj in remaining_objects:
             obj_dims = get_obj_dims(obj)
             obj_text = ""
@@ -137,6 +137,8 @@ def render_ocr():
                 if is_contained(text_dims, obj_dims):
                     obj_text += line['text'] + ", "
                     lines_to_remove.append(i)
+            # Add the appropraite article of the object
+            # as well as the object type to the text
             text += get_article(obj['type']) + obj['type']
             if len(obj_text) > 0:
                 obj_text = obj_text[:-2]
@@ -148,14 +150,16 @@ def render_ocr():
             text += "The remaining text not contained in any object: "
             for line in retmaining_text:
                 text += line['text'] + ", "
+        text = text[:-1]
 
     else:
         # Get text renderer data
         text += 'The following ' + str(len(ocr_data['lines']))
         text += ' lines were found in the image: '
         for line in ocr_data['lines']:
-            line_text = line['text'] + '\n'
+            line_text = line['text'] + ', '
             text += line_text
+        text = text[:-2]
 
     response = {
         "request_uuid": content["request_uuid"],
