@@ -80,7 +80,7 @@ def render_ocr():
         return response
 
     ocr_data = preprocessors['ca.mcgill.a11y.image.preprocessor.ocr']
-    
+
     # OCR lines empty
     if len(ocr_data['lines']) == 0:
         logging.debug("OCR lines empty")
