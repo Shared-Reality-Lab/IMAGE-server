@@ -108,7 +108,7 @@ autourStyle = { |json, ttsData, outPath, addr|
         nil,
         outPath,
         sampleRate: 48000,
-        headerFormat: "WAV",
+        headerFormat: "FLAC",
         sampleFormat: "int16",
         options: ServerOptions.new.numOutputBusChannels_(2).verbosity_(-1),
         action: {
