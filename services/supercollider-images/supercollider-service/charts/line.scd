@@ -83,15 +83,19 @@ singleLineChart = { |json, ttsData, outPath, addr|
     // Write file
     score.recordNRT(
         nil,
-        outPath,
+        outPath ++ ".wav",
         sampleRate: 48000,
-        headerFormat: "FLAC",
+        headerFormat: "WAVE",
         sampleFormat: "int16",
         options: ServerOptions.new.numOutputBusChannels_(2).verbosity_(-1),
         action: {
             // Check for successful write (file exists)
             if(File.exists(outPath),
-                { addr.sendMsg(\status, \done); },
+                {
+                    ("lame -v" + outPath ++ ".wav" + outPath).systemCmd;
+                    File.delete(outPath ++ ".wav");
+                    addr.sendMsg(\status, \done);
+                },
                 {
                     "Failed to write file in NRT!".postln;
                     addr.sendMsg(\status, \fail);
