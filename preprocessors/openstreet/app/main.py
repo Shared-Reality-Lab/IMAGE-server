@@ -43,6 +43,7 @@ def get_location(distance_in_metres: float, lat: float, lon: float):
     queried_osm_data, bbox = query_osmdata(coordinates)
 
     transformed_osm_data = transform_osmdata(queried_osm_data)
+    
     merged_street = merge_street_by_name(transformed_osm_data)
 
     intersection, street_intersection_sets = extract_nodes_list(merged_street)

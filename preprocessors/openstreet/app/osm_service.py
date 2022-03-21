@@ -56,7 +56,7 @@ def query_osmdata(coordinates):
 
     return (queried_osm_data, bbox)
 
-
+#[highway~"^(primary|tertiary|residential|service|footway)$"]
 def transform_osmdata(raw_osmdata: List[dict]):
     """Retrieve inteterested street information from the requested OSM data"""
     assert raw_osmdata is not None
