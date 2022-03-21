@@ -1,9 +1,7 @@
 from typing import List
 import overpy
-import json
 from copy import deepcopy
 import haversine as hs
-import random
 import math
 
 
@@ -47,7 +45,7 @@ def query_osmdata(coordinates):
     api = overpy.Overpass()
     queried_osm_data = api.query(
         f"""
-    way({lat_min},{lon_min},{lat_max},{lon_max}) [highway~"^(primary|tertiary|residential|service|footway)$"];
+    way({lat_min},{lon_min},{lat_max},{lon_max})[highway~"^(primary|tertiary|residential|service|footway)$"];
     (._;>;);
     out body;
     """
@@ -56,7 +54,10 @@ def query_osmdata(coordinates):
 
     return (queried_osm_data, bbox)
 
-#[highway~"^(primary|tertiary|residential|service|footway)$"]
+
+# [highway~"^(primary|tertiary|residential|service|footway)$"]
+
+
 def transform_osmdata(raw_osmdata: List[dict]):
     """Retrieve inteterested street information from the requested OSM data"""
     assert raw_osmdata is not None
@@ -225,12 +226,7 @@ def my_final_data_structure(
                                 node = nodes[i]
                                 node["cat"] = "intersection"
                                 alist.append(node)
-                                node["name"] = (
-                                    "intersection "
-                                    + merged_street_name
-                                    + " and "
-                                    + intersected_street_name
-                                )
+                                node["name"] = f"intersection {merged_street_name} and {intersected_street_name}"
                                 blist.append(node)
                                 street_info = {
                                     "street_name": copy_of_merged_street[obj][
@@ -342,8 +338,7 @@ def align_points_of_interest(processed_amenities, merged_street_data):
 
         for str_obj in range(len(copy_of_merged_street_data)):
             if (
-                copy_of_merged_street_data[str_obj]["street_name"]
-                == street_record["street_name"]
+                copy_of_merged_street_data[str_obj]["street_name"] == street_record["street_name"]
             ):
                 nodes = copy_of_merged_street_data[str_obj]["nodes"]
                 nodes.insert(street_record["node_index"], street_record["poi"])
@@ -456,8 +451,7 @@ def final_osm_data_format(all_pois_merged_list, merged_street):
             """Merge pois when we have multiple pois competeting for a node and assign it to key called s_link"""
 
             if (
-                second_copy_of_street_data[street_object]["street_name"]
-                == street_record["street_name"]
+                second_copy_of_street_data[street_object]["street_name"] == street_record["street_name"]
             ):
 
                 index = street_record["node_index"]
