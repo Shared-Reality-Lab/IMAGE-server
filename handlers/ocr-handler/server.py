@@ -128,11 +128,11 @@ def render_ocr():
                              obj in object_data['objects']]
         text += "The following objects were detected: "
         for obj in remaining_objects:
-            obj_dims = get_obj_dims(obj)
+            obj_dims = get_dims(obj)
             obj_text = ""
             for i, line in enumerate(retmaining_text):
                 lines_to_remove = []
-                text_dims = get_text_dims(line)
+                text_dims = get_dims(line)
                 if is_contained(text_dims, obj_dims):
                     obj_text += line['text'] + ", "
                     lines_to_remove.append(i)
@@ -146,7 +146,7 @@ def render_ocr():
             for i in lines_to_remove:
                 retmaining_text.pop(i)
         if len(retmaining_text) > 0:
-            text += "The remaining text not contained in any object: "
+            text += "The remaining text not contained in any detected object: "
             for line in retmaining_text:
                 text += line['text'] + ", "
         text = text[:-1]
@@ -183,21 +183,7 @@ def render_ocr():
     return response
 
 
-def get_text_dims(line):
-    """
-    Returns a dict with [ulx, uly, lrx, lry]
-    of the text box
-    """
-    text_box = {
-        'ulx': line['bounding_box'][0],
-        'uly': line['bounding_box'][1],
-        'lrx': line['bounding_box'][6],
-        'lry': line['bounding_box'][7]
-    }
-    return text_box
-
-
-def get_obj_dims(obj):
+def get_dims(obj):
     """
     Returns a dict with [ulx, uly, lrx, lry]
     of the object box
