@@ -24,9 +24,6 @@ import io
 import base64
 import requests
 from flask import Flask, request, jsonify
-from azure.cognitiveservices.vision.computervision import ComputerVisionClient
-from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes # noqa
-from msrest.authentication import CognitiveServicesCredentials
 
 app = Flask(__name__)
 
