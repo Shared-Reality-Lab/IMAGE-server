@@ -1,6 +1,18 @@
 This preprocessor is used for segmenting an image. The entire code for this preprocessor has been refered from [CSAILVision Semantic Segmentation Repository](https://github.com/CSAILVision/semantic-segmentation-pytorch/blob/master/LICENSE). 
 
-We have taken the code from [CSAILVision Semantic Segmentation Repository](https://github.com/CSAILVision/semantic-segmentation-pytorch/blob/master/LICENSE) and have converted it into an API. The following libraries were used for converting the semantic segmentation code to an API
+
+
+The code for converting the repository to an API can be found in ```segment.py```. The versions for all the mentioned libraries can be found in ```requirements.txt```
+
+
+In order to run the API as a docker container use the following commands:
+```docker build -t <image-name>```
+```docker run --gpus all --publish <port>:5000 <image-name>```
+
+
+The main code changes have occurred in ```segment.py```. Appropriate comments have been added to the ```segment.py``` to improve the readability. 
+
+The code from [CSAILVision Semantic Segmentation Repository](https://github.com/CSAILVision/semantic-segmentation-pytorch/blob/master/LICENSE) has been converted into API using the following libraries: 
 
 | Library | Link | Distribution License |
 | ------------- | ------------- | -------------|
@@ -16,5 +28,3 @@ We have taken the code from [CSAILVision Semantic Segmentation Repository](https
 | Torch | [Link](https://github.com/pytorch/pytorch/blob/master/LICENSE) | BSD License (BSD-3)|
 | Torchvision | [Link](https://github.com/pytorch/vision/blob/main/LICENSE) | BSD-3-Clause License |
 | Scipy | [Link](https://github.com/scipy/scipy) | BSD License | 
-
-The code for converting the repository to an API can be found in ```segment.py```. The versions for all the mentioned libraries can be found in ```requirements.txt```
