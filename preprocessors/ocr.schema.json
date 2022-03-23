@@ -20,12 +20,13 @@
                     "bounding_box": {
                         "type": "array",
                         "title": "Bounding box",
-                        "description": "The bounding box of the text in pixels: [X-TL, Y-TL, X-TR, Y-TR, X-BR, Y-BR, X-BL, Y-BL]",
-                        "minItems": 8,
-                        "maxItems": 8,
+                        "description": "The normalized bounding box of the text: [X-TL, Y-TL, X-BL, Y-BL]",
+                        "minItems": 4,
+                        "maxItems": 4,
                         "items": {
-                            "type": "integer",
-                            "minimum": 0
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
                         }
                     }
                 },
