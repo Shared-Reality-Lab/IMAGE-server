@@ -104,7 +104,7 @@ app.post("/handler", async (req, res) => {
                         scData["ttsFileName"] = inFile;
                         jsonFile = filePrefix + req.body["request_uuid"] + ".json";
                         await fs.writeFile(jsonFile, JSON.stringify(scData));
-                        outFile = filePrefix + uuidv4() + ".flac";
+                        outFile = filePrefix + uuidv4() + ".mp3";
                         await fs.writeFile(outFile, "");
                         await fs.chmod(outFile, 0o664);
 
@@ -113,7 +113,7 @@ app.post("/handler", async (req, res) => {
                     }).then(async () => {
                         const buffer = await fs.readFile(outFile);
                         // TODO detect mime type from file
-                        const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
+                        const dataURL = "data:audio/mp3;base64," + buffer.toString("base64");
                         const rendering = {
                             "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
                             "description": "Simple Line Chart",
@@ -178,14 +178,14 @@ app.post("/handler", async (req, res) => {
                         scData["ttsFileName"] = inFile;
                         jsonFile = filePrefix + req.body["request_uuid"] + ".json";
                         await fs.writeFile(jsonFile, JSON.stringify(scData));
-                        outFile = filePrefix + uuidv4() + ".flac";
+                        outFile = filePrefix + uuidv4() + ".mp3";
                         await fs.writeFile(outFile, "");
                         await fs.chmod(outFile, 0o664);
                         console.log("Forming OSC...");
                         return utils.sendOSC(jsonFile, outFile, "supercollider", scPort, "/render/charts/pie");
                     }).then(async () => {
                         const buffer = await fs.readFile(outFile);
-                        const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
+                        const dataURL = "data:audio/mp3;base64," + buffer.toString("base64");
                         const rendering = {
                             "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
                             "description": "Simple Pie Chart",

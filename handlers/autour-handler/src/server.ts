@@ -163,7 +163,7 @@ app.post("/handler", async (req, res) => {
         scData["ttsFileName"] = inFile;
         jsonFile = filePrefix + Math.round(Date.now()) + ".json";
         await fs.writeFile(jsonFile, JSON.stringify(scData));
-        outFile = filePrefix + uuidv4() + ".flac";
+        outFile = filePrefix + uuidv4() + ".mp3";
         await fs.writeFile(outFile, "");
         await fs.chmod(outFile, 0o664);
 
@@ -220,7 +220,7 @@ app.post("/handler", async (req, res) => {
         return fs.readFile(out);
     }).then(buffer => {
         // TODO detect mime type from file since we will eventually use a compressed format
-        const dataURL = "data:audio/flac;base64," + buffer.toString("base64");
+        const dataURL = "data:audio/mp3;base64," + buffer.toString("base64");
         renderings.push({
             "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
             "description": "Points of interest around the location in the map.",
