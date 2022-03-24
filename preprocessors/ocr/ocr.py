@@ -21,12 +21,9 @@ import logging
 import jsonschema
 import os
 import io
-import re
 import base64
+import requests
 from flask import Flask, request, jsonify
-from azure.cognitiveservices.vision.computervision import ComputerVisionClient
-from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes # noqa
-from msrest.authentication import CognitiveServicesCredentials
 
 app = Flask(__name__)
 
@@ -75,10 +72,12 @@ def get_ocr_text():
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
     # Get OCR text response
-    ocr_result = analyze_image(content['graphic'])
+    width = content['dimensions'][0]
+    height = content['dimensions'][1]
+    ocr_result = analyze_image(content['graphic'], width, height)
 
     if ocr_result is None:
-        return jsonify("Could not retreive Azure results"), 400
+        return jsonify("Could not retreive Azure results"), 500
 
     name = 'ca.mcgill.a11y.image.preprocessor.ocr'
     request_uuid = content['request_uuid']
@@ -110,7 +109,7 @@ def get_ocr_text():
     return response
 
 
-def analyze_image(source):
+def analyze_image(source, width, height):
     """
     Gets OCR text data from Azure API
     """
@@ -124,50 +123,37 @@ def analyze_image(source):
     subscription_key = os.environ["AZURE_API_KEY"]
     endpoint = "https://image-cv.cognitiveservices.azure.com/"
 
-    computervision_client = ComputerVisionClient(
-        endpoint, CognitiveServicesCredentials(subscription_key))
+    headers = {
+        'Content-Type': 'application/octet-stream',
+        'Ocp-Apim-Subscription-Key': subscription_key,
+    }
 
-    read_response = computervision_client.read_in_stream(stream,  raw=True)
+    ocr_url = endpoint + "vision/v3.2/ocr"
 
-    read_operation_location = read_response.headers["Operation-Location"]
-    # Grab the ID from the URL
-    operation_id = read_operation_location.split("/")[-1]
+    response = requests.post(ocr_url, headers=headers, data=stream)
+    response.raise_for_status()
 
-    # Call the "GET" API and wait for it to
-    # retrieve the results barring timeout
+    read_result = response.json()
 
-    start_time = time.time()
-
-    while True:
-        read_result = computervision_client.get_read_result(operation_id)
-        if read_result.status not in ['notStarted', 'running']:
-            break
-        if time.time() - start_time > 3:
-            logging.error("Azure request timed out")
-            return None
-        time.sleep(1)
-
-    # Check for success
-    if read_result.status == OperationStatusCodes.succeeded:
-        ocr_results = []
-        for analyzed_result in read_result.analyze_result.read_results:
-            for line in analyzed_result.lines:
-                text = line.text
-                line_data = {
-                    "text": text,
-                    "bounding_box": line.bounding_box
-                }
-                line_confidence = 0
-                for word in line.words:
-                    line_confidence += word.confidence
-                line_confidence /= len(line.words)
-                contains_alphanum = re.search(r'[a-zA-Z0-9]', text)
-                if line_confidence > 0.85 and contains_alphanum:
-                    ocr_results.append(line_data)
-        return ocr_results
-    else:
-        logging.error("OCR text: {}".format(read_result.status))
-        return None
+    ocr_results = []
+    for region in read_result['regions']:
+        region_text = ""
+        for line in region['lines']:
+            for word in line['words']:
+                region_text += word['text'] + " "
+        region_text = region_text[:-1]
+        # Get normalized bounding box
+        bounding_box = region['boundingBox'].split(",")
+        for i, val in enumerate(bounding_box):
+            if i % 2 == 0:
+                bounding_box[i] = int(val) / width
+            else:
+                bounding_box[i] = int(val) / height
+        ocr_results.append({
+            'text': region_text,
+            'bounding_box': bounding_box
+        })
+    return ocr_results
 
 
 if __name__ == "__main__":
