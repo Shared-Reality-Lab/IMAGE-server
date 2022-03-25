@@ -93,6 +93,14 @@ services:
             ca.mcgill.a11y.image.port: 5000
         env_file:
             - ./config/azure-api.env
+    openstreet:
+        build:
+            context: ./preprocessors/openstreet
+            dockerfile: Dockerfile
+        image: "osm-preprocessors:latest"
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 3
+            ca.mcgill.a11y.image.port: 5000
     object-grouping:
         build:
             context: ./preprocessors/grouping
