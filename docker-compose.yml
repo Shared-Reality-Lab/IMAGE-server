@@ -100,7 +100,7 @@ services:
         image: "osm-preprocessors:latest"
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 5000
+            ca.mcgill.a11y.image.port: 8000
     object-grouping:
         build:
             context: ./preprocessors/grouping
