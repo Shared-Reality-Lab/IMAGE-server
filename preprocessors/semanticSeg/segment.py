@@ -73,12 +73,14 @@ def findContour(pred_color, width, height):
     contours, hierarchy = cv2.findContours(
         thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
+    # removes the remaining part of image and keeps the contours of segments
     image = image - dummy
     centres = []
     area = []
     totArea = 0
     send_contour = []
     flag = False
+    # calculate the centre and area of individual contours
     for i in range(len(contours)):
         moments = cv2.moments(contours[i])
         if moments['m00'] == 0:
@@ -115,6 +117,7 @@ def findContour(pred_color, width, height):
     centre = [centre1, centre2]
     totArea = totArea / (width * height)
     result = np.concatenate(contours, dtype=np.float32)
+    # if contour is very small then delete it
     if(totArea < 0.05):
         return ([0, 0], [0, 0], 0)
     result = np.squeeze(result)
@@ -129,6 +132,7 @@ def run_segmentation(url,
                      segmentation_module,
                      dictionary,
                      pil_to_tensor):
+    # convert an image from base64 format
     # Following 4 lines refered from
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
     image_b64 = url.split(",")[1]
@@ -137,6 +141,7 @@ def run_segmentation(url,
     pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     height, width, channels = pil_image.shape
     scale_size = np.float(1500.0 / np.float(max(height, width)))
+    # scale down an image to avoid OOM error
     if(scale_size <= 1.0):
         height = np.int(height * scale_size)
         width = np.int(width * scale_size)
@@ -156,6 +161,7 @@ def run_segmentation(url,
     singleton_batch = {'img_data': img_data[None]}
     output_size = img_data.shape[1:]
     with torch.no_grad():
+        # get segmentation results
         scores = segmentation_module(singleton_batch,
                                      segSize=output_size)
     _, pred = torch.max(scores, dim=1)
@@ -165,6 +171,7 @@ def run_segmentation(url,
     logging.info("Segments detected, Runnning contour code")
     for c in predicted_classes[:5]:
         color, name = visualize_result(img_original, pred, c)
+        # find contours for every class
         send, center, area = findContour(color, width, height)
         if(area == 0):
             continue
@@ -180,6 +187,7 @@ def segment():
     gc.collect()
     torch.cuda.empty_cache()
     dictionary = []
+    # load all the schemas
     with open('./schemas/preprocessors/segmentation.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
@@ -197,6 +205,7 @@ def segment():
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
     logging.info("Schemas loaded")
+    # load all the models
     net_encoder = ModelBuilder.build_encoder(
         arch='resnet50dilated',
         fc_dim=2048,
@@ -224,6 +233,7 @@ def segment():
             std=[0.229, 0.224, 0.225])
     ])
     content = request.get_json()
+    # check if the input json is a valid json
     try:
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
@@ -240,6 +250,9 @@ def segment():
     classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
     classifier_2 = "ca.mcgill.a11y.image.preprocessor.graphicTagger"
     preprocess_output = content["preprocessors"]
+    # check if the first classifier and second classifier are present.
+    # these steps could be skipped
+    # if the architecture if modified appropriately
     if classifier_1 in preprocess_output:
         classifier_1_output = preprocess_output[classifier_1]
         classifier_1_label = classifier_1_output["category"]
@@ -288,6 +301,7 @@ def segment():
         "name": preprocessorName,
         "data": segment
     }
+    # validate the output using schemas
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
