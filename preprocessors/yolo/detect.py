@@ -72,7 +72,7 @@ def detect_objects(send,
                 map_location=device
             )['model']
         ).to(device).eval()
-    ##load images by converting them from base64 to readable format
+    # load images by converting them from base64 to readable format
     dataset = LoadImages(source, img_size=imgsz, stride=stride)
     # generate the predictions
     if device.type != 'cpu':
@@ -84,7 +84,7 @@ def detect_objects(send,
         img /= 255.0
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
-        #get predictions for the model
+        # get predictions for the model
         pred = model(img, augment=augment)[0]
         # , max_det=max_det)
         pred = non_max_suppression(
@@ -112,7 +112,7 @@ def detect_objects(send,
                             names[c] if hide_conf else
                             f'{names[c]} {conf:.2f}'
                         )
-                        #normalise the image
+                        # normalise the image
                         xleft = int(xyxy[0]) / width
                         yleft = int(xyxy[1]) / height
                         xright = int(xyxy[2]) / width
