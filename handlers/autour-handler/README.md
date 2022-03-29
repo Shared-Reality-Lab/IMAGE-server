@@ -4,7 +4,7 @@
 
 ## What is this?
 
-This is a [handler](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#handlers=) component that creates a sptialized audio scene indicating points of interests around a location.
+This is a [handler](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#handlers=) component that creates a spatialized audio scene indicating points of interest around a location.
 Points of interest are determined using the [Autour Preprocessor](../../preprocessors/autour).
 It is heavily influenced by and depends on the [Autour project](http://autour.mcgill.ca/).
 
