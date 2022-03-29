@@ -5,6 +5,6 @@
 ## What is this?
 
 This is a [handler](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#handlers=) component that creates a sptialized audio representation of [Highcharts](https://www.highcharts.com/) charts.
-Currently, it only supports line charts with a single line and pie charts.
+Currently, it only supports line or area charts with a single trend and pie charts.
 It communicates with the [ESPnet TTS service](../../services/espnet-tts) for text-to-speech
 and [SuperCollider](../../services/supercollider-service/charts) for audio synthesis.
