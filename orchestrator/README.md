@@ -25,7 +25,7 @@ mounted to this location if this option is used. A cron job will delete subdirec
 unless that request has been [authorized by the user to save beyond that point](#authenticate).
 If left unset or set to any other value, request and response data will never be saved.
 - `PARALLEL_PREPROCESSORS`: when set to `ON` or `on`, the preprocessors in a [priority group](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#docker-compose-configuration) will be run in parallel
-rather than serially. Note that this may result in higher resource usage and instability on some systems.
+rather than serially. Note that this may result in higher resource usage which can cause instability if resources (e.g., GPU memory) are exhausted.
 If left unset or set to any other value, preprocessors within a group will run sequentially although in an undefined order.
 
 ## Endpoints

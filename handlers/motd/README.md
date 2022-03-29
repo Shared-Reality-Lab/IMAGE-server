@@ -4,4 +4,5 @@
 
 ## What is this?
 
-This is a basic handler used to display a status message (set through the environment variable `MOTD`) as plain text to the user.
+This is a basic handler used to display a status message (set through the environment variable `MOTD` in `docker-compose.yml`) as plain text to the user. Note that this means no HTML or other markup will be rendered.
+

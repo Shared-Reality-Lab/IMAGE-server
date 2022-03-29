@@ -5,7 +5,6 @@
 ## What is this?
 
 This is a [handler](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#handlers=) component that creates a sptialized audio scene to convey detected objects and detected semantic segments.
-As of the time of writing, these are determined using the YOLO preprocessor and CSAIL semseg preprocessor respectively.
 
 Data from these two sources are used to create plain text description.
 This description is used to create a text-to-speech rendering using [ESPnet](../../services/espnet-tts)
