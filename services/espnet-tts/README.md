@@ -27,4 +27,4 @@ The result will be a JSON object where the field `audio` contains the data URL o
 To allow each segment of text to be located separately, a separate field called `durations` is an array of the duration of each segment
 in the order they were sent in the request given in number of samples.
 
-For example locate the TTS of the third text segment, it would be in the audio file from sample `d1 + d2` to sample `d1 + d2 + d3`.
+For example, to locate the TTS of the third text segment, it would be in the audio file from sample `d1 + d2` to sample `d1 + d2 + d3`.
