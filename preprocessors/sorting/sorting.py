@@ -25,8 +25,10 @@ from math import sqrt
 app = Flask(__name__)
 
 # this function determines the size of bounding box
+
+
 def calculate_diagonal(x1, y1, x2, y2):
-    diag = sqrt((x2-x1)**2+(y2-y1)**2)
+    diag = sqrt((x2 - x1)**2 + (y2 - y1)**2)
     return diag
 
 
@@ -80,12 +82,13 @@ def readImage():
         object_type.append(objects[i]["type"])
         dimensions.append(objects[i]["dimensions"])
         area.append(objects[i]["area"])
-    # create 3 lists for 3 sortings(refer readme for finding the type of sorting)
+    # create 3 lists for 3 sortings(refer readme for finding the type of
+    # sorting)
     for i in range(len(objects)):
         left2right.append([objects[i]["ID"], dimensions[i][2]])
         top2bottom.append([objects[i]["ID"], dimensions[i][1]])
         small2big.append([objects[i]["ID"], area[i]])
-    # sort the lists 
+    # sort the lists
     top2bottom = sorted(top2bottom, key=lambda x: x[1])
     left2right = sorted(left2right, key=lambda x: x[1])
     small2big = sorted(small2big, key=lambda x: x[1])
@@ -99,7 +102,7 @@ def readImage():
     name = "ca.mcgill.a11y.image.preprocessor.sorting"
     data = {"leftToRight": left_id,
             "topToBottom": top_id, "smallToBig": small_id}
-    #verify the output format
+    # verify the output format
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(data)
