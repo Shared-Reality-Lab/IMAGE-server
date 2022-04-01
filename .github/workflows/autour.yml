@@ -70,6 +70,7 @@ jobs:
             org.opencontainers.image.title=IMAGE Preprocessor Autour
             org.opencontainers.image.description=Gets information from the Autour server for use in IMAGE.
             org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
+            org.opencontainers.image.documentation=https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/autour/README.md
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
       - name: Build and push
