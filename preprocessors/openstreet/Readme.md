@@ -67,4 +67,44 @@ $ pip install -r requirements.txt
 ```
 $ uvicorn app.main:app --reload
 ```
-6. 
+
+
+### Instructions for testing
+
+1. Pull the image from the server 
+
+```
+$ docker run osm-preprocessors:latest 
+
+```
+2. Use the command to do local build 
+
+```
+$ docker-compose build openstreet
+$ docker-compose up -d orchestrator openstreet
+
+NB: You can stop or start the container by running the following command respectively
+
+$ docker stop image-server_openstreet_1
+or
+
+$ docker start image-server_openstreet_1
+
+```
+
+3. To publish the output of the container. 
+
+```
+$ curl -X 'GET' \
+  'http://localhost:8000/location/100/49.8974309/-97.2033944' \
+  -H 'accept: application/json'
+
+```
+
+In this case, 100 is the radius in metres while 49.8974309 and -97.2033944 are
+latitude and longitude respectively of a point on the OpenStreet Map. You may play around the three values to see different results yourself.
+
+or download and install insomnia rest. Please see https://insomnia.rest/  to download   
+After installing insomnia, type http://localhost:8000/location/100/49.8974309/-97.2033944 on the "GET" field.
+and click the Send Button. 
+

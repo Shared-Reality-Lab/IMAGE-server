@@ -1,3 +1,4 @@
+FROM schemas:latest AS schemas
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
 
 WORKDIR /code
