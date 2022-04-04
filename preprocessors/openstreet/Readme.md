@@ -106,5 +106,5 @@ latitude and longitude respectively of a point on the OpenStreet Map. You may pl
 
 or download and install insomnia rest. Please see https://insomnia.rest/  to download   
 After installing insomnia, type http://localhost:8000/location/100/49.8974309/-97.2033944 on the "GET" field.
-and click the Send Button. 
+and click the Send Button. You may also use postman if you so wish
 
