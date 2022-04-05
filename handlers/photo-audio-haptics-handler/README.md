@@ -10,7 +10,7 @@ The centroid and normalized bounding box information is stored for each detected
 
 For audio, data from the two detected sources are used to create a plain text description.
 This description is used to create a text-to-speech rendering using [ESPnet](../../services/espnet-tts)
-which is then passed to [SuperCollider](../../services/supercollider-service/photo.scd).
+which is then passed to [SuperCollider](../../services/supercollider-images/supercollider-service/photo.scd).
 It will be opportunistically returned as segmented audio. Otherwise, it will just return a simple audio rendering.
 
 If successful, the handler returns a rendering with a list of JSON objects, called entities, each containing audio and location information.
