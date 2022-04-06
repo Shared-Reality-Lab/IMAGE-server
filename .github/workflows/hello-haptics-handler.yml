@@ -7,10 +7,10 @@ on:
   pull_request:
     branches: [ main ]
     paths: [ "handlers/hello-haptics-handler/**" ]
-  workflow_run:
-    workflows: [ "Schemas (Trigger)" ]
-    types:
-      - completed
+#  workflow_run:
+#    workflows: [ "Schemas (Trigger)" ]
+#    types:
+#      - completed
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io
@@ -84,6 +84,7 @@ jobs:
         with:
           context: .
           file: ./handlers/hello-haptics-handler/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          # push: ${{ github.event_name != 'pull_request' }}
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
