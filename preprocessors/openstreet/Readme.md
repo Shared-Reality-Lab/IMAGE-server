@@ -71,40 +71,56 @@ $ uvicorn app.main:app --reload
 
 ### Instructions for testing
 
-1. Pull the image from the server 
-
+1. Clone this repository. Note that the schemas are a submodule, so you need to either get them in the initial clone, e.g.,
 ```
-$ docker run osm-preprocessors:latest 
-
+git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git
 ```
-2. Use the command to do local build 
 
+or else get them after you've done the initial clone (while in the root of the cloned repo on your local machine):
 ```
-$ docker-compose build openstreet
-$ docker-compose up -d orchestrator openstreet
-
-NB: You can stop or start the container by running the following command respectively
-
-$ docker stop image-server_openstreet_1
-or
-
-$ docker start image-server_openstreet_1
+git submodule init
+git submodule update
 
 ```
 
-3. To publish the output of the container. 
+2. Run 
 
 ```
-$ curl -X 'GET' \
+git checkout openStreetM
+
+```
+3. Set DOCKER_GID variable to 134
+
+```
+export DOCKER_GID=134
+
+```
+
+4. Run
+
+```
+docker build schemas -t schemas
+docker-compose build openstreet
+docker-compose up -d orchestrator openstreet
+docker run -d osm-preprocessors
+
+```
+
+5. Test with the request below to get sample result
+```
+curl -X 'GET' \
   'http://localhost:8000/location/100/49.8974309/-97.2033944' \
   -H 'accept: application/json'
 
 ```
-
-In this case, 100 is the radius in metres while 49.8974309 and -97.2033944 are
+In this case, 100 is the distance in metres while 49.8974309 and -97.2033944 are
 latitude and longitude respectively of a point on the OpenStreet Map. You may play around the three values to see different results yourself.
 
-or download and install insomnia rest. Please see https://insomnia.rest/  to download   
-After installing insomnia, type http://localhost:8000/location/100/49.8974309/-97.2033944 on the "GET" field.
-and click the Send Button. You may also use postman if you so wish
+
+
+You may also do the testing on your local machine by following all the above instructions. 
+On your local machine, you may also like to download and install insomnia rest. Please see https://insomnia.rest/    
+
+After the installation, type http://localhost:8000/location/100/49.8974309/-97.2033944 on the "GET" field.
+and click the Send Button. You may also like to use postman if you so wish. The displayed results should be the same as that of (5) above, but in a more user-friendly format.
 
