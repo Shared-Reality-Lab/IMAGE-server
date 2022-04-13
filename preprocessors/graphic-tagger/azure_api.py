@@ -29,7 +29,7 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-
+# extract the required results from the API returned values
 def process_results(response, labels):
     if not response["categories"]:
         return labels[0]
@@ -44,7 +44,7 @@ def process_results(response, labels):
         else:
             return labels[0]
 
-
+# this function takes in the image and send the image to Azure to get the output
 def process_image(image, labels):
 
     region = "canadacentral"  # For example, "westus"
@@ -173,6 +173,7 @@ def categorise():
             "name": name,
             "data": type
         }
+        # validate the results to check if they are in correct format
         try:
             validator = jsonschema.Draft7Validator(schema,
                                                    resolver=resolver)
