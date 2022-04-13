@@ -30,6 +30,8 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # extract the required results from the API returned values
+
+
 def process_results(response, labels):
     if not response["categories"]:
         return labels[0]
@@ -44,7 +46,10 @@ def process_results(response, labels):
         else:
             return labels[0]
 
-# this function takes in the image and send the image to Azure to get the output
+# this function takes in the image and send the image to Azure to get the
+# output
+
+
 def process_image(image, labels):
 
     region = "canadacentral"  # For example, "westus"
@@ -69,7 +74,7 @@ def process_image(image, labels):
     response = requests.request(
         'post',
         "https://{}.api.cognitive.microsoft.com/vision/v1.0/analyze".format(
-                                    region),
+            region),
         data=image,
         headers=headers,
         params=params
