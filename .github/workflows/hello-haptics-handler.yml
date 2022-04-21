@@ -77,6 +77,7 @@ jobs:
             org.opencontainers.image.title=IMAGE Handler Hello Haptics
             org.opencontainers.image.description=Example haptics handler for IMAGE using the Haply.
             org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
+            org.opencontainers.image.documentation=https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/handlers/hello-haptics-handler/README.md
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
       - name: Build and push
