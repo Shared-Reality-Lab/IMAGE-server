@@ -252,7 +252,7 @@ export function renderingTitle(semseg: Record<string, unknown>, objDet: Record<s
     }
 }
 
-export function generateContours(JSONObj:any, IDs:number, dim_x:number, dim_y:number){
+export function generateContours(JSONObj:any, dim_x:number, dim_y:number){
     var res = new Array(60);
     for (var i = 0; i < res.length; i++) {
         res[i] = new Int8Array(40);
@@ -311,10 +311,10 @@ export function generateContours(JSONObj:any, IDs:number, dim_x:number, dim_y:nu
           
           //console.log(trun_array);
           for (var i = 0; i < trun_array.length; i++) {
-            var s_x = Math.floor(trun_array[i][0] * dim_x );
-            var s_y = Math.floor(trun_array[i][1] * dim_y ); 
-            var e_x = Math.floor(trun_array[(i+1) % trun_array.length][0] * dim_x);
-            var e_y = Math.floor(trun_array[(i+1) % trun_array.length][1] * dim_y); 
+            var s_x:any = Math.floor(trun_array[i][0] * dim_x );
+            var s_y:any = Math.floor(trun_array[i][1] * dim_y ); 
+            var e_x:any = Math.floor(trun_array[(i+1) % trun_array.length][0] * dim_x);
+            var e_y:any = Math.floor(trun_array[(i+1) % trun_array.length][1] * dim_y); 
             if (s_x >= dim_x) s_x = dim_x-1;
             if (s_y >= dim_y) s_y = dim_y-1;
             if (e_x >= dim_x) e_x = dim_x-1;
@@ -326,28 +326,28 @@ export function generateContours(JSONObj:any, IDs:number, dim_x:number, dim_y:nu
               res[s_x][s_y] = 1;
             }
             else if (s_x == e_x)  {
-              var x = s_x;
+              var x:number = s_x;
               if (s_y < e_y)  {
-                for (var y = s_y; y < e_y; y++)  {
+                for (var y:number = s_y; y < e_y; y++)  {
                   //console.log(x, y);
                   res[x][y] = 1;
                 }
               }
               else{
-                for (var y = s_y; y > e_y; y--)  {
+                for (var y:number = s_y; y > e_y; y--)  {
                   res[x][y] = 1;
                 }
               }
             }
             else if (s_y == e_y)  {
-              var y = s_y;
+              var y:number = s_y;
               if (s_x < e_x)  {
-                for (var x = s_x; x < e_x; x++)  {
+                for (var x:number = s_x; x < e_x; x++)  {
                   res[x][y] = 1;
                 }
               }
               else{
-                for (var x = s_x; x > e_x; x--)  {
+                for (var x:number = s_x; x > e_x; x--)  {
                   res[x][y] = 1;
                 }
               }

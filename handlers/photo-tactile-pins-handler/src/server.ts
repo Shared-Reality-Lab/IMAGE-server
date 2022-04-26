@@ -90,8 +90,8 @@ app.post("/handler", async (req, res) => {
     // Check for renderer availability
     // *******************************************************
     const hasPinArray = req.body["renderers"].includes("ca.mcgill.a11y.image.renderer.tactilepinarray");
-    if (!hasAudioHaptic) {
-        console.warn("Photo audio-haptic renderer not supported!");
+    if (!hasPinArray) {
+        console.warn("Refreshable tactile pin array renderer not supported!");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
         if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
             res.json(response);
@@ -122,9 +122,97 @@ app.post("/handler", async (req, res) => {
 
     if (hasPinArray) {
 
-        // generate bitmap     
-        let bitmap = Array(padWidth).fill(null).map(() => Array(padHeight).fill(0)); 
-           
+        
+
+        try {
+            // Do TTS
+            const ttsResponse = await utils.getTTS(ttsData.map(x => x["value"]));
+            // Add offset values to data
+            for (let i = 0, offset = 0; i < ttsData.length; i++) {
+                ttsData[i]["audio"] = {
+                    "offset": offset,
+                    "duration": ttsResponse.durations[i]
+                };
+                offset += ttsResponse.durations[i];
+            }
+
+            const scData = {
+                "data": ttsData,
+                "ttsFileName": ""
+            };
+
+            // Write to file
+            let inFile: string, outFile: string, jsonFile: string;
+            await fetch(ttsResponse["audio"]).then(resp => {
+                return resp.arrayBuffer();
+            }).then(async (buf) => {
+                inFile = filePrefix + req.body["request_uuid"] + ".wav";
+                await fs.writeFile(inFile, Buffer.from(buf));
+                scData["ttsFileName"] = inFile;
+                jsonFile = filePrefix + req.body["request_uuid"] + ".json";
+                await fs.writeFile(jsonFile, JSON.stringify(scData));
+                outFile = filePrefix + uuidv4() + ".mp3";
+                await fs.writeFile(outFile, "");
+                await fs.chmod(outFile, 0o664);
+
+                console.log("Forming OSC...");
+                return utils.sendOSC(jsonFile, outFile, "supercollider", scPort);
+            }).then(async (entities: any) => {
+                const buffer = await fs.readFile(outFile);
+                // TODO detect mime type from file
+                const dataURL = "data:audio/mp3;base64," + buffer.toString("base64");
+                if (hasPinArray && entities.length > segGeometryData.length) {
+                    
+                    // Add the point and contour location information to each returned entity.
+                    // An entity could be either an object or segment.
+                    // Ordered by segment text, segments, object text, and then objects for now.
+                    // For the segments...
+                    
+                   // generate bitmap for segments
+                   var bitmap:any = []
+                    for (var i =0; i< segGeometryData.length; i++)     {
+                        // bitmap.push(Array(padWidth).fill(null).map(() => Array(padHeight).fill(0))); 
+                        const dim_x = preprocessors.dimensions[0];
+                        const dim_y = preprocessors.dimensions[1];
+                        bitmap.push( utils.generateContours(preSemSeg, dim_x,dim_y));
+
+                    }
+                   
+                    // For the objects...
+                    const rendering = {
+                        "type_id": "ca.mcgill.a11y.image.renderer.PhotoAudioHaptics",
+                        "description": renderingTitle,
+                        "data": {
+                            "info": {
+                                "audioFile": dataURL,
+                                "segments": bitmap
+                            },
+                        }
+                    };
+                    if (ajv.validate("https://image.a11y.mcgill.ca/renderers/tactilepinarray.schema.json", rendering["data"])) {
+                        renderings.push(rendering);
+                        console.log("finished forming audio-haptics rendering");
+                    } else {
+                        console.error(ajv.errors);
+                    }
+                }
+            }).finally(() => {
+                // Delete our files if they exist on the disk
+                if (inFile !== undefined) {
+                    fs.access(inFile).then(() => { return fs.unlink(inFile); }).catch(() => { /* noop */ });
+                }
+                if (jsonFile !== undefined) {
+                    fs.access(jsonFile).then(() => { return fs.unlink(jsonFile); }).catch(() => { /* noop */ });
+                }
+                if (outFile !== undefined) {
+                    fs.access(outFile).then(() => { return fs.unlink(outFile); }).catch(() => { /* noop */ });
+                }
+            });
+        } catch (e) {
+            console.error("Failed to generate audio!");
+            console.error(e);
+        }
+  
     }
 
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
