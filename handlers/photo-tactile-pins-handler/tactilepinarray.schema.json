@@ -1,0 +1,66 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/renderers/tactilepinarray.schema.json",
+    "title": "Tactile Pin Array Photo Renderer",
+    "type": "object",
+    "description": "Data for basic tacile pin array rendering ca.mcgill.a11y.image.renderer.tactilepinarray.",
+    "definitions": {
+        "bitmap": {
+            "type": "array",
+            "description": "this is the bitmap for the tactile pin array to render",
+            "items": {
+                "description": "This is the heigh level of each pin",
+                "type": "number",
+                "maximum": 3,
+                "minimum": 0
+            }
+        },
+        "name":{
+            "type": "string",
+            "description": "This is the name of the object/entity to display on the tactile pin array"
+        },
+        "entityType": {
+            "type": "string",
+            "description": "This is the type of contour being rendered",
+            "enum": ["Object", "Segment"]
+
+        },
+        "contourType":{
+            "type": "string",
+            "description": "This is the type of contour being rendered",
+            "enum": ["filled", "hollow"]
+        }       
+
+    },
+    "properties": {
+        "audioFile": { "$ref": "./definitions.json#/definitions/audioFile" },
+        "entity":{
+            "type": "array",
+            "description":  "A segment or object",
+            "items": {
+                "allOf": [
+                    {
+                        "$ref": "./definitions.json#/definitions/segmentOffsetSeconds"
+                    },
+                    {
+                        "$ref": "#/definitions/name"
+                    },
+                    {
+                        "$ref": "#/definitions/bitmap"
+                    },
+                    {
+                        "$ref": "#/defintions/entityType"
+                    },
+                    {
+                        "$ref": "#/definitions/contourType"
+                    }
+                ]
+
+            }
+
+        },
+        "operationalAudio" : { "$ref": "./definitions.json#/definitions/segmentOffsetSeconds"}
+
+    },
+    "required": ["segments"]
+}
