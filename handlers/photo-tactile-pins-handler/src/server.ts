@@ -113,6 +113,17 @@ app.post("/handler", async (req, res) => {
     const objGeometryData: utils.objGeometryInfo[] = [];
    
     ttsData.push({ "value": utils.generateIntro(preSecondCat), "type": "text" });
+
+    if (preSemSeg) {
+        // Use all segments returned for now.
+        // Filtering may be helpful later.
+        const [ttsInfo, geometryInfo] = utils.generateSemSeg(preSemSeg);
+        ttsData.push(...ttsInfo);
+        segGeometryData.push(...geometryInfo);
+        if (preObjDet && preGroupData) {
+            ttsData.push({ "value": "It also", "type": "text" });
+        }
+    }
    
   
    
@@ -174,7 +185,7 @@ app.post("/handler", async (req, res) => {
                         // bitmap.push(Array(padWidth).fill(null).map(() => Array(padHeight).fill(0))); 
                         const dim_x = preprocessors.dimensions[0];
                         const dim_y = preprocessors.dimensions[1];
-                        bitmap.push( utils.generateContours(preSemSeg, dim_x,dim_y));
+                        bitmap.push( utils.generateContours(segGeometryData[i], dim_x,dim_y));
 
                     }
                    
