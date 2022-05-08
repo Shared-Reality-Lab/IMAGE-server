@@ -53,7 +53,7 @@ vocoder = load_model(download_pretrained_model(vocoder_tag)).to(device).eval()
 vocoder.remove_weight_norm()
 
 
-@lru_cache
+@lru_cache()
 def tts(text):
     with torch.no_grad():
         start = time.time()

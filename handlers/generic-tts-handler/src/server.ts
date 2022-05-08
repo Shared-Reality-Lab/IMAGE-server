@@ -54,6 +54,7 @@ function calcConfidence(objects: Record<string, unknown>[]): number {
 }
 
 app.post("/handler", async (req, res) => {
+    console.debug("Request received.");
     // Check for good data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
@@ -121,7 +122,7 @@ app.post("/handler", async (req, res) => {
     // const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
     // Removing scenes due to server#167.
     const sceneData: any = undefined;
-    const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.secondCategoriser"];
+    const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.graphicTagger"];
     let ttsIntro;
     if (sceneData && sceneData["categories"].length > 0) {
         let sceneName = sceneData["categories"][0]["name"] as string;
@@ -177,7 +178,7 @@ app.post("/handler", async (req, res) => {
         ttsResponse = ttsResponse as Record<string, unknown>;
     } catch (e) {
         console.error(e);
-        res.status(500).json({"error": e.message});
+        res.status(500).json({"error": (e as Error).message});
         return;
     }
 
@@ -246,7 +247,8 @@ app.post("/handler", async (req, res) => {
         const oscPort = new osc.UDPPort({
             "remoteAddress": "supercollider",
             "remotePort": scPort,
-            "localAddress": "0.0.0.0"
+            "localAddress": "0.0.0.0",
+            "localPort": 0  // This will request a free port
         });
         return Promise.race<string>([
             new Promise<string>((resolve, reject) => {
@@ -330,6 +332,7 @@ app.post("/handler", async (req, res) => {
         "renderings": renderings
     };
 
+    console.debug("Sending response.");
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);
     } else {

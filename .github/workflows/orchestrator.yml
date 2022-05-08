@@ -2,11 +2,19 @@ name: Orchestrator
 on:
   push:
     branches: [ main ]
+    tags: [ "orchestrator-[0-9]+.[0-9]+.[0-9]+" ]
     paths: [ "orchestrator/**" ]
   pull_request:
     branches: [ main ]
     paths: [ "orchestrator/**" ]
+  workflow_run:
+    workflows: [ "Schemas (Trigger)" ]
+    types:
+      - completed
   workflow_dispatch:
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: shared-reality-lab/image-orchestrator
 jobs:
   lint:
     name: Basic linting and type checking.
@@ -27,3 +35,56 @@ jobs:
       - name: Check with tsc
         working-directory: ./orchestrator
         run: npx tsc --noEmit
+  build-and-push-image:
+    name: Build and Push to Registry
+    needs: lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Log into GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get Correct Tags
+        run: |
+          if [[ ${{ github.ref }} =~ ^refs/tags/orchestrator-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "TAGGED=true" >> $GITHUB_ENV
+          else
+            echo "TAGGED=false" >> $GITHUB_ENV
+          fi
+      - name: Get timestamp
+        run: echo "timestamp=$(date -u +'%Y-%m-%dT%H.%M')" >> $GITHUB_ENV
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=${{ env.TAGGED }}
+          tags: |
+            type=match,enable=${{ env.TAGGED }},priority=300,pattern=orchestrator-(\d+.\d+.\d+),group=1
+            type=raw,priority=200,value=unstable
+            type=raw,priority=100,value=${{ env.timestamp }}
+          labels: |
+            org.opencontainers.image.title=IMAGE Orchestrator
+            org.opencontainers.image.description=Orchestrator for an IMAGE server instance. This manages handlers and preprocessors.
+            org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
+            org.opencontainers.image.documentation=https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/orchestrator/README.md
+            org.opencontainers.image.licenses=AGPL-3.0-or-later
+            maintainer=IMAGE Project <image@cim.mcgill.ca>
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./orchestrator/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

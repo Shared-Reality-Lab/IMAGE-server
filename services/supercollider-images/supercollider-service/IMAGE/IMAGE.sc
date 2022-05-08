@@ -94,6 +94,23 @@ IMAGE {
                 Out.ar(2, encoded);
             }).store;
 
+            // Another point for line graphs
+            SynthDef((\discreteRingzPingHOA++(i+1)).asSymbol,{|freq = 200, phi = 0, theta = 0.0, radius = 1, gain = 0.1, decay = 0.02, imp = 48|
+                var  sig, encoded, env, excitation, reverb;
+                    // excitation =  Dust.ar(100);
+                    // partials =  ({|i|SinOsc.ar( (i+1) * freq.lag(0.5) )}!10).sum;
+                    env = EnvGen.ar(Env.perc(0.01, 0.01, 1.0, -4),1, doneAction: 2);
+                    sig =  Ringz.ar( WhiteNoise.ar(0.05), freq, 10) ;
+                    // sig =  Ringz.ar( PinkNoise.ar(0.05) * Decay.ar( Impulse.ar(imp), 0.01) , freq, decay, 0.01 );
+                    // reverb = FreeVerb.ar(sig, 0.1, 0.3, damp: 0.6, mul: 1);
+                    encoded = HoaEncodeDirection.ar(sig * env * gain,
+                                            theta,
+                                            phi,
+                                            radius,
+                                            order.asInteger);
+                Out.ar(2,  encoded);
+            }).store;
+
             // Continuous voice
             // For continuous line graphs
             SynthDef((\playVoiceContinuousHOA++(i+1)).asSymbol, {|freq = 200, blend = 0.0, bright = 1, phi = 0, theta = 0.0, radius = 1, gain = 0|
@@ -110,6 +127,49 @@ IMAGE {
                     order.asInteger
                 );
                 Out.ar(2, encoded);
+            }).store;
+
+            // Discrete Sine Pings Length 5 For earcons
+            SynthDef((\playDiscreteSinePingHOA++(i+1)).asSymbol, {|note = 80, int0=0, int1=1, int2=1, int3=0, int4=2, phi=0, theta=0, radius=1, gain=0, decay=0.02, imp=48|
+                var sig1, env1, ping1, sig2, env2, ping2, sig3, env3, ping3, sig4, env4, ping4, sig5, env5, ping5, encoded, excitation, reverb, spread=0.05, envDec=0.02, attack=0.01, resonzDecay=3;
+                // excitation = Dust.ar(100);
+                env1 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, attack, envDec], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                sig1 = PinkNoise.ar(0.1);
+                ping1 = Ringz.ar(env1 * sig1, (note + int0).midicps, resonzDecay,  AmpComp.kr((note + int0).midicps, 200));
+                env2 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [spread *1, attack, envDec], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                sig2 = PinkNoise.ar(0.1);
+                ping2 = Ringz.ar(env2 * sig2, (note + int1).midicps, resonzDecay,  AmpComp.kr((note + int1).midicps, 200));
+                env3 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [spread *2, attack, envDec], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                sig3 = PinkNoise.ar(0.1);
+                ping3 = Ringz.ar(env3 * sig3, (note + int2).midicps, resonzDecay,  AmpComp.kr((note + int2).midicps, 200));
+                env4 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [spread *3, attack, envDec], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                sig4 = PinkNoise.ar(0.1);
+                ping4 = Ringz.ar(env4 * sig4, (note + int3).midicps, resonzDecay,  AmpComp.kr((note + int3).midicps, 200));
+                env5 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [spread *4, attack, envDec], curve: [1, 8, -9]), 1, doneAction: Done.none);
+                sig5 = PinkNoise.ar(0.1);
+                ping5 = Ringz.ar(env5 * sig5, (note + int4).midicps, resonzDecay,  AmpComp.kr((note + int4).midicps, 200));
+                // reverb = FreeVerb.ar(sig, 0.1, 0.3, damp: 0.5, mul: 1);
+                encoded = HoaEncodeDirection.ar((ping1 + ping2 + ping3 + ping4 + ping5) * gain,
+                    theta,
+                    phi,
+                    2.0,
+                    order.asInteger
+                );
+                Out.ar(2, encoded);
+            }).store;
+
+            // Continuous noise for pie charts v2 from Florian
+            SynthDef((\playContinuousResonzNoiseHOA++(i+1)).asSymbol, { |freq = 200, phi = 0, theta = 0, radius = 2, gain = 0, decay = 0.02, imp = 48, lag = 10|
+              var sig, encoded, reverb;
+              sig = Ringz.ar(PinkNoise.ar(0.05) * Decay2.ar(Impulse.ar(imp), 0.03, 0.1), freq, decay, 0.01) * AmpComp.kr(freq, 200);
+              reverb = FreeVerb.ar(sig, 0.1, 0.3, damp: 0.6, mul: 500);
+              encoded = HoaEncodeDirection.ar(reverb * gain.lagud(lag, lag),
+                theta,
+                phi,
+                radius,
+                order.asInteger
+              );
+              Out.ar(2, encoded);
             }).store;
         });
 
@@ -203,54 +263,58 @@ IMAGE {
             // Play klank for segmentations
             SynthDef((\playKlankNoise4SegmentHOA++(i+1)).asSymbol, { |midinote = 60,
                                                                       theta = 0.0pi, phi = 0.0pi, radius = 2.5,
-                                                                      out = 2, gain = 0, lag = 0.1|
-            var sig, encoded;
-                sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!18, {|i| 1/(i+1) }!18, {|i| 2/(i+1) }!18], BrownNoise.ar(0.001) + Dust.ar(50, 0.5) , midinote.midicps  );
-                encoded = HoaEncodeDirection.ar(sig, theta.lag(lag),
+                                                                      out = 2, gain = 0, lag = 0.1, release=0.5, gate=1|
+            var sig, encoded, env, envGen;
+                env = Env.asr(releaseTime: release);
+                envGen = EnvGen.ar(env, gate);
+                sig = Klank.ar(`[{|i|  (i+1) + 0.01.rand2 }!18, {|i| 1/(i+1) }!18, {|i| 2/(i+1) }!18], BrownNoise.ar(0.001) + Dust.ar(50, 0.5) , midinote.midicps  ) * envGen * AmpComp.kr(midinote.midicps, 300);
+                DetectSilence.ar(sig, doneAction: Done.freeSelf);
+                encoded = HoaEncodeDirection.ar(sig* gain.lag(lag), theta.lag(lag),
                                                      phi.lag(lag),
                                                      radius.lag(lag),
                                                      order.asInteger);
-                Out.ar(out, encoded * gain.lag(lag))
+                Out.ar(out, encoded)
             }).store;
         });
     }
 
     // load and parse a JSON file as a dictionary
-    *loadJSON { |path|
-        var res = nil;
-        if(File.exists(path.standardizePath),
-            {
-                File.use(path, "r", { |f|
-                    var jsonData;
-                    jsonData = f.readAllString;
-                    res = jsonData.parseYAML;
-                });
-            },
-            {
-                ("Could not open a JSON file at "++path++"!").postln;
-            }
-        );
-        ^res
-    }
+    // *loadJSON { |path|
+    //     var res = nil;
+    //     if(File.exists(path.standardizePath),
+    //         {
+    //             File.use(path, "r", { |f|
+    //                 var jsonData;
+    //                 jsonData = f.readAllString;
+    //                 res = jsonData.parseYAML;
+    //             });
+    //         },
+    //         {
+    //             ("Could not open a JSON file at "++path++"!").postln;
+    //         }
+    //     );
+    //     ^res
+    // }
 
-    *loadSound { |path|
-        var res = nil;
-        if(File.exists(path),
-            {
-                SoundFile.use(path, { |f|
-                    res = f;
-                });
-            },
-            {
-                ("Could not open a sound file at "++path++"!").postln;
-            }
-        );
-        ^res
-    }
+    // *loadSound { |path|
+    //     var res = nil;
+    //     if(File.exists(path),
+    //         {
+    //             SoundFile.use(path, { |f|
+    //                 res = f;
+    //             });
+    //         },
+    //         {
+    //             ("Could not open a sound file at "++path++"!").postln;
+    //         }
+    //     );
+    //     ^res
+    // }
 
     *loadTTSJSON { |path|
         var jsonData, soundFile;
-        jsonData = this.loadJSON(path);
+        //jsonData = this.loadJSON(path);
+        jsonData = path.standardizePath.parseJSONFile;
         if(jsonData.isNil,
             {
                 Error("Failed to load JSON file at %!".format(path)).throw;
@@ -263,7 +327,8 @@ IMAGE {
             }
         );
 
-        soundFile = this.loadSound(jsonData.at("ttsFileName"));
+        //soundFile = this.loadSound(jsonData.at("ttsFileName"));
+        soundFile = SoundFile.openRead(jsonData.at("ttsFileName").standardizePath);
         if(soundFile.isNil,
             {
                 Error("Failed to load sound file at %!".format(jsonData.at("ttsFileName"))).throw;
