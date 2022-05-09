@@ -1,8 +1,0 @@
-openstreet:
-        build:
-            context: ./preprocessors/openstreet
-            dockerfile: Dockerfile
-        image: "test-osm-preprocessors:latest"
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 8000

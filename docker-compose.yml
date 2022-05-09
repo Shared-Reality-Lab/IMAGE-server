@@ -14,17 +14,12 @@ services:
         volumes:
         
     openstreet:
-        build:
-            context: ./preprocessors/openstreet
-            dockerfile: Dockerfile
-        image: "osm-preprocessors:latest"
+        image: ghcr.io/shared-reality-lab/image-preprocessor-openstreet:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 8000
+        
   
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 5
-            ca.mcgill.a11y.image.port: 5000
     semantic-segmentation:
         image: ghcr.io/shared-reality-lab/image-preprocessor-semantic-segmentation:unstable
         labels:
