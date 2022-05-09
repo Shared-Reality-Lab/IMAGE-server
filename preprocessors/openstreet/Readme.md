@@ -91,15 +91,10 @@ git checkout openStreetM
 ```
 3. Set DOCKER_GID variable 
 
-```
-
-
-```
 
 4. Run
 
 ```
-#docker build schemas -t schemas
 #docker-compose build openstreet
 #docker-compose up -d orchestrator openstreet
 #docker run -d osm-preprocessors
@@ -121,6 +116,19 @@ latitude and longitude respectively of a point on the OpenStreet Map. You may pl
 You may also do the testing on your local machine by following all the above instructions. 
 On your local machine, you may also like to download and install insomnia rest. Please see https://insomnia.rest/    
 
-After the installation, type http://localhost:8000/location/100/49.8974309/-97.2033944 on the "GET" field.
+After the installation, copy and paste this URL http://localhost:8000/location/100/49.8974309/-97.2033944 on the "GET" field.
 and click the Send Button. You may also like to use postman if you so wish. The displayed results should be the same as that of (5) above, but in a more user-friendly format.
 
+####
+For additional info:
+a. Computing bounding_box-
+
+1. https://docs.google.com/document/d/1RN9tQKsTodWhX7qpr40jLGHbjzhyM4RrG0JYlSvcMrw/edit?usp=sharing
+
+2. https://wiki.openstreetmap.org/wiki/Bounding_Box
+
+3. https://www.katemarshallmaths.com/uploads/1/8/8/2/18821302/theory_on_latitude_and_longitude.pdf
+
+4. https://sciencing.com/what-parallels-maps-4689046.html
+
+5. https://stackoverflow.com/questions/238260/how-to-calculate-the-bounding-box-for-a-given-lat-lng-location
