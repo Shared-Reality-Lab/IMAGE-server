@@ -29,6 +29,8 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+# extract the required results from the API returned values
+
 
 def process_results(response, labels):
     if not response["categories"]:
@@ -43,6 +45,9 @@ def process_results(response, labels):
                     return(i)
         else:
             return labels[0]
+
+# this function takes in the image and send the image to Azure to get the
+# output
 
 
 def process_image(image, labels):
@@ -69,7 +74,7 @@ def process_image(image, labels):
     response = requests.request(
         'post',
         "https://{}.api.cognitive.microsoft.com/vision/v1.0/analyze".format(
-                                    region),
+            region),
         data=image,
         headers=headers,
         params=params
@@ -173,6 +178,7 @@ def categorise():
             "name": name,
             "data": type
         }
+        # validate the results to check if they are in correct format
         try:
             validator = jsonschema.Draft7Validator(schema,
                                                    resolver=resolver)

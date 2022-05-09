@@ -188,11 +188,20 @@ def get_dims(obj):
     Returns a dict with [ulx, uly, lrx, lry]
     of the object box
     """
+    # If the object is not a region of text
+    # its bounding box is called "dimensions"
+    # so the key is set accordingly
+    if "dimensions" in obj:
+        key = "dimensions"
+    # Otherwise, the key is "bounding_box"
+    # for regions of text
+    else:
+        key = "bounding_box"
     obj_box = {
-        'ulx': obj['dimensions'][0],
-        'uly': obj['dimensions'][1],
-        'lrx': obj['dimensions'][2],
-        'lry': obj['dimensions'][3]
+        'ulx': obj[key][0],
+        'uly': obj[key][1],
+        'lrx': obj[key][2],
+        'lry': obj[key][3]
     }
     return obj_box
 

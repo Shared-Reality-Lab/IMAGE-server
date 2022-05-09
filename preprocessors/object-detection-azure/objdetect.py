@@ -38,6 +38,8 @@ with open('./schemas/definitions.json') as jsonfile:
 with open('./schemas/request.schema.json') as jsonfile:
     first_schema = json.load(jsonfile)
 
+# normalise the xy coordinates
+
 
 def process_results(result):
     send = []
@@ -63,6 +65,8 @@ def process_results(result):
                       }
         send.append(dictionary)
     return send
+
+# get the object detection values from azure api
 
 
 def process_image(image):
@@ -179,6 +183,7 @@ def categorise():
             "name": name,
             "data": type
         }
+        # validate the output with schema
         try:
             validator = jsonschema.Draft7Validator(schema,
                                                    resolver=resolver)
