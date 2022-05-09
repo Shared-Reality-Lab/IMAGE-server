@@ -1,5 +1,4 @@
-FROM schemas:latest AS schemas
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
+FROM python 3.9.5:alpine
 
 WORKDIR /code
 COPY ./requirements.txt /code/requirements.txt
