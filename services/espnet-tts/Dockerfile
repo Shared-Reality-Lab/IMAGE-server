@@ -1,27 +1,26 @@
-FROM schemas:latest AS schemas
-
-FROM pytorch/pytorch:1.8.1-cuda11.1-cudnn8-runtime
+FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
 
 RUN apt-get update && apt-get install -y libsndfile1 build-essential && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /run/tts
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 RUN adduser --disabled-password python
 RUN chown python:python .
 USER python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip install --upgrade pip
-RUN pip install espnet==0.10.0
-RUN pip install parallel_wavegan==0.4.8
-RUN pip install espnet_model_zoo
-RUN pip install Flask gunicorn
-RUN pip install jsonschema
+COPY /services/espnet-tts/requirements.txt .
+RUN pip install -r requirements.txt
 
-COPY src/predownload.py .
+COPY /services/espnet-tts/src/predownload.py .
 RUN python predownload.py
+RUN mkdir -p /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2
+RUN wget https://image.a11y.mcgill.ca/models/espnet/train_nodev_ljspeech_full_band_melgan.v2.tar.gz -O /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2.tar.gz
+RUN tar xzvf /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2.tar.gz -C /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2/
 
-COPY src/* ./
-COPY --from=schemas /schemas/services/tts/* ./
+COPY /services/espnet-tts/src/* ./
+COPY /schemas/services/tts/* ./
 ENV TORCH_DEVICE="cpu"
 EXPOSE 80
 

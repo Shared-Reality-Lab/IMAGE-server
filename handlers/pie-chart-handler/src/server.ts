@@ -40,6 +40,7 @@ const filePrefix = "/tmp/sc-store/pie-chart-handler-";
 app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/handler", async (req, res) => {
+    console.debug("Received request");
     // Check for good data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
@@ -100,7 +101,8 @@ app.post("/handler", async (req, res) => {
     const oscPort = new osc.UDPPort({
         "remoteAddress": "supercollider",
         "remotePort": scPort,
-        "localAddress": "0.0.0.0"
+        "localAddress": "0.0.0.0",
+        "localPort": 0  // This will request a free port
     });
     try {
         await Promise.race<string>([
@@ -146,7 +148,6 @@ app.post("/handler", async (req, res) => {
             const dataURL = "data:audio/wav;base64," + buffer.toString("base64");
             const r = {
                 "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                "confidence": 50,
                 "description": "A spatial sonification of a pie chart without label information.",
                 "data": {
                     "audio": dataURL
@@ -176,6 +177,7 @@ app.post("/handler", async (req, res) => {
         "renderings": renderings
     };
 
+    console.debug("Sending response");
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);
     } else {

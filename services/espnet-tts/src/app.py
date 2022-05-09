@@ -24,6 +24,7 @@ from espnet_util import tts, fs
 from flask import Flask, Response, request
 from io import BytesIO
 from jsonschema import validate
+from torch.cuda import empty_cache
 from werkzeug.wsgi import FileWrapper
 
 logging.basicConfig(format="%(asctime)s %(message)s")
@@ -41,6 +42,7 @@ app = Flask(__name__)
 
 @app.route("/service/tts/simple", methods=["POST"])
 def perform_tts():
+    logger.debug("Received request")
     data = request.get_json()
     if data is None or "text" not in data:
         return {"error": "Missing key \"text\"."}, 400
@@ -53,16 +55,20 @@ def perform_tts():
         sf.write(f, wav, fs, format="WAV")
         f.seek(0)
         wrapper = FileWrapper(f)
+        logger.debug("Sending response")
         return Response(wrapper, mimetype="audio/wav", direct_passthrough=True)
     except Exception as e:
         logger.error(e)
         return {
             "error": "An error occurred while performing text-to-speech"
         }, 500
+    finally:
+        empty_cache()
 
 
 @app.route("/service/tts/segments", methods=["POST"])
 def segment_tts():
+    logger.debug("Received request")
     data = request.get_json()
 
     # Validate request
@@ -97,9 +103,12 @@ def segment_tts():
         }
 
         validate(response, segment_response)
+        logger.debug("Sending response")
         return response
     except Exception as e:
         logger.error(e)
         return {
             "error": "An error occurred while performing text-to-speech"
         }, 500
+    finally:
+        empty_cache()

@@ -35,6 +35,7 @@ const port = 80;
 app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/handler", async (req, res) => {
+    console.debug("Sending request");
     // Check for good data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
@@ -102,7 +103,7 @@ app.post("/handler", async (req, res) => {
     // const sceneData = preprocessors["ca.mcgill.a11y.image.preprocessor.sceneRecognition"];
     // Scene recognition dropped due to poor/horrible results.
     const sceneData: any = undefined;
-    const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.secondCategoriser"]
+    const secondClassifierData = preprocessors["ca.mcgill.a11y.image.preprocessor.graphicTagger"]
     let intro;
     if (sceneData && sceneData["categories"].length > 0) {
         let sceneName = sceneData["categories"][0]["name"] as string;
@@ -155,7 +156,6 @@ app.post("/handler", async (req, res) => {
         "renderings": [
             {
                 "type_id": "ca.mcgill.a11y.image.renderer.Text",
-                "confidence": 50,
                 "description": "A description of the image and its objects.",
                 "data": {
                     "text": text
@@ -164,6 +164,7 @@ app.post("/handler", async (req, res) => {
         ]
     };
 
+    console.debug("Sending response");
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response) &&
        ajv.validate("https://image.a11y.mcgill.ca/renderers/text.schema.json", response["renderings"][0]["data"])) {
         res.json(response);

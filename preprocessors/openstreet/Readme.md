@@ -89,20 +89,20 @@ git submodule update
 git checkout openStreetM
 
 ```
-3. Set DOCKER_GID variable to 134
+3. Set DOCKER_GID variable 
 
 ```
-export DOCKER_GID=134
+
 
 ```
 
 4. Run
 
 ```
-docker build schemas -t schemas
-docker-compose build openstreet
-docker-compose up -d orchestrator openstreet
-docker run -d osm-preprocessors
+#docker build schemas -t schemas
+#docker-compose build openstreet
+#docker-compose up -d orchestrator openstreet
+#docker run -d osm-preprocessors
 
 ```
 

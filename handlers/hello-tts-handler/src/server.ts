@@ -41,6 +41,7 @@ const scPort = 57120;
 app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/handler", async (req, res) => {
+    console.debug("Received request");
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         const renderings: Record<string, unknown>[] = [];
         // Check for the renderer we need
@@ -105,7 +106,8 @@ app.post("/handler", async (req, res) => {
                     const oscPort = new osc.UDPPort({
                         "remoteAddress": "supercollider",
                         "remotePort": scPort,
-                        "localAddress": "0.0.0.0"
+                        "localAddress": "0.0.0.0",
+                        "localPort": 0  // This will request a free port
                     });
                     console.log("Sending message...");
                     return new Promise<string>((resolve, reject) => {
@@ -178,6 +180,7 @@ app.post("/handler", async (req, res) => {
             "timestamp": Math.round(Date.now() / 1000),
             "renderings": renderings
         };
+        console.debug("Sending response");
         if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
             res.json(response);
         } else {

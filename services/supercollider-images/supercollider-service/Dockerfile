@@ -1,4 +1,4 @@
-FROM supercollider-extra:3.11.1
+FROM ghcr.io/shared-reality-lab/supercollider:extra-3.11.1
 
 USER root
 
@@ -12,6 +12,7 @@ RUN chmod 2774 /tmp/sc-store
 
 WORKDIR /tmp/sc
 COPY --chown=sclang:audio *.scd ./
+COPY --chown=sclang:audio ./charts ./charts
 COPY --chown=sclang:audio ./IMAGE ./IMAGE
 
 USER sclang

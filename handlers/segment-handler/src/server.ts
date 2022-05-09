@@ -46,6 +46,7 @@ const filePrefix = "/tmp/sc-store/semantic-segmentation-handler-";
 app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/handler", async (req, res) => {
+    console.debug("Received request");
     // Validate the request data (just in case)
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
@@ -116,7 +117,7 @@ app.post("/handler", async (req, res) => {
         ttsResponse = ttsResponse as Record<string, unknown>;
     } catch (e) {
         console.error(e);
-        res.status(500).json({"error": e.message});
+        res.status(500).json({"error": (e as Error).message});
         return;
     }
 
@@ -176,7 +177,8 @@ app.post("/handler", async (req, res) => {
         const oscPort = new osc.UDPPort({
             "remoteAddress": "supercollider",
             "remotePort": scPort,
-            "localAddress": "0.0.0.0"
+            "localAddress": "0.0.0.0",
+            "localPort": 0  // This will request a free port
         });
 
         // Send response and receive reply or timeout
@@ -238,7 +240,6 @@ app.post("/handler", async (req, res) => {
         if (hasSimple) {
             const r = {
                 "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                "confidence": 50, // TODO magic number
                 "description": "A sonification of segments detected in the image.",
                 "data": {
                     "audio": dataURL
@@ -254,7 +255,6 @@ app.post("/handler", async (req, res) => {
         if (segArray.length > 0 && hasSegment) {
             const r = {
                 "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
-                "confidence": 50, // TODO magic number
                 "description": "Navigable sonifications of segments detected in the image.",
                 "data": {
                     "audioFile": dataURL,
@@ -286,6 +286,7 @@ app.post("/handler", async (req, res) => {
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
     response["renderings"] = renderings;
 
+    console.debug("Sending response");
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);
     } else {

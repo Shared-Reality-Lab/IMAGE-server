@@ -19,4 +19,7 @@ IMAGE.storeSynthDefs;
 "generic.scd".load;
 "example.scd".load;
 "segmentation.scd".load;
-"charts.scd".load;
+"charts/line.scd".load;
+"charts/pie.scd".load;
+"autour.scd".load;
+"photo.scd".load;

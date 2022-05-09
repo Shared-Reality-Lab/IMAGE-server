@@ -72,6 +72,7 @@ def detect_objects(send,
                 map_location=device
             )['model']
         ).to(device).eval()
+    # load images by converting them from base64 to readable format
     dataset = LoadImages(source, img_size=imgsz, stride=stride)
     # generate the predictions
     if device.type != 'cpu':
@@ -83,6 +84,7 @@ def detect_objects(send,
         img /= 255.0
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
+        # get predictions for the model
         pred = model(img, augment=augment)[0]
         # , max_det=max_det)
         pred = non_max_suppression(
@@ -110,6 +112,7 @@ def detect_objects(send,
                             names[c] if hide_conf else
                             f'{names[c]} {conf:.2f}'
                         )
+                        # normalise the image
                         xleft = int(xyxy[0]) / width
                         yleft = int(xyxy[1]) / height
                         xright = int(xyxy[2]) / width
@@ -157,6 +160,7 @@ def run(weights='yolov5x.pt',
         hide_conf=False,
         half=False,
         ):
+    logging.debug("Received request")
     save_img = not nosave and not source.endswith('.txt')
     set_logging()
     device = select_device(device)
@@ -191,7 +195,7 @@ def run(weights='yolov5x.pt',
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 400
-        if "image" not in content:
+        if "graphic" not in content:
             logging.info("No image content. Skipping...")
             return "", 204
         preprocess_output = content["preprocessors"]
@@ -200,18 +204,18 @@ def run(weights='yolov5x.pt',
         name = "ca.mcgill.a11y.image.preprocessor.objectDetection"
         # Following 4 lines are refered from
         # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
-        source = content["image"]
+        source = content["graphic"]
         image_b64 = source.split(",")[1]
         binary = base64.b64decode(image_b64)
         image = np.asarray(bytearray(binary), dtype="uint8")
         imgDim = cv2.imdecode(image, cv2.IMREAD_COLOR)
         height, width, channels = imgDim.shape
-        classifier_1 = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
-        classifier_2 = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
+        classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
+        classifier_2 = "ca.mcgill.a11y.image.preprocessor.graphicTagger"
         if classifier_1 in preprocess_output:
             classifier_1_output = preprocess_output[classifier_1]
             classifier_1_label = classifier_1_output["category"]
-            if classifier_1_label != "image":
+            if classifier_1_label != "photograph":
                 logging.info("Not image content. Skipping...")
                 return "", 204
             if classifier_2 in preprocess_output:
@@ -303,6 +307,7 @@ def run(weights='yolov5x.pt',
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
         return response
 
 

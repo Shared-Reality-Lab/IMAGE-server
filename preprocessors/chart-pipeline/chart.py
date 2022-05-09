@@ -84,7 +84,7 @@ def processImage(content):
     name = "ca.mcgill.a11y.image.preprocessor.chart"
     
     # Extraxt image from URI
-    url = content["image"]
+    url = content["graphic"]
     image_b64 = url.split(",")[1]
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")

@@ -38,7 +38,7 @@ import gc
 
 
 app = Flask(__name__)
-
+logging.basicConfig(level=logging.NOTSET)
 # assigns different colors to different segments. This helps in
 # determining contour or different segments. Refer Line 136 to see how
 # unique color helps in contour determination
@@ -73,11 +73,14 @@ def findContour(pred_color, width, height):
     contours, hierarchy = cv2.findContours(
         thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
+    # removes the remaining part of image and keeps the contours of segments
     image = image - dummy
     centres = []
     area = []
     totArea = 0
+    send_contour = []
     flag = False
+    # calculate the centre and area of individual contours
     for i in range(len(contours)):
         moments = cv2.moments(contours[i])
         if moments['m00'] == 0:
@@ -90,6 +93,19 @@ def findContour(pred_color, width, height):
         centres.append(
             (int(moments['m10'] / moments['m00']),
              int(moments['m01'] / moments['m00'])))
+        area_indi = cv2.contourArea(contours[i])
+        centre_indi = (int(moments['m10'] / moments['m00']),
+                       int(moments['m01'] / moments['m00']))
+        contour_indi = [list(x) for x in contours[i]]
+        contour_indi = np.squeeze(contour_indi)
+        centre_down = [centre_indi[0] / width, centre_indi[1] / height]
+        area_down = area_indi / (width * height)
+        contour_indi = contour_indi.tolist()
+        for j in range(len(contour_indi)):
+            contour_indi[j][0] = float(float(contour_indi[j][0]) / width)
+            contour_indi[j][1] = float(float(contour_indi[j][1]) / height)
+        send_contour.append({"coordinates": contour_indi,
+                            "centroid": centre_down, "area": area_down})
     if not area:
         flag = True
     else:
@@ -101,20 +117,22 @@ def findContour(pred_color, width, height):
     centre = [centre1, centre2]
     totArea = totArea / (width * height)
     result = np.concatenate(contours, dtype=np.float32)
+    # if contour is very small then delete it
     if(totArea < 0.05):
         return ([0, 0], [0, 0], 0)
     result = np.squeeze(result)
     result = np.swapaxes(result, 0, 1)
     result[0] = result[0] / float(width)
     result[1] = result[1] / float(height)
-    send = np.swapaxes(result, 0, 1).tolist()
-    return send, centre, totArea
+#    send = np.swapaxes(result, 0, 1).tolist()
+    return send_contour, centre, totArea
 
 
 def run_segmentation(url,
                      segmentation_module,
                      dictionary,
                      pil_to_tensor):
+    # convert an image from base64 format
     # Following 4 lines refered from
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
     image_b64 = url.split(",")[1]
@@ -122,35 +140,54 @@ def run_segmentation(url,
     image = np.asarray(bytearray(binary), dtype="uint8")
     pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     height, width, channels = pil_image.shape
+    scale_size = np.float(1500.0 / np.float(max(height, width)))
+    # scale down an image to avoid OOM error
+    if(scale_size <= 1.0):
+        height = np.int(height * scale_size)
+        width = np.int(width * scale_size)
+        pil_image = cv2.resize(pil_image, (width, height),
+                               interpolation=cv2.INTER_AREA)
     img = pil_image
+    height, width, channels = img.shape
     img_original = numpy.array(img)
     img_data = pil_to_tensor(img)
-    img_data = img_data.cuda()
+    try:
+        img_data = img_data.cuda()
+    except RuntimeError as e:
+        if 'out of memory' in str(e):
+            print("OOM detected")
+            torch.cuda.empty_cache()
+            return jsonify("OOM detected"), 500
     singleton_batch = {'img_data': img_data[None]}
     output_size = img_data.shape[1:]
     with torch.no_grad():
+        # get segmentation results
         scores = segmentation_module(singleton_batch,
                                      segSize=output_size)
     _, pred = torch.max(scores, dim=1)
     pred = pred.cpu()[0].numpy()
     color, name = visualize_result(img_original, pred, 0)
     predicted_classes = numpy.bincount(pred.flatten()).argsort()[::-1]
+    logging.info("Segments detected, Runnning contour code")
     for c in predicted_classes[:5]:
         color, name = visualize_result(img_original, pred, c)
+        # find contours for every class
         send, center, area = findContour(color, width, height)
         if(area == 0):
             continue
         dictionary.append(
-            {"nameOfSegment": name, "coord": send,
+            {"name": name, "contours": send,
              "centroid": center, "area": area})
     return {"segments": dictionary}
 
 
 @app.route("/preprocessor", methods=['POST', 'GET'])
 def segment():
+    logging.debug("Received request")
     gc.collect()
     torch.cuda.empty_cache()
     dictionary = []
+    # load all the schemas
     with open('./schemas/preprocessors/segmentation.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
@@ -167,6 +204,8 @@ def segment():
     }
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
+    logging.info("Schemas loaded")
+    # load all the models
     net_encoder = ModelBuilder.build_encoder(
         arch='resnet50dilated',
         fc_dim=2048,
@@ -180,7 +219,13 @@ def segment():
     crit = torch.nn.NLLLoss(ignore_index=-1)
     segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)
     segmentation_module.eval()
-    segmentation_module.cuda()
+    try:
+        segmentation_module.cuda()
+    except RuntimeError as e:
+        if 'out of memory' in str(e):
+            print("OOM detected")
+            torch.cuda.empty_cache()
+            return jsonify("OOM detected"), 500
     pil_to_tensor = torchvision.transforms.Compose([
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize(
@@ -188,27 +233,32 @@ def segment():
             std=[0.229, 0.224, 0.225])
     ])
     content = request.get_json()
+    # check if the input json is a valid json
     try:
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
-    if "image" not in content:
+    if "graphic" not in content:
         logging.info("Not image content. Skipping...")
         return "", 204
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     preprocessorName = \
         "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
-    classifier_1 = "ca.mcgill.a11y.image.preprocessor.firstCategoriser"
-    classifier_2 = "ca.mcgill.a11y.image.preprocessor.secondCategoriser"
+    classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
+    classifier_2 = "ca.mcgill.a11y.image.preprocessor.graphicTagger"
     preprocess_output = content["preprocessors"]
+    # check if the first classifier and second classifier are present.
+    # these steps could be skipped
+    # if the architecture if modified appropriately
     if classifier_1 in preprocess_output:
         classifier_1_output = preprocess_output[classifier_1]
         classifier_1_label = classifier_1_output["category"]
-        if classifier_1_label != "image":
-            logging.info("Not image content. Skipping...")
+        if classifier_1_label != "photograph":
+            logging.info("Not photograph content. Skipping...")
+
             return "", 204
         if classifier_2 in preprocess_output:
             # classifier_2_output = preprocess_output[classifier_2]
@@ -216,7 +266,7 @@ def segment():
             # if classifier_2_label != "outdoor":
             #     logging.info("Cannot process image")
             #     return "", 204
-            segment = run_segmentation(content["image"],
+            segment = run_segmentation(content["graphic"],
                                        segmentation_module,
                                        dictionary,
                                        pil_to_tensor)
@@ -225,7 +275,7 @@ def segment():
             even when the second classifier is absent, however it is
             recommended to the run the semantic segmentation
             model in conjunction with the second classifier."""
-            segment = run_segmentation(content["image"],
+            segment = run_segmentation(content["graphic"],
                                        segmentation_module,
                                        dictionary,
                                        pil_to_tensor)
@@ -234,12 +284,13 @@ def segment():
         even when the first classifier is absent, however it is
         recommended to the run the semantic segmentation
         model in conjunction with the first classifier."""
-        segment = run_segmentation(content["image"],
+        segment = run_segmentation(content["graphic"],
                                    segmentation_module,
                                    dictionary,
                                    pil_to_tensor)
+    torch.cuda.empty_cache()
     try:
-        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+        validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(segment)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
@@ -250,13 +301,14 @@ def segment():
         "name": preprocessorName,
         "data": segment
     }
+    # validate the output using schemas
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
-
+    logging.info("Valid response generated")
     return response
 
 
