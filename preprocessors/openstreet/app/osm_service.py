@@ -73,12 +73,12 @@ def process_OSMap_data(OSM_data):
             "street_id": int(way.id),
             "street_name": way.tags.get("name", "n/a"),
             "street_type": way.tags.get("highway", "n/a"),
-            "addr:street": way.tags.get("addr:street", "n/a"),
+            "addr:street":way.tags.get("addr:street", "n/a"),
             "surface": way.tags.get("surface", "n/a"),
             "oneway": way.tags.get("oneway", "n/a"),
             "sidewalk": way.tags.get("sidewalk", "n/a"),
-            "maxspeed": way.tags.get("maxspeed", "n/a"),
-            "lanes": way.tags.get("lanes", "n/a"),
+            "maxspeed": way.tags.get("maxspeed","n/a"),
+            "lanes": way.tags.get("lanes","n/a"),
             "nodes": node_list,
             # "timestamp": way.tags.get("osm_base")
         }
