@@ -73,8 +73,8 @@ services:
             ca.mcgill.a11y.image.preprocessor: 4
             ca.mcgill.a11y.image.port: 5000
 
-    openstreet:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-openstreet:unstable
+    openstreetmap:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 8000

@@ -56,11 +56,11 @@ services:
             context: .
             dockerfile: ./preprocessors/graphic-tagger/Dockerfile
         image: "graphic-tagger:latest"
-    openstreet:
+    openstreetmap-preprocessor:
         build:
             context: .
-            dockerfile: ./preprocessors/openstreet/Dockerfile
-        image: "openstreet:latest"
+            dockerfile: ./preprocessors/openstreetmap/Dockerfile
+        image: "openstreetmap:latest"
     object-grouping:
         build:
             context: .
