@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 #COPY ./app /code/app
 COPY /preprocessors/openstreetmap/ /code
 
-EXPOSE 8000
+EXPOSE 5000
 
-CMD ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+#CMD ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+CMD [ "gunicorn", "app.main:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
