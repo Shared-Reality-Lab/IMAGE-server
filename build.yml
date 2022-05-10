@@ -56,7 +56,7 @@ services:
             context: .
             dockerfile: ./preprocessors/graphic-tagger/Dockerfile
         image: "graphic-tagger:latest"
-    openstreetmap-preprocessor:
+    openstreetmap:
         build:
             context: .
             dockerfile: ./preprocessors/openstreetmap/Dockerfile
