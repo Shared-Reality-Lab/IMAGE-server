@@ -14,4 +14,4 @@ COPY /preprocessors/openstreetmap/ /code
 EXPOSE 5000
 
 #CMD ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
-CMD [ "gunicorn", "app.main:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
+CMD [ "uvicorn", "app.main:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
