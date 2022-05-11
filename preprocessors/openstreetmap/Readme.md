@@ -89,15 +89,16 @@ git submodule update
 git checkout openStreetM
 
 ```
-3. Set DOCKER_GID variable 
+3. Set your DOCKER_GID variable 
 
 
 4. Run
 
 ```
-#docker-compose build openstreet
-#docker-compose up -d orchestrator openstreet
-#docker run -d osm-preprocessors
+docker-compose build openstreetmap
+docker-compose up -d orchestrator openstreetmap
+docker run --rm -p 8000:8000 osm-preprocessors
+
 
 ```
 
