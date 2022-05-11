@@ -76,13 +76,6 @@ $ uvicorn app.main:app --reload
 git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git
 ```
 
-or else get them after you've done the initial clone (while in the root of the cloned repo on your local machine):
-```
-git submodule init
-git submodule update
-
-```
-
 2. Run 
 
 ```
@@ -133,3 +126,5 @@ a. Computing bounding_box-
 4. https://sciencing.com/what-parallels-maps-4689046.html
 
 5. https://stackoverflow.com/questions/238260/how-to-calculate-the-bounding-box-for-a-given-lat-lng-location
+
+6. https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
