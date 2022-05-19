@@ -1,5 +1,9 @@
 from fastapi import FastAPI
-import uuid
+from pydantic import BaseModel
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import PlainTextResponse
+import logging
 from app.osm_service import (
     query_OSMap,
     get_timestamp,
@@ -14,16 +18,55 @@ from app.osm_service import (
 app = FastAPI()
 
 
+class Coordinate(BaseModel):
+    latitude: float
+    longitude: float
+
+# Validate incoming request
+
+
+class incoming_request(BaseModel):
+    request_uuid: str
+    timestamp: int
+    coordinates: Coordinate
+    context: str
+    language: str
+    url: str
+    capabilities: list[str] = []
+    renderers: list[str]
+
+
+# Validate preprocessor's response
+
+class outgoing_request(BaseModel):
+    request_uuid: str
+    timestamp: int
+    name: str
+    data: object
+
+
 @app.get("/")
 def health():
     return {"Hello": "World"}
 
+# Generate validation error if JSON request format is invalid
 
-@app.get("/location/{distance_in_metres}/{lat}/{lon}")
-def get_location(distance: float, lat: float, lon: float):
-    bbox_coordinates = create_bbox_coordinates(distance, lat, lon)
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    return PlainTextResponse(str(exc), status_code=400)
+
+
+@app.post("/preprocessor/", response_model=outgoing_request)
+async def get_map_data(request: incoming_request):
+
+    request = jsonable_encoder(request)
+    latitude = request["coordinates"]["latitude"]
+    longitude = request["coordinates"]["longitude"]
+    request_uuid = request["request_uuid"]
+    distance: float = 100
+    bbox_coordinates = create_bbox_coordinates(distance, latitude, longitude)
     OSM_data = query_OSMap(bbox_coordinates)
-    timestamp = get_timestamp()
     processed_OSM_data = process_OSMap_data(OSM_data)
     intersection_record_updated = extract_street(processed_OSM_data)
     POD1 = allot_intersection(processed_OSM_data, intersection_record_updated)
@@ -34,22 +77,14 @@ def get_location(distance: float, lat: float, lon: float):
         "point_of_interest": POIs,
         "streets": response,
     }
-    OSM_Preproc = {
-        "request_uuid": uuid.uuid4(),
-        "timestamp": timestamp,
-        "coordinates": {
-            "latitude": lat,
-            "longitude": lon},
-        "context": "",
-        "language": "en",
-        "url": "",
-        "capabilities": [],
-        "renderers": "",
-        "preprocessor": {
-            "OSM_preprocessor": {
-                "latitude": lat,
-                "longitude": lon,
-                "radius": distance,
-                "bounding_box": bbox_coordinates,
-                "OSM_data": response, }}}
-    return (OSM_Preproc)
+    response = {
+
+        "request_uuid": request_uuid,
+        "timestamp": int(get_timestamp()),
+        "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
+        "data": response,
+
+    }
+
+    logging.debug("Sending response")
+    return response
