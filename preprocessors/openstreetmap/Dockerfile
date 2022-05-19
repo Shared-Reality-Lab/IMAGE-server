@@ -12,9 +12,9 @@ COPY ./app /code/app
 #COPY /schemas /code/schemas
 #COPY /preprocessors/openstreetmap/ /code
 
-EXPOSE 8000
+EXPOSE 1000
 
-CMD ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "1000"]
 #CMD [ "uvicorn", "app.main:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
 #FROM python:3.9.5-alpine
 
