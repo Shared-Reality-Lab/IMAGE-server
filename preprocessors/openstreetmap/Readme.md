@@ -97,9 +97,27 @@ docker run --rm -p 8000:8000 osm-preprocessors
 
 5. Test with the request below to get sample result
 ```
-curl -X 'GET' \
-  'http://localhost:8000/location/100/49.8974309/-97.2033944' \
-  -H 'accept: application/json'
+curl -X 'POST' \
+  'http://localhost:8000/preprocessor/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "request_uuid": "a3d7b6be-8f3b-47ba-8b17-4b0557e7a8ce",
+  "timestamp": 1637789517,
+  "coordinates": {
+      "latitude": 47.620452,
+      "longitude": -122.348793
+  },
+  "context": "",
+  "language": "en",
+  "url": "https://fake.site.com/some-url",
+  "capabilities": [],
+  "renderers": [
+    "ca.mcgill.a11y.image.renderer.Text",
+    "ca.mcgill.a11y.image.renderer.SimpleAudio",
+    "ca.mcgill.a11y.image.renderer.SegmentAudio"
+  ]
+}'
 
 ```
 In this case, 100 is the distance in metres while 49.8974309 and -97.2033944 are
