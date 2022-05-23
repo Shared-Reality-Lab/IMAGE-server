@@ -6,10 +6,10 @@ This service basically involves automatic communication with the openstreetmap (
 
 ## Instruction (Docker Setup) - Recommended
 
-1. Ensure you're in the directory `preprocessors/openstreet`
+1. Ensure you're in the directory `preprocessors/openstreetmap`
 
 ```
-$ cd  /project-path/preprocessors/openstreet
+$ cd  /project-path/preprocessors/openstreetmap
 
 ```
 2. Build the service (Only reguired for the first time)
@@ -30,10 +30,10 @@ $ docker-compose up
 ## Instructions (Without Docker Setup)
 Follow the instructions to run this service locally.
 
-1. Ensure you're in the directory `preprocessors/openstreet`
+1. Ensure you're in the directory `preprocessors/openstreetmap`
 
 ```
-$ cd  /project-path/preprocessors/openstreet
+$ cd  /project-path/preprocessors/openstreetmap
 
 ```
 2. Create a python virtual environment with the command. This is require if you're starting the project for the first time.
@@ -120,16 +120,35 @@ curl -X 'POST' \
 }'
 
 ```
-In this case, 100 is the distance in metres while 49.8974309 and -97.2033944 are
-latitude and longitude respectively of a point on the OpenStreet Map. You may play around the three values to see different results yourself.
+In this case, 47.620452, and -122.348793 are latitude and longitude on the OpenStreet Map. 
 
 
 
 You may also do the testing on your local machine by following all the above instructions. 
 On your local machine, you may also like to download and install insomnia rest. Please see https://insomnia.rest/    
 
-After the installation, copy and paste this URL http://localhost:8000/location/100/49.8974309/-97.2033944 on the "GET" field.
-and click the Send Button. You may also like to use postman if you so wish. The displayed results should be the same as that of (5) above, but in a more user-friendly format.
+After the installation, copy and paste this URL http://localhost:8000/preprocessor/ on the "POST" field and then test with a POST request such as
+
+'''
+{
+  "request_uuid": "a3d7b6be-8f3b-47ba-8b17-4b0557e7a8ce",
+  "timestamp": 1637789517,
+  "coordinates": {
+      "latitude": 47.620452,
+      "longitude": -122.348793
+  },
+  "context": "",
+  "language": "en",
+  "url": "https://fake.site.com/some-url",
+  "capabilities": [],
+  "renderers": [
+    "ca.mcgill.a11y.image.renderer.Text",
+    "ca.mcgill.a11y.image.renderer.SimpleAudio",
+    "ca.mcgill.a11y.image.renderer.SegmentAudio"
+  ]
+}
+'''
+ You may also like to use postman if you so wish. The displayed results should be the same as that of (5) above, but in a more user-friendly format.
 
 ####
 For additional info:
