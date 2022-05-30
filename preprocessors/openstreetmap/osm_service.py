@@ -3,6 +3,9 @@ from copy import deepcopy
 import haversine as hs
 import math
 from datetime import datetime
+from flask import jsonify
+import jsonschema
+import logging
 
 
 def create_bbox_coordinates(distance, lat, lon):
@@ -344,3 +347,42 @@ def OSM_preprocessor(processed_OSM_data, POIs):
                                     else:
                                         nodes[node]["POI_id"] = existing_id
     return processed_OSM_data2
+
+
+def validate(schema, data, resolver, json_message, error_code):
+    """
+    Validate a piece of data against a schema
+
+    Args:
+        schema: a JSON schema to check against
+        data: the data to check
+        resolver: a JSON schema resolver
+        json_messaage: the error to jsonify and return
+        error_code: the error code to return
+
+    Returns:
+        None or Tuple[flask.Response, int]
+    """
+    try:
+        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+        validator.validate(data)
+    except jsonschema.exceptions.ValidationError as error:
+        logging.error(error)
+        return jsonify(json_message), error_code
+
+    return None
+
+
+def get_coordinates(content):
+    """
+    Retrieve the coordinates of a map from the
+    content of the request or through a Google Places API call
+
+    Args:
+        content: a dictionary with the content of the map
+
+    Returns:
+        Dict[str: int] or None
+    """
+    if 'coordinates' in content.keys():
+        return content['coordinates']

@@ -24,7 +24,7 @@ $ docker-compose build
 $ docker-compose up
 ```
 
-4. With your browser or Postman, navigate to http://localhost:8000
+4. With your browser or Postman, navigate to http://localhost:5000
 
 
 ## Instructions (Without Docker Setup)
@@ -90,15 +90,14 @@ git checkout openStreetM
 ```
 docker-compose build openstreetmap
 docker-compose up -d orchestrator openstreetmap
-docker run --rm -p 8000:8000 osm-preprocessors
-
+docker run --rm -p 5000:5000 osm-preprocessors
 
 ```
 
 5. Test with the request below to get sample result
 ```
 curl -X 'POST' \
-  'http://localhost:8000/preprocessor/' \
+  'http://localhost:5000/preprocessor/' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -127,7 +126,7 @@ In this case, 47.620452, and -122.348793 are latitude and longitude on the OpenS
 You may also do the testing on your local machine by following all the above instructions. 
 On your local machine, you may also like to download and install insomnia rest. Please see https://insomnia.rest/    
 
-After the installation, copy and paste this URL http://localhost:8000/preprocessor/ on the "POST" field and then test with a POST request such as
+After the installation, copy and paste this URL http://localhost:5000/preprocessor/ on the "POST" field and then test with a POST request such as
 
 '''
 {
