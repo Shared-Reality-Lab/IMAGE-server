@@ -69,11 +69,11 @@ app.post("/handler", async (req, res) => {
     const renderings: Record<string, unknown>[] = [];
     const highChartsData = req.body["highChartsData"];
 
-    const series: { type: string }[] | undefined = highChartsData?.data?.series;
+    const series: { type: string }[] | undefined = highChartsData?.series;
     if (series && series.length === 1) {
-        const serie = series[0] as { type: string, data: Record<string, unknown>[][] };
-        if (serie["data"] && serie["data"].length > 0) {
-            const data = serie["data"][0];
+        const serie = series[0] as { type: string, data: Record<string, unknown>[] };
+	if (serie["data"] && serie["data"].length > 0) {
+            const data = serie["data"];
             if (serie["type"] === "line" || serie["type"] === "area") {
                 // We can work with this
                 console.log("Length: " + data.length);
@@ -148,7 +148,7 @@ app.post("/handler", async (req, res) => {
             } else if (serie["type"] === "pie") {
                 console.log("Pie chart");
                 const segmentNames: string[] = [];
-                for (const segment of data) {
+		for (const segment of data) {
                     if ("name" in segment) {
                         const name = String(segment["name"]);
                         const value = (("y" in segment) ? String(segment["y"]) : "0") + " percent";
