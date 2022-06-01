@@ -72,15 +72,11 @@ app.post("/handler", async (req, res) => {
     const series: { type: string }[] | undefined = highChartsData?.series;
     if (series && series.length === 1) {
         const serie = series[0] as { type: string, data: Record<string, unknown>[] };
-        console.log("hello");
-	console.log(serie["type"]);
-	//console.log(serie["data"][0]);
-	if (serie["data"] && serie["data"].length > 0) {
+	    if (serie["data"] && serie["data"].length > 0) {
             const data = serie["data"];
             if (serie["type"] === "line" || serie["type"] === "area") {
                 // We can work with this
                 console.log("Length: " + data.length);
-		// console.log("first point", data[0]);
                 let title: string;
                 if (highChartsData?.title) {
                     title = highChartsData?.title;
@@ -152,11 +148,10 @@ app.post("/handler", async (req, res) => {
             } else if (serie["type"] === "pie") {
                 console.log("Pie chart");
                 const segmentNames: string[] = [];
-                console.log(data);
-		for (const segment of data) {
+		        for (const segment of data) {
                     if ("name" in segment) {
                         const name = String(segment["name"]);
-                        const value = (("y" in segment) ? String(segment["y"]): "0") + " percent";
+                        const value = (("y" in segment) ? String(segment["y"]) : "0") + " percent";
                         segmentNames.push(name + ", " + value);
                     } else {
                         segmentNames.push("Unnamed data");
