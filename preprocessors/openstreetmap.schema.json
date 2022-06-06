@@ -8,11 +8,11 @@
 
         "timestamp": {
             "type": "number",
-            "minimum": 0    
+            "minimum": 0
         },
         "request_uuid": {
             "type": "string",
-            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"     
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
         },
         "name": {
             "type": "string",
@@ -28,7 +28,7 @@
                     "type": "object",
                     "title": "node"
                 },
-                    "properties": {
+                "properties": {
                     "id": {
                         "type": "number",
                         "minLength": 1,
@@ -65,7 +65,7 @@
                 "description": " The street segments",
                 "properties": {
                     "street_id": {"type": "number"},
-                    "street_name":{"type": "string"}, 
+                    "street_name": {"type": "string"},
                     "street_type": {"type": "string"},
                     "addr:street": {"type": "string"},
                     "surface": {"type": "string"},
@@ -74,9 +74,13 @@
                     "maxspeed": {"type": "number"},
                     "lanes": {"type": "number"},
                     "nodes": {
-                        "type": "object",
+                        "type": "array",
                         "title": "nodes",
-                        "description": " The distinct points having a directional progression along the street segments",
+                        "description": " The distinct points (nodes) having a directional progression along the street segments",
+                        "items": {
+                            "type": "object",
+                            "title": "node"
+                        },
                         "properties": {
                             "id": {
                                 "type": "number",
@@ -87,27 +91,27 @@
                             "lat": {
                                 "type": "number",
                                 "title": "Latitude",
-                                "description": "The latitude of a node (point) on a map",
+                                "description": "The latitude on a map",
                                 "minimum": -90,
                                 "maximum": 90
                             },
                             "lon": {
                                 "type": "number",
                                 "title": "Longitude",
-                                "description": "The longitude of a node (point) on a map",
+                                "description": "The longitude on a map",
                                 "minimum": -180,
                                 "maximum": 180
                             },
                             "POI_id": {
                                 "type": "array",
                                 "title": "POI_id",
-                                "description": "Match the point of interest node id to the nearest point on the street",
+                                "description": "Point of interest id matched to the nearest point (node) on the street",
                                 "properties": {
                                     "id": {
                                         "type": "number",
                                         "minLength": 1,
                                         "title": "node id",
-                                        "description": "point of interest node id"
+                                        "description": "point of interest id"
                                     }
                                 }
                             }
