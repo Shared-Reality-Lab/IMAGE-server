@@ -74,13 +74,10 @@
                     "maxspeed": {"type": "number"},
                     "lanes": {"type": "number"},
                     "nodes": {
-                        "type": "array",
+                        "type": "object",
                         "title": "nodes",
                         "description": " The distinct points (nodes) having a directional progression along the street segments",
-                        "items": {
-                            "type": "object",
-                            "title": "node"
-                        },
+                        
                         "properties": {
                             "id": {
                                 "type": "number",
