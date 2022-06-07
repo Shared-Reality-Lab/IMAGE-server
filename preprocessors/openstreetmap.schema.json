@@ -20,105 +20,119 @@
         },
         "data": {
             "type": "object",
-            "point_of_interest": {
-                "type": "array",
-                "title": "point_of_interest",
-                "description": "The collection of all points of interest within the specified area of the map",
-                "items": {
-                    "type": "object",
-                    "title": "node"
-                },
-                "properties": {
-                    "id": {
-                        "type": "number",
-                        "minLength": 1,
-                        "title": "node id",
-                        "description": "point of interest node id"
-                    },
-                    "lat": {
-                        "type": "number",
-                        "title": "Latitude",
-                        "description": "The latitude of the point of interest",
-                        "minimum": -90,
-                        "maximum": 90
-                    },
-                    "lon": {
-                        "type": "number",
-                        "title": "Longitude",
-                        "description": "The longitude of the point of interest",
-                        "minimum": -180,
-                        "maximum": 180
-                    },
-                    "cat": {
-                        "type": "string",
-                        "title": "Category",
-                        "description": "The category of the point of interest"
-                    },
-                    "name": {
-                        "type": "string",
-                        "title": "Name of point of interest",
-                        "description": "The specific name of the point of interest"
-                    }}},
-            "streets": {
-                "type": "array",
-                "title": "streets",
-                "description": " The street segments",
-                "properties": {
-                    "street_id": {"type": "number"},
-                    "street_name": {"type": "string"},
-                    "street_type": {"type": "string"},
-                    "addr:street": {"type": "string"},
-                    "surface": {"type": "string"},
-                    "oneway": {"type": "string"},
-                    "sidewalk": {"type": "string"},
-                    "maxspeed": {"type": "number"},
-                    "lanes": {"type": "number"},
-                    "nodes": {
+            "properties": {
+                "point_of_interest": {
+                    "type": "array",
+                    "title": "point_of_interest",
+                    "description": "The collection of all points of interest within the specified area of the map",
+                    "items": {
                         "type": "object",
-                        "title": "nodes",
-                        "description": " The distinct points (nodes) having a directional progression along the street segments",
-                        
+                        "title": "node" ,
                         "properties": {
                             "id": {
-                                "type": "number",
-                                "minLength": 1,
-                                "title": "node id",
-                                "description": "point of interest node id"
+                            "type": "number",
+                            "title": "node id",
+                            "description": "point of interest node id"
                             },
                             "lat": {
                                 "type": "number",
                                 "title": "Latitude",
-                                "description": "The latitude on a map",
+                                "description": "The latitude of the point of interest",
                                 "minimum": -90,
                                 "maximum": 90
                             },
                             "lon": {
                                 "type": "number",
                                 "title": "Longitude",
-                                "description": "The longitude on a map",
+                                "description": "The longitude of the point of interest",
                                 "minimum": -180,
                                 "maximum": 180
                             },
-                            "POI_id": {
+                            "cat": {
+                                "type": "string",
+                                "title": "Category",
+                                "description": "The category of the point of interest"
+                            },
+                            "name": {
+                                "type": "string",
+                                "title": "Name of point of interest",
+                                "description": "The specific name of the point of interest"
+                            }}}},
+                "streets": {
+                    "type": "array",
+                    "title": "streets",
+                    "description": "The street segments",
+                    "items": {
+                        "type": "object",
+                        "title": "street_segment",
+                        "properties": {
+                            "street_id": {"type": "number"},
+                            "street_name": {"type": "string"},
+                            "street_type": {"type": "string"},
+                            "addr:street": {"type": "string"},
+                            "surface": {"type": "string"},
+                            "oneway": {"type": "string"},
+                            "sidewalk": {"type": "string"},
+                            "maxspeed": {"type": "string"},
+                            "lanes": {"type": "string"},
+                            "nodes": {
                                 "type": "array",
-                                "title": "POI_id",
-                                "description": "Point of interest id matched to the nearest point (node) on the street",
-                                "properties": {
-                                    "id": {
+                                "title": "nodes",
+                                "description": " The distinct points (nodes) having a directional progression along the street segments",
+                                "items": {
+                                    "type": "object",
+                                    "title": "node",
+                                    "properties": {
+                                        "id": {
                                         "type": "number",
-                                        "minLength": 1,
                                         "title": "node id",
-                                        "description": "point of interest id"
-                                    }
+                                        "description": "point of interest node id"
+                                        },
+                                        "lat": {
+                                            "type": "number",
+                                            "title": "Latitude",
+                                            "description": "The latitude on a map",
+                                            "minimum": -90,
+                                            "maximum": 90
+                                        },
+                                        "lon": {
+                                            "type": "number",
+                                            "title": "Longitude",
+                                            "description": "The longitude on a map",
+                                            "minimum": -180,
+                                            "maximum": 180
+                                        },
+                                        "POI_id": {
+                                            "type": "array",
+                                            "title": "POI_id",
+                                            "description": "Po int of interest id matched to the nearest point (node) on the street",
+                                            "items": {
+                                                "type": "number",
+                                                "title": "node id",
+                                                "description": "point of interest id"
+                                            }    
+                                            
+                                            
+                                        }
+                                    }    
                                 }
+    
                             }
-                        }
+    
+                        
+                        },
+                        "required": ["street_id"]
                     }
-
-                },
-                "required": ["street_id"]
+                    
+                }
+                
+                
             }
-        }
+            
+        }    
+        
     },
     "required": ["request_uuid", "timestamp", "name", "data"]
 }
+
+
