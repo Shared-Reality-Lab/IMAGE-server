@@ -2,9 +2,32 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://image.a11y.mcgill.ca/preprocessors/openstreetmap.schema.json",
     "type": "object",
-    "title": "OpenStreetMap Preprocessor",
-    "description": "Preprocessor for extracting streets and points of interests (e.g., amenities and street intersections) near them.",
+    "title": "Openstreetmap Data",
+    "description": "Extracted streets and points of interests (e.g., amenities and street intersections) near them.",
     "definitions": {
+        "node": {
+            "id": {
+                "type": "number",
+                "title": "node ID",
+                "description": "Is a uniquely assigned ID of a node"
+            },
+            "lat": {
+                "type": "number",
+                "title": "Latitude",
+                "description": "The latitude of the node",
+                "minimum": -90,
+                "maximum": 90
+            },
+            "lon": {
+                "type": "number",
+                "title": "Longitude",
+                "description": "The longitude of the node",
+                "minimum": -180,
+                "maximum": 180
+            }
+        }
+    },
+    "properties": {
         "street_info": {
             "type": "object",
             "description": "A set of streets and points of interest.",
@@ -19,23 +42,13 @@
                                 "description": "It consists of a single point in space defined by its latitude, longitude and node ID in the OpenStreetMap(https://wiki.openstreetmap.org/wiki/Node)",
                                 "properties": {
                                     "id": {
-                                        "type": "number",
-                                        "title": "node id",
-                                        "description": "An assigned ID of the node representing the point of interest"
+                                        "$ref": "#/definitions/node/id"
                                     },
                                     "lat": {
-                                        "type": "number",
-                                        "title": "Latitude",
-                                        "description": "The latitude of the point of interest",
-                                        "minimum": -90,
-                                        "maximum": 90
+                                        "$ref": "#/definitions/node/lat"
                                     },
                                     "lon": {
-                                        "type": "number",
-                                        "title": "Longitude",
-                                        "description": "The longitude of the point of interest",
-                                        "minimum": -180,
-                                        "maximum": 180
+                                        "$ref": "#/definitions/node/lon"
                                     },
                                     "cat": {
                                         "type": "string",
@@ -78,32 +91,20 @@
                                     "description": "A single point in space defined by its latitude, longitude and node ID in the OpenStreetMap (https://wiki.openstreetmap.org/wiki/Node)",
                                     "properties": {
                                         "id": {
-                                            "type": "number",
-                                            "title": "node ID",
-                                            "description": "Is a uniquely assigned ID of a node"
+                                            "$ref": "#/definitions/node/id"
                                         },
                                         "lat": {
-                                            "type": "number",
-                                            "title": "Latitude",
-                                            "description": "The latitude of the node",
-                                            "minimum": -90,
-                                            "maximum": 90
+                                            "$ref": "#/definitions/node/lat"
                                         },
                                         "lon": {
-                                            "type": "number",
-                                            "title": "Longitude",
-                                            "description": "The longitude of the node",
-                                            "minimum": -180,
-                                            "maximum": 180
+                                            "$ref": "#/definitions/node/lon"
                                         },
                                         "POI_IDs": {
                                             "type": "array",
                                             "title": "POI_IDs",
                                             "description": " Represents the node IDs of the points of interest near a given point (node) on the street(way)",
                                             "items": {
-                                                "type": "number",
-                                                "title": "node IDs",
-                                                "description": " node IDs of the points of interest"
+                                                "$ref": "#/definitions/node/id"
                                             }
                                         }
                                     }
@@ -115,14 +116,12 @@
                 }
             }
         }
-    },
-    "properties": {
-        "street_data": {
-            "type": "array",
-            "description": "Street data comprising all the points of interests and then the streets along with the points of interest near them",
-            "items": {
-                "$ref": "#/definitions/street_info"
-            }
-        }
     }
 }
+   
+
+
+
+
+        
+    
