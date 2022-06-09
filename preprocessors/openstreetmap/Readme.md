@@ -104,8 +104,8 @@ curl -X 'POST' \
   "request_uuid": "a3d7b6be-8f3b-47ba-8b17-4b0557e7a8ce",
   "timestamp": 1637789517,
   "coordinates": {
-      "latitude": 47.620452,
-      "longitude": -122.348793
+      "latitude": 49.8974309,
+      "longitude": -97.2033944
   },
   "context": "",
   "language": "en",
@@ -119,7 +119,7 @@ curl -X 'POST' \
 }'
 
 ```
-In this case, 47.620452, and -122.348793 are latitude and longitude on the OpenStreet Map. 
+In this case, 49.8974309 and -97.2033944 are latitude and longitude on the OpenStreetMap. 
 
 
 
@@ -133,8 +133,8 @@ After the installation, copy and paste this URL http://localhost:5000/preprocess
   "request_uuid": "a3d7b6be-8f3b-47ba-8b17-4b0557e7a8ce",
   "timestamp": 1637789517,
   "coordinates": {
-      "latitude": 47.620452,
-      "longitude": -122.348793
+      "latitude": 49.8974309,
+      "longitude": -97.2033944
   },
   "context": "",
   "language": "en",
