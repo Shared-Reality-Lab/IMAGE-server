@@ -108,7 +108,6 @@
                                         }
                                     }
                                 }
-
                             }
                         },
                         "required": ["street_id"]
@@ -116,7 +115,6 @@
                 }
             }
         }
-
     },
     "properties": {
         "street_data": {
