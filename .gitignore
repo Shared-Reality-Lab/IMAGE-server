@@ -5,5 +5,4 @@ __pycache__/
 config/maps.env
 config/azure-api.env
 config/chart.env
-schemas
-config
+
