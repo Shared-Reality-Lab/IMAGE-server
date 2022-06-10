@@ -1,7 +1,0 @@
-schemas
-.env
-config/maps.env
-config/azure-api.env
-config/chart.env
-express-common.env
-maps.env
