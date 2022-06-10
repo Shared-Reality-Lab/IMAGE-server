@@ -131,23 +131,24 @@ IMAGE {
 
             // Discrete Sine Pings Length 5 For earcons
             SynthDef((\playDiscreteSinePingHOA++(i+1)).asSymbol, {|note = 80, int0=0, int1=1, int2=1, int3=0, int4=2, phi=0, theta=0, radius=1, gain=0, decay=0.02, imp=48|
-                var sig1, env1, ping1, sig2, env2, ping2, sig3, env3, ping3, sig4, env4, ping4, sig5, env5, ping5, encoded, excitation, reverb, spread=0.05, envDec=0.02, attack=0.01, resonzDecay=3;
+                var env1, ping1, env2, ping2, env3, ping3, env4, ping4, env5, ping5, encoded, excitation, reverb, spread=0.05, envDec=0.02, attack=0.01, resonzDecay=3;
                 // excitation = Dust.ar(100);
                 env1 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, attack, envDec], curve: [1, 8, -9]), 1, doneAction: Done.none);
-                sig1 = PinkNoise.ar(0.1);
-                ping1 = Ringz.ar(env1 * sig1, (note + int0).midicps, resonzDecay,  AmpComp.kr((note + int0).midicps, 200));
+                //sig = PinkNoise.ar(0.1);
+                ping1 = Ringz.ar(env1 * PinkNoise.ar(0.1), (note + int0).midicps, resonzDecay,  AmpComp.kr((note + int0).midicps, 200));
+                DetectSilence.ar(ping1, doneAction: Done.freeSelf);
                 env2 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [spread *1, attack, envDec], curve: [1, 8, -9]), 1, doneAction: Done.none);
-                sig2 = PinkNoise.ar(0.1);
-                ping2 = Ringz.ar(env2 * sig2, (note + int1).midicps, resonzDecay,  AmpComp.kr((note + int1).midicps, 200));
+                ping2 = Ringz.ar(env2 * PinkNoise.ar(0.1), (note + int1).midicps, resonzDecay,  AmpComp.kr((note + int1).midicps, 200));
+                DetectSilence.ar(ping2, doneAction: Done.freeSelf);
                 env3 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [spread *2, attack, envDec], curve: [1, 8, -9]), 1, doneAction: Done.none);
-                sig3 = PinkNoise.ar(0.1);
-                ping3 = Ringz.ar(env3 * sig3, (note + int2).midicps, resonzDecay,  AmpComp.kr((note + int2).midicps, 200));
+                ping3 = Ringz.ar(env3 * PinkNoise.ar(0.1), (note + int2).midicps, resonzDecay,  AmpComp.kr((note + int2).midicps, 200));
+                DetectSilence.ar(ping3, doneAction: Done.freeSelf);
                 env4 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [spread *3, attack, envDec], curve: [1, 8, -9]), 1, doneAction: Done.none);
-                sig4 = PinkNoise.ar(0.1);
-                ping4 = Ringz.ar(env4 * sig4, (note + int3).midicps, resonzDecay,  AmpComp.kr((note + int3).midicps, 200));
+                ping4 = Ringz.ar(env4 * PinkNoise.ar(0.1), (note + int3).midicps, resonzDecay,  AmpComp.kr((note + int3).midicps, 200));
+                DetectSilence.ar(ping4, doneAction: Done.freeSelf);
                 env5 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [spread *4, attack, envDec], curve: [1, 8, -9]), 1, doneAction: Done.none);
-                sig5 = PinkNoise.ar(0.1);
-                ping5 = Ringz.ar(env5 * sig5, (note + int4).midicps, resonzDecay,  AmpComp.kr((note + int4).midicps, 200));
+                ping5 = Ringz.ar(env5 * PinkNoise.ar(0.1), (note + int4).midicps, resonzDecay,  AmpComp.kr((note + int4).midicps, 200));
+                DetectSilence.ar(ping5, doneAction: Done.freeSelf);
                 // reverb = FreeVerb.ar(sig, 0.1, 0.3, damp: 0.5, mul: 1);
                 encoded = HoaEncodeDirection.ar((ping1 + ping2 + ping3 + ping4 + ping5) * gain,
                     theta,
