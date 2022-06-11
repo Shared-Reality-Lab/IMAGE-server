@@ -374,7 +374,7 @@ def validate(schema, data, resolver, json_message, error_code):
 def get_coordinates(content):
     """
     Retrieve the coordinates of a map from the
-    content of the request 
+    content of the request
     """
     if 'coordinates' in content.keys():
         return content['coordinates']
