@@ -23,6 +23,7 @@ app = Flask(__name__)
 def health():
     return {"Hello": "World"}
 
+
 @app.route('/preprocessor', methods=['POST', ])
 def get_map_data():
     """
