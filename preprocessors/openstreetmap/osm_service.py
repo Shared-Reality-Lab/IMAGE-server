@@ -274,7 +274,7 @@ def OSM_preprocessor(processed_OSM_data, POIs):
 
                             id_list.append(nodes[node]["id"])
 
-                            nodes[node]["POI_id"] = [
+                            nodes[node]["POIs_ID"] = [
                                 POIs[i]["id"]]  # create a key-pair in the node
 
                             # node_list keeps all the nodes using POIs
@@ -288,7 +288,7 @@ def OSM_preprocessor(processed_OSM_data, POIs):
                                 if nodes[node]["id"] == node_list[n]["id"]:
 
                                     # Existing amenity/POI's id(s)
-                                    existing_id = node_list[n]["POI_id"]
+                                    existing_id = node_list[n]["POIs_ID"]
 
                                     # An id for new POI
                                     new_id = POIs[i]["id"]
@@ -300,9 +300,9 @@ def OSM_preprocessor(processed_OSM_data, POIs):
 
                                         # Two id's merged into a single list
                                         merged_id = existing_id + [new_id]
-                                        nodes[node]["POI_id"] = merged_id
+                                        nodes[node]["POIs_ID"] = merged_id
                                     else:
-                                        nodes[node]["POI_id"] = existing_id
+                                        nodes[node]["POIs_ID"] = existing_id
 
         else:  # POIs here are intersections
             for objs in range(len(processed_OSM_data2)):
@@ -319,7 +319,7 @@ def OSM_preprocessor(processed_OSM_data, POIs):
                             id_list.append(nodes[node]["id"])
 
                             # create a new key-pair in the node
-                            nodes[node]["POI_id"] = [nodes[node]["id"]]
+                            nodes[node]["POIs_ID"] = [nodes[node]["id"]]
 
                             # node_list keeps all the nodes using POIs
                             node_list.append(nodes[node])
@@ -330,7 +330,7 @@ def OSM_preprocessor(processed_OSM_data, POIs):
                             for n in range(len(node_list)):
 
                                 if nodes[node]["id"] == node_list[n]["id"]:
-                                    existing_id = node_list[n]["POI_id"]
+                                    existing_id = node_list[n]["POIs_ID"]
 
                                     # node id for intersection (POI)
                                     new_id = nodes[node]["id"]
@@ -341,9 +341,9 @@ def OSM_preprocessor(processed_OSM_data, POIs):
 
                                         # Two id's merged into a single list
                                         merged_id = existing_id + [new_id]
-                                        nodes[node]["POI_id"] = merged_id
+                                        nodes[node]["POIs_iD"] = merged_id
                                     else:
-                                        nodes[node]["POI_id"] = existing_id
+                                        nodes[node]["POIs_ID"] = existing_id
     return processed_OSM_data2
 
 

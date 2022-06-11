@@ -81,7 +81,7 @@ def get_map_data():
     POIs = enlist_POIs(POD1, amenity)
     response = OSM_preprocessor(processed_OSM_data, POIs)
     response = {
-        "point_of_interest": POIs,
+        "points_of_interest": POIs,
         "streets": response,
     }
     response = {
