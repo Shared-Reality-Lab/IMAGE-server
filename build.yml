@@ -58,7 +58,7 @@ services:
         image: "graphic-tagger:latest"
     openstreetmap:
         build:
-            context: .
+            context: 
             dockerfile: ./preprocessors/openstreetmap/Dockerfile
         image: "openstreetmap:latest"
     object-grouping:
