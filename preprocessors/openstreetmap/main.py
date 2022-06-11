@@ -27,7 +27,7 @@ def health():
 @app.route('/preprocessor', methods=['POST', ])
 def get_map_data():
     """
-    Gets data on locations nearby a map from the OVERPASS API
+    Gets map data from OpenStreetMap
     """
     logging.debug("Received request")
     # Load schemas

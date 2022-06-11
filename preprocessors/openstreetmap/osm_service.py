@@ -374,13 +374,7 @@ def validate(schema, data, resolver, json_message, error_code):
 def get_coordinates(content):
     """
     Retrieve the coordinates of a map from the
-    content of the request or through a Google Places API call
-
-    Args:
-        content: a dictionary with the content of the map
-
-    Returns:
-        Dict[str: int] or None
+    content of the request 
     """
     if 'coordinates' in content.keys():
         return content['coordinates']
