@@ -22,7 +22,6 @@ app = Flask(__name__)
 @app.route("/")
 def health():
     return {"Hello": "World"}
-methods=['POST', ]
 
 @app.route('/preprocessor', methods=['POST', ])
 def get_map_data():
