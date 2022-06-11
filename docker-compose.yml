@@ -12,8 +12,9 @@ services:
             # This should be set in an environment variable or .env
             - ${DOCKER_GID}
         volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
-            
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - user-logs:/var/log/IMAGE
+    # Services
     supercollider:
         image: ghcr.io/shared-reality-lab/image-service-supercollider:unstable
         command: sclang -D ./loader.scd
@@ -66,7 +67,7 @@ services:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
         env_file:
-            - ./config/azure-api.env             
+            - ./config/azure-api.env
     object-grouping:
         image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:unstable
         labels:
@@ -77,14 +78,6 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
-    #openstreetmap:
-        #build:
-            #context: .
-            #dockerfile: ./preprocessors/openstreetmap/Dockerfile
-        #image: "osm-preprocessors:latest"
-        #labels:
-            #ca.mcgill.a11y.image.preprocessor: 3
-            #ca.mcgill.a11y.image.port: 5000
     object-sorting:
         image: ghcr.io/shared-reality-lab/image-preprocessor-sorting:unstable
         labels:
@@ -171,7 +164,6 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
-
 volumes:
     sc-store:
     user-logs:
