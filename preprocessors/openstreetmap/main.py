@@ -22,12 +22,12 @@ app = Flask(__name__)
 @app.route("/")
 def health():
     return {"Hello": "World"}
+methods=['POST', ]
 
-
-@app.route('/preprocessor', methods=['POST', 'GET'])
+@app.route('/preprocessor', methods=['POST', ])
 def get_map_data():
     """
-    Gets data on locations nearby a map from the Autour API
+    Gets data on locations nearby a map from the OVERPASS API
     """
     logging.debug("Received request")
     # Load schemas
@@ -60,7 +60,7 @@ def get_map_data():
     if validated is not None:
         return validated
 
-    # Build Autour request
+    # Build OpenStreetMap request
     coords = get_coordinates(content)
 
     if coords is None:
