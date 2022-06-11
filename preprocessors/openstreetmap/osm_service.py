@@ -83,7 +83,6 @@ def process_OSMap_data(OSM_data):
             "maxspeed": way.tags.get("maxspeed", "n/a"),
             "lanes": way.tags.get("lanes", "n/a"),
             "nodes": node_list,
-            # "timestamp": way.tags.get("osm_base")
         }
         processed_OSM_data.append(way_object)
     return processed_OSM_data
@@ -118,7 +117,7 @@ def extract_street(processed_OSM_data):  # extract two streets
                 }
                 intersection_record.append(street_object)
 
-    # Group the street segment by their ids
+    # Group the streets by their ids
     output = {}
     for obj in intersection_record:
         street_id = obj["street_id"]
@@ -141,8 +140,7 @@ def extract_street(processed_OSM_data):  # extract two streets
             existing_record["intersection_nodes"] = merged_intersection_nodes
             output[street_id] = existing_record
     intersection_record_updated = list(output.values())
-    # Keep a unique set of intersections under each street segment (i.e.
-    # street id)
+    # Keep a unique set of intersections under each street segment
     for obj in range(len(intersection_record_updated)):
         unique_set = []
         inter_sets = intersection_record_updated[obj]["intersection_nodes"]
@@ -167,7 +165,7 @@ def allot_intersection(processed_OSM_data, inters_rec_up
                 id2 = inters[objs]["street_id"]
                 intersection_nodes = inters[objs]["intersection_nodes"]
                 for items in range(len(intersection_nodes)):
-                    if id1 != id2:  # compare unique street segment only
+                    if id1 != id2:  # compare unique street only
 
                         # check if a node represents an intersection
                         if nodes[i] == intersection_nodes[items]:
@@ -179,8 +177,8 @@ def allot_intersection(processed_OSM_data, inters_rec_up
 
 
 def get_amenities(bbox_coordinates):
-    # Send request OSM to get amenities which are part of point of interest
-    # (POIs)
+    # Send request to OSM to get amenities which are part of
+    # points of interest (POIs)
     api = overpy.Overpass()
     lat_min = bbox_coordinates[0]
     lon_min = bbox_coordinates[1]
@@ -221,7 +219,7 @@ def enlist_POIs(processed_OSM_data1, amenity):
                     POIs.append(nodes[node])
     for objs in range(len(amenity)):
         POIs.append(amenity[objs])
-    return POIs  # POIs is a list of all point of interest
+    return POIs  # POIs is a list of all points of interest
 
 
 def OSM_preprocessor(processed_OSM_data, POIs):
@@ -234,7 +232,7 @@ def OSM_preprocessor(processed_OSM_data, POIs):
     for i in range(len(
             POIs)):
         key_to_check = POIs[i]["cat"]
-        # check if true, then the point of interests are amenity,
+        # check if true, then the points of interest are amenity,
         # e.g. restaurants, bars, rentals, etc
         if key_to_check != "intersection":
             minimum_distance = []
@@ -311,10 +309,10 @@ def OSM_preprocessor(processed_OSM_data, POIs):
                 nodes = processed_OSM_data2[objs]["nodes"]
                 for node in range(len(nodes)):
 
-                    # check if node is among the point of interest list
+                    # check if node is among the points of interest list
                     if nodes[node]["id"] == POIs[i]["id"]:
 
-                        # check if this node has not been used by POIs
+                        # check if this node has not been used by any POIs
                         if nodes[node]["id"] not in id_list:
 
                             # id_list stores all the node ids using the POIs
@@ -326,7 +324,7 @@ def OSM_preprocessor(processed_OSM_data, POIs):
                             # node_list keeps all the nodes using POIs
                             node_list.append(nodes[node])
 
-                            # POI_list keeps all the POI ids
+                            # POI_list keeps all the POIs ids
                             POI_id_list.append(nodes[node]["id"])
                         else:
                             for n in range(len(node_list)):
