@@ -73,14 +73,6 @@ def process_OSMap_data(OSM_data):
             if node_object not in node_list:
                 node_list.append(node_object)
 
-        # Convert maxspeed to integer if value is not None
-        maxspeed = way.tags.get("maxspeed")
-        lanes = way.tags.get("lanes")
-        if maxspeed is not None:
-            maxspeed = int(maxspeed)
-        else:
-            maxspeed = maxspeed
-
         # Convert lanes to integer if its value is not None
         lanes = way.tags.get("lanes")
         if lanes is not None:
@@ -96,7 +88,7 @@ def process_OSMap_data(OSM_data):
             "surface": way.tags.get("surface"),
             "oneway": way.tags.get("oneway"),
             "sidewalk": way.tags.get("sidewalk"),
-            "maxspeed": maxspeed,
+            "maxspeed": way.tags.get("maxspeed"),
             "lanes": lanes,
             "nodes": node_list,
         }
@@ -122,17 +114,32 @@ def extract_street(processed_OSM_data):  # extract two streets
             intersecting_points = compare_street(
                 street1, street2)  # function call
             if len(intersecting_points):  # check if not empty
-                street_object = {
-                    "street_id": processed_OSM_data[i]["street_id"],
-                    "street_name": processed_OSM_data[i]["street_name"],
-                    "intersection_nodes": intersecting_points,
-                }
+                if "street_name" in processed_OSM_data[i]:
+                    street_object = {
+                        "street_id": processed_OSM_data[i]["street_id"],
+                        "street_name": processed_OSM_data[i]["street_name"],
+                        "intersection_nodes": intersecting_points,
+                    }
+                else:
+                    street_object = {
+                        "street_id": processed_OSM_data[i]["street_id"],
+                        "intersection_nodes": intersecting_points,
+                    }
+
                 intersection_record.append(street_object)
-                street_object = {
-                    "street_id": processed_OSM_data[j]["street_id"],
-                    "street_name": processed_OSM_data[j]["street_name"],
-                    "intersection_nodes": intersecting_points,
-                }
+
+                if "street_name" in processed_OSM_data[j]:
+                    street_object = {
+                        "street_id": processed_OSM_data[j]["street_id"],
+                        "street_name": processed_OSM_data[j]["street_name"],
+                        "intersection_nodes": intersecting_points,
+                    }
+                else:
+                    street_object = {
+                        "street_id": processed_OSM_data[j]["street_id"],
+                        "intersection_nodes": intersecting_points,
+                    }
+
                 intersection_record.append(street_object)
 
     # Group the streets by their ids
@@ -141,11 +148,19 @@ def extract_street(processed_OSM_data):  # extract two streets
         street_id = obj["street_id"]
         if street_id not in output:
             assert obj["intersection_nodes"] is not None
-            record = {
-                "street_id": obj["street_id"],
-                "street_name": obj["street_name"],
-                "intersection_nodes": obj["intersection_nodes"],
-            }
+
+            if "street_name" in obj:
+                record = {
+                    "street_id": obj["street_id"],
+                    "street_name": obj["street_name"],
+                    "intersection_nodes": obj["intersection_nodes"],
+                }
+            else:
+                record = {
+                    "street_id": obj["street_id"],
+                    "intersection_nodes": obj["intersection_nodes"],
+                }
+
             output[street_id] = record
         else:
             existing_record = output[street_id]
@@ -174,12 +189,12 @@ def allot_intersection(processed_OSM_data, inters_rec_up
     processed_OSM_data1 = deepcopy(processed_OSM_data)
     inters = inters_rec_up
     for obj in range(len(processed_OSM_data1)):
-        name1 = processed_OSM_data1[obj]["street_name"]
+
         id1 = processed_OSM_data1[obj]["street_id"]
         nodes = processed_OSM_data1[obj]["nodes"]
         for i in range(len(nodes)):
             for objs in range(len(inters)):
-                name2 = inters[objs]["street_name"]
+
                 id2 = inters[objs]["street_id"]
                 intersection_nodes = inters[objs]["intersection_nodes"]
                 for items in range(len(intersection_nodes)):
@@ -189,7 +204,27 @@ def allot_intersection(processed_OSM_data, inters_rec_up
                         if nodes[i] == intersection_nodes[items]:
                             nodes[i]["cat"] = "intersection"
                             f = nodes[i]
-                            f["name"] = f"{name1}{id1} intersects {name2}{id2}"
+                            key = "street_name"
+                            X = processed_OSM_data1[obj]
+                            Y = inters[objs]
+
+                            # Check if street_name key is empty or not to
+                            # format the output
+                            if key in X and key in Y:
+                                nm1 = X["street_name"]
+                                nm2 = Y["street_name"]
+                                f["name"] = f"{nm1}{id1} intersects {nm2}{id2}"
+
+                            elif key not in X and key in Y:
+                                nm2 = Y
+                                f["name"] = f"{id1} intersects {nm2}{id2}"
+
+                            elif key in X and key not in Y:
+                                nm1 = X
+                                f["name"] = f"{nm1}{id1} intersects {id2}"
+
+                            else:
+                                f["name"] = f"{id1} intersects {id2}"
 
     return processed_OSM_data1
 
