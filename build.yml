@@ -60,7 +60,7 @@ services:
         build:
             context: .
             dockerfile: ./preprocessors/openstreetmap/Dockerfile
-        image: "openstreetmap:latest"
+        image: "osm-preprocessors:latest"
     object-grouping:
         build:
             context: .
