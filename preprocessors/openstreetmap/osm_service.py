@@ -43,7 +43,7 @@ def query_OSMap(bbox_coordinates):
     api = overpy.Overpass()
     OSM_data = api.query(
         f"""
-    way({lat_min},{lon_min},{lat_max},{lon_max})[highway~"^(primary|tertiary|secondary|track|path|crossing|pedestrian|living_street|residential|service|footway)$"];
+    way({lat_min},{lon_min},{lat_max},{lon_max})[highway~"^(primary|tertiary|secondary|crossing|pedestrian|residential|footway)$"];
     (._;>;);
     out body;
     """
@@ -72,18 +72,36 @@ def process_OSMap_data(OSM_data):
             }
             if node_object not in node_list:
                 node_list.append(node_object)
+
+        # Convert maxspeed to integer if value is not None
+        maxspeed = way.tags.get("maxspeed")
+        lanes = way.tags.get("lanes")
+        if maxspeed is not None:
+            maxspeed = int(maxspeed)
+        else:
+            maxspeed = maxspeed
+
+        # Convert lanes to integer if its value is not None
+        lanes = way.tags.get("lanes")
+        if lanes is not None:
+            lanes = int(lanes)
+        else:
+            lanes = lanes
+
         way_object = {
             "street_id": int(way.id),
-            "street_name": way.tags.get("name", "n/a"),
-            "street_type": way.tags.get("highway", "n/a"),
-            "addr:street": way.tags.get("addr:street", "n/a"),
-            "surface": way.tags.get("surface", "n/a"),
-            "oneway": way.tags.get("oneway", "n/a"),
-            "sidewalk": way.tags.get("sidewalk", "n/a"),
-            "maxspeed": way.tags.get("maxspeed", "n/a"),
-            "lanes": way.tags.get("lanes", "n/a"),
+            "street_name": way.tags.get("name"),
+            "street_type": way.tags.get("highway"),
+            "addr:street": way.tags.get("addr:street"),
+            "surface": way.tags.get("surface"),
+            "oneway": way.tags.get("oneway"),
+            "sidewalk": way.tags.get("sidewalk"),
+            "maxspeed": maxspeed,
+            "lanes": lanes,
             "nodes": node_list,
         }
+        # Delete key if value is empty
+        way_object = dict(x for x in way_object.items() if all(x))
         processed_OSM_data.append(way_object)
     return processed_OSM_data
 
