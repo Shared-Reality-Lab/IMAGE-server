@@ -216,11 +216,11 @@ def allot_intersection(processed_OSM_data, inters_rec_up
                                 f["name"] = f"{nm1}{id1} intersects {nm2}{id2}"
 
                             elif key not in X and key in Y:
-                                nm2 = Y
+                                nm2 = Y["street_name"]
                                 f["name"] = f"{id1} intersects {nm2}{id2}"
 
                             elif key in X and key not in Y:
-                                nm1 = X
+                                nm1 = X["street_name"]
                                 f["name"] = f"{nm1}{id1} intersects {id2}"
 
                             else:
