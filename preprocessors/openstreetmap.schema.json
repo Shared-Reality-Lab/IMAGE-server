@@ -1,0 +1,120 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/openstreetmap.schema.json",
+    "type": "object",
+    "title": "Openstreetmap Data",
+    "description": "Extracted streets and points of interests (e.g., amenities and street intersections) near them.",
+    "definitions": {
+        "node": {
+            "id": {
+                "type": "number",
+                "title": "node ID",
+                "description": "Is a uniquely assigned ID of a node"
+            },
+            "lat": {
+                "type": "number",
+                "title": "Latitude",
+                "description": "The latitude of the node",
+                "minimum": -90,
+                "maximum": 90
+            },
+            "lon": {
+                "type": "number",
+                "title": "Longitude",
+                "description": "The longitude of the node",
+                "minimum": -180,
+                "maximum": 180
+            }
+        }
+    },
+    "properties": {
+        "street_info": {
+            "type": "object",
+            "description": "A set of streets and points of interest.",
+            "properties": {
+                "points_of_interest": {
+                    "type": "array",
+                            "title": "points of interest",
+                            "description": "The collection of all points of interest within the specified area of the map",
+                            "items": {
+                                "type": "object",
+                                "title": "node",
+                                "description": "It consists of a single point in space defined by its latitude, longitude and node ID in the OpenStreetMap(https://wiki.openstreetmap.org/wiki/Node)",
+                                "properties": {
+                                    "id": {
+                                        "$ref": "#/definitions/node/id"
+                                    },
+                                    "lat": {
+                                        "$ref": "#/definitions/node/lat"
+                                    },
+                                    "lon": {
+                                        "$ref": "#/definitions/node/lon"
+                                    },
+                                    "cat": {
+                                        "type": "string",
+                                        "title": "Category",
+                                        "description": "The category of the point of interest. A point of interest is catigorized into either an amenity such as a restaurant, a school, etc., (https://wiki.openstreetmap.org/wiki/Map_features#Amenity) or a street intersection"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "title": "Name of point of interest",
+                                        "description": "The specific name of the point of interest (POI), e.g., the name of the amenity or the names of the two streets that intersect each other, in case the POI is an intersection"
+                                    }
+                                }
+                            }
+                },
+                "streets": {
+                    "type": "array",
+                    "title": "streets",
+                    "description": " A set of OSM ways (streets)",
+                    "items": {
+                        "type": "object",
+                        "title": "street",
+                        "description": " It represents the OSM way. An OSM way is an ordered list of nodes (points) with at least one tag that represents a linear feature on the ground, e.g., a road (https://wiki.openstreetmap.org/wiki/Way)",
+                        "properties": {
+                            "street_id": {"type": "number"},
+                            "street_name": {"type": "string"},
+                            "street_type": {"type": "string"},
+                            "addr:street": {"type": "string"},
+                            "surface": {"type": "string"},
+                            "oneway": {"type": "string"},
+                            "sidewalk": {"type": "string"},
+                            "maxspeed": {"type": "string"},
+                            "lanes": {"type": "string"},
+                            "nodes": {
+                                "type": "array",
+                                "title": "nodes",
+                                "description": " An ordered list of nodes along the respective street (way)",
+                                "items": {
+                                    "type": "object",
+                                    "title": "node",
+                                    "description": "A single point in space defined by its latitude, longitude and node ID in the OpenStreetMap (https://wiki.openstreetmap.org/wiki/Node)",
+                                    "properties": {
+                                        "id": {
+                                            "$ref": "#/definitions/node/id"
+                                        },
+                                        "lat": {
+                                            "$ref": "#/definitions/node/lat"
+                                        },
+                                        "lon": {
+                                            "$ref": "#/definitions/node/lon"
+                                        },
+                                        "POI_IDs": {
+                                            "type": "array",
+                                            "title": "POI_IDs",
+                                            "description": " Represents the node IDs of the points of interest near a given point (node) on the street(way)",
+                                            "items": {
+                                                "$ref": "#/definitions/node/id"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "required": ["street_id"]
+                    }
+                }
+            }
+        }
+    }
+}
