@@ -3,12 +3,12 @@
     "$id": "https://image.a11y.mcgill.ca/renderers/svglayers.schema.json",
     "title": "Layered SVG Renderer",
     "type": "object",
-    "description": "Overlay visualization of data from an input graphic, possibly containing multiple layers.",
+    "description": "Data for verlay visualization of data from an input graphic, possibly containing multiple layers. ca.mcgill.a11y.image.renderer.SVGLayers.",
     "definitions": {
         "svgLayer": {
             "description": "A single SVG graphic encoded as a data URL.",
             "type": "string",
-            "pattern": "^data:image/svg\+xml.+$"
+            "pattern": "^data:image\/svg\+xml(;base64)?,[^ :/?#[\]@!$&'()*+,;=]+$"
         }
     },
     "properties": {
