@@ -1,0 +1,39 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/renderers/svglayers.schema.json",
+    "title": "Layered SVG Renderer",
+    "type": "object",
+    "description": "Overlay visualization of data from an input graphic, possibly containing multiple layers.",
+    "definitions": {
+        "svgLayer": {
+            "description": "A single SVG graphic encoded as a data URL.",
+            "type": "string",
+            "pattern": "^data:image/svg\+xml.+$"
+        }
+    },
+    "properties": {
+        "layers": {
+            "description": "The layer(s) representing data. It should be possible to overlay each layer on the original graphic to meaningfully convey the desired information.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "svg": { "$ref": "#/definitions/svgLayer" },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 300,
+                        "description": "A short, descriptive label for the SVG in this layer."
+                    }
+                },
+                "required": [ "svg", "label" ]
+            },
+            "minItems": 1
+        },
+        "description": {
+            "description": "Optional. A short, description of the overall information contained in the layers.",
+            "type": "string",
+            "maxLength": 500
+        }
+    },
+    "required": [ "layers" ]
+}
