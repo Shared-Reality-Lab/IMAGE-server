@@ -71,7 +71,7 @@ def get_map_data():
     latitude = coords["latitude"]
     longitude = coords["longitude"]
     request_uuid = content["request_uuid"]
-    distance: float = 100
+    distance: float = 60
     bbox_coordinates = create_bbox_coordinates(distance, latitude, longitude)
     OSM_data = query_OSMap(bbox_coordinates)
     processed_OSM_data = process_OSMap_data(OSM_data)
@@ -90,6 +90,7 @@ def get_map_data():
         "timestamp": int(get_timestamp()),
         "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
         "data": response
+
 
     }
 

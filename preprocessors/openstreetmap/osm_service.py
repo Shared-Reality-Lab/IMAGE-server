@@ -43,10 +43,12 @@ def query_OSMap(bbox_coordinates):
     api = overpy.Overpass()
     OSM_data = api.query(
         f"""
-    way({lat_min},{lon_min},{lat_max},{lon_max})[highway~"^(primary|tertiary|secondary|crossing|pedestrian|residential|footway)$"];
+    way({lat_min},{lon_min},{lat_max},{lon_max})[highway~"^(primary|tertiary|secondary|track|path|living_street|service|crossing|pedestrian|residential|footway)$"];
     (._;>;);
     out body;
     """
+
+
     )
     return (OSM_data)
 
@@ -80,13 +82,20 @@ def process_OSMap_data(OSM_data):
         else:
             lanes = lanes
 
+        # Convert oneway tag to boolean if its value is not None
+        oneway = way.tags.get("oneway")
+        if oneway is not None:
+            oneway = bool(oneway)
+        else:
+            oneway = oneway
+
         way_object = {
             "street_id": int(way.id),
             "street_name": way.tags.get("name"),
             "street_type": way.tags.get("highway"),
             "addr:street": way.tags.get("addr:street"),
             "surface": way.tags.get("surface"),
-            "oneway": way.tags.get("oneway"),
+            "oneway": oneway,
             "sidewalk": way.tags.get("sidewalk"),
             "maxspeed": way.tags.get("maxspeed"),
             "lanes": lanes,
@@ -244,7 +253,7 @@ def get_amenities(bbox_coordinates):
     out body;
     """
     )
-    # Filter the amenity data from OSM to have only the basic tag info
+    # Filter the amenity tags to the basic useful ones
     amenity = []
     for node in amenities.nodes:
         if node.tags.get("amenity") is not None:
@@ -255,7 +264,10 @@ def get_amenities(bbox_coordinates):
                 "name": node.tags.get("name"),
                 "cat": node.tags.get("amenity"),
             }
+            # Delete key if value is empty
+            amenity_record = dict(x for x in amenity_record.items() if all(x))
             amenity.append(amenity_record)
+
     return amenity
 
 
