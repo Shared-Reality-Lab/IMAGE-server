@@ -2,5 +2,7 @@
 __pycache__/
 *.swp
 .env
-
+config/maps.env
+config/azure-api.env
+config/chart.env
 
