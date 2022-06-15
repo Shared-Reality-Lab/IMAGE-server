@@ -2,18 +2,30 @@ version: "3"
 
 services:
     orchestrator:
-        image: ghcr.io/shared-reality-lab/image-orchestrator:unstable
+        build:
+            context: ./orchestrator
+            dockerfile: Dockerfile
+        image: "orchestrator:latest"
         env_file:
             - ./config/express-common.env
-        environment:
-            - STORE_IMAGE_DATA=ON
-            - PARALLEL_PREPROCESSORS=ON
         group_add:
             # This should be set in an environment variable or .env
             - ${DOCKER_GID}
         volumes:
-            - /var/run/docker.sock:/var/run/docker.sock:ro
-            - user-logs:/var/log/IMAGE
+            - /var/run/docker.sock:/var/run/docker.sock
+    #orchestrator:
+        #image: ghcr.io/shared-reality-lab/image-orchestrator:unstable
+        #env_file:
+            #- ./config/express-common.env
+        #environment:
+            #- STORE_IMAGE_DATA=ON
+            #- PARALLEL_PREPROCESSORS=ON
+        #group_add:
+            # This should be set in an environment variable or .env
+            #- ${DOCKER_GID}
+        #volumes:
+            #- /var/run/docker.sock:/var/run/docker.sock:ro
+            #- user-logs:/var/log/IMAGE
     # Services
     supercollider:
         image: ghcr.io/shared-reality-lab/image-service-supercollider:unstable
