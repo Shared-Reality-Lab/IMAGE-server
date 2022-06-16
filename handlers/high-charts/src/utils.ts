@@ -95,7 +95,7 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
  * @returns graphInfo string
  */
 export function getGraphInfo(highChartsData: any): string{
-    const chartsData = structuredClone(highChartsData);
+    const chartsData = JSON.parse(JSON.stringify(highChartsData));
     const title = chartsData.title || chartsData.series[0].name || 'Untitled Chart';
     const xAxis = chartsData.axes.find((axes: { axis: string; })=>axes.axis == "xAxis");
     const yAxis = chartsData.axes.find((axes: { axis: string; })=>axes.axis == "yAxis");
