@@ -94,11 +94,11 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
  * @param highChartsData 
  * @returns graphInfo string
  */
-export function getGraphInfo(highChartsData: Record<string, any>): string{
-    let chartsData = structuredClone(highChartsData);
-    let title = chartsData.title || chartsData.series[0].name || 'Untitled Chart';
-    let xAxis = chartsData.axes.find((axes: any)=>axes.axis == "xAxis");
-    let yAxis = chartsData.axes.find((axes: any)=>axes.axis == "yAxis");
+export function getGraphInfo(highChartsData: any): string{
+    const chartsData = structuredClone(highChartsData);
+    const title = chartsData.title || chartsData.series[0].name || 'Untitled Chart';
+    const xAxis = chartsData.axes.find((axes: { axis: string; })=>axes.axis == "xAxis");
+    const yAxis = chartsData.axes.find((axes: { axis: string; })=>axes.axis == "yAxis");
     let xStart = xAxis.dataMin;
     let xEnd = xAxis.dataMax;
     let yStart = yAxis.dataMin;
