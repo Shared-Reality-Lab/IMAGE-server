@@ -88,3 +88,35 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
         })
     ]);
 }
+
+/**
+ * The function will return the string representing the graph title and axes information
+ * @param highChartsData 
+ * @returns graphInfo string
+ */
+export function getGraphInfo(highChartsData: Record<string, any>): string{
+    let chartsData = structuredClone(highChartsData);
+    let title = chartsData.title || chartsData.series[0].name || 'Untitled Chart';
+    let xAxis = chartsData.axes.find((axes: any)=>axes.axis == "xAxis");
+    let yAxis = chartsData.axes.find((axes: any)=>axes.axis == "yAxis");
+    let xStart = xAxis.dataMin;
+    let xEnd = xAxis.dataMax;
+    let yStart = yAxis.dataMin;
+    let yEnd = yAxis.dataMax;
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    if (xAxis.type.lowerCase() == "datetime"){
+        xAxis.dataMin = new Date(xAxis.dataMin);
+        xAxis.dataMax = new Date(xAxis.dataMax);
+        xStart = `${xAxis.dataMin.getDate()} ${monthNames[xAxis.dataMin.getMonth()]} ${xAxis.dataMin.getYear()}`;
+        xEnd = `${xAxis.dataMax.getDate()} ${monthNames[xAxis.dataMax.getMonth()]} ${xAxis.dataMax.getYear()}`
+    } 
+    if (yAxis.type.lowerCase() == "datetime"){
+        yAxis.dataMin = new Date(yAxis.dataMin);
+        yAxis.dataMax = new Date(yAxis.dataMax);
+        yStart = `${yAxis.dataMin.getDate()} ${monthNames[yAxis.dataMin.getMonth()]} ${yAxis.dataMin.getYear()}`;
+        yEnd = `${yAxis.dataMax.getDate()} ${monthNames[yAxis.dataMax.getMonth()]} ${yAxis.dataMax.getYear()}`
+    } 
+    let xAxisInfo = `${xAxis.axis} , ${xAxis.title} from ${xStart} to ${xEnd}`;
+    let yAxisInfo = `${yAxis.axis} , ${yAxis.title} from ${yStart} to ${yEnd}`;
+    return `${title} , ${xAxisInfo} , ${yAxisInfo}`;
+}
