@@ -116,7 +116,7 @@ export function getGraphInfo(highChartsData: any): string{
         yStart = `${yAxis.dataMin.getDate()} ${monthNames[yAxis.dataMin.getMonth()]} ${yAxis.dataMin.getYear()}`;
         yEnd = `${yAxis.dataMax.getDate()} ${monthNames[yAxis.dataMax.getMonth()]} ${yAxis.dataMax.getYear()}`
     } 
-    let xAxisInfo = `${xAxis.axis} , ${xAxis.title} from ${xStart} to ${xEnd}`;
-    let yAxisInfo = `${yAxis.axis} , ${yAxis.title} from ${yStart} to ${yEnd}`;
+    const xAxisInfo = `${xAxis.axis} , ${xAxis.title} from ${xStart} to ${xEnd}`;
+    const yAxisInfo = `${yAxis.axis} , ${yAxis.title} from ${yStart} to ${yEnd}`;
     return `${title} , ${xAxisInfo} , ${yAxisInfo}`;
 }

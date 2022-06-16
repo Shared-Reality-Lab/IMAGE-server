@@ -78,7 +78,7 @@ app.post("/handler", async (req, res) => {
                 // We can work with this
                 console.log("Length: " + data.length);
                 try {
-                    let graphInfo = utils.getGraphInfo(highChartsData);
+                    const graphInfo = utils.getGraphInfo(highChartsData);
                     console.log(graphInfo);
                     const ttsResponse = await utils.getTTS([graphInfo]);
                     const scData = {
