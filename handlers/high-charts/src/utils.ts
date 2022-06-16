@@ -104,13 +104,13 @@ export function getGraphInfo(highChartsData: any): string{
     let yStart = yAxis.dataMin;
     let yEnd = yAxis.dataMax;
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    if (xAxis.type.lowerCase() == "datetime"){
+    if (xAxis.type.toLowerCase() == "datetime"){
         xAxis.dataMin = new Date(xAxis.dataMin);
         xAxis.dataMax = new Date(xAxis.dataMax);
         xStart = `${xAxis.dataMin.getDate()} ${monthNames[xAxis.dataMin.getMonth()]} ${xAxis.dataMin.getYear()}`;
         xEnd = `${xAxis.dataMax.getDate()} ${monthNames[xAxis.dataMax.getMonth()]} ${xAxis.dataMax.getYear()}`
     } 
-    if (yAxis.type.lowerCase() == "datetime"){
+    if (yAxis.type.toLowerCase() == "datetime"){
         yAxis.dataMin = new Date(yAxis.dataMin);
         yAxis.dataMax = new Date(yAxis.dataMax);
         yStart = `${yAxis.dataMin.getDate()} ${monthNames[yAxis.dataMin.getMonth()]} ${yAxis.dataMin.getYear()}`;
