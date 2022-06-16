@@ -107,14 +107,14 @@ export function getGraphInfo(highChartsData: any): string{
     if (xAxis.type.toLowerCase() == "datetime"){
         xAxis.dataMin = new Date(xAxis.dataMin);
         xAxis.dataMax = new Date(xAxis.dataMax);
-        xStart = `${xAxis.dataMin.getDate()} ${monthNames[xAxis.dataMin.getMonth()]} ${xAxis.dataMin.getYear()}`;
-        xEnd = `${xAxis.dataMax.getDate()} ${monthNames[xAxis.dataMax.getMonth()]} ${xAxis.dataMax.getYear()}`
+        xStart = `${xAxis.dataMin.getDate()} ${monthNames[xAxis.dataMin.getMonth()]} ${xAxis.dataMin.getFullYear()}`;
+        xEnd = `${xAxis.dataMax.getDate()} ${monthNames[xAxis.dataMax.getMonth()]} ${xAxis.dataMax.getFullYear()}`
     } 
     if (yAxis.type.toLowerCase() == "datetime"){
         yAxis.dataMin = new Date(yAxis.dataMin);
         yAxis.dataMax = new Date(yAxis.dataMax);
-        yStart = `${yAxis.dataMin.getDate()} ${monthNames[yAxis.dataMin.getMonth()]} ${yAxis.dataMin.getYear()}`;
-        yEnd = `${yAxis.dataMax.getDate()} ${monthNames[yAxis.dataMax.getMonth()]} ${yAxis.dataMax.getYear()}`
+        yStart = `${yAxis.dataMin.getDate()} ${monthNames[yAxis.dataMin.getMonth()]} ${yAxis.dataMin.getFullYear()}`;
+        yEnd = `${yAxis.dataMax.getDate()} ${monthNames[yAxis.dataMax.getMonth()]} ${yAxis.dataMax.getFullYear()}`
     } 
     const xAxisInfo = `${xAxis.axis} , ${xAxis.title} from ${xStart} to ${xEnd}`;
     const yAxisInfo = `${yAxis.axis} , ${yAxis.title} from ${yStart} to ${yEnd}`;
