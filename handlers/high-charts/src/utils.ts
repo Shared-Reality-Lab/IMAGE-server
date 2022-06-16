@@ -118,5 +118,5 @@ export function getGraphInfo(highChartsData: any): string{
     } 
     const xAxisInfo = `${xAxis.axis} , ${xAxis.title} from ${xStart} to ${xEnd}`;
     const yAxisInfo = `${yAxis.axis} , ${yAxis.title} from ${yStart} to ${yEnd}`;
-    return `${title} , ${xAxisInfo} , ${yAxisInfo}`;
+    return `${title} . ${xAxisInfo} . ${yAxisInfo}`;
 }
