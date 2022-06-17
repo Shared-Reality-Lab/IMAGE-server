@@ -77,15 +77,10 @@ app.post("/handler", async (req, res) => {
             if (serie["type"] === "line" || serie["type"] === "area") {
                 // We can work with this
                 console.log("Length: " + data.length);
-                let title: string;
-                if (highChartsData?.title) {
-                    title = highChartsData?.title;
-                } else {
-                    title = "Untitled line chart."
-                }
-
                 try {
-                    const ttsResponse = await utils.getTTS([title]);
+                    const graphInfo = utils.getGraphInfo(highChartsData);
+                    console.log(graphInfo);
+                    const ttsResponse = await utils.getTTS([graphInfo]);
                     const scData = {
                         "audio": {
                             "offset": 0,

@@ -88,3 +88,33 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
         })
     ]);
 }
+
+/**
+ * The function will return the string representing the graph title and axes information
+ * @param highChartsData 
+ * @returns graphInfo string
+ */
+export function getGraphInfo(highChartsData: any): string{
+    const title = highChartsData.title || highChartsData.series[0].name || 'Untitled Chart';
+    const xAxis = highChartsData.axes.find((axes: { axis: string; })=>axes.axis === "xAxis");
+    const yAxis = highChartsData.axes.find((axes: { axis: string; })=>axes.axis === "yAxis");
+    let xStart = xAxis.dataMin;
+    let xEnd = xAxis.dataMax;
+    let yStart = yAxis.dataMin;
+    let yEnd = yAxis.dataMax;
+    if (xAxis.type.toLowerCase() === "datetime"){
+        const xDataMin = new Date(xAxis.dataMin);
+        const xDataMax = new Date(xAxis.dataMax);
+        xStart = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(xDataMin)
+        xEnd = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(xDataMax)
+    } 
+    if (yAxis.type.toLowerCase() === "datetime"){
+        const yDataMin = new Date(yAxis.dataMin);
+        const yDataMax = new Date(yAxis.dataMax);
+        yStart = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(yDataMin)
+        yEnd = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(yDataMax)
+    } 
+    const xAxisInfo = `x Axis,${xAxis.title},from ${xStart} to ${xEnd}`;
+    const yAxisInfo = `y Axis,${yAxis.title},from ${yStart} to ${yEnd}`;
+    return `${title}. ${xAxisInfo}. ${yAxisInfo}`;
+}
