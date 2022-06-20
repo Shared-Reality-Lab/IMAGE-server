@@ -21,7 +21,7 @@
                     "svg": { "$ref": "#/definitions/svgLayer" },
                     "label": {
                         "type": "string",
-                        "maxLength": 300,
+                        "maxLength": 150,
                         "description": "A short, descriptive label for the SVG in this layer."
                     }
                 },
