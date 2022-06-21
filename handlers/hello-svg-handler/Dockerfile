@@ -13,6 +13,6 @@ RUN pip install -r requirements.txt
 COPY /schemas /usr/src/app/schemas
 COPY /handlers/hello-svg-handler/ /usr/src/app
 
-EXPOSE 5000
+EXPOSE 80
 USER python
-CMD ["gunicorn", "hello_svg:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
+CMD ["gunicorn", "hello_svg:app", "-b", "0.0.0.0:80", "--capture-output", "--log-level=debug" ]
