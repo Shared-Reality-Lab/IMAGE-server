@@ -24,6 +24,7 @@ import drawSvg as draw
 
 app = Flask(__name__)
 
+
 @app.route("/handler", methods=["POST"])
 def handle():
     logging.debug("Received request")
@@ -48,7 +49,9 @@ def handle():
     # Get and validate request contents
     contents = request.get_json()
     try:
-        validator = jsonschema.Draft7Validator(request_schema, resolver=resolver)
+        validator = jsonschema.Draft7Validator(
+                request_schema, resolver=resolver
+        )
         validator.validate(contents)
     except ValidationError as e:
         logging.error(e)
@@ -69,7 +72,8 @@ def handle():
                     "svg": svg.asDataUri(),
                 }
             ],
-            "description": "An example SVG that conveys nothing useful, but says hello."
+            "description": "An example SVG that conveys nothing useful,"
+                           + " but says hello."
     }
     rendering = {
             "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
@@ -78,7 +82,9 @@ def handle():
     }
     # Validate response and return
     try:
-        validator = jsonschema.Draft7Validator(renderer_schema, resolver=resolver)
+        validator = jsonschema.Draft7Validator(
+                renderer_schema, resolver=resolver
+        )
         validator.validate(data)
     except ValidationError as e:
         logging.error(e)
@@ -90,7 +96,9 @@ def handle():
             "renderings": [rendering]
     }
     try:
-        validator = jsonschema.Draft7Validator(response_schema, resolver=resolver)
+        validator = jsonschema.Draft7Validator(
+                response_schema, resolver=resolver
+        )
         validator.validate(response)
     except ValidationError as e:
         logging.error("Failed to generate a valid response")
