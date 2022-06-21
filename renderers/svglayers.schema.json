@@ -8,7 +8,7 @@
         "svgLayer": {
             "description": "A single SVG graphic encoded as a data URL.",
             "type": "string",
-            "pattern": "^data:image\/svg\\+xml(;base64)?,[^ :/?#[\\]@!$&'()*+,;=]+$"
+            "pattern": "^data:image\/svg\\+xml(;base64)?,([^ :/?#[\\]@!$&'()*+,;=]+)|([a-zA-Z0-9+\/=]+)$"
         }
     },
     "properties": {
