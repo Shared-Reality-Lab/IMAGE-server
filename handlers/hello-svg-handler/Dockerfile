@@ -1,4 +1,6 @@
-FROM python:3.10-alpine
+FROM python:3.10
+
+RUN apt-get install libcairo2
 
 RUN adduser --disabled-password python
 WORKDIR /usr/src/app
