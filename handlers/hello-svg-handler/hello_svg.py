@@ -59,8 +59,14 @@ def handle():
 
     # Check for dimensions
     if "dimensions" in contents:
+        # If an existing graphic exists, often it is
+        # best to use that for convenience.
+        # see the following for SVG coordinate info:
+        # developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions
         dimensions = contents["dimensions"]
     else:
+        # otherwise, pick something sensible for the task.
+        # 200x200 is arbitrary in this case.
         dimensions = 200, 200
     # Create dummy hello world SVG
     svg = draw.Drawing(dimensions[0], dimensions[1], origin='center')
