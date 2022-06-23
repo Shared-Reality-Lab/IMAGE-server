@@ -117,6 +117,11 @@ services:
             context: .
             dockerfile: ./handlers/hello-haptics-handler/Dockerfile
         image: "hello-haptics-handler:latest"
+    hello-svg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/hello-svg-handler/Dockerfile
+        image: "hello-svg-handler:latest"
     photo-audio-haptics-handler:
         build:
             context: .
