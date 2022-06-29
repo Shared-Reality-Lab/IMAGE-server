@@ -22,7 +22,7 @@ As of 2022-06-29, these are the statuses of the handlers:
 
 * Supported
     * `autour-handler` (embedded maps)
-    * `high-charts` ([Highcharts](https://www.highcharts.com/) visualizations)
+    * `high-charts` ([Highcharts](https://www.highcharts.com/) renderings)
     * `motd` (custom status messages)
     * `photo-audio-handler` (photographs, audio-only)
     * `photo-audio-haptics-handler` (photographs, force feedback)
