@@ -17,7 +17,7 @@ More information on handlers and how they fit into the overall system is availab
 
 This directory contains all the handlers produced by the IMAGE project. Not all the handlers here are currently running on our server at
 [https://image.a11y.mcgill.ca](https://image.a11y.mcgill.ca)! All subdirectories prefixed with `hello-` are demonstrations for different
-tasks and do *not* provide the best user experience. Other handlers are now deprecated and have been replaced, but are kept here for documentation.
+tasks and do *not* provide an experience that we consider useful to actual end users. Other handlers are now deprecated and have been replaced, but are kept here for documentation and reference.
 As of 2022-06-29, these are the statuses of the handlers:
 
 * Supported
