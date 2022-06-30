@@ -16,7 +16,7 @@
                         "type": "number"
                     },
                     "possible_emotion": {
-                        "description": "An array of possible actions performed by the object. This includes the confidence and actions.",
+                        "description": "An array of possible emotions for a person",
                         "type": "array",
                         "items": {
                             "type": "object",
@@ -31,11 +31,11 @@
                         }
                     },
                     "possible_gender": {
-                        "description": "An array of possible positions for the object. This includes confidence and the position of object.",
+                        "description": "Possible gender of the person",
                         "type": "string"
                     },
                     "possible_age":{
-                        "description": "",
+                        "description": "Possible age of the person",
                         "type":"number"
                     }
                 },
