@@ -1,0 +1,47 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/emotion-recognition.schema.json",
+    "type": "object",
+    "title": "Emotion Recognition Data",
+    "description": "The emotion, gender and age of the person",
+    "properties": {
+        "emotion_age_gender": {
+            "description": "The information regarding the age, gender and emotion of the person",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "ObjectID": {
+                        "description": "The ID of the object against which the outputs are generated",
+                        "type": "number"
+                    },
+                    "possible_emotion": {
+                        "description": "An array of possible actions performed by the object. This includes the confidence and actions.",
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "emotion": {
+                                    "type": "string"
+                                },
+                                "confidence": {
+                                    "type": "number"
+                                }
+                            }
+                        }
+                    },
+                    "possible_gender": {
+                        "description": "An array of possible positions for the object. This includes confidence and the position of object.",
+                        "type": "string"
+                    },
+                    "possible_age":{
+                        "description": "",
+                        "type":"number"
+                    }
+                },
+                "required": ["ObjectID", "possible_emotion"]
+            }
+        }
+    },
+    "required": ["emotion_age_gender"]
+}
