@@ -40,7 +40,7 @@ singleLineChart = { |json, ttsData, outPath, addr|
     // Play non-spatialized audio
     score.add([
         timing,
-        [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, audio.at("offset").asInteger, \duration, (audio.at("duration").asInteger / ttsData.sampleRate), \gain, baseGain]
+        [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, audio.at("offset").asInteger, \duration, (audio.at("duration").asInteger / ttsData.sampleRate), \gain, 0.dbamp]
     ]);
     timing = timing + (audio.at("duration").asInteger / ttsData.sampleRate);
 
