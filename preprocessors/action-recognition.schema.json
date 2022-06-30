@@ -11,43 +11,44 @@
             "items": {
                 "type": "object",
                 "properties": {
-                    "ObjectID":{
+                    "ObjectID": {
+                        "description": "The ID of the object against which the outputs are generated",
                         "type": "number"
                     },
                     "possible_action": {
-                      "type":"array",
-                        "items":{
-                        "type": "object",
-                        "properties": {
-                            "action":{
-                                "type":"string",
-                                "minimum": 0
-                            },
-                            "confidence":{
-                                "type":"number"
+                        "description": "An array of possible actions performed by the object. This includes the confidence and actions.",
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "action": {
+                                    "type": "string"
+                                },
+                                "confidence": {
+                                    "type": "number"
+                                }
                             }
-                        }
                         }
                     },
                     "possible_position": {
-                      "type":"array",
-                        "items":{
-                        "type":"object",
-                        "properties": {
-                            "position":{
-                                "type":"string"
-                            },
-                            "confidence":{
-                                "type":"number"
+                        "description": "An array of possible positions for the object. This includes confidence and the position of object.",
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "position": {
+                                    "type": "string"
+                                },
+                                "confidence": {
+                                    "type": "number"
+                                }
                             }
-                        } 
                         }
-                    }    
-                    },
-                "required": [ "ObjectID","possible_action","possible_position" ]  
-                }
+                    }
+                },
+                "required": ["ObjectID", "possible_action", "possible_position"]
+            }
         }
     },
     "required": ["position_action"]
 }
-
