@@ -21,6 +21,7 @@ from jsonschema.exceptions import ValidationError
 import logging
 import time
 import drawSvg as draw
+# import cairosvg
 
 app = Flask(__name__)
 
@@ -29,33 +30,33 @@ app = Flask(__name__)
 def handle():
     logging.debug("Received request")
     # Load necessary schema files
-    with open("./schemas/definitions.json") as f:
-        definitions_schema = json.load(f)
-    with open("./schemas/request.schema.json") as f:
-        request_schema = json.load(f)
-    with open("./schemas/handler-response.schema.json") as f:
-        response_schema = json.load(f)
-    with open("./schemas/renderers/svglayers.schema.json") as f:
-        renderer_schema = json.load(f)
-    store = {
-            definitions_schema["$id"]: definitions_schema,
-            request_schema["$id"]: request_schema,
-            response_schema["$id"]: response_schema,
-            renderer_schema["$id"]: renderer_schema,
-    }
-    resolver = jsonschema.RefResolver.from_schema(
-            request_schema, store=store
-    )
+    # with open("./schemas/definitions.json") as f:
+    #     definitions_schema = json.load(f)
+    # with open("./schemas/request.schema.json") as f:
+    #     request_schema = json.load(f)
+    # with open("./schemas/handler-response.schema.json") as f:
+    #     response_schema = json.load(f)
+    # with open("./schemas/renderers/svglayers.schema.json") as f:
+    #     renderer_schema = json.load(f)
+    # store = {
+    #         definitions_schema["$id"]: definitions_schema,
+    #         request_schema["$id"]: request_schema,
+    #         response_schema["$id"]: response_schema,
+    #         renderer_schema["$id"]: renderer_schema,
+    # }
+    # resolver = jsonschema.RefResolver.from_schema(
+    #         request_schema, store=store
+    # )
     # Get and validate request contents
     contents = request.get_json()
-    try:
-        validator = jsonschema.Draft7Validator(
-                request_schema, resolver=resolver
-        )
-        validator.validate(contents)
-    except ValidationError as e:
-        logging.error(e)
-        return jsonify("Invalid request received!"), 400
+    # try:
+    #     validator = jsonschema.Draft7Validator(
+    #             request_schema, resolver=resolver
+    #     )
+    #     validator.validate(contents)
+    # except ValidationError as e:
+    #     logging.error(e)
+    #     return jsonify("Invalid request received!"), 400
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
@@ -68,31 +69,53 @@ def handle():
             "timestamp": int(time.time()),
             "renderings": []
         }
-        try:
-            validator = jsonschema.Draft7Validator(renderer_schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
-            return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Sending response")
-        return response
+        # try:
+        #     validator = jsonschema.Draft7Validator(renderer_schema, resolver=resolver)
+        #     validator.validate(response)
+        # except jsonschema.exceptions.ValidationError as error:
+        #     logging.error(error)
+        #     return jsonify("Invalid Preprocessor JSON format"), 500
+        # logging.debug("Sending response")
+        # return response
     if "dimensions" in contents:
         # If an existing graphic exists, often it is
         # best to use that for convenience.
         # see the following for SVG coordinate info:
         # developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions
-        dimensions = 0,1
-    else:
-        # otherwise, pick something sensible for the task.
-        # 200x200 is arbitrary in this case.
-        dimensions = 200, 200
+        dimensions = contents["dimensions"]
+    # else:
+    #     # otherwise, pick something sensible for the task.
+    #     # 200x200 is arbitrary in this case.
+    #     dimensions = 200, 200
 
-
+    print(dimensions)
     objects = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]["objects"]
-    svg = draw.Drawing(dimensions[0], dimensions[1], origin='center')
-    if(len(objects)>0):
-        for i in range(len(objects)):
-            svg.append(draw.Rectangle(objects[i]['dimensions'][0],objects[i]['dimensions'][1],objects[i]['dimensions'][2],objects[i]['dimensions'][3]))
+    grouped = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]["grouped"]
+    ungrouped = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]["ungrouped"]
+    svg = draw.Drawing(dimensions[0], dimensions[1])
+    svg_layers = []
+    if(len(grouped)>0):
+        for i in range(len(grouped)):
+            ids = grouped[i]["IDs"]
+            category = objects[ids[0]]["type"]
+            for j in range(len(ids)):
+                
+                width = int(objects[j]['dimensions'][2]*dimensions[0] - objects[j]['dimensions'][0]*dimensions[0])
+                height = int((objects[j]['dimensions'][3]*dimensions[1]) - (objects[j]['dimensions'][1]*dimensions[1]))
+                svg.append(draw.Rectangle(int(objects[j]['dimensions'][0]*dimensions[0]),int(objects[j]['dimensions'][1]*dimensions[1]),width,height,stroke="#ff4477",fill_opacity=0))
+                print(objects[j]['dimensions'][0]*dimensions[0])
+                print(objects[j]['dimensions'][1]*dimensions[1])
+                print(width)
+                print(height)
+                print("\n")
+                print("\n")
+                # svg.append(draw.Rectangle((objects[j]['dimensions'][0]),(objects[j]['dimensions'][1]),(objects[j]['dimensions'][2]),(objects[j]['dimensions'][3]),fill='#eeee00',stroke='black'))
+                svg.append(draw.Text(category,fontSize=8,x = int(objects[j]['dimensions'][2]*dimensions[0]),y = int(objects[j]['dimensions'][3]*dimensions[1]),fill='black'))
+            svg_layers.append({"label":category,"svg":svg.asDataUri()})
+            break
+    if(len(ungrouped)>0):
+        for i in range(len(ungrouped)):
+            svg.append(draw.Rectangle((objects[i]['dimensions'][0]*dimensions[0]),(objects[i]['dimensions'][1]*dimensions[1]),(objects[i]['dimensions'][2]*dimensions[0]),(objects[i]['dimensions'][3]*dimensions[1])))
             svg.append(draw.Text(objects[i]["type"],8, 0, 0,fill='black'))
             
     ## not sure
@@ -100,23 +123,19 @@ def handle():
     
     # Create dummy hello world SVG
     # svg = draw.Drawing(dimensions[0], dimensions[1], origin='center')
-
-    svg.append(draw.Text("Hello, world", 8, 0, 0, fill='black'))
+    svg.saveSvg('example.svg')
+    # svg.rasterize()
+    # svg.savePng('example.png')
+    # svg.append(draw.Text("Hello, world", 8, 0, 0, fill='black'))
     data = {
-            "layers": [
-                {
-                    "label": "The example SVG",
-                    "svg": svg.asDataUri(),
-                }
-            ],
-            "description": "An example SVG that conveys nothing useful,"
-                           + " but says hello."
+            "layers": svg_layers
     }
     rendering = {
             "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
             "description": "An example SVG visualization",
             "data": data
     }
+    return rendering
     # Validate response and return
     try:
         validator = jsonschema.Draft7Validator(
@@ -146,4 +165,4 @@ def handle():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80, debug=False)
+    app.run(host="0.0.0.0", port=80, debug=True)
