@@ -21,6 +21,9 @@ from jsonschema.exceptions import ValidationError
 import logging
 import time
 import drawSvg as draw
+import base64
+import numpy as np
+import cv2
 # import cairosvg
 
 app = Flask(__name__)
@@ -49,6 +52,11 @@ def handle():
     # )
     # Get and validate request contents
     contents = request.get_json()
+    image_b64 = contents["graphic"].split(",")[1]
+    binary = base64.b64decode(image_b64)
+    image = np.asarray(bytearray(binary), dtype="uint8")
+    img0 = cv2.imdecode(image, cv2.IMREAD_COLOR)
+    cv2.imwrite('test.png', img0)
     # try:
     #     validator = jsonschema.Draft7Validator(
     #             request_schema, resolver=resolver
@@ -98,11 +106,14 @@ def handle():
         for i in range(len(grouped)):
             ids = grouped[i]["IDs"]
             category = objects[ids[0]]["type"]
+            # if('person' not in category):
+            #     continue
             for j in range(len(ids)):
                 
                 width = int(objects[j]['dimensions'][2]*dimensions[0] - objects[j]['dimensions'][0]*dimensions[0])
                 height = int((objects[j]['dimensions'][3]*dimensions[1]) - (objects[j]['dimensions'][1]*dimensions[1]))
-                svg.append(draw.Rectangle(int(objects[j]['dimensions'][0]*dimensions[0]),int(objects[j]['dimensions'][1]*dimensions[1]),width,height,stroke="#ff4477",fill_opacity=0))
+                y = dimensions[1] - int(objects[j]['dimensions'][1]*dimensions[1])
+                svg.append(draw.Rectangle(int(objects[j]['dimensions'][0]*dimensions[0]),y,width,height,stroke="#ff4477",fill_opacity=0))
                 print(objects[j]['dimensions'][0]*dimensions[0])
                 print(objects[j]['dimensions'][1]*dimensions[1])
                 print(width)
@@ -110,9 +121,9 @@ def handle():
                 print("\n")
                 print("\n")
                 # svg.append(draw.Rectangle((objects[j]['dimensions'][0]),(objects[j]['dimensions'][1]),(objects[j]['dimensions'][2]),(objects[j]['dimensions'][3]),fill='#eeee00',stroke='black'))
-                svg.append(draw.Text(category,fontSize=8,x = int(objects[j]['dimensions'][2]*dimensions[0]),y = int(objects[j]['dimensions'][3]*dimensions[1]),fill='black'))
+                svg.append(draw.Text(category,fontSize=8,x = int(objects[j]['dimensions'][2]*dimensions[0]),y = y,fill='black'))
             svg_layers.append({"label":category,"svg":svg.asDataUri()})
-            break
+            # break
     if(len(ungrouped)>0):
         for i in range(len(ungrouped)):
             svg.append(draw.Rectangle((objects[i]['dimensions'][0]*dimensions[0]),(objects[i]['dimensions'][1]*dimensions[1]),(objects[i]['dimensions'][2]*dimensions[0]),(objects[i]['dimensions'][3]*dimensions[1])))
