@@ -39,6 +39,8 @@ git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.gi
 The default compose file within there (`docker-compose.yml`) is a useful base for testing. Each image will be downloaded from the Github Container Registry
 using the "unstable" tag.
 
+This can be brought up using `docker-compose up -d`.
+
 ## For Production
 
 For production, it is recommended to use "latest" and limit the number of running services for additional stability.
@@ -101,3 +103,18 @@ a second web server. This one is a docker instance of [nginx](https://nginx.org)
 that normally hosts the [IMAGE website](https://image.a11y.mcgill.ca).
 It forwards requests to orchestrator endpoints (e.g., `/render`) to the
 orchestrator docker service.
+
+Note that if these are not in the same `docker-compose.yml`, they will not
+share networks by default. For this reason, we typically include
+the nginx instance in the IMAGE `docker-compose.yml` and then include
+the traefik network externally using the following configuration:
+```yaml
+networks:
+  traefik:
+    external: true
+    name: traefik
+  default:
+    name: image
+```
+This connects to a preexisting network named "traefik" while also explicitly naming the default network created by this compose "image".
+Remember that non-default networks must be explicitly added to services.
