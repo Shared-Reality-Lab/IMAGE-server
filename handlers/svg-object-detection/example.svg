@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="171" height="114" viewBox="0 -114 171 114">
+<defs>
+</defs>
+<rect x="74" y="-40" width="8" height="17" stroke="#ff4477" fill-opacity="0" />
+<text x="82" y="-23" font-size="8" fill="black" dy="0em">chair </text>
+<rect x="117" y="-57" width="2" height="2" stroke="#ff4477" fill-opacity="0" />
+<text x="119" y="-55" font-size="8" fill="black" dy="0em">chair </text>
+<rect x="24" y="-60" width="2" height="3" stroke="#ff4477" fill-opacity="0" />
+<text x="26" y="-57" font-size="8" fill="black" dy="0em">chair </text>
+<rect x="74" y="-40" width="8" height="17" stroke="#ff4477" fill-opacity="0" />
+<text x="82" y="-23" font-size="8" fill="black" dy="0em">tie </text>
+<rect x="117" y="-57" width="2" height="2" stroke="#ff4477" fill-opacity="0" />
+<text x="119" y="-55" font-size="8" fill="black" dy="0em">tie </text>
+<rect x="24" y="-60" width="2" height="3" stroke="#ff4477" fill-opacity="0" />
+<text x="26" y="-57" font-size="8" fill="black" dy="0em">tie </text>
+<rect x="93" y="-159" width="29" height="64" stroke="#ff4477" fill-opacity="0" />
+<text x="122" y="-95" font-size="8" fill="black" dy="0em">tie </text>
+<rect x="89" y="-60" width="1" height="4" stroke="#ff4477" fill-opacity="0" />
+<text x="90" y="-56" font-size="8" fill="black" dy="0em">tie </text>
+<rect x="74" y="-40" width="8" height="17" stroke="#ff4477" fill-opacity="0" />
+<text x="82" y="-23" font-size="8" fill="black" dy="0em">person </text>
+<rect x="117" y="-57" width="2" height="2" stroke="#ff4477" fill-opacity="0" />
+<text x="119" y="-55" font-size="8" fill="black" dy="0em">person </text>
+<rect x="24" y="-60" width="2" height="3" stroke="#ff4477" fill-opacity="0" />
+<text x="26" y="-57" font-size="8" fill="black" dy="0em">person </text>
+<rect x="93" y="-159" width="29" height="64" stroke="#ff4477" fill-opacity="0" />
+<text x="122" y="-95" font-size="8" fill="black" dy="0em">person </text>
+<rect x="89" y="-60" width="1" height="4" stroke="#ff4477" fill-opacity="0" />
+<text x="90" y="-56" font-size="8" fill="black" dy="0em">person </text>
+<rect x="41" y="-84" width="1" height="4" stroke="#ff4477" fill-opacity="0" />
+<text x="42" y="-80" font-size="8" fill="black" dy="0em">person </text>
+<rect x="123" y="-142" width="24" height="53" stroke="#ff4477" fill-opacity="0" />
+<text x="147" y="-89" font-size="8" fill="black" dy="0em">person </text>
+<rect x="105" y="-50" width="28" height="22" stroke="#ff4477" fill-opacity="0" />
+<text x="133" y="-28" font-size="8" fill="black" dy="0em">person </text>
+<rect x="106" y="-89" width="2" height="8" stroke="#ff4477" fill-opacity="0" />
+<text x="109" y="-81" font-size="8" fill="black" dy="0em">person </text>
+</svg>
