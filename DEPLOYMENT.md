@@ -17,6 +17,12 @@ we have practical experience with. You should have installed:
     - Many of these containers do not use or do not need to use a GPU, but performance will be greatly reduced.
 - [Git](https://git-scm.com/)
 
+Note that running every GPU-ready container on a GPU will use multiple GB of memory
+on the device. On many GPUs, an out-of-memory error will occur. For most GPU-ready
+containers, switching it to CPU is a matter of removing the deployment lines
+specifying it should have access to a GPU. Otherwise, there will be an environment
+variable specifying which to use (e.g., "cuda", "cpu").
+
 ## Unstable vs Latest
 
 Our Docker images our tagged in four possible ways:
@@ -40,6 +46,8 @@ The default compose file within there (`docker-compose.yml`) is a useful base fo
 using the "unstable" tag.
 
 This can be brought up using `docker-compose up -d`.
+We recommend limiting the number of running services to fit the resource constraints
+of your particular system (i.e., available CPU, GPU, memory).
 
 ## For Production
 
@@ -70,7 +78,18 @@ DOCKER_GID=NUM
 ```
 to `.env` in the directory containing `docker-compose.yml` where `NUM` is replaced with the GID.
 
-### Autour Preprocessor
+### API Keys
+
+For services that rely on third-party servers to run, access to an API key is often
+necessary. For obvious reasons, these are not committed to the repository.
+The way we typically have handled loading an API key is as follows:
+
+1. Reference an environment variable in the program that should contain the API key;
+2. Set the environment variable *only for services that need it* using the `docker-compose.yml`.
+
+Examples for a few preprocessors are described below.
+
+#### Autour Preprocessor
 
 For the autour preprocessor to work, it must have the environment variable
 `GOOGLE_PLACES_KEY` set to a valid API key. This can be done in many ways,
@@ -78,7 +97,7 @@ but we include it at `./config/maps.env` and load this using the `env_file` key 
 If you do not want to use this preprocessor, either remove these lines
 or create an empty file of this name as otherwise service creation may fail, even if you aren't starting this preprocessor.
 
-### OCR, Graphic Tagger, and Azure Object Detection Preprocessors
+#### OCR, Graphic Tagger, and Azure Object Detection Preprocessors
 
 For these to work, a valid Microsoft Azure API key must be available in the
 environment variable `AZURE_API_KEY`. You can set this in a variety of ways,
