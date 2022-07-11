@@ -1,11 +1,16 @@
 import overpy
 from copy import deepcopy
 import haversine as hs
-import math
+from math import radians, degrees, cos
 from datetime import datetime
 from flask import jsonify
 import jsonschema
 import logging
+from overpy.exception import (
+    OverpassTooManyRequests,
+    OverpassGatewayTimeout,
+    OverpassRuntimeError,
+)
 
 
 def create_bbox_coordinates(distance, lat, lon):
@@ -14,97 +19,104 @@ def create_bbox_coordinates(distance, lat, lon):
     assert lon >= -180.0 and lon <= 180.0
     distance_in_km = distance * 0.001
     """ convert lat/lon from degrees to radians """
-    lat = math.radians(lat)
-    lon = math.radians(lon)
+    lat, lon = radians(lat), radians(lon)
     radius = 6371
     """ Radius of the earth in km """
-    parallel_radius = radius * math.cos(lat)
+    parallel_radius = radius * cos(lat)
     """ Radius of the parallel at given latitude """
     lat_min = lat - distance_in_km / radius
     lat_max = lat + distance_in_km / radius
     lon_min = lon - distance_in_km / parallel_radius
     lon_max = lon + distance_in_km / parallel_radius
     """ Convert lat/lon from radians back to degrees """
-    lat_min = math.degrees(lat_min)
-    lon_min = math.degrees(lon_min)
-    lat_max = math.degrees(lat_max)
-    lon_max = math.degrees(lon_max)
+    lat_min, lon_min = degrees(lat_min), degrees(lon_min)
+    lat_max, lon_max = degrees(lat_max), degrees(lon_max)
     bbox_coordinates = [lat_min, lon_min, lat_max, lon_max]
     return bbox_coordinates
 
 
-def query_OSMap(bbox_coordinates):
-    """Send request to get map data from OSM"""
-    lat_min = bbox_coordinates[0]
-    lon_min = bbox_coordinates[1]
-    lat_max = bbox_coordinates[2]
-    lon_max = bbox_coordinates[3]
+def get_streets(bbox_coord):
+    lat_min, lon_min = bbox_coord[0], bbox_coord[1]
+    lat_max, lon_max = bbox_coord[2], bbox_coord[3]
     """ fetch all ways and nodes """
-    api = overpy.Overpass()
-    OSM_data = api.query(
-        f"""
-    way({lat_min},{lon_min},{lat_max},{lon_max})[highway~"^(primary|tertiary|secondary|track|path|living_street|service|crossing|pedestrian|residential|footway)$"];
-    (._;>;);
-    out body;
-    """
-
-
-    )
-    return (OSM_data)
+    try:
+        api = overpy.Overpass(
+            url="https://pegasus.cim.mcgill.ca/overpass/api/interpreter?")
+        OSM_data = api.query(
+            f"""
+        way({lat_min},{lon_min},{lat_max},{lon_max})[highway~"^(primary|tertiary|secondary|track|path|living_street|service|crossing|pedestrian|residential|footway)$"];
+        (._;>;);
+        out body;
+        """
+        )
+    except OverpassGatewayTimeout:
+        error = 'Overpass GatewayTimeout: High server load. Retry again'
+        logging.error(error)
+    except OverpassTooManyRequests:
+        error = 'Overpass Too many requests. Retry again'
+        logging.error(error)
+    except OverpassRuntimeError:
+        error = 'Overpass Runtime error. Retry again'
+        logging.error(error)
+    except Exception:
+        error = 'Overpass Attibute error. Retry again'
+        logging.error(error)
+    else:
+        return (OSM_data)
 
 
 def get_timestamp():
     d = datetime.now()
     timestamp = int(datetime.timestamp(d))
-
     return timestamp
 
 
-def process_OSMap_data(OSM_data):
+def process_streets_data(OSM_data):
     """Retrieve inteterested street information from the requested OSM data"""
-    assert OSM_data is not None
-    processed_OSM_data = []
-    for way in OSM_data.ways:
-        node_list = []
-        for node in way.nodes:
-            node_object = {
-                "id": int(node.id),
-                "lat": float(node.lat),
-                "lon": float(node.lon),
-            }
-            if node_object not in node_list:
-                node_list.append(node_object)
-
-        # Convert lanes to integer if its value is not None
-        lanes = way.tags.get("lanes")
-        if lanes is not None:
-            lanes = int(lanes)
-        else:
-            lanes = lanes
-
-        # Convert oneway tag to boolean if its value is not None
-        oneway = way.tags.get("oneway")
-        if oneway is not None:
-            oneway = bool(oneway)
-        else:
-            oneway = oneway
-
-        way_object = {
-            "street_id": int(way.id),
-            "street_name": way.tags.get("name"),
-            "street_type": way.tags.get("highway"),
-            "addr:street": way.tags.get("addr:street"),
-            "surface": way.tags.get("surface"),
-            "oneway": oneway,
-            "sidewalk": way.tags.get("sidewalk"),
-            "maxspeed": way.tags.get("maxspeed"),
-            "lanes": lanes,
-            "nodes": node_list,
-        }
-        # Delete key if value is empty
-        way_object = dict(x for x in way_object.items() if all(x))
-        processed_OSM_data.append(way_object)
-    return processed_OSM_data
+    try:
+        processed_OSM_data = []
+        for way in OSM_data.ways:
+            node_list = []
+            for node in way.nodes:
+                node_object = {
+                    "id": int(node.id),
+                    "lat": float(node.lat),
+                    "lon": float(node.lon),
+                }
+                if node_object not in node_list:
+                    node_list.append(node_object)
+            # Convert lanes to integer if its value is not None
+            lanes = way.tags.get("lanes")
+            if lanes is not None:
+                lanes = int(lanes)
+            else:
+                lanes = lanes
+            # Convert oneway tag to boolean if its value is not None
+            oneway = way.tags.get("oneway")
+            if oneway is not None:
+                oneway = bool(oneway)
+            else:
+                oneway = oneway
+                way_object = {
+                    "street_id": int(way.id),
+                    "street_name": way.tags.get("name"),
+                    "street_type": way.tags.get("highway"),
+                    "addr:street": way.tags.get("addr:street"),
+                    "surface": way.tags.get("surface"),
+                    "oneway": oneway,
+                    "sidewalk": way.tags.get("sidewalk"),
+                    "maxspeed": way.tags.get("maxspeed"),
+                    "lanes": lanes,
+                    "nodes": node_list,
+                }
+                # Delete key if value is empty
+                way_object = dict(x for x in way_object.items() if all(x))
+                processed_OSM_data.append(way_object)
+    except AttributeError:
+        error = 'Overpass Attibute error. Retry again'
+        logging.error(error)
+    else:
+        return processed_OSM_data
 
 
 def compare_street(street1, street2):  # Compare two streets
@@ -113,9 +125,7 @@ def compare_street(street1, street2):  # Compare two streets
 
 
 def extract_street(processed_OSM_data):  # extract two streets
-
     intersection_record = []
-
     for i in range(len(processed_OSM_data)):
         for j in range(i + 1, len(processed_OSM_data)):
             street1 = processed_OSM_data[i]["nodes"]
@@ -134,9 +144,7 @@ def extract_street(processed_OSM_data):  # extract two streets
                         "street_id": processed_OSM_data[i]["street_id"],
                         "intersection_nodes": intersecting_points,
                     }
-
                 intersection_record.append(street_object)
-
                 if "street_name" in processed_OSM_data[j]:
                     street_object = {
                         "street_id": processed_OSM_data[j]["street_id"],
@@ -148,16 +156,13 @@ def extract_street(processed_OSM_data):  # extract two streets
                         "street_id": processed_OSM_data[j]["street_id"],
                         "intersection_nodes": intersecting_points,
                     }
-
                 intersection_record.append(street_object)
-
     # Group the streets by their ids
     output = {}
     for obj in intersection_record:
         street_id = obj["street_id"]
         if street_id not in output:
             assert obj["intersection_nodes"] is not None
-
             if "street_name" in obj:
                 record = {
                     "street_id": obj["street_id"],
@@ -169,7 +174,6 @@ def extract_street(processed_OSM_data):  # extract two streets
                     "street_id": obj["street_id"],
                     "intersection_nodes": obj["intersection_nodes"],
                 }
-
             output[street_id] = record
         else:
             existing_record = output[street_id]
@@ -186,9 +190,10 @@ def extract_street(processed_OSM_data):  # extract two streets
     for obj in range(len(intersection_record_updated)):
         unique_set = []
         inter_sets = intersection_record_updated[obj]["intersection_nodes"]
-        for item in range(len(inter_sets)):
-            if inter_sets[item] not in unique_set:
-                unique_set.append(inter_sets[item])
+        unique_set = [item for item in inter_sets if item not in unique_set]
+        # for item in range(len(inter_sets)):
+        # if inter_sets[item] not in unique_set:
+        # unique_set.append(inter_sets[item])
         intersection_record_updated[obj]["intersection_nodes"] = unique_set
     return (intersection_record_updated)
 
@@ -198,17 +203,14 @@ def allot_intersection(processed_OSM_data, inters_rec_up
     processed_OSM_data1 = deepcopy(processed_OSM_data)
     inters = inters_rec_up
     for obj in range(len(processed_OSM_data1)):
-
         id1 = processed_OSM_data1[obj]["street_id"]
         nodes = processed_OSM_data1[obj]["nodes"]
         for i in range(len(nodes)):
             for objs in range(len(inters)):
-
                 id2 = inters[objs]["street_id"]
                 intersection_nodes = inters[objs]["intersection_nodes"]
                 for items in range(len(intersection_nodes)):
                     if id1 != id2:  # compare unique street only
-
                         # check if a node represents an intersection
                         if nodes[i] == intersection_nodes[items]:
                             nodes[i]["cat"] = "intersection"
@@ -216,213 +218,203 @@ def allot_intersection(processed_OSM_data, inters_rec_up
                             key = "street_name"
                             X = processed_OSM_data1[obj]
                             Y = inters[objs]
-
                             # Check if street_name key is empty or not to
                             # format the output
                             if key in X and key in Y:
                                 nm1 = X["street_name"]
                                 nm2 = Y["street_name"]
                                 f["name"] = f"{nm1}{id1} intersects {nm2}{id2}"
-
                             elif key not in X and key in Y:
                                 nm2 = Y["street_name"]
                                 f["name"] = f"{id1} intersects {nm2}{id2}"
-
                             elif key in X and key not in Y:
                                 nm1 = X["street_name"]
                                 f["name"] = f"{nm1}{id1} intersects {id2}"
-
                             else:
                                 f["name"] = f"{id1} intersects {id2}"
-
     return processed_OSM_data1
 
 
-def get_amenities(bbox_coordinates):
+def get_amenities(bbox_coord):
     # Send request to OSM to get amenities which are part of
     # points of interest (POIs)
-    api = overpy.Overpass()
-    lat_min = bbox_coordinates[0]
-    lon_min = bbox_coordinates[1]
-    lat_max = bbox_coordinates[2]
-    lon_max = bbox_coordinates[3]
-    amenities = api.query(
-        f"""
-    node({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
-    (._;>;);
-    out body;
-    """
-    )
-    # Filter the amenity tags to the basic useful ones
-    amenity = []
-    for node in amenities.nodes:
-        if node.tags.get("amenity") is not None:
-            amenity_record = {
-                "id": int(node.id),
-                "lat": float(node.lat),
-                "lon": float(node.lon),
-                "name": node.tags.get("name"),
-                "cat": node.tags.get("amenity"),
-            }
+    lat_min, lon_min = bbox_coord[0], bbox_coord[1]
+    lat_max, lon_max = bbox_coord[2], bbox_coord[3]
+    try:
+        api = overpy.Overpass(
+            url="https://pegasus.cim.mcgill.ca/overpass/api/interpreter?")
+        amenities = api.query(
+            f"""
+        node({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
+        (._;>;);
+        out body;
+        """
+        )
+    except OverpassGatewayTimeout:
+        error = 'Overpas GatewayTimeout: High server load. Retry again'
+        logging.error(error)
+    except OverpassTooManyRequests:
+        error = 'Overpass Too many requests. Retry again'
+        logging.error(error)
+    except OverpassRuntimeError:
+        error = 'Overpass Runtime error. Retry again'
+        logging.error(error)
+    except Exception:
+        error = 'Overpass Attibute error. Retry again'
+        logging.error(error)
+    else:
+        # Filter the amenity tags to the basic useful ones
+        amenity = []
+        for node in amenities.nodes:
+            if node.tags.get("amenity") is not None:
+                amenity_record = {
+                    "id": int(node.id),
+                    "lat": float(node.lat),
+                    "lon": float(node.lon),
+                    "name": node.tags.get("name"),
+                    "cat": node.tags.get("amenity"),
+                }
             # Delete key if value is empty
             amenity_record = dict(x for x in amenity_record.items() if all(x))
             amenity.append(amenity_record)
-
-    return amenity
+        return amenity
 
 
 def enlist_POIs(processed_OSM_data1, amenity):
     # Keep all identified points of interest in a single list
     POIs = []
-    for obj in range(len(processed_OSM_data1)):
-        nodes = processed_OSM_data1[obj]["nodes"]
-        for node in range(len(nodes)):
-            key_to_check = "cat"
-            # check if "cat" key is in the node
-            if key_to_check in nodes[node]:
-                if nodes[node]["cat"]:  # ensure the "cat" key has a value
-                    POIs.append(nodes[node])
-    for objs in range(len(amenity)):
-        POIs.append(amenity[objs])
+    if len(processed_OSM_data1):
+        for obj in range(len(processed_OSM_data1)):
+            nodes = processed_OSM_data1[obj]["nodes"]
+            for node in range(len(nodes)):
+                key_to_check = "cat"
+                # check if "cat" key is in the node
+                if key_to_check in nodes[node]:
+                    if nodes[node]["cat"]:  # ensure the "cat" key has a value
+                        POIs.append(nodes[node])
+    if amenity is not None and len(amenity) != 0:
+        # POIs = [objs for objs in amenity]
+        for objs in range(len(amenity)):
+            POIs.append(amenity[objs])
     return POIs  # POIs is a list of all points of interest
 
 
-def OSM_preprocessor(processed_OSM_data, POIs):
-    id_list = []
-    node_list = []
-    POI_id_list = []
+def OSM_preprocessor(processed_OSM_data, POIs, amenity):
+    id_list, node_list, POI_id_list = [], [], []
     processed_OSM_data2 = deepcopy(processed_OSM_data)
-    assert POIs is not None
-    # Iterate through the amenities
-    for i in range(len(
-            POIs)):
-        key_to_check = POIs[i]["cat"]
-        # check if true, then the points of interest are amenity,
-        # e.g. restaurants, bars, rentals, etc
-        if key_to_check != "intersection":
-            minimum_distance = []
-            for obj in range(len(processed_OSM_data)):
-                nodes = processed_OSM_data[obj]["nodes"]
-                for j in range(len(nodes)):
-                    lat1 = nodes[j]["lat"]
-                    lon1 = nodes[j]["lon"]
-                    lat2 = POIs[i]["lat"]
-                    lon2 = POIs[i]["lon"]
-                    location1 = (float(lat1), float(lon1))
-                    location2 = (float(lat2), float(lon2))
-                    # Compute the distance between a node and POI
-                    distance = hs.haversine(location1, location2)
-                    if (len(minimum_distance)) == 0:
-                        minimum_distance.append(distance)
-                        k = processed_OSM_data2[obj]["nodes"]
-                        reference_id = {
-                            "node_id": k[j]["id"], }
-                    else:
-                        if distance < minimum_distance[0]:
-                            minimum_distance[0] = distance
+    if len(POIs):
+        # Iterate through the amenities
+        for i in range(len(
+                POIs)):
+            key_to_check = POIs[i]["cat"]
+            # check if true, then the points of interest are amenity,
+            # e.g. restaurants, bars, rentals, etc
+            if key_to_check != "intersection" and amenity is not None:
+                minimum_distance = []
+                for obj in range(len(processed_OSM_data)):
+                    nodes = processed_OSM_data[obj]["nodes"]
+                    for j in range(len(nodes)):
+                        lat1 = nodes[j]["lat"]
+                        lon1 = nodes[j]["lon"]
+                        lat2 = POIs[i]["lat"]
+                        lon2 = POIs[i]["lon"]
+                        location1 = (float(lat1), float(lon1))
+                        location2 = (float(lat2), float(lon2))
+                        # Compute the distance between a node and POI
+                        distance = hs.haversine(location1, location2)
+                        if (len(minimum_distance)) == 0:
+                            minimum_distance.append(distance)
                             k = processed_OSM_data2[obj]["nodes"]
                             reference_id = {
                                 "node_id": k[j]["id"], }
-
-            # iterate through the OSM data
-            # to reference the node that should
-            # hold the point of interest
-
-            for objs in range(len(processed_OSM_data2)):
-                nodes = processed_OSM_data2[objs]["nodes"]
-                for node in range(len(nodes)):  # if true,
-                    # the node will hold the point of interest
-
-                    if nodes[node]["id"] == reference_id["node_id"]:
-                        if nodes[node]["id"] not in id_list:  # id_list stores
-                            # all the node ids using the POIs
-
-                            id_list.append(nodes[node]["id"])
-
-                            nodes[node]["POIs_ID"] = [
-                                POIs[i]["id"]]  # create a key-pair in the node
-
-                            # node_list keeps all the nodes using POIs
-                            node_list.append(nodes[node])
-
-                            # POI_list keeps all the POI ids
-                            POI_id_list.append(POIs[i]["id"])
                         else:
-                            for n in range(len(node_list)):
-                                # identify the node in the list by using its id
-                                if nodes[node]["id"] == node_list[n]["id"]:
+                            if distance < minimum_distance[0]:
+                                minimum_distance[0] = distance
+                                k = processed_OSM_data2[obj]["nodes"]
+                                reference_id = {
+                                    "node_id": k[j]["id"], }
+                # iterate through the OSM data
+                # to reference the node that should
+                # hold the point of interest
+                for objs in range(len(processed_OSM_data2)):
+                    nodes = processed_OSM_data2[objs]["nodes"]
+                    for node in range(len(nodes)):  # if true,
+                        # the node will hold the point of interest
+                        if nodes[node]["id"] == reference_id["node_id"]:
+                            if nodes[node]["id"] not in id_list:  # id_list
+                                # stores all the node ids using the POIs
+                                id_list.append(nodes[node]["id"])
+                                nodes[node]["POIs_ID"] = [
+                                    POIs[i]["id"]]  # New key-pair in the node
+                                # node_list keeps all the nodes using POIs
+                                node_list.append(nodes[node])
+                                # POI_list keeps all the POI ids
+                                POI_id_list.append(POIs[i]["id"])
+                            else:
+                                for n in range(len(node_list)):
+                                    # identify the node in the list by using
+                                    # its id
+                                    if nodes[node]["id"] == node_list[n]["id"]:
+                                        # Existing amenity/POI's id(s)
+                                        existingid = node_list[n]["POIs_ID"]
+                                        # An id for new POI
+                                        new_id = POIs[i]["id"]
+                                        # Ensure new id is not in the existing
+                                        # id
+                                        if new_id not in POI_id_list:
+                                            POI_id_list.append(new_id)
+                                            # Two id's merged into a single
+                                            # list
+                                            merged_id = existingid + [new_id]
+                                            nodes[node]["POIs_ID"] = merged_id
+                                        else:
+                                            nodes[node]["POIs_ID"] = existingid
+            else:  # POIs here are intersections
+                for objs in range(len(processed_OSM_data2)):
+                    nodes = processed_OSM_data2[objs]["nodes"]
+                    for node in range(len(nodes)):
+                        # check if node is among the points of interest list
+                        if nodes[node]["id"] == POIs[i]["id"]:
+                            # check if this node has not been used by any POIs
+                            if nodes[node]["id"] not in id_list:
+                                # id_list stores all the node ids using the
+                                # POIs
+                                id_list.append(nodes[node]["id"])
+                                # create a new key-pair in the node
+                                nodes[node]["POIs_ID"] = [nodes[node]["id"]]
+                                # node_list keeps all the nodes using POIs
+                                node_list.append(nodes[node])
+                                # POI_list keeps all the POIs ids
+                                POI_id_list.append(nodes[node]["id"])
+                            else:
+                                for n in range(len(node_list)):
+                                    if nodes[node]["id"] == node_list[n]["id"]:
+                                        existingid = node_list[n]["POIs_ID"]
+                                        # node id for intersection (POI)
+                                        new_id = nodes[node]["id"]
+                                        # Ensure new id is not in the existing
+                                        # id
+                                        if new_id not in POI_id_list:
+                                            POI_id_list.append(new_id)
+                                            # Two id's merged into a single
+                                            # list
+                                            merged_id = existingid + [new_id]
+                                            nodes[node]["POIs_iD"] = merged_id
+                                        else:
+                                            nodes[node]["POIs_ID"] = existingid
 
-                                    # Existing amenity/POI's id(s)
-                                    existing_id = node_list[n]["POIs_ID"]
-
-                                    # An id for new POI
-                                    new_id = POIs[i]["id"]
-
-                                    # Ensure new id is not in the existing id
-                                    if new_id not in POI_id_list:
-
-                                        POI_id_list.append(new_id)
-
-                                        # Two id's merged into a single list
-                                        merged_id = existing_id + [new_id]
-                                        nodes[node]["POIs_ID"] = merged_id
-                                    else:
-                                        nodes[node]["POIs_ID"] = existing_id
-
-        else:  # POIs here are intersections
-            for objs in range(len(processed_OSM_data2)):
-                nodes = processed_OSM_data2[objs]["nodes"]
-                for node in range(len(nodes)):
-
-                    # check if node is among the points of interest list
-                    if nodes[node]["id"] == POIs[i]["id"]:
-
-                        # check if this node has not been used by any POIs
-                        if nodes[node]["id"] not in id_list:
-
-                            # id_list stores all the node ids using the POIs
-                            id_list.append(nodes[node]["id"])
-
-                            # create a new key-pair in the node
-                            nodes[node]["POIs_ID"] = [nodes[node]["id"]]
-
-                            # node_list keeps all the nodes using POIs
-                            node_list.append(nodes[node])
-
-                            # POI_list keeps all the POIs ids
-                            POI_id_list.append(nodes[node]["id"])
-                        else:
-                            for n in range(len(node_list)):
-
-                                if nodes[node]["id"] == node_list[n]["id"]:
-                                    existing_id = node_list[n]["POIs_ID"]
-
-                                    # node id for intersection (POI)
-                                    new_id = nodes[node]["id"]
-
-                                    # Ensure new id is not in the existing id
-                                    if new_id not in POI_id_list:
-                                        POI_id_list.append(new_id)
-
-                                        # Two id's merged into a single list
-                                        merged_id = existing_id + [new_id]
-                                        nodes[node]["POIs_iD"] = merged_id
-                                    else:
-                                        nodes[node]["POIs_ID"] = existing_id
     return processed_OSM_data2
 
 
 def validate(schema, data, resolver, json_message, error_code):
     """
     Validate a piece of data against a schema
-
     Args:
         schema: a JSON schema to check against
         data: the data to check
         resolver: a JSON schema resolver
         json_messaage: the error to jsonify and return
         error_code: the error code to return
-
     Returns:
         None or Tuple[flask.Response, int]
     """
@@ -432,7 +424,6 @@ def validate(schema, data, resolver, json_message, error_code):
     except jsonschema.exceptions.ValidationError as error:
         logging.error(error)
         return jsonify(json_message), error_code
-
     return None
 
 

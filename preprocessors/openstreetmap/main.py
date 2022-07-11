@@ -3,10 +3,10 @@ import jsonschema
 import json
 import logging
 from osm_service import (
-    query_OSMap,
+    get_streets,
     get_timestamp,
     create_bbox_coordinates,
-    process_OSMap_data,
+    process_streets_data,
     extract_street,
     allot_intersection,
     get_amenities,
@@ -17,11 +17,6 @@ from osm_service import (
 )
 
 app = Flask(__name__)
-
-
-@app.route("/")
-def health():
-    return {"Hello": "World"}
 
 
 @app.route('/preprocessor', methods=['POST', ])
@@ -43,7 +38,6 @@ def get_map_data():
         definition_schema['$id']: definition_schema
     }
     content = request.get_json()
-
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
     # Validate incoming request
@@ -62,38 +56,64 @@ def get_map_data():
 
     # Build OpenStreetMap request
     coords = get_coordinates(content)
-
     if coords is None:
-        error = 'Invalid map place received. Unable to find Lat/Lng'
+        error = 'Unable to find Lat/Lng'
         logging.error(error)
         return jsonify(error), 400
 
     latitude = coords["latitude"]
     longitude = coords["longitude"]
-    request_uuid = content["request_uuid"]
-    distance: float = 60
+    distance: float = 100
     bbox_coordinates = create_bbox_coordinates(distance, latitude, longitude)
-    OSM_data = query_OSMap(bbox_coordinates)
-    processed_OSM_data = process_OSMap_data(OSM_data)
-    intersection_record_updated = extract_street(processed_OSM_data)
-    POD1 = allot_intersection(processed_OSM_data, intersection_record_updated)
+    OSM_data = get_streets(bbox_coordinates)
+    request_uuid = content["request_uuid"]
     amenity = get_amenities(bbox_coordinates)
-    POIs = enlist_POIs(POD1, amenity)
-    response = OSM_preprocessor(processed_OSM_data, POIs)
-    response = {
-        "points_of_interest": POIs,
-        "streets": response,
-    }
-    response = {
-
-        "request_uuid": request_uuid,
-        "timestamp": int(get_timestamp()),
-        "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
-        "data": response
-
-
-    }
-
+    if OSM_data is not None:
+        processed_OSM_data = process_streets_data(OSM_data)
+        if processed_OSM_data is None:
+            POD1 = None
+        else:
+            intersection_record_updated = extract_street(processed_OSM_data)
+            POD1 = allot_intersection(
+                processed_OSM_data,
+                intersection_record_updated)
+        POIs = enlist_POIs(POD1, amenity)
+        if processed_OSM_data is not None and len(processed_OSM_data) != 0:
+            response = OSM_preprocessor(processed_OSM_data, POIs, amenity)
+            response = {
+                "request_uuid": request_uuid,
+                "timestamp": int(get_timestamp()),
+                "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
+                "data": {"points_of_interest": POIs, "streets": response}
+            }
+        elif amenity is not None:
+            response = {
+                "request_uuid": request_uuid,
+                "timestamp": int(get_timestamp()),
+                "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
+                "data": {"points_of_interest": amenity}
+            }
+        else:
+            response = {
+                "request_uuid": request_uuid,
+                "timestamp": int(get_timestamp()),
+                "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
+                "data": []
+            }
+    elif OSM_data is None and amenity is not None:
+        response = {
+            "request_uuid": request_uuid,
+            "timestamp": int(get_timestamp()),
+            "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
+            "data": {"points_of_interest": amenity}
+        }
+    else:
+        response = {
+            "request_uuid": request_uuid,
+            "timestamp": int(get_timestamp()),
+            "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
+            "data": []
+        }
     validated = validate(
         schema=schema,
         data=response,
@@ -103,10 +123,9 @@ def get_map_data():
 
     if validated is not None:
         return validated
-
     logging.debug("Sending response")
     return response
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=True)
