@@ -21,6 +21,7 @@ from jsonschema.exceptions import ValidationError
 import logging
 import time
 import drawSvg as draw
+import random
 
 app = Flask(__name__)
 
@@ -75,7 +76,7 @@ def handle():
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
-        
+
     # No Object Detector found
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation" not in preprocessors:
         logging.debug("No Semantic Segmenter found")
@@ -103,12 +104,17 @@ def handle():
     segments = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]["segments"]
     svg = draw.Drawing(dimensions[0], dimensions[1])
     svg_layers = []
-    colors = ["red","blue","yellow","green"]
+    colors = ["red","blue","yellow","green","pink","orange","purple","cyan","coral","teal","indigo","lime","chocolate"]
     new_contour = []
     if(len(segments)>0):
         for j in range(len(segments)):
             contour = segments[j]["contours"]
-            p = draw.Path(stroke=colors[j], stroke_width=2, fill='none',)
+            print(str(hex(random.randint(0, 0xFFFFFF))))
+            color = '#'+str(hex(random.randint(0, 0xFFFFFF)))
+            try:
+                p = draw.Path(stroke=colors[j], stroke_width=2, fill='none',)
+            except:
+                p = draw.Path(stroke="red", stroke_width=2, fill='none',)
             for k in range(len(contour)):
                 coord = contour[k]["coordinates"]
                 for i in range(len(coord)):
