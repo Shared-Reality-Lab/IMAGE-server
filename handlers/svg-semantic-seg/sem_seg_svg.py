@@ -87,24 +87,33 @@ def handle():
     segments = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]["segments"]
     svg = draw.Drawing(dimensions[0], dimensions[1])
     svg_layers = []
-    colors = ["red","blue","yellow"]
+    colors = ["red","blue","yellow","green"]
+    new_contour = []
     if(len(segments)>0):
         for j in range(len(segments)):
             contour = segments[j]["contours"]
             svg_lines = []
+            p = draw.Path(stroke=colors[j], stroke_width=2, fill='none',)
             for k in range(len(contour)):
                 coord = contour[k]["coordinates"]
                 for i in range(len(coord)):
-                    svg_lines.append(coord[i][0]*dimensions[0])
-                    svg_lines.append(dimensions[1] - coord[i][1]*dimensions[1])
-            p = draw.Path(stroke=colors[j], stroke_width=2, fill='none',)  # Add an arrow to the end of a path
-            p.M(svg_lines[0], svg_lines[1])
-            l=2
-            while(l<(len(svg_lines)-1)):
-                p.L(svg_lines[l],svg_lines[l+1])
-                l = l+2
+                    if(i==0):
+                        continue
+                    if(i==1):
+                        p.M(coord[i][0]*dimensions[0], (dimensions[1] - coord[i][1]*dimensions[1]))
+                    p.L(coord[i][0]*dimensions[0],dimensions[1] - coord[i][1]*dimensions[1])
+                    # svg_lines.append(coord[i][0]*dimensions[0])
+                    # svg_lines.append(dimensions[1] - coord[i][1]*dimensions[1])
+                # new_contour.append(i)
+            # p = draw.Path(stroke=colors[j], stroke_width=2, fill='none',)  # Add an arrow to the end of a path
+            # p.M(svg_lines[0], svg_lines[1])
+            # l=2
+            # while(l<(len(svg_lines)-1)):
+            #     p.L(svg_lines[l],svg_lines[l+1])
+            #     l = l+2
             svg.append(p)
             svg_layers.append({"label":segments[j]["name"],"svg":svg.asDataUri()})
+            break
             
     svg.saveSvg('/Users/rohanakut/Desktop/labWork/docker_here2/handlers/svg-semantic-seg/example.svg')
     data = {
