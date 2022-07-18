@@ -70,6 +70,23 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
+    print(contents['capabilities'][0])
+    if(contents['capabilities'][0] != "ca.mcgill.a11y.image.capability.DebugMode"):
+        logging.debug("Debug mode inactive")
+        print("debug inactive")
+        response = {
+            "request_uuid": contents["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": []
+        }
+        try:
+            validator = jsonschema.Draft7Validator(response_schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+            logging.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
+        return response
 
     # No Object Detector found
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" not in preprocessors:
@@ -80,7 +97,7 @@ def handle():
             "renderings": []
         }
         try:
-            validator = jsonschema.Draft7Validator(renderer_schema, resolver=resolver)
+            validator = jsonschema.Draft7Validator(response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
             logging.error(error)
@@ -94,7 +111,6 @@ def handle():
         # developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions
         dimensions = contents["dimensions"]
 
-    # print(dimensions)
     objects = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]["objects"]
     grouped = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]["grouped"]
     ungrouped = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]["ungrouped"]
@@ -114,7 +130,6 @@ def handle():
                 start_y1 = abs(dimensions[1]- y1)
                 svg.append(draw.Rectangle(x1,start_y1,width,height,stroke="#ff4477",fill_opacity=0))
             svg_layers.append({"label":category,"svg":svg.asDataUri()})
-            break
            
     if(len(ungrouped)>0):
         for i in range(len(ungrouped)):
