@@ -30,13 +30,13 @@ app = Flask(__name__)
 def handle():
     logging.debug("Received request")
     # Load necessary schema files
-    with open("../../schemas/definitions.json") as f:
+    with open("./schemas/definitions.json") as f:
         definitions_schema = json.load(f)
-    with open("../../schemas/request.schema.json") as f:
+    with open("./schemas/request.schema.json") as f:
         request_schema = json.load(f)
-    with open("../../schemas/handler-response.schema.json") as f:
+    with open("./schemas/handler-response.schema.json") as f:
         response_schema = json.load(f)
-    with open("../../schemas/renderers/svglayers.schema.json") as f:
+    with open("./schemas/renderers/svglayers.schema.json") as f:
         renderer_schema = json.load(f)
     store = {
             definitions_schema["$id"]: definitions_schema,
