@@ -150,7 +150,7 @@ def handle():
     }
     rendering = {
             "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
-            "description": "An example SVG visualization",
+            "description": "SVG visualization",
             "data": data
     }
     try:
