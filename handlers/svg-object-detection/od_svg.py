@@ -33,13 +33,13 @@ app = Flask(__name__)
 def handle():
     logging.debug("Received request")
     # Load necessary schema files
-    with open("../../schemas/definitions.json") as f:
+    with open("./schemas/definitions.json") as f:
         definitions_schema = json.load(f)
-    with open("../../schemas/request.schema.json") as f:
+    with open("./schemas/request.schema.json") as f:
         request_schema = json.load(f)
-    with open("../../schemas/handler-response.schema.json") as f:
+    with open("./schemas/handler-response.schema.json") as f:
         response_schema = json.load(f)
-    with open("../../schemas/renderers/svglayers.schema.json") as f:
+    with open("./schemas/renderers/svglayers.schema.json") as f:
         renderer_schema = json.load(f)
     store = {
             definitions_schema["$id"]: definitions_schema,
@@ -57,16 +57,16 @@ def handle():
     image = np.asarray(bytearray(binary), dtype="uint8")
     img0 = cv2.imdecode(image, cv2.IMREAD_COLOR)
     img0 = cv2.resize(img0, (contents["dimensions"]))
-    print(img0.shape)
-    cv2.imwrite('test1.png', img0)
-    # try:
-    #     validator = jsonschema.Draft7Validator(
-    #             request_schema, resolver=resolver
-    #     )
-    #     validator.validate(contents)
-    # except ValidationError as e:
-    #     logging.error(e)
-    #     return jsonify("Invalid request received!"), 400
+    # print(img0.shape)
+    # cv2.imwrite('test1.png', img0)
+    try:
+        validator = jsonschema.Draft7Validator(
+                request_schema, resolver=resolver
+        )
+        validator.validate(contents)
+    except ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid request received!"), 400
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
@@ -94,7 +94,7 @@ def handle():
         # developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions
         dimensions = contents["dimensions"]
 
-    print(dimensions)
+    # print(dimensions)
     objects = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]["objects"]
     grouped = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]["grouped"]
     ungrouped = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]["ungrouped"]
@@ -104,9 +104,6 @@ def handle():
         for i in range(len(grouped)):
             ids = grouped[i]["IDs"]
             category = objects[ids[0]]["type"]
-            print(category)
-            if(i<=1):
-                continue
             for j in range(len(ids)):
                 x1 = int(objects[j]['dimensions'][0]*dimensions[0])
                 x2 = int(objects[j]['dimensions'][2]*dimensions[0])
@@ -114,10 +111,8 @@ def handle():
                 y2 = int(objects[j]['dimensions'][3]*dimensions[1])
                 width = abs(x2-x1)
                 height = abs(y2-y1)
-                print(x1,y1,width,height)
-                # print(x2,y2)
-                print("\n")
-                svg.append(draw.Rectangle(x1,y1,width,height,stroke="#ff4477",fill_opacity=0))
+                start_y1 = abs(dimensions[1]- y1)
+                svg.append(draw.Rectangle(x1,start_y1,width,height,stroke="#ff4477",fill_opacity=0))
             svg_layers.append({"label":category,"svg":svg.asDataUri()})
             break
            
@@ -130,10 +125,11 @@ def handle():
             y2 = int(objects[j]['dimensions'][3]*dimensions[1])
             width = abs(x2-x1)
             height = abs(y2-y1)
-            svg.append(draw.Rectangle(x1,y1,width,height,stroke="#ff4477",fill_opacity=0))
+            start_y1 = abs(dimensions[1] - y1)
+            svg.append(draw.Rectangle(x1,start_y1,width,height,stroke="#dd4477",fill='#1248ff'))
             svg_layers.append({"label":category,"svg":svg.asDataUri()})
             
-    svg.saveSvg('example.svg')
+    # svg.saveSvg('example.svg')
     data = {
             "layers": svg_layers
     }
