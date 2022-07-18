@@ -59,7 +59,23 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
-
+    if(contents['capabilities'][0] != "ca.mcgill.a11y.image.capability.DebugMode"):
+        logging.debug("Debug mode inactive")
+        print("debug inactive")
+        response = {
+            "request_uuid": contents["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": []
+        }
+        try:
+            validator = jsonschema.Draft7Validator(response_schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+            logging.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
+        return response
+        
     # No Object Detector found
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation" not in preprocessors:
         logging.debug("No Semantic Segmenter found")
@@ -69,7 +85,7 @@ def handle():
             "renderings": []
         }
         try:
-            validator = jsonschema.Draft7Validator(renderer_schema, resolver=resolver)
+            validator = jsonschema.Draft7Validator(response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
             logging.error(error)
@@ -92,7 +108,6 @@ def handle():
     if(len(segments)>0):
         for j in range(len(segments)):
             contour = segments[j]["contours"]
-            svg_lines = []
             p = draw.Path(stroke=colors[j], stroke_width=2, fill='none',)
             for k in range(len(contour)):
                 coord = contour[k]["coordinates"]
@@ -102,15 +117,6 @@ def handle():
                     if(i==1):
                         p.M(coord[i][0]*dimensions[0], (dimensions[1] - coord[i][1]*dimensions[1]))
                     p.L(coord[i][0]*dimensions[0],dimensions[1] - coord[i][1]*dimensions[1])
-                    # svg_lines.append(coord[i][0]*dimensions[0])
-                    # svg_lines.append(dimensions[1] - coord[i][1]*dimensions[1])
-                # new_contour.append(i)
-            # p = draw.Path(stroke=colors[j], stroke_width=2, fill='none',)  # Add an arrow to the end of a path
-            # p.M(svg_lines[0], svg_lines[1])
-            # l=2
-            # while(l<(len(svg_lines)-1)):
-            #     p.L(svg_lines[l],svg_lines[l+1])
-            #     l = l+2
             svg.append(p)
             svg_layers.append({"label":segments[j]["name"],"svg":svg.asDataUri()})
             break
