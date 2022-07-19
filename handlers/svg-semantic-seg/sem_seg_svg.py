@@ -127,7 +127,7 @@ def handle():
             svg_layers.append({"label":segments[j]["name"],"svg":svg.asDataUri()})
             break
             
-    svg.saveSvg('/Users/rohanakut/Desktop/labWork/docker_here2/handlers/svg-semantic-seg/example.svg')
+    #svg.saveSvg('/Users/rohanakut/Desktop/labWork/docker_here2/handlers/svg-semantic-seg/example.svg')
     data = {
             "layers": svg_layers
     }
