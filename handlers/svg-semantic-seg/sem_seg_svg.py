@@ -125,7 +125,7 @@ def handle():
                     p.L(coord[i][0]*dimensions[0],dimensions[1] - coord[i][1]*dimensions[1])
             svg.append(p)
             svg_layers.append({"label":segments[j]["name"],"svg":svg.asDataUri()})
-            break
+
             
     #svg.saveSvg('/Users/rohanakut/Desktop/labWork/docker_here2/handlers/svg-semantic-seg/example.svg')
     data = {
