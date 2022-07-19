@@ -12,7 +12,7 @@
  * GNU Affero General Public License for more details.
  * You should have received a copy of the GNU Affero General Public License
  * and our Additional Terms along with this program.
- * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
+ * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
  */
 import Ajv from "ajv";
 import express from "express";
@@ -69,23 +69,17 @@ app.post("/handler", async (req, res) => {
     const renderings: Record<string, unknown>[] = [];
     const highChartsData = req.body["highChartsData"];
 
-    const series: { type: string }[] | undefined = highChartsData?.data?.series;
+    const series: { type: string }[] | undefined = highChartsData?.series;
     if (series && series.length === 1) {
-        const serie = series[0] as { type: string, data: Record<string, unknown>[][] };
+        const serie = series[0] as { type: string, data: Record<string, unknown>[] };
         if (serie["data"] && serie["data"].length > 0) {
-            const data = serie["data"][0];
+            const data = serie["data"];
             if (serie["type"] === "line" || serie["type"] === "area") {
                 // We can work with this
                 console.log("Length: " + data.length);
-                let title: string;
-                if (highChartsData?.title) {
-                    title = highChartsData?.title;
-                } else {
-                    title = "Untitled line chart."
-                }
-
                 try {
-                    const ttsResponse = await utils.getTTS([title]);
+                    const graphInfo = utils.getGraphInfo(highChartsData);
+                    const ttsResponse = await utils.getTTS([graphInfo]);
                     const scData = {
                         "audio": {
                             "offset": 0,

@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # and our Additional Terms along with this program.
 # If not, see
-# <https://github.com/Shared-Reality-Lab/IMAGE-server/LICENSE>.
+# <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 
 import time
