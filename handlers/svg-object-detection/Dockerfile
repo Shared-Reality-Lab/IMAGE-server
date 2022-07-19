@@ -7,12 +7,12 @@ WORKDIR /usr/src/app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip install --upgrade pip
-COPY /handlers/hello-svg-handler/requirements.txt /usr/src/app/requirements.txt
+COPY /handlers/svg-object-detection/requirements.txt /usr/src/app/requirements.txt
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
-COPY /handlers/hello-svg-handler/ /usr/src/app
+COPY /handlers/svg-object-detection/ /usr/src/app
 
 EXPOSE 80
 USER python
-CMD ["gunicorn", "hello_svg:app", "-b", "0.0.0.0:80", "--capture-output", "--log-level=debug" ]
+CMD ["gunicorn", "od_svg:app", "-b", "0.0.0.0:80", "--capture-output", "--log-level=debug" ]

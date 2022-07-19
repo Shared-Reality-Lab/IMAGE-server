@@ -23,7 +23,6 @@ import time
 import drawSvg as draw
 import base64
 import numpy as np
-import cv2
 # import cairosvg
 
 app = Flask(__name__)
@@ -52,13 +51,6 @@ def handle():
     )
     # Get and validate request contents
     contents = request.get_json()
-    image_b64 = contents["graphic"].split(",")[1]
-    binary = base64.b64decode(image_b64)
-    image = np.asarray(bytearray(binary), dtype="uint8")
-    img0 = cv2.imdecode(image, cv2.IMREAD_COLOR)
-    img0 = cv2.resize(img0, (contents["dimensions"]))
-    # print(img0.shape)
-    # cv2.imwrite('test1.png', img0)
     try:
         validator = jsonschema.Draft7Validator(
                 request_schema, resolver=resolver
