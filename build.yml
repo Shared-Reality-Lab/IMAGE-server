@@ -16,6 +16,11 @@ services:
             context: .
             dockerfile: services/espnet-tts/Dockerfile
         image: "espnet-tts:latest"
+    high-charts-handler:
+        build:
+            context: .
+            dockerfile: ./preprocessor/charts/Dockerfile
+        image: "charts:latest"
     hello-preprocessor:
         build:
             context: .
@@ -142,17 +147,18 @@ services:
             context: .
             dockerfile: ./handlers/high-charts/Dockerfile
         image: "high-charts-handler:latest"
+
     # Supercollider on Fedora 34
-    supercollider-base:
-        build:
-            context: ./services/supercollider-images/supercollider
-            dockerfile: Dockerfile
-        image: "supercollider:3.12.2"
-    supercollider-extra:
-        build:
-            context: ./services/supercollider-images/supercollider-extra
-            dockerfile: Dockerfile
-        image: "supercollider-extra:3.11.1"
+    # supercollider-base:
+    #     build:
+    #         context: ./services/supercollider-images/supercollider
+    #         dockerfile: Dockerfile
+    #     image: "supercollider:3.12.2"
+    # supercollider-extra:
+    #     build:
+    #         context: ./services/supercollider-images/supercollider-extra
+    #         dockerfile: Dockerfile
+    #     image: "supercollider-extra:3.11.1"
     schemas:
         build:
             context: ./schemas
