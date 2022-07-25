@@ -16,7 +16,7 @@ services:
             context: .
             dockerfile: services/espnet-tts/Dockerfile
         image: "espnet-tts:latest"
-    high-charts-handler:
+    charts-preprocessor:
         build:
             context: .
             dockerfile: ./preprocessor/charts/Dockerfile

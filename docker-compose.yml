@@ -61,6 +61,11 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
+    content-categoriser:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-charts:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 5000
     graphic-tagger:
         image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:unstable
         labels:
