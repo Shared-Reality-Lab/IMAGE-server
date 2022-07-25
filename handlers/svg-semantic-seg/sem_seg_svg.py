@@ -60,7 +60,7 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
-    if(contents['capabilities'][0] != "ca.mcgill.a11y.image.capability.DebugMode"):
+    if( "ca.mcgill.a11y.image.capability.DebugMode" not in contents['capabilities'][0]):
         logging.debug("Debug mode inactive")
         print("debug inactive")
         response = {
@@ -99,6 +99,21 @@ def handle():
         # see the following for SVG coordinate info:
         # developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions
         dimensions = contents["dimensions"]
+    else:
+        logging.debug("Dimensions are not defined")
+        response = {
+            "request_uuid": contents["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": []
+        }
+        try:
+            validator = jsonschema.Draft7Validator(response_schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+            logging.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
+        return response
 
 
     segments = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]["segments"]
@@ -126,8 +141,6 @@ def handle():
             svg.append(p)
             svg_layers.append({"label":segments[j]["name"],"svg":svg.asDataUri()})
 
-            
-    #svg.saveSvg('/Users/rohanakut/Desktop/labWork/docker_here2/handlers/svg-semantic-seg/example.svg')
     data = {
             "layers": svg_layers
     }
