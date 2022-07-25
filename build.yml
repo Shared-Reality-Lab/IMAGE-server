@@ -19,7 +19,7 @@ services:
     charts-preprocessor:
         build:
             context: .
-            dockerfile: ./preprocessor/charts/Dockerfile
+            dockerfile: ./preprocessors/charts/Dockerfile
         image: "charts:latest"
     hello-preprocessor:
         build:
