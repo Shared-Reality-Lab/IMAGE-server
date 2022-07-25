@@ -63,7 +63,7 @@ def handle():
     # Check preprocessor data
     preprocessors = contents['preprocessors']
     print(contents['capabilities'][0])
-    if(contents['capabilities'][0] != "ca.mcgill.a11y.image.capability.DebugMode"):
+    if("ca.mcgill.a11y.image.capability.DebugMode" not in contents['capabilities'][0]):
         logging.debug("Debug mode inactive")
         print("debug inactive")
         response = {
@@ -135,8 +135,6 @@ def handle():
             start_y1 = abs(dimensions[1] - y1)
             svg.append(draw.Rectangle(x1,start_y1,width,height,stroke="#dd4477",fill='#1248ff'))
             svg_layers.append({"label":category,"svg":svg.asDataUri()})
-            
-    # svg.saveSvg('example.svg')
     data = {
             "layers": svg_layers
     }
