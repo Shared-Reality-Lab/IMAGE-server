@@ -17,6 +17,7 @@ from osm_service import (
 )
 
 app = Flask(__name__)
+app.config['JSON_SORT_KEYS'] = False
 
 
 @app.route('/preprocessor', methods=['POST', ])
@@ -63,11 +64,15 @@ def get_map_data():
 
     latitude = coords["latitude"]
     longitude = coords["longitude"]
-    distance: float = 100
+    distance: float = 200
     bbox_coordinates = create_bbox_coordinates(distance, latitude, longitude)
     OSM_data = get_streets(bbox_coordinates)
     request_uuid = content["request_uuid"]
     amenity = get_amenities(bbox_coordinates)
+    time_stamp = int(get_timestamp())
+    header_info = {
+        "longitude": f" From {bbox_coordinates[1]} To {bbox_coordinates[3]} ",
+        "latitude": f" From {bbox_coordinates[0]} To {bbox_coordinates[2]} "}
     if OSM_data is not None:
         processed_OSM_data = process_streets_data(OSM_data)
         if processed_OSM_data is None:
@@ -82,37 +87,40 @@ def get_map_data():
             response = OSM_preprocessor(processed_OSM_data, POIs, amenity)
             response = {
                 "request_uuid": request_uuid,
-                "timestamp": int(get_timestamp()),
+                "timestamp": time_stamp,
                 "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
-                "data": {"points_of_interest": POIs, "streets": response}
-            }
+                "data": {
+                    "Header_Info": header_info,
+                    "points_of_interest": POIs,
+                    "streets": response}}
         elif amenity is not None:
             response = {
                 "request_uuid": request_uuid,
-                "timestamp": int(get_timestamp()),
+                "timestamp": time_stamp,
                 "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
-                "data": {"points_of_interest": amenity}
-            }
+                "data": {
+                    "Header_Info": header_info,
+                    "points_of_interest": amenity}}
         else:
             response = {
                 "request_uuid": request_uuid,
-                "timestamp": int(get_timestamp()),
+                "timestamp": time_stamp,
                 "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
-                "data": []
+                "data": {"Header_Info": header_info}
             }
     elif OSM_data is None and amenity is not None:
         response = {
             "request_uuid": request_uuid,
-            "timestamp": int(get_timestamp()),
+            "timestamp": time_stamp,
             "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
-            "data": {"points_of_interest": amenity}
+            "data": {"Header_Info": header_info, "points_of_interest": amenity}
         }
     else:
         response = {
             "request_uuid": request_uuid,
-            "timestamp": int(get_timestamp()),
+            "timestamp": time_stamp,
             "name": "ca.mcgill.a11y.image.preprocessor.openstreetmap",
-            "data": []
+            "data": {"Header_Info": header_info}
         }
     validated = validate(
         schema=schema,
@@ -128,4 +136,4 @@ def get_map_data():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)

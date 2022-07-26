@@ -139,6 +139,12 @@ def extract_street(processed_OSM_data):  # extract two streets
                         "street_name": processed_OSM_data[i]["street_name"],
                         "intersection_nodes": intersecting_points,
                     }
+                elif "street_type" in processed_OSM_data[i]:
+                    street_object = {
+                        "street_id": processed_OSM_data[i]["street_id"],
+                        "street_type": processed_OSM_data[i]["street_type"],
+                        "intersection_nodes": intersecting_points,
+                    }
                 else:
                     street_object = {
                         "street_id": processed_OSM_data[i]["street_id"],
@@ -149,6 +155,12 @@ def extract_street(processed_OSM_data):  # extract two streets
                     street_object = {
                         "street_id": processed_OSM_data[j]["street_id"],
                         "street_name": processed_OSM_data[j]["street_name"],
+                        "intersection_nodes": intersecting_points,
+                    }
+                elif "street_type" in processed_OSM_data[i]:
+                    street_object = {
+                        "street_id": processed_OSM_data[i]["street_id"],
+                        "street_type": processed_OSM_data[i]["street_type"],
                         "intersection_nodes": intersecting_points,
                     }
                 else:
@@ -167,6 +179,12 @@ def extract_street(processed_OSM_data):  # extract two streets
                 record = {
                     "street_id": obj["street_id"],
                     "street_name": obj["street_name"],
+                    "intersection_nodes": obj["intersection_nodes"],
+                }
+            elif "street_type" in obj:
+                record = {
+                    "street_id": obj["street_id"],
+                    "street_type": obj["street_type"],
                     "intersection_nodes": obj["intersection_nodes"],
                 }
             else:
@@ -215,39 +233,55 @@ def allot_intersection(processed_OSM_data, inters_rec_up
                         if nodes[i] == intersection_nodes[items]:
                             nodes[i]["cat"] = "intersection"
                             f = nodes[i]
-                            key = "street_name"
+                            key1 = "street_name"
+                            key2 = "street_type"
                             X = processed_OSM_data1[obj]
                             Y = inters[objs]
                             # Check if street_name key is empty or not to
                             # format the output
-                            if key in X and key in Y:
+                            if key1 in X and key1 in Y:
                                 nm1 = X["street_name"]
                                 nm2 = Y["street_name"]
-                                f["name"] = f"{nm1}{id1} intersects {nm2}{id2}"
-                            elif key not in X and key in Y:
+                                f["name"] = f"{nm1} intersecting {nm2}"
+                            elif key1 not in X and key1 in Y:
                                 nm2 = Y["street_name"]
-                                f["name"] = f"{id1} intersects {nm2}{id2}"
-                            elif key in X and key not in Y:
+                                if key2 in X:  # Use street type if noname
+                                    stp = X["street_type"]
+                                    f["name"] = f"{stp} intersecting {nm2}"
+                                else:
+                                    f["name"] = f"{id1} intersecting {nm2}"
+                            elif key1 in X and key1 not in Y:
                                 nm1 = X["street_name"]
-                                f["name"] = f"{nm1}{id1} intersects {id2}"
+                                if key2 in Y:  # Use street type if noname
+                                    stp = Y["street_type"]
+                                    f["name"] = f"{nm1} intersecting {stp}"
+                                else:
+                                    f["name"] = f"{nm1} intersecting {id2}"
                             else:
-                                f["name"] = f"{id1} intersects {id2}"
+                                if key2 in X and key2 in Y:
+                                    stp1 = X["street_type"]
+                                    stp2 = Y["street_type"]
+                                    f["name"] = f"{stp1} intersecting {stp2}"
+                                else:
+                                    f["name"] = f"{id1} intersecting {id2}"
     return processed_OSM_data1
 
 
 def get_amenities(bbox_coord):
     # Send request to OSM to get amenities which are part of
     # points of interest (POIs)
+    api = overpy.Overpass(
+        url="https://pegasus.cim.mcgill.ca/overpass/api/interpreter?")
     lat_min, lon_min = bbox_coord[0], bbox_coord[1]
     lat_max, lon_max = bbox_coord[2], bbox_coord[3]
     try:
-        api = overpy.Overpass(
-            url="https://pegasus.cim.mcgill.ca/overpass/api/interpreter?")
         amenities = api.query(
             f"""
-        node({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
-        (._;>;);
-        out body;
+        (node({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
+        way({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
+        rel({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
+        );
+        out center;
         """
         )
     except OverpassGatewayTimeout:
@@ -265,18 +299,69 @@ def get_amenities(bbox_coord):
     else:
         # Filter the amenity tags to the basic useful ones
         amenity = []
-        for node in amenities.nodes:
-            if node.tags.get("amenity") is not None:
-                amenity_record = {
-                    "id": int(node.id),
-                    "lat": float(node.lat),
-                    "lon": float(node.lon),
-                    "name": node.tags.get("name"),
-                    "cat": node.tags.get("amenity"),
-                }
-            # Delete key if value is empty
-            amenity_record = dict(x for x in amenity_record.items() if all(x))
-            amenity.append(amenity_record)
+        if amenities.nodes:
+            for node in amenities.nodes:
+                if node.tags.get("amenity") is not None:
+                    amenity_record = {
+                        "id": int(node.id),
+                        "lat": float(node.lat),
+                        "lon": float(node.lon),
+                        "name": node.tags.get("name"),
+                        "cat": node.tags.get("amenity"),
+                    }
+                    # Fetch as many tags possible
+
+                    for key, value in node.tags.items():
+                        if value != node.tags.get(
+                                "name") and value != node.tags.get("amenity"):
+                            if key not in amenity_record:
+                                amenity_record[key] = value
+
+                # Delete keys with no value
+                amenity_record = dict(
+                    x for x in amenity_record.items() if all(x))
+                amenity.append(amenity_record)
+
+        if amenities.ways:
+            for way in amenities.ways:
+                if way.tags.get("amenity") is not None:
+                    amenity_record = {
+                        "id": int(way.id),
+                        "lat": float(way.center_lat),
+                        "lon": float(way.center_lon),
+                        "name": way.tags.get("name"),
+                        "cat": way.tags.get("amenity"),
+                    }
+                    # Fetch as many tags possible
+                    for key, value in way.tags.items():
+                        if value != way.tags.get(
+                                "name") and value != way.tags.get("amenity"):
+                            if key not in amenity_record:
+                                amenity_record[key] = value
+                # Delete keys with no value
+                amenity_record = dict(
+                    x for x in amenity_record.items() if all(x))
+                amenity.append(amenity_record)
+        if amenities.relations:
+            for rel in amenities.relations:
+                if rel.tags.get("amenity") is not None:
+                    amenity_record = {
+                        "id": int(rel.id),
+                        "lat": float(rel.center_lat),
+                        "lon": float(rel.center_lon),
+                        "name": rel.tags.get("name"),
+                        "cat": rel.tags.get("amenity"),
+                    }
+                    # Fetch as many tags possible
+                    for key, value in rel.tags.items():
+                        if value != rel.tags.get(
+                                "name") and value != rel.tags.get("amenity"):
+                            if key not in amenity_record:
+                                amenity_record[key] = value
+                # Delete keys with no value
+                amenity_record = dict(
+                    x for x in amenity_record.items() if all(x))
+                amenity.append(amenity_record)
         return amenity
 
 
@@ -403,6 +488,17 @@ def OSM_preprocessor(processed_OSM_data, POIs, amenity):
                                         else:
                                             nodes[node]["POIs_ID"] = existingid
 
+    # Arrange street segments in order of lengths (descending order)
+    for i in range(len(processed_OSM_data2)):
+        j = i + 1
+        for j in range(len(processed_OSM_data2)):
+            # Use the size of their nodes to rank them
+            nodes1 = len(processed_OSM_data2[i]["nodes"])
+            nodes2 = len(processed_OSM_data2[j]["nodes"])
+            if nodes1 > nodes2:
+                street = processed_OSM_data2[i]
+                processed_OSM_data2[i] = processed_OSM_data2[j]
+                processed_OSM_data2[j] = street
     return processed_OSM_data2
 
 
