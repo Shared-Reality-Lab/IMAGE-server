@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+     openstreetmap:
+        build:
+            context: .
+            dockerfile: ./preprocessors/openstreetmap/Dockerfile
+        image: "osm-preprocessors:latest"
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 3
+            ca.mcgill.a11y.image.port: 5000
+
+
