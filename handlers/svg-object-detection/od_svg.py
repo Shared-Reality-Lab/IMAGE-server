@@ -122,33 +122,37 @@ def handle():
     grouped = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]["grouped"]
     ungrouped = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]["ungrouped"]
     svg = draw.Drawing(dimensions[0], dimensions[1])
+    print(dimensions[0],dimensions[1])
     svg_layers = []
     if(len(grouped)>0):
         for i in range(len(grouped)):
             ids = grouped[i]["IDs"]
             category = objects[ids[0]]["type"]
             for j in range(len(ids)):
-                x1 = int(objects[j]['dimensions'][0]*dimensions[0])
-                x2 = int(objects[j]['dimensions'][2]*dimensions[0])
-                y1 = int(objects[j]['dimensions'][1]*dimensions[1])
-                y2 = int(objects[j]['dimensions'][3]*dimensions[1])
+                print(ids[j])
+                x1 = int(objects[ids[j]]['dimensions'][0]*dimensions[0])
+                x2 = int(objects[ids[j]]['dimensions'][2]*dimensions[0])
+                y1 = int(objects[ids[j]]['dimensions'][1]*dimensions[1])
+                y2 = int(objects[ids[j]]['dimensions'][3]*dimensions[1])
                 width = abs(x2-x1)
                 height = abs(y2-y1)
                 start_y1 = abs(dimensions[1]- y1)
                 svg.append(draw.Rectangle(x1,start_y1,width,height,stroke="#ff4477",fill_opacity=0))
             svg_layers.append({"label":category,"svg":svg.asDataUri()})
+            # break
            
     if(len(ungrouped)>0):
         for i in range(len(ungrouped)):
             category = objects[ungrouped[i]]["type"]
-            x1 = int(objects[j]['dimensions'][0]*dimensions[0])
-            x2 = int(objects[j]['dimensions'][2]*dimensions[0])
-            y1 = int(objects[j]['dimensions'][1]*dimensions[1])
-            y2 = int(objects[j]['dimensions'][3]*dimensions[1])
+            print(category)
+            x1 = int(objects[ungrouped[i]]['dimensions'][0]*dimensions[0])
+            x2 = int(objects[ungrouped[i]]['dimensions'][2]*dimensions[0])
+            y1 = int(objects[ungrouped[i]]['dimensions'][1]*dimensions[1])
+            y2 = int(objects[ungrouped[i]]['dimensions'][3]*dimensions[1])
             width = abs(x2-x1)
             height = abs(y2-y1)
             start_y1 = abs(dimensions[1] - y1)
-            svg.append(draw.Rectangle(x1,start_y1,width,height,stroke="#dd4477",fill='#1248ff'))
+            svg.append(draw.Rectangle(x1,start_y1,width,height,stroke="#dd4477",fill_opacity=0))
             svg_layers.append({"label":category,"svg":svg.asDataUri()})
     data = {
             "layers": svg_layers
