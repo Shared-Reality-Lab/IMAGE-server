@@ -488,18 +488,63 @@ def OSM_preprocessor(processed_OSM_data, POIs, amenity):
                                         else:
                                             nodes[node]["POIs_ID"] = existingid
 
-    # Arrange street segments in order of lengths (descending order)
-    for i in range(len(processed_OSM_data2)):
-        j = i + 1
-        for j in range(len(processed_OSM_data2)):
-            # Use the size of their nodes to rank them
-            nodes1 = len(processed_OSM_data2[i]["nodes"])
-            nodes2 = len(processed_OSM_data2[j]["nodes"])
-            if nodes1 > nodes2:
-                street = processed_OSM_data2[i]
-                processed_OSM_data2[i] = processed_OSM_data2[j]
-                processed_OSM_data2[j] = street
-    return processed_OSM_data2
+    # Arrange street segments in descending order
+
+    size = len(processed_OSM_data2) - 1
+    quickSort(processed_OSM_data2, 0, size)
+
+    # Reverse to descending order
+
+    sorted_streets = []
+    for i in range(size + 1):
+        sorted_streets.append(processed_OSM_data2[size - i])
+
+    return sorted_streets
+
+# Quick sort in Python
+
+
+def array_divider(array, low, high):
+
+    # choose the far-right number as pivot
+    pivot = len(array[high]['nodes'])
+
+    # pointer for greater number
+    k = low - 1
+
+    # traverse through all elements
+    # compare each with pivot value
+    for i in range(low, high):
+        if len(array[i]['nodes']) <= pivot:
+            # if number less than pivot is seen
+            # swap it with the larger number index by k
+            k = k + 1
+
+            # swapping number at k with number at i
+            (array[k], array[i]) = (array[i], array[k])
+
+    # swap the pivot value with the larger number indicated by k
+    (array[k + 1], array[high]) = (array[high], array[k + 1])
+
+    # return the position from where division is done
+    return k + 1
+
+# function to perform quicksort
+
+
+def quickSort(array, low, high):
+
+    if low < high:
+        # find pivot value such that
+        # any number less than pivot goes to the left
+        # any number greater than pivot stays on the right
+        div = array_divider(array, low, high)
+
+        # recursive call on the left of pivot
+        quickSort(array, low, div - 1)
+
+        # recursive call on the right of pivot
+        quickSort(array, div + 1, high)
 
 
 def validate(schema, data, resolver, json_message, error_code):
