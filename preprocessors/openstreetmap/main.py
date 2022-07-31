@@ -64,7 +64,7 @@ def get_map_data():
 
     latitude = coords["latitude"]
     longitude = coords["longitude"]
-    distance: float = 100
+    distance: float = 200
     bbox_coordinates = create_bbox_coordinates(distance, latitude, longitude)
     OSM_data = get_streets(bbox_coordinates)
     request_uuid = content["request_uuid"]
