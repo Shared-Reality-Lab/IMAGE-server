@@ -73,6 +73,11 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 4
             ca.mcgill.a11y.image.port: 5000
+    openstreetmap:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 3
+            ca.mcgill.a11y.image.port: 5000
     object-sorting:
         image: ghcr.io/shared-reality-lab/image-preprocessor-sorting:unstable
         labels:
@@ -159,7 +164,6 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
-
 volumes:
     sc-store:
     user-logs:
