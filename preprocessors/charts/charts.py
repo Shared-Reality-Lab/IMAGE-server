@@ -22,7 +22,6 @@ import jsonschema
 import os
 import io
 import base64
-import requests
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
