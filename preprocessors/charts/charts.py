@@ -75,12 +75,12 @@ def get_ocr_text():
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
 
-    try:
-        # validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
-        # validator.validate(data)
-    except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
-        return jsonify("Invalid Preprocessor JSON format"), 500
+    # try:
+    #     # validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+    #     # validator.validate(data)
+    # except jsonschema.exceptions.ValidationError as error:
+    #     logging.error(error)
+    #     return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {
         'request_uuid': request_uuid,
