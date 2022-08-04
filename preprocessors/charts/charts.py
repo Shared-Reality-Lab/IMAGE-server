@@ -34,8 +34,8 @@ def get_ocr_text():
     """
     logging.debug("Received request")
     # Load schemas
-    with open('./schemas/preprocessors/ocr.schema.json') as jsonfile:
-        data_schema = json.load(jsonfile)
+    # with open('./schemas/preprocessors/ocr.schema.json') as jsonfile:
+    #     data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
@@ -76,8 +76,8 @@ def get_ocr_text():
     timestamp = int(time.time())
 
     try:
-        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
-        validator.validate(data)
+        # validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+        # validator.validate(data)
     except jsonschema.exceptions.ValidationError as error:
         logging.error(error)
         return jsonify("Invalid Preprocessor JSON format"), 500
