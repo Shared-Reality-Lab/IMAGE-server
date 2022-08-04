@@ -20,7 +20,7 @@ services:
         build:
             context: .
             dockerfile: ./preprocessors/charts/Dockerfile
-        image: "charts:latest"
+        image: "charts-preprocessor:latest"
     hello-preprocessor:
         build:
             context: .
