@@ -78,7 +78,7 @@ def get_ocr_text():
 
     series_object = content['highChartsData']['series'][0]
 
-    for point in series_object:
+    for point in series_object['data']:
         point['lowerPointsOnLeft'] = -2
         point['higherPointsOnLeft'] = -1
         point['lowerPointsOnRight'] = 1
