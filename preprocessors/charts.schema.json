@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/charts.schema.json",
+    "type": "object",
+    "title": "Charts preprocessor",
+    "description": "Extracts additional information from the datapoints present in the graph",
+    "properties": {
+        "lines": {
+            "type": "array",
+            "title": "dataPoints",
+            "description": "The dataPoints in the graph",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "x",
+                        "description": "x axis value"
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "y",
+                        "description": "y axis value"
+                    },
+                    "lowerPointsOnLeft": {
+                        "type": "number",
+                        "title": "Lower points on left",
+                        "description": "Contigous points lower than the data Point, lying on the left side on the x axis"
+                    },
+                    "higherPointsOnLeft": {
+                        "type": "number",
+                        "title": "higher points on left",
+                        "description": "Contigous points higher than the data Point, lying on the left side on the x axis"
+                    },
+                    "lowerPointsOnRight": {
+                        "type": "number",
+                        "title": "Lower points on right",
+                        "description": "Contigous points lower than the data Point, lying on the right side on the x axis"
+                    },
+                    "higherPointsOnRight": {
+                        "type": "number",
+                        "title": "higher points on right",
+                        "description": "Contigous points than the data Point, lying on the right side on the x axis"
+                    }
+                },
+                "required": ["x", "y", "lowerPointsOnLeft", "higherPointsOnLeft", "lowerPointsOnRight", "higherPointsOnRight"]
+            }
+        }
+    },
+    "required": ["dataPoints"]
+}
