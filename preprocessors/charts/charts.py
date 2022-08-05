@@ -84,6 +84,8 @@ def get_ocr_text():
         point['lowerPointsOnRight'] = 1
         point['higherPointsOnRight'] = 2
 
+    data = {'dataPoints': series_object}
+
     try:
         validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
         validator.validate(data)
@@ -106,7 +108,7 @@ def get_ocr_text():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")
-    print(series_object)
+    print(data)
     return response
 
 
