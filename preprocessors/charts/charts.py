@@ -34,8 +34,8 @@ def get_ocr_text():
     """
     logging.debug("Received request")
     # Load schemas
-    # with open('./schemas/preprocessors/ocr.schema.json') as jsonfile:
-    #     data_schema = json.load(jsonfile)
+    with open('./schemas/preprocessors/charts.schema.json') as jsonfile:
+        data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
     with open('./schemas/definitions.json') as jsonfile:
@@ -71,16 +71,25 @@ def get_ocr_text():
         schema, store=schema_store)
     print(content['highChartsData'])
 
+
     name = 'ca.mcgill.a11y.image.preprocessor.chart'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
 
-    # try:
-    #     # validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
-    #     # validator.validate(data)
-    # except jsonschema.exceptions.ValidationError as error:
-    #     logging.error(error)
-    #     return jsonify("Invalid Preprocessor JSON format"), 500
+    series_object = content['highChartsData']['series'][0]
+
+    for point in series_object:
+        point['lowerPointsOnLeft'] = -2
+        point['higherPointsOnLeft'] = -1
+        point['lowerPointsOnRight'] = 1
+        point['higherPointsOnRight'] = 2
+
+    try:
+        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+        validator.validate(data)
+    except jsonschema.exceptions.ValidationError as error:
+        logging.error(error)
+        return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {
         'request_uuid': request_uuid,
@@ -97,6 +106,7 @@ def get_ocr_text():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")
+    print(series_object)
     return response
 
 
