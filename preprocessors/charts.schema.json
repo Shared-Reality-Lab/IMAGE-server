@@ -5,7 +5,7 @@
     "title": "Charts preprocessor",
     "description": "Extracts additional information from the datapoints present in the graph",
     "properties": {
-        "lines": {
+        "dataPoints": {
             "type": "array",
             "title": "dataPoints",
             "description": "The dataPoints in the graph",
