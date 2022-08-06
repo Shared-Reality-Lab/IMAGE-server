@@ -24,6 +24,8 @@ import io
 import base64
 from flask import Flask, request, jsonify
 
+from chart_utils import getLowerPointsOnLeft, getHigherPointsOnLeft , getLowerPointsOnRight, getHigherPointsOnRight
+
 app = Flask(__name__)
 
 
@@ -77,12 +79,13 @@ def get_ocr_text():
     timestamp = int(time.time())
 
     series_object = content['highChartsData']['series'][0]
+    series_data = series_object['data']
 
-    for point in series_object['data']:
-        point['lowerPointsOnLeft'] = -2
-        point['higherPointsOnLeft'] = -1
-        point['lowerPointsOnRight'] = 1
-        point['higherPointsOnRight'] = 2
+    for index,point in enumerate(series_data):
+        point['lowerPointsOnLeft'] = getLowerPointsOnLeft(index, point, series_data)
+        point['higherPointsOnLeft'] = getHigherPointsOnLeft(index, point, series_data)
+        point['lowerPointsOnRight'] = getLowerPointsOnRight(index, point, series_data)
+        point['higherPointsOnRight'] = getHigherPointsOnRight(index, point, series_data)
 
     data = {'dataPoints': series_object}
 
@@ -110,7 +113,6 @@ def get_ocr_text():
     logging.debug("Sending response")
     print(data)
     return response
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
