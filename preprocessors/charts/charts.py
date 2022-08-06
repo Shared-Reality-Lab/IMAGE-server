@@ -24,7 +24,7 @@ import io
 import base64
 from flask import Flask, request, jsonify
 
-from chart_utils import getLowerPointsOnLeft, getHigherPointsOnLeft , getLowerPointsOnRight, getHigherPointsOnRight
+from charts_utils import getLowerPointsOnLeft, getHigherPointsOnLeft , getLowerPointsOnRight, getHigherPointsOnRight
 
 app = Flask(__name__)
 
