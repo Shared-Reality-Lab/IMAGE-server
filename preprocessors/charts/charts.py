@@ -71,7 +71,6 @@ def get_ocr_text():
     # Use response schema to validate response
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
-    print(content['highChartsData'])
 
 
     name = 'ca.mcgill.a11y.image.preprocessor.chart'
@@ -111,7 +110,7 @@ def get_ocr_text():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")
-    print(data)
+    #print(data)
     return response
 
 if __name__ == "__main__":

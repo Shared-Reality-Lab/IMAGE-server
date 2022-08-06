@@ -68,6 +68,11 @@ app.post("/handler", async (req, res) => {
 
     const renderings: Record<string, unknown>[] = [];
     const highChartsData = req.body["highChartsData"];
+    // check for preprocessor data
+    const preprocessors = req.body["preprocessors"];
+    const chartsData = preprocessors["ca.mcgill.a11y.image.preprocessor.autour"];
+    console.log(Object.keys(chartsData));
+    console.log(chartsData);
 
     const series: { type: string }[] | undefined = highChartsData?.series;
     if (series && series.length === 1) {
