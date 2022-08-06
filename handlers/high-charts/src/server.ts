@@ -70,7 +70,7 @@ app.post("/handler", async (req, res) => {
     const highChartsData = req.body["highChartsData"];
     // check for preprocessor data
     const preprocessors = req.body["preprocessors"];
-    const chartsData = preprocessors["ca.mcgill.a11y.image.preprocessor.autour"];
+    const chartsData = preprocessors["ca.mcgill.a11y.image.preprocessor.chart"];
     console.log(Object.keys(chartsData));
     console.log(chartsData);
 
