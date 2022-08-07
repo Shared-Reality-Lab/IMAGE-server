@@ -6,11 +6,7 @@ from datetime import datetime
 from flask import jsonify
 import jsonschema
 import logging
-from overpy.exception import (
-    OverpassTooManyRequests,
-    OverpassGatewayTimeout,
-    OverpassRuntimeError,
-)
+from config import defaultServer, secondaryServer1, secondaryServer2
 
 
 def create_bbox_coordinates(distance, lat, lon):
@@ -35,34 +31,64 @@ def create_bbox_coordinates(distance, lat, lon):
     return bbox_coordinates
 
 
-def get_streets(bbox_coord):
+def server_config1(url, bbox_coord):
+    # Get street data from the
+    # specified url.
+
     lat_min, lon_min = bbox_coord[0], bbox_coord[1]
     lat_max, lon_max = bbox_coord[2], bbox_coord[3]
     """ fetch all ways and nodes """
+
+    api = overpy.Overpass(url=url)
+    street_data = api.query(
+        f"""
+    way({lat_min},{lon_min},{lat_max},{lon_max})[highway];
+
+    (._;>;);
+    out geom;
+    """
+    )
+    return street_data
+
+
+def server_config2(url, bbox_coord):
+    # Get amenities from
+    # the specified url.
+
+    lat_min, lon_min = bbox_coord[0], bbox_coord[1]
+    lat_max, lon_max = bbox_coord[2], bbox_coord[3]
+    api = overpy.Overpass(url=url)
+    street_amenities = api.query(
+        f"""
+    (node({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
+    way({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
+    rel({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
+    );
+    out center;
+    """
+    )
+    return street_amenities
+
+
+def get_streets(bbox_coord):
+    """ fetch all ways and nodes """
     try:
-        api = overpy.Overpass(
-            url="https://pegasus.cim.mcgill.ca/overpass/api/interpreter?")
-        OSM_data = api.query(
-            f"""
-        way({lat_min},{lon_min},{lat_max},{lon_max})[highway];
-        (._;>;);
-        out body;
-        """
-        )
-    except OverpassGatewayTimeout:
-        error = 'Overpass GatewayTimeout: High server load. Retry again'
-        logging.error(error)
-    except OverpassTooManyRequests:
-        error = 'Overpass Too many requests. Retry again'
-        logging.error(error)
-    except OverpassRuntimeError:
-        error = 'Overpass Runtime error. Retry again'
-        logging.error(error)
+        OSM_data = server_config1(defaultServer, bbox_coord)
     except Exception:
-        error = 'Overpass Attibute error. Retry again'
-        logging.error(error)
-    else:
-        return (OSM_data)
+        try:
+            error = 'Primary server not responding, so connecting server 1'
+            logging.error(error)
+            OSM_data = server_config1(secondaryServer1, bbox_coord)
+        except Exception:
+            try:
+                error = 'Server 1 not responding, so connecting server 2'
+                logging.error(error)
+                OSM_data = server_config1(secondaryServer2, bbox_coord)
+            except Exception:
+                error = 'Unable to get data. All servers down!'
+                logging.error(error)
+                OSM_data = None
+    return (OSM_data)
 
 
 def get_timestamp():
@@ -270,35 +296,26 @@ def allot_intersection(processed_OSM_data, inters_rec_up
 def get_amenities(bbox_coord):
     # Send request to OSM to get amenities which are part of
     # points of interest (POIs)
-    api = overpy.Overpass(
-        url="https://pegasus.cim.mcgill.ca/overpass/api/interpreter?")
-    lat_min, lon_min = bbox_coord[0], bbox_coord[1]
-    lat_max, lon_max = bbox_coord[2], bbox_coord[3]
     try:
-        amenities = api.query(
-            f"""
-        (node({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
-        way({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
-        rel({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
-        );
-        out center;
-        """
-        )
-    except OverpassGatewayTimeout:
-        error = 'Overpas GatewayTimeout: High server load. Retry again'
-        logging.error(error)
-    except OverpassTooManyRequests:
-        error = 'Overpass Too many requests. Retry again'
-        logging.error(error)
-    except OverpassRuntimeError:
-        error = 'Overpass Runtime error. Retry again'
-        logging.error(error)
+        amenities = server_config2(defaultServer, bbox_coord)
     except Exception:
-        error = 'Overpass Attibute error. Retry again'
-        logging.error(error)
-    else:
-        # Filter the amenity tags to the basic useful ones
-        amenity = []
+        try:
+            error = 'Primary server not responding, so connecting server 1'
+            logging.error(error)
+            amenities = server_config2(secondaryServer1, bbox_coord)
+        except Exception:
+            try:
+                error = 'Server 1 not responding, so connecting server 2'
+                logging.error(error)
+                amenities = server_config2(secondaryServer2, bbox_coord)
+            except Exception:
+                error = 'Unable to get data. All servers down!'
+                logging.error(error)
+                amenities = None
+
+    # Filter the amenity tags to the basic useful ones
+    amenity = []
+    if amenities is not None:
         if amenities.nodes:
             for node in amenities.nodes:
                 if node.tags.get("amenity") is not None:
@@ -342,6 +359,7 @@ def get_amenities(bbox_coord):
                 amenity_record = dict(
                     x for x in amenity_record.items() if all(x))
                 amenity.append(amenity_record)
+
         if amenities.relations:
             for rel in amenities.relations:
                 if rel.tags.get("amenity") is not None:
@@ -362,7 +380,7 @@ def get_amenities(bbox_coord):
                 amenity_record = dict(
                     x for x in amenity_record.items() if all(x))
                 amenity.append(amenity_record)
-        return amenity
+    return amenity
 
 
 def enlist_POIs(processed_OSM_data1, amenity):
