@@ -69,6 +69,8 @@ def get_map_data():
     OSM_data = get_streets(bbox_coordinates)
     request_uuid = content["request_uuid"]
     amenity = get_amenities(bbox_coordinates)
+
+    # Use variable for timestamp
     time_stamp = int(get_timestamp())
     header_info = {
         "longitude": f" From {bbox_coordinates[1]} To {bbox_coordinates[3]} ",
