@@ -30,7 +30,7 @@ app = Flask(__name__)
 
 
 @app.route('/preprocessor', methods=['POST', 'GET'])
-def get_ocr_text():
+def get_chart_info():
     """
     Get the useful chart information from the given input
     """
