@@ -21,7 +21,8 @@ import logging
 import jsonschema
 from flask import Flask, request, jsonify
 
-from charts_utils import getLowerPointsOnLeft, getHigherPointsOnLeft, getLowerPointsOnRight, getHigherPointsOnRight
+from charts_utils import (getLowerPointsOnLeft, 
+    getHigherPointsOnLeft, getLowerPointsOnRight, getHigherPointsOnRight)
 
 app = Flask(__name__)
 
@@ -76,11 +77,27 @@ def get_chart_info():
     series_object = content['highChartsData']['series'][0]
     series_data = series_object['data']
 
-    for index,point in enumerate(series_data):
-        point['lowerPointsOnLeft'] = getLowerPointsOnLeft(index,point,series_data)
-        point['higherPointsOnLeft'] = getHigherPointsOnLeft(index,point,series_data)
-        point['lowerPointsOnRight'] = getLowerPointsOnRight(index,point,series_data)
-        point['higherPointsOnRight'] = getHigherPointsOnRight(index,point,series_data)
+    for index, point in enumerate(series_data):
+        point['lowerPointsOnLeft'] = getLowerPointsOnLeft(
+                                        index, 
+                                        point, 
+                                        series_data
+                                    )
+        point['higherPointsOnLeft'] = getHigherPointsOnLeft(
+                                        index,
+                                        point,
+                                        series_data
+                                    )
+        point['lowerPointsOnRight'] = getLowerPointsOnRight(
+                                        index,
+                                        point,
+                                        series_data
+                                    )
+        point['higherPointsOnRight'] = getHigherPointsOnRight(
+                                        index,
+                                        point,
+                                        series_data
+                                    )
 
     data = {'dataPoints': series_data}
 
