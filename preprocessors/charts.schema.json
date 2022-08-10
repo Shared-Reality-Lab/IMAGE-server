@@ -25,22 +25,22 @@
                     "lowerPointsOnLeft": {
                         "type": "number",
                         "title": "Lower points on left",
-                        "description": "Contigous points lower than the data Point, lying on the left side on the x axis"
+                        "description": "contiguous points lower than the data Point, lying on the left side on the x axis"
                     },
                     "higherPointsOnLeft": {
                         "type": "number",
                         "title": "higher points on left",
-                        "description": "Contigous points higher than the data Point, lying on the left side on the x axis"
+                        "description": "contiguous points higher than the data Point, lying on the left side on the x axis"
                     },
                     "lowerPointsOnRight": {
                         "type": "number",
                         "title": "Lower points on right",
-                        "description": "Contigous points lower than the data Point, lying on the right side on the x axis"
+                        "description": "contiguous points lower than the data Point, lying on the right side on the x axis"
                     },
                     "higherPointsOnRight": {
                         "type": "number",
                         "title": "higher points on right",
-                        "description": "Contigous points than the data Point, lying on the right side on the x axis"
+                        "description": "contiguous points than the data Point, lying on the right side on the x axis"
                     }
                 },
                 "required": ["x", "y", "lowerPointsOnLeft", "higherPointsOnLeft", "lowerPointsOnRight", "higherPointsOnRight"]
