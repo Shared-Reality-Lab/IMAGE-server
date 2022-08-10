@@ -86,7 +86,7 @@ def get_chart_info():
         point['lowerPointsOnRight'] = getLowerPointsOnRight(index, point, series_data)
         point['higherPointsOnRight'] = getHigherPointsOnRight(index, point, series_data)
 
-    data = {'dataPoints': series_object}
+    data = {'dataPoints': series_data}
 
     try:
         validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)

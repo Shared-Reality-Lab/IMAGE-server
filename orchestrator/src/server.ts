@@ -146,7 +146,6 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
         // OK data returned
         if (resp.status === 200) {
             try {
-                console.log(resp);
                 const json = await resp.json();
                 (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
             } catch (err) {
