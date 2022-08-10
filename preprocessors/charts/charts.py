@@ -19,12 +19,9 @@ import json
 import time
 import logging
 import jsonschema
-import os
-import io
-import base64
 from flask import Flask, request, jsonify
 
-from charts_utils import getLowerPointsOnLeft, getHigherPointsOnLeft , getLowerPointsOnRight, getHigherPointsOnRight
+from charts_utils import getLowerPointsOnLeft, getHigherPointsOnLeft, getLowerPointsOnRight, getHigherPointsOnRight
 
 app = Flask(__name__)
 
@@ -72,7 +69,6 @@ def get_chart_info():
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
 
-
     name = 'ca.mcgill.a11y.image.preprocessor.chart'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
@@ -81,10 +77,10 @@ def get_chart_info():
     series_data = series_object['data']
 
     for index,point in enumerate(series_data):
-        point['lowerPointsOnLeft'] = getLowerPointsOnLeft(index, point, series_data)
-        point['higherPointsOnLeft'] = getHigherPointsOnLeft(index, point, series_data)
-        point['lowerPointsOnRight'] = getLowerPointsOnRight(index, point, series_data)
-        point['higherPointsOnRight'] = getHigherPointsOnRight(index, point, series_data)
+        point['lowerPointsOnLeft'] = getLowerPointsOnLeft(index,point,series_data)
+        point['higherPointsOnLeft'] = getHigherPointsOnLeft(index,point,series_data)
+        point['lowerPointsOnRight'] = getLowerPointsOnRight(index,point,series_data)
+        point['higherPointsOnRight'] = getHigherPointsOnRight(index,point,series_data)
 
     data = {'dataPoints': series_data}
 
@@ -110,8 +106,9 @@ def get_chart_info():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")
-    #print(data)
+    # print(data)
     return response
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
