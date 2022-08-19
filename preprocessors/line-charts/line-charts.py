@@ -30,7 +30,7 @@ app = Flask(__name__)
 @app.route('/preprocessor', methods=['POST', 'GET'])
 def get_chart_info():
     """
-    The preprocessor currently handles only single-line charts, 
+    The preprocessor currently handles only single-line charts,
     functionality to be extended later
     """
     logging.debug("Received request")
