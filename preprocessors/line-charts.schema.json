@@ -25,22 +25,22 @@
                     "lowerPointsOnLeft": {
                         "type": "number",
                         "title": "Lower points on left",
-                        "description": "number of continous points lower than the current point, lying on the left of current point"
+                        "description": "number of continous points lower than the current point, lying on the left side of current point"
                     },
                     "higherPointsOnLeft": {
                         "type": "number",
                         "title": "higher points on left",
-                        "description": "number of continous points higher than the current point, lying on the left of current point"
+                        "description": "number of continous points higher than the current point, lying on the left side of current point"
                     },
                     "lowerPointsOnRight": {
                         "type": "number",
                         "title": "Lower points on right",
-                        "description": "number of continous points lower than the current point, lying on the right of current point"
+                        "description": "number of continous points lower than the current point, lying on the right side of current point"
                     },
                     "higherPointsOnRight": {
                         "type": "number",
                         "title": "higher points on right",
-                        "description": "number of continous points higher than the current point, lying on the right of current point"
+                        "description": "number of continous points higher than the current point, lying on the right side of current point"
                     }
                 },
                 "required": ["x", "y", "lowerPointsOnLeft", "higherPointsOnLeft", "lowerPointsOnRight", "higherPointsOnRight"]
