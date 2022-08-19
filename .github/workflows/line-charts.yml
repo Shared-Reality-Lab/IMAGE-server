@@ -1,12 +1,12 @@
-name: Charts Preprocessor
+name: Line Charts Preprocessor
 on:
   push:
     branches: [ main ]
-    tags: [ "preprocessor-charts-[0-9]+.[0-9]+.[0-9]+" ]
-    paths: [ "preprocessors/charts/**" ]
+    tags: [ "preprocessor-line-charts-[0-9]+.[0-9]+.[0-9]+" ]
+    paths: [ "preprocessors/line-charts/**" ]
   pull_request:
     branches: [ main ]
-    paths: [ "preprocessors/charts/**" ]
+    paths: [ "preprocessors/line-charts/**" ]
   workflow_run:
     workflows: [ "Schemas (Trigger)" ]
     types:
@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: shared-reality-lab/image-preprocessor-charts
+  IMAGE_NAME: shared-reality-lab/image-preprocessor-line-charts
 jobs:
   lint:
     name: PEP 8 style check.
@@ -27,7 +27,7 @@ jobs:
       - name: Install flake8
         run: pip install flake8
       - name: Check with flake8
-        run: python -m flake8 ./preprocessors/charts --show-source
+        run: python -m flake8 ./preprocessors/line-charts --show-source
   build-and-push-image:
     name: Build and Push to Registry
     needs: lint
@@ -48,7 +48,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Get Correct Tags
         run: |
-          if [[ ${{ github.ref }} =~ ^refs/tags/preprocessor-charts-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ ${{ github.ref }} =~ ^refs/tags/preprocessor-line-charts-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "TAGGED=true" >> $GITHUB_ENV
           else
             echo "TAGGED=false" >> $GITHUB_ENV
@@ -63,21 +63,21 @@ jobs:
           flavor: |
             latest=${{ env.TAGGED }}
           tags: |
-            type=match,enable=${{ env.TAGGED }},priority=300,pattern=preprocessor-charts-(\d+.\d+.\d+),group=1
+            type=match,enable=${{ env.TAGGED }},priority=300,pattern=preprocessor-line-charts-(\d+.\d+.\d+),group=1
             type=raw,priority=200,value=unstable
             type=raw,priority=100,value=${{ env.timestamp }}
           labels: |
             org.opencontainers.image.title=IMAGE Preprocessor Charts
-            org.opencontainers.image.description=Gets additional information from highcharts for use in the IMAGE project 
+            org.opencontainers.image.description=Gets additional information from linecharts in highchart format for use in the IMAGE project 
             org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
-            org.opencontainers.image.documentation=https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/charts/README.md
+            org.opencontainers.image.documentation=https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/line-charts/README.md
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./preprocessors/charts/Dockerfile
+          file: ./preprocessors/line-charts/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

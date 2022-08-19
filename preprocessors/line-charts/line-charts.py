@@ -1,4 +1,4 @@
-# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+# Copyright (c) 2022 IMAGE Project, Shared Reality Lab, McGill University
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -30,11 +30,11 @@ app = Flask(__name__)
 @app.route('/preprocessor', methods=['POST', 'GET'])
 def get_chart_info():
     """
-    Get the useful chart information from the given input
+    The preprocessor currently handles only single-line charts, functionality to be extended later
     """
     logging.debug("Received request")
     # Load schemas
-    with open('./schemas/preprocessors/charts.schema.json') as jsonfile:
+    with open('./schemas/preprocessors/line-charts.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
@@ -49,9 +49,13 @@ def get_chart_info():
 
     # Check if request is for a chart
     if 'highChartsData' not in content:
-        logging.info("Not a charts request. Skipping...")
+        logging.info("Not a highcharts charts request. Skipping...")
         return "", 204
-
+    
+    if ((len(content['highChartsData'].series) > 1) or (content['highChartsData'].series[0].type != 'line')):
+        logging.info("Not a single line charts request. Skipping...")
+        return "", 204
+    
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
     # Validate incoming request
@@ -70,7 +74,7 @@ def get_chart_info():
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
 
-    name = 'ca.mcgill.a11y.image.preprocessor.chart'
+    name = 'ca.mcgill.a11y.image.preprocessor.lineChart'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
 

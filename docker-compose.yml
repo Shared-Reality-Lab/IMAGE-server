@@ -61,8 +61,8 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
-    charts-preprocessor:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-charts:unstable
+    line-charts-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-line-charts:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
