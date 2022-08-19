@@ -12,7 +12,7 @@ RUN pip3 install -r requirements.txt
 
 COPY /schemas /app/schemas
 
-COPY /preprocessors/charts/ /app
+COPY /preprocessors/line-charts/ /app
 
 EXPOSE 5000
 

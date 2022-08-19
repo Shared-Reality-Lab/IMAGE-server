@@ -16,11 +16,11 @@ services:
             context: .
             dockerfile: services/espnet-tts/Dockerfile
         image: "espnet-tts:latest"
-    charts-preprocessor:
+    line-charts-preprocessor:
         build:
             context: .
-            dockerfile: ./preprocessors/charts/Dockerfile
-        image: "charts-preprocessor:latest"
+            dockerfile: ./preprocessors/line-charts/Dockerfile
+        image: "line-charts-preprocessor:latest"
     hello-preprocessor:
         build:
             context: .
