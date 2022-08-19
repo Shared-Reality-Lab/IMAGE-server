@@ -124,7 +124,7 @@ def get_chart_info():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")
-    print(data)
+    #print(data)
     return response
 
 
