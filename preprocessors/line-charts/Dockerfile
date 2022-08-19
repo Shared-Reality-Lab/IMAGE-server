@@ -6,7 +6,7 @@ ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip3 install --upgrade pip
 
-COPY /preprocessors/charts/requirements.txt /app/requirements.txt
+COPY /preprocessors/line-charts/requirements.txt /app/requirements.txt
 
 RUN pip3 install -r requirements.txt
 
