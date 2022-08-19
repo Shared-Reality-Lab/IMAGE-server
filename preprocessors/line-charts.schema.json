@@ -1,9 +1,9 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://image.a11y.mcgill.ca/preprocessors/single-line-charts.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/line-charts.schema.json",
     "type": "object",
     "title": "Single Line Charts Data",
-    "description": "Extracts additional information from the data points present in the single line-chart",
+    "description": "Extracts additional information from the data points present in the line-chart",
     "properties": {
         "dataPoints": {
             "type": "array",
