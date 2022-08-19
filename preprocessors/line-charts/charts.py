@@ -22,7 +22,7 @@ import jsonschema
 from flask import Flask, request, jsonify
 
 from charts_utils import getLowerPointsOnLeft, getHigherPointsOnLeft
-from chart_utils import getLowerPointsOnRight, getHigherPointsOnRight
+from charts_utils import getLowerPointsOnRight, getHigherPointsOnRight
 
 app = Flask(__name__)
 
