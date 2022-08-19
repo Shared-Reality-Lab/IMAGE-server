@@ -1,14 +1,14 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://image.a11y.mcgill.ca/preprocessors/charts.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/single-line-charts.schema.json",
     "type": "object",
-    "title": "Charts preprocessor",
-    "description": "Extracts additional information from the datapoints present in the graph",
+    "title": "Single Line Charts Data",
+    "description": "Extracts additional information from the data points present in the single line-chart",
     "properties": {
         "dataPoints": {
             "type": "array",
-            "title": "dataPoints",
-            "description": "The dataPoints in the graph",
+            "title": "Line-chart data points",
+            "description": "Information about data-points present in the line chart",
             "items": {
                 "type": "object",
                 "properties": {
@@ -25,22 +25,22 @@
                     "lowerPointsOnLeft": {
                         "type": "number",
                         "title": "Lower points on left",
-                        "description": "contiguous points lower than the data Point, lying on the left side on the x axis"
+                        "description": "number of continous points lower than the current point, lying on the left of current point"
                     },
                     "higherPointsOnLeft": {
                         "type": "number",
                         "title": "higher points on left",
-                        "description": "contiguous points higher than the data Point, lying on the left side on the x axis"
+                        "description": "number of continous points higher than the current point, lying on the left of current point"
                     },
                     "lowerPointsOnRight": {
                         "type": "number",
                         "title": "Lower points on right",
-                        "description": "contiguous points lower than the data Point, lying on the right side on the x axis"
+                        "description": "number of continous points lower than the current point, lying on the right of current point"
                     },
                     "higherPointsOnRight": {
                         "type": "number",
                         "title": "higher points on right",
-                        "description": "contiguous points than the data Point, lying on the right side on the x axis"
+                        "description": "number of continous points higher than the current point, lying on the right of current point"
                     }
                 },
                 "required": ["x", "y", "lowerPointsOnLeft", "higherPointsOnLeft", "lowerPointsOnRight", "higherPointsOnRight"]
