@@ -30,7 +30,8 @@ app = Flask(__name__)
 @app.route('/preprocessor', methods=['POST', 'GET'])
 def get_chart_info():
     """
-    The preprocessor currently handles only single-line charts, functionality to be extended later
+    The preprocessor currently handles only single-line charts, 
+    functionality to be extended later
     """
     logging.debug("Received request")
     # Load schemas
@@ -52,7 +53,8 @@ def get_chart_info():
         logging.info("Not a highcharts charts request. Skipping...")
         return "", 204
     
-    if ((len(content['highChartsData'].series) > 1) or (content['highChartsData'].series[0].type != 'line')):
+    if ((len(content['highChartsData'].series) > 1) or
+     (content['highChartsData'].series[0].type != 'line')):
         logging.info("Not a single line charts request. Skipping...")
         return "", 204
     
