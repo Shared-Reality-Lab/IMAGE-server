@@ -53,8 +53,8 @@ def get_chart_info():
         logging.info("Not a highcharts charts request. Skipping...")
         return "", 204
 
-    if ((len(content['highChartsData'].series) > 1) or
-            (content['highChartsData'].series[0].type != 'line')):
+    if ((len(content['highChartsData']['series']) > 1) or
+            (content['highChartsData']['series'][0].type != 'line')):
         logging.info("Not a single line charts request. Skipping...")
         return "", 204
 
