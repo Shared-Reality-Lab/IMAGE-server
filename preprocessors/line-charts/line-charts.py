@@ -52,12 +52,12 @@ def get_chart_info():
     if 'highChartsData' not in content:
         logging.info("Not a highcharts charts request. Skipping...")
         return "", 204
-    
+
     if ((len(content['highChartsData'].series) > 1) or
-     (content['highChartsData'].series[0].type != 'line')):
+        (content['highChartsData'].series[0].type != 'line')):
         logging.info("Not a single line charts request. Skipping...")
         return "", 204
-    
+
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
     # Validate incoming request
@@ -129,7 +129,7 @@ def get_chart_info():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")
-    # print(data)
+    print(data)
     return response
 
 
