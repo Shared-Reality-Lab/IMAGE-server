@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/line-charts.schema.json",
+    "type": "object",
+    "title": "Line Charts Data",
+    "description": "Additional information about the data points present in the line-chart",
+    "properties": {
+        "dataPoints": {
+            "type": "array",
+            "title": "Line-chart data points",
+            "description": "Information about data-points present in the line chart",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "x",
+                        "description": "x axis value"
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "y",
+                        "description": "y axis value"
+                    },
+                    "lowerPointsOnLeft": {
+                        "type": "number",
+                        "title": "Lower points on left",
+                        "description": "number of continous points lower than the current point, lying on the left side of current point"
+                    },
+                    "higherPointsOnLeft": {
+                        "type": "number",
+                        "title": "higher points on left",
+                        "description": "number of continous points higher than the current point, lying on the left side of current point"
+                    },
+                    "lowerPointsOnRight": {
+                        "type": "number",
+                        "title": "Lower points on right",
+                        "description": "number of continous points lower than the current point, lying on the right side of current point"
+                    },
+                    "higherPointsOnRight": {
+                        "type": "number",
+                        "title": "higher points on right",
+                        "description": "number of continous points higher than the current point, lying on the right side of current point"
+                    }
+                },
+                "required": ["x", "y", "lowerPointsOnLeft", "higherPointsOnLeft", "lowerPointsOnRight", "higherPointsOnRight"]
+            }
+        }
+    },
+    "required": ["dataPoints"]
+}
