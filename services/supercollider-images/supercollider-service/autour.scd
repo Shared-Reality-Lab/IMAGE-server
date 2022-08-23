@@ -19,7 +19,7 @@ var autourStyle;
 "Autour-style Rendering".postln;
 
 autourStyle = { |json, ttsData, outPath, addr|
-    var dMeters, score, timing, order=5, length=5, nTones=3, earconList, places, lat, lon, poiDelay=0.5, endDelay=0.5, intro, baseGain=(-4.dbamp);
+    var dMeters, score, timing, order=5, length=5, nTones=3, earconList, places, lat, lon, poiDelay=0.5, endDelay=0.5, intro, baseGain=(1.dbamp);
     timing = 0;
     score = IMAGE.newScore(order);
 
