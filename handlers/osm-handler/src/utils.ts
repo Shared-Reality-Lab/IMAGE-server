@@ -119,7 +119,7 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
                 // Send command when ready
                 oscPort.on("ready", () => {
                     oscPort.send({
-                        "address": "/render/photo",
+                        "address": "/render/map/osmStreets",
                         "args": [
                             { "type": "s", "value": jsonFile },
                             { "type": "s", "value": outFile }

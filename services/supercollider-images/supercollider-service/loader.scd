@@ -23,3 +23,4 @@ IMAGE.storeSynthDefs;
 "charts/pie.scd".load;
 "autour.scd".load;
 "photo.scd".load;
+"osm.scd".load;
