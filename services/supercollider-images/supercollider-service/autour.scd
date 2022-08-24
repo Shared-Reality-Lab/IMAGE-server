@@ -64,7 +64,7 @@ autourStyle = { |json, ttsData, outPath, addr|
         // As of writing (2022-01-06), the radius for included POIs is 250 meters.
         score.add([
             timing,
-            [\s_new, (\playDiscreteSinePingHOA++order.asSymbol).asSymbol, -1, 2, 1001,
+            [\s_new, (\playDiscreteSinePingAutourHOA++order.asSymbol).asSymbol, -1, 2, 1001,
                 \note, note,
                 \int0, ecPattern.at(0),
                 \int1, ecPattern.at(1),
