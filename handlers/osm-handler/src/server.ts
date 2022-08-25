@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+ * Copyright (c) 2022 IMAGE Project, Shared Reality Lab, McGill University
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -82,6 +82,8 @@ app.post("/handler", async (req, res) => {
     for (const street of osmPreprocessor.streets as utils.Street[]) {
         if (street.street_name !== undefined) {
             osmNames.push(street.street_name);
+        } else if (street.street_type !== undefined) {
+            osmNames.push(street.street_type);
         }
     }
     if (osmPreprocessor.points_of_interest !== undefined) {
@@ -102,7 +104,7 @@ app.post("/handler", async (req, res) => {
         // is the offset.
         let i = 0, offset = 0;
         for (const street of osmPreprocessor.streets as utils.Street[]) {
-            if (street.street_name !== undefined) {
+            if (street.street_name !== undefined || street.street_type !== undefined) {
                 street["audio"] = {
                     "offset": offset,
                     "duration": ttsResponse.durations[i]

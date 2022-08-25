@@ -14,10 +14,15 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
  */
-var renderOsmStreets;
+var renderOsmStreets, spawnNewSweepSynth, order=5;
+spawnNewSweepSynth = [\s_new, (\playContinuousResonzNoiseHOA++order.asSymbol).asSymbol, 1002, 2, 1001,
+            \freq, 90.midicps,
+            \gain, 0.0,
+            \decay, 0.005,
+            \imp, 10];
 "OSM Streets Rendering".postln;
 renderOsmStreets = { |json, ttsData, outPath, addr|
-    var score, timing, order=5, segmentInfo=Array.new, baseGain=(0.dbamp), streets, pois, latList, lonList, latMax, latMin, lonMax, lonMin, intervalDuration = 0.1, lowNote = 70, highNote = lowNote + 48;
+    var score, timing, segmentInfo=Array.new, baseGain=(6.dbamp), baseGainTTS=(0.dbamp), streets, pois, latList, lonList, latMax, latMin, lonMax, lonMin, intervalDuration = 0.1, lowNote = 70, highNote = lowNote + 48;
     timing = 0;
     score = IMAGE.newScore(order);
 
@@ -51,17 +56,34 @@ renderOsmStreets = { |json, ttsData, outPath, addr|
     // Launch synth for beginning of the street
     score.add([
         timing,
-        [\s_new, (\playContinuousResonzNoiseHOA++order.asSymbol).asSymbol, 1002, 2, 1001,
-            \freq, 90.midicps,
-            \gain, 0.0,
-            \decay, 0.005,
-            \imp, 10]
+        spawnNewSweepSynth
     ]);
 
     // Iterate over each street...
     streets.do({|street, i|
         var theta, phi, freq;
         // TODO play street name if applicable
+        if(street.at("audio").notNil, {
+            var duration, offset;
+            // Free sweep synth
+            score.add([
+                timing,
+                [\n_free, 1002]
+            ]);
+            duration = street.at("audio").at("duration").asInteger / ttsData.sampleRate;
+            offset = street.at("audio").at("offset").asInteger;
+            score.add([
+                timing,
+                [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, offset, \duration, duration, \gain, baseGainTTS]
+            ]);
+            timing = timing + duration;
+            // Recreate sweep synth
+            score.add([
+                timing,
+                spawnNewSweepSynth
+            ]);
+        }, { ("No street name for"+i++"th way!").postln; });
+
         // Set to first position in list
         // Note: longitude is east-west, latitude is north-south
         // Need to flip latitude since we function expects graphics coordinates (0 is top)
@@ -86,13 +108,40 @@ renderOsmStreets = { |json, ttsData, outPath, addr|
                 node.at("lat").asFloat.linlin(latMin, latMax, 1, 0)
             );
             freq = node.at("lat").asFloat.linlin(latMin, latMax, lowNote.midicps, highNote.midicps);
-            if (node.at("POIs_ID").notNil, {
+            if(node.at("POIs_ID").notNil, {
+                var poi;
                 // mute street noise
                 score.add([
                     timing,
                     [\n_set, 1002, \gain, baseGain * 0.003]
                 ]);
                 timing = timing + 0.1;
+                // Free synth to reduce cycles
+                score.add([
+                    timing,
+                    [\n_free, 1002]
+                ]);
+
+                /*node.at("POIs_ID").do({|poi_id|
+                    var poi = pois.select({|item|
+                        item.at("id").asInteger == poi_id.asInteger
+                    });
+                    if(poi.notNil, {
+                        var duration, offset;
+                        poi = poi.at(0);
+                        if(poi.at("cat") != "intersection", {
+                            duration = poi.at("audio").at("duration").asInteger / ttsData.sampleRate;
+                            poi.postln;
+                            offset = poi.at("audio").at("offset").asInteger;
+                            score.add([
+                                timing,
+                                [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, offset, \duration, duration, \gain, baseGainTTS]
+                            ]);
+                            timing = timing + duration;
+                        });
+                    });
+                });*/
+
                 // Magic numbers from Florian...
                 score.add([
                     timing,
@@ -102,6 +151,15 @@ renderOsmStreets = { |json, ttsData, outPath, addr|
                         \freq, freq,
                         \decay, 0.01.linlin(0.0, 1.0, 0.008, 0.03),
                         \gain, baseGain * 0.01]
+                ]);
+
+                score.add([
+                    timing,
+                    spawnNewSweepSynth
+                ]);
+                score.add([
+                    timing,
+                    [\n_set, 1002, \theta, theta, \phi, phi, \freq, freq]
                 ]);
 
                 // TODO wait and play TTS for these POIs

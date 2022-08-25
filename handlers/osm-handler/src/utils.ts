@@ -138,7 +138,7 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
                     oscPort.close();
                 } catch (_) { /* noop */ }
                 reject("Timeout");
-            }, 5000);
+            }, 10000);
         })
     ]);
 }
