@@ -122,17 +122,15 @@ renderOsmStreets = { |json, ttsData, outPath, addr|
                     [\n_free, 1002]
                 ]);
 
-                /*node.at("POIs_ID").do({|poi_id|
-                    var poi = pois.select({|item|
-                        item.at("id").asInteger == poi_id.asInteger
-                    });
-                    if(poi.notNil, {
+                node.at("POIs_ID").postln; //debug
+                poi = pois.select({|item| node.at("POIs_ID").includesEqual(item.at("id")) });
+                poi.size.postln; //debug
+                if(poi.notNil, {
+                    poi.do({|item|
                         var duration, offset;
-                        poi = poi.at(0);
-                        if(poi.at("cat") != "intersection", {
-                            duration = poi.at("audio").at("duration").asInteger / ttsData.sampleRate;
-                            poi.postln;
-                            offset = poi.at("audio").at("offset").asInteger;
+                        if(item.at("cat") != "intersection", {
+                            duration = item.at("audio").at("duration").asInteger / ttsData.sampleRate;
+                            offset = item.at("audio").at("offset").asInteger;
                             score.add([
                                 timing,
                                 [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, offset, \duration, duration, \gain, baseGainTTS]
@@ -140,7 +138,7 @@ renderOsmStreets = { |json, ttsData, outPath, addr|
                             timing = timing + duration;
                         });
                     });
-                });*/
+                });
 
                 // Magic numbers from Florian...
                 score.add([
