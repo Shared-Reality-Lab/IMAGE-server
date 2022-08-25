@@ -128,7 +128,7 @@ renderOsmStreets = { |json, ttsData, outPath, addr|
                 if(poi.notNil, {
                     poi.do({|item|
                         var duration, offset;
-                        if(item.at("cat") != "intersection", {
+                        //if(item.at("cat") != "intersection", {
                             duration = item.at("audio").at("duration").asInteger / ttsData.sampleRate;
                             offset = item.at("audio").at("offset").asInteger;
                             score.add([
@@ -136,7 +136,7 @@ renderOsmStreets = { |json, ttsData, outPath, addr|
                                 [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, offset, \duration, duration, \gain, baseGainTTS]
                             ]);
                             timing = timing + duration;
-                        });
+                        //});
                     });
                 });
 
