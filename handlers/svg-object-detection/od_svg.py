@@ -62,8 +62,7 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
-    print(contents['capabilities'][0])
-    if( "ca.mcgill.a11y.image.capability.DebugMode" not in contents['capabilities'][0]):
+    if( "ca.mcgill.a11y.image.capability.DebugMode" not in contents['capabilities']):
         logging.debug("Debug mode inactive")
         print("debug inactive")
         response = {
