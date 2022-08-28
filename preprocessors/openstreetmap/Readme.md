@@ -79,7 +79,7 @@ git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.gi
 2. Run 
 
 ```
-git checkout openStreetM
+# git checkout openStreetM
 
 ```
 3. Set your DOCKER_GID variable 
