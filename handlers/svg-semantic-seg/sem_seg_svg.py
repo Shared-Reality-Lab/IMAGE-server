@@ -147,7 +147,7 @@ def handle():
     }
     rendering = {
             "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
-            "description": "An example SVG visualization",
+            "description": "Semantic Segmentation Visualisation",
             "data": data
     }
     try:
