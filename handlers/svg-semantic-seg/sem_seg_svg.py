@@ -30,13 +30,13 @@ app = Flask(__name__)
 def handle():
     logging.debug("Received request")
     # Load necessary schema files
-    with open("./schemas/definitions.json") as f:
+    with open("../../schemas/definitions.json") as f:
         definitions_schema = json.load(f)
-    with open("./schemas/request.schema.json") as f:
+    with open("../../schemas/request.schema.json") as f:
         request_schema = json.load(f)
-    with open("./schemas/handler-response.schema.json") as f:
+    with open("../../schemas/handler-response.schema.json") as f:
         response_schema = json.load(f)
-    with open("./schemas/renderers/svglayers.schema.json") as f:
+    with open("../../schemas/renderers/svglayers.schema.json") as f:
         renderer_schema = json.load(f)
     store = {
             definitions_schema["$id"]: definitions_schema,
@@ -60,7 +60,7 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
-    if( "ca.mcgill.a11y.image.capability.DebugMode" not in contents['capabilities'][0]):
+    if( "ca.mcgill.a11y.image.capability.DebugMode" not in contents['capabilities']):
         logging.debug("Debug mode inactive")
         print("debug inactive")
         response = {
@@ -127,9 +127,9 @@ def handle():
             print(str(hex(random.randint(0, 0xFFFFFF))))
             color = '#'+str(hex(random.randint(0, 0xFFFFFF)))
             try:
-                p = draw.Path(stroke=colors[j], stroke_width=2, fill='none',)
+                p = draw.Path(stroke=colors[j], stroke_width=4, fill='none',)
             except:
-                p = draw.Path(stroke="red", stroke_width=2, fill='none',)
+                p = draw.Path(stroke="red", stroke_width=4, fill='none',)
             for k in range(len(contour)):
                 coord = contour[k]["coordinates"]
                 for i in range(len(coord)):
@@ -140,6 +140,10 @@ def handle():
                     p.L(coord[i][0]*dimensions[0],dimensions[1] - coord[i][1]*dimensions[1])
             svg.append(p)
             svg_layers.append({"label":segments[j]["name"],"svg":svg.asDataUri()})
+            if(j==1):
+                break
+        
+    svg.saveSvg('/Users/rohanakut/Desktop/labWork/docker_here2/handlers/svg-semantic-seg/example.svg')
 
     data = {
             "layers": svg_layers
