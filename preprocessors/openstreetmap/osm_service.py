@@ -122,7 +122,6 @@ def process_streets_data(OSM_data):
                 oneway = bool(oneway)
             else:
                 oneway = oneway
-
             way_object = {
                 "street_id": int(way.id),
                 "street_name": way.tags.get("name"),
@@ -133,15 +132,19 @@ def process_streets_data(OSM_data):
                 "sidewalk": way.tags.get("sidewalk"),
                 "maxspeed": way.tags.get("maxspeed"),
                 "lanes": lanes,
-                "nodes": node_list,
+
             }
-            # Delete key if value it is empty
+            # Fetch as many tags as possible
+          
+
+            way_object["nodes"] = node_list
+
+            # Delete key if value is empty
             way_object = dict(x for x in way_object.items() if all(x))
 
             # Include only streets with names
             if "street_name" in way_object:
                 processed_OSM_data.append(way_object)
-            processed_OSM_data.append(way_object)
     except AttributeError:
         error = 'Overpass Attibute error. Retry again'
         logging.error(error)
