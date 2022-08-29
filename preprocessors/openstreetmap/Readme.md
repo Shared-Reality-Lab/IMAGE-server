@@ -94,7 +94,7 @@ docker run --rm -p 5000:5000 osm-preprocessors
 
 ```
 
-5. Test with the request below to get sample result, using either sample A or B.
+5. Test with the requests below, using either sample A or B.
    Use sample A if you're okay with the default map size, and sample B if you prefer to 
    scale the map, by changing the value of the "distance" key. 
    
@@ -129,10 +129,10 @@ B:
   "request_uuid": "a3d7b6be-8f3b-47ba-8b17-4b0557e7a8ce",
   "timestamp": 1637789517,
   "coordinates": {
-      "latitude": 45.50548,
-      "longitude":-73.56680
+      "latitude": 49.8974309,
+      "longitude": -97.2033944
   },
-	"distance":150,
+  "distance": 150,
   "context": "",
   "language": "en",
   "url": "https://fake.site.com/some-url",
@@ -179,10 +179,10 @@ or
   "request_uuid": "a3d7b6be-8f3b-47ba-8b17-4b0557e7a8ce",
   "timestamp": 1637789517,
   "coordinates": {
-      "latitude": 45.50548,
-      "longitude":-73.56680
+      "latitude": 49.8974309,
+      "longitude": -97.2033944
   },
-	"distance":150,
+  "distance": 150,
   "context": "",
   "language": "en",
   "url": "https://fake.site.com/some-url",
