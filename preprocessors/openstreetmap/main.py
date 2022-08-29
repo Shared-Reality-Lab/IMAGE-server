@@ -28,7 +28,7 @@ def get_map_data():
     """
     logging.debug("Received request")
     # Load schemas
-    with open('./schemas/preprocessors/open-street-map.schema.json') as jsonfile:
+    with open('./schemas/preprocessors/op-street-map.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)

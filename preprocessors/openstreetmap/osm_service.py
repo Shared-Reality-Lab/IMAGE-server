@@ -135,7 +135,6 @@ def process_streets_data(OSM_data):
 
             }
             # Fetch as many tags as possible
-          
 
             way_object["nodes"] = node_list
 
