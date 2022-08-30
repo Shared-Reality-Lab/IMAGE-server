@@ -28,7 +28,7 @@ def get_map_data():
     """
     logging.debug("Received request")
     # Load schemas
-    with open('./schemas/preprocessors/op-street-map.schema.json') as jsonfile:
+    with open('./schemas/preprocessors/openstreetmap.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
@@ -99,11 +99,9 @@ def get_map_data():
                 "timestamp": time_stamp,
                 "name": name,
                 "data": {
-                    "street_info": {
-                        "bounds": header_info,
-                        "points_of_interest": POIs,
-                        "streets": response
-                    }
+                    "bounds": header_info,
+                    "points_of_interest": POIs,
+                    "streets": response     
                 }
             }
         elif amenity is not None and len(amenity) != 0:
@@ -112,10 +110,8 @@ def get_map_data():
                 "timestamp": time_stamp,
                 "name": name,
                 "data": {
-                    "street_info": {
-                        "bounds": header_info,
-                        "points_of_interest": amenity
-                    }
+                    "bounds": header_info,
+                    "points_of_interest": amenity
                 }
             }
         else:
@@ -124,9 +120,7 @@ def get_map_data():
                 "timestamp": time_stamp,
                 "name": name,
                 "data": {
-                    "street_info": {
-                        "bounds": header_info
-                    }
+                    "bounds": header_info      
                 }
             }
     elif OSM_data is None and amenity is not None:
@@ -135,10 +129,8 @@ def get_map_data():
             "timestamp": time_stamp,
             "name": name,
             "data": {
-                "street_info": {
-                    "bounds": header_info,
-                    "points_of_interest": amenity
-                }
+                "bounds": header_info,
+                "points_of_interest": amenity
             }
         }
     else:
@@ -147,9 +139,7 @@ def get_map_data():
             "timestamp": time_stamp,
             "name": name,
             "data": {
-                "street_info": {
-                    "bounds": header_info
-                }
+                "bounds": header_info
             }
         }
     validated = validate(
