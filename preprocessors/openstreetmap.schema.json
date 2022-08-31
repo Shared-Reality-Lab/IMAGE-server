@@ -27,41 +27,70 @@
             }
         }
     },
-    "properties": {
-        "street_info": {
+    "properties": { 
+        "data": {
             "type": "object",
-            "description": "A set of streets and points of interest.",
             "properties": {
-                "points_of_interest": {
-                    "type": "array",
-                            "title": "points of interest",
-                            "description": "The collection of all points of interest within the specified area of the map",
-                            "items": {
-                                "type": "object",
-                                "title": "node",
-                                "description": "It consists of a single point in space defined by its latitude, longitude and node ID in the OpenStreetMap(https://wiki.openstreetmap.org/wiki/Node)",
-                                "properties": {
-                                    "id": {
-                                        "$ref": "#/definitions/node/id"
-                                    },
-                                    "lat": {
-                                        "$ref": "#/definitions/node/lat"
-                                    },
-                                    "lon": {
-                                        "$ref": "#/definitions/node/lon"
-                                    },
-                                    "cat": {
-                                        "type": "string",
-                                        "title": "Category",
-                                        "description": "The category of the point of interest. A point of interest is catigorized into either an amenity such as a restaurant, a school, etc., (https://wiki.openstreetmap.org/wiki/Map_features#Amenity) or a street intersection"
-                                    },
-                                    "name": {
-                                        "type": "string",
-                                        "title": "Name of point of interest",
-                                        "description": "The specific name of the point of interest (POI), e.g., the name of the amenity or the names of the two streets that intersect each other, in case the POI is an intersection"
-                                    }
+                "bounds": {
+                    "type": "object",
+                    "description": "Header information with the minimum and maximum values for latitude and longitude.",
+                    "properties": {
+                        "latitude": {
+                            "type": "object",
+                            "description": " This represents the minimum and maximum latitude values",
+                            "properties": {
+                                "min": {
+                                    "$ref": "#/definitions/node/lat"
+                                },
+                                "max": {
+                                    "$ref": "#/definitions/node/lat"
+                                }
+                            }   
+                        },
+                        "longitude": {
+                            "type": "object",
+                            "description": " This represents the minimum and maximum longitude values",
+                            "properties": {
+                                "min": {
+                                    "$ref": "#/definitions/node/lon"
+                                },
+                                "max": {
+                                    "$ref": "#/definitions/node/lon"
                                 }
                             }
+                        }
+                    }
+                },
+                "points_of_interest": {
+                    "type": "array",
+                    "title": "points of interest",
+                    "description": "The collection of all points of interest within the specified area of the map",
+                    "items": {
+                        "type": "object",
+                        "title": "node",
+                        "description": "It consists of a single point in space defined by its latitude, longitude and node ID in the OpenStreetMap(https://wiki.openstreetmap.org/wiki/Node)",
+                        "properties": {
+                            "id": {
+                                "$ref": "#/definitions/node/id"
+                            },
+                            "lat": {
+                                "$ref": "#/definitions/node/lat"
+                            },
+                            "lon": {
+                                "$ref": "#/definitions/node/lon"
+                            },
+                            "cat": {
+                                "type": "string",
+                                "title": "Category",
+                                "description": "The category of the point of interest. A point of interest is catigorized into either an amenity such as a restaurant, a school, etc., (https://wiki.openstreetmap.org/wiki/Map_features#Amenity) or a street intersection"
+                            },
+                            "name": {
+                                "type": "string",
+                                "title": "Name of point of interest",
+                                "description": "The specific name of the point of interest (POI), e.g., the name of the amenity or the names of the two streets that intersect each other, in case the POI is an intersection"
+                            }
+                        }
+                    }
                 },
                 "streets": {
                     "type": "array",
@@ -77,10 +106,10 @@
                             "street_type": {"type": "string"},
                             "addr:street": {"type": "string"},
                             "surface": {"type": "string"},
-                            "oneway": {"type": "string"},
+                            "oneway": {"type": "boolean"},
                             "sidewalk": {"type": "string"},
                             "maxspeed": {"type": "string"},
-                            "lanes": {"type": "string"},
+                            "lanes": {"type": "number"},
                             "nodes": {
                                 "type": "array",
                                 "title": "nodes",
@@ -111,10 +140,12 @@
                                 }
                             }
                         },
-                        "required": ["street_id"]
+                        "required": ["street_id", "street_name"]
                     }
-                }
-            }
+                }      
+            },
+            "required": ["bounds", "points_of_interest", "streets"]
         }
     }
 }
+        
