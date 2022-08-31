@@ -33,7 +33,7 @@
             "properties": {
                 "bounds": {
                     "type": "object",
-                    "description": "Header information with the minimum and maximum values for latitude and longitude.",
+                    "description": "Header information with the minimum and maximum values for both latitude and longitude.",
                     "properties": {
                         "latitude": {
                             "type": "object",
