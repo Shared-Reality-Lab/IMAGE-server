@@ -101,7 +101,7 @@ def get_map_data():
                 "data": {
                     "bounds": header_info,
                     "points_of_interest": POIs,
-                    "streets": response     
+                    "streets": response
                 }
             }
         elif amenity is not None and len(amenity) != 0:
@@ -120,7 +120,7 @@ def get_map_data():
                 "timestamp": time_stamp,
                 "name": name,
                 "data": {
-                    "bounds": header_info      
+                    "bounds": header_info
                 }
             }
     elif OSM_data is None and amenity is not None:
