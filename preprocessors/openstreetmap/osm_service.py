@@ -553,7 +553,8 @@ def get_coordinates(content):
 
 
 def scale_distance(content):
-    # Make distance scalable
+    # Make distance scalable.
+    # The distance is measured in metres.
     try:
         distance = content["distance"]
         if distance <= 0:
