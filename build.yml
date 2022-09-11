@@ -137,6 +137,11 @@ services:
             context: .
             dockerfile: ./handlers/motd/Dockerfile
         image: "motd-handler:latest"
+    semseg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-semantic-seg/Dockerfile
+        image: "semseg-svg:latest"
     high-charts-handler:
         build:
             context: .
