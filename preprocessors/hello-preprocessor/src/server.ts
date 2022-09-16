@@ -37,7 +37,7 @@ app.post("/preprocessor", (req, res) => {
             "timestamp": Math.round(Date.now() / 1000),
             "name": "ca.mcgill.a11y.image.hello.preprocessor",
             "data": {
-                "message": "Hello, World!"
+                "message": "I don't know!"
             }
         };
         if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", response)) {
