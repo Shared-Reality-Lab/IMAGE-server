@@ -127,12 +127,15 @@ def analyze_image(source, width, height, cld_srv_optn):
     binary = base64.b64decode(image_b64)
     stream = io.BytesIO(binary)
 
-    subscription_key = os.environ["AZURE_API_KEY"]
-    endpoint = "https://image-cv.cognitiveservices.azure.com/"
+    azure_subscription_key = os.environ["AZURE_API_KEY"]
+    azure_endpoint = "https://image-cv.cognitiveservices.azure.com/"
 
-    if cld_srv_optn == "READ":
+    freeocr_subscription_key = os.environ["FREEOCR_API_KEY"]
+    freeocr_endpoint = "https://api.ocr.space/parse/image"
+
+    if cld_srv_optn == "READ_AZURE":
         computervision_client = ComputerVisionClient(
-            endpoint, CognitiveServicesCredentials(subscription_key))
+            azure_endpoint, CognitiveServicesCredentials(azure_subscription_key))
         read_response = computervision_client.read_in_stream(stream,  raw=True)
 
         read_operation_location = read_response.headers["Operation-Location"]
@@ -159,30 +162,26 @@ def analyze_image(source, width, height, cld_srv_optn):
             for region in read_result.analyze_result.read_results:
                 for line in region.lines:
                     line_text = line.text
-                    # Get normalized bounding box
-                    bounding_box = line.bounding_box
-                    bndng_bx = [bounding_box[0], bounding_box[5], (bounding_box[2]-bounding_box[0]), (bounding_box[7]-bounding_box[3])]
-                    for i, val in enumerate(bndng_bx):
-                        if i % 2 == 0:
-                            bndng_bx[i] = int(val) / width
-                        else:
-                            bndng_bx[i] = int(val) / height
+                    # Get normalized bounding box - NOT ACCURATE
+                    bbx = line.bounding_box
+                    bndng_bx = [bbx[0], bbx[5], (bbx[2]-bbx[0]), (bbx[7]-bbx[3])]
+                    bounding_box = normalize_bounding_box(bndng_bx, width, height)
                     ocr_results.append({
                         'text': line_text,
-                        'bounding_box': bndng_bx
+                        'bounding_box': bounding_box
                     })
             return ocr_results
         else:
             logging.error("OCR text: {}".format(read_result.status))
             return None
         
-    elif cld_srv_optn == "OCR":
+    elif cld_srv_optn == "OCR_AZURE":
         headers = {
             'Content-Type': 'application/octet-stream',
-            'Ocp-Apim-Subscription-Key': subscription_key,
+            'Ocp-Apim-Subscription-Key': azure_subscription_key,
         }
 
-        ocr_url = endpoint + "vision/v3.2/ocr"
+        ocr_url = azure_endpoint + "vision/v3.2/ocr"
 
         response = requests.post(ocr_url, headers=headers, data=stream)
         response.raise_for_status()
@@ -197,18 +196,43 @@ def analyze_image(source, width, height, cld_srv_optn):
                     region_text += word['text'] + " "
             region_text = region_text[:-1]
             # Get normalized bounding box
-            bounding_box = region['boundingBox'].split(",")
-            for i, val in enumerate(bounding_box):
-                if i % 2 == 0:
-                    bounding_box[i] = int(val) / width
-                else:
-                    bounding_box[i] = int(val) / height
+            bndng_bx = region['boundingBox'].split(",")
+            bounding_box = normalize_bounding_box(bndng_bx, width, height)
             ocr_results.append({
                 'text': region_text,
                 'bounding_box': bounding_box
             })
         return ocr_results
 
+    elif cld_srv_optn == "OCR_FREE":
+        payload = {'base64Image': source,
+            'apikey': freeocr_subscription_key,
+            'isOverlayRequired': True
+            }
+        response = requests.post(freeocr_endpoint, data=payload)
+        read_result = response.json()
+        
+        ocr_results = []
+        text = ""
+        for line in read_result['ParsedResults'][0]['TextOverlay']['Lines']:
+            text += line['LineText'] + " "
+            # Get normalized bounding box - NOT ACCURATE
+            bndng_bx = [0, 0, line['MaxHeight'], line['MinTop']]
+            bounding_box = normalize_bounding_box(bndng_bx, width, height)
+        text = text[:-1]
+        ocr_results.append({
+            'text': text,
+            'bounding_box': [0,0,0,0]#bounding_box
+        })
+        return ocr_results
+
+def normalize_bounding_box(bb, w, h):
+    for i, val in enumerate(bb):
+                if i % 2 == 0:
+                    bb[i] = int(val) / w
+                else:
+                    bb[i] = int(val) / h
+    return bb
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
