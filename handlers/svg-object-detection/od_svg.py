@@ -21,9 +21,6 @@ from jsonschema.exceptions import ValidationError
 import logging
 import time
 import drawSvg as draw
-import base64
-import numpy as np
-# import cairosvg
 
 app = Flask(__name__)
 
@@ -41,19 +38,19 @@ def handle():
     with open("./schemas/renderers/svglayers.schema.json") as f:
         renderer_schema = json.load(f)
     store = {
-            definitions_schema["$id"]: definitions_schema,
-            request_schema["$id"]: request_schema,
-            response_schema["$id"]: response_schema,
-            renderer_schema["$id"]: renderer_schema,
+        definitions_schema["$id"]: definitions_schema,
+        request_schema["$id"]: request_schema,
+        response_schema["$id"]: response_schema,
+        renderer_schema["$id"]: renderer_schema,
     }
     resolver = jsonschema.RefResolver.from_schema(
-            request_schema, store=store
+        request_schema, store=store
     )
     # Get and validate request contents
     contents = request.get_json()
     try:
         validator = jsonschema.Draft7Validator(
-                request_schema, resolver=resolver
+            request_schema, resolver=resolver
         )
         validator.validate(contents)
     except ValidationError as e:
@@ -62,7 +59,8 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
-    if( "ca.mcgill.a11y.image.capability.DebugMode" not in contents['capabilities']):
+    if "ca.mcgill.a11y.image.capability.DebugMode" \
+            not in contents['capabilities']:
         logging.debug("Debug mode inactive")
         print("debug inactive")
         response = {
@@ -71,7 +69,8 @@ def handle():
             "renderings": []
         }
         try:
-            validator = jsonschema.Draft7Validator(response_schema, resolver=resolver)
+            validator = jsonschema.Draft7Validator(
+                response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
             logging.error(error)
@@ -80,7 +79,8 @@ def handle():
         return response
 
     # No Object Detector found
-    if "ca.mcgill.a11y.image.preprocessor.objectDetection" not in preprocessors:
+    if "ca.mcgill.a11y.image.preprocessor.objectDetection"\
+            not in preprocessors:
         logging.debug("No Object Detector found")
         response = {
             "request_uuid": contents["request_uuid"],
@@ -88,7 +88,8 @@ def handle():
             "renderings": []
         }
         try:
-            validator = jsonschema.Draft7Validator(response_schema, resolver=resolver)
+            validator = jsonschema.Draft7Validator(
+                response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
             logging.error(error)
@@ -109,7 +110,8 @@ def handle():
             "renderings": []
         }
         try:
-            validator = jsonschema.Draft7Validator(response_schema, resolver=resolver)
+            validator = jsonschema.Draft7Validator(
+                response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
             logging.error(error)
@@ -117,53 +119,70 @@ def handle():
         logging.debug("Sending response")
         return response
 
-    objects = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]["objects"]
-    grouped = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]["grouped"]
-    ungrouped = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]["ungrouped"]
+    o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
+    g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
+    u = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
+    objects = o["objects"]
+    grouped = g["grouped"]
+    ungrouped = u["ungrouped"]
     svg = draw.Drawing(dimensions[0], dimensions[1])
-    print(dimensions[0],dimensions[1])
+    print(dimensions[0], dimensions[1])
     svg_layers = []
-    if(len(grouped)>0):
+    if (len(grouped) > 0):
         for i in range(len(grouped)):
             ids = grouped[i]["IDs"]
             category = objects[ids[0]]["type"]
             for j in range(len(ids)):
                 print(ids[j])
-                x1 = int(objects[ids[j]]['dimensions'][0]*dimensions[0])
-                x2 = int(objects[ids[j]]['dimensions'][2]*dimensions[0])
-                y1 = int(objects[ids[j]]['dimensions'][1]*dimensions[1])
-                y2 = int(objects[ids[j]]['dimensions'][3]*dimensions[1])
-                width = abs(x2-x1)
-                height = abs(y2-y1)
-                start_y1 = abs(dimensions[1]- y1-height)
-                svg.append(draw.Rectangle(x1,start_y1,width,height,stroke="#ff4477",fill_opacity=0))
-            svg_layers.append({"label":category,"svg":svg.asDataUri()})
+                x1 = int(objects[ids[j]]['dimensions'][0] * dimensions[0])
+                x2 = int(objects[ids[j]]['dimensions'][2] * dimensions[0])
+                y1 = int(objects[ids[j]]['dimensions'][1] * dimensions[1])
+                y2 = int(objects[ids[j]]['dimensions'][3] * dimensions[1])
+                width = abs(x2 - x1)
+                height = abs(y2 - y1)
+                start_y1 = abs(dimensions[1] - y1 - height)
+                svg.append(
+                    draw.Rectangle(
+                        x1,
+                        start_y1,
+                        width,
+                        height,
+                        stroke="#ff4477",
+                        fill_opacity=0))
+            svg_layers.append({"label": category, "svg": svg.asDataUri()})
             # break
-           
-    if(len(ungrouped)>0):
+
+    if (len(ungrouped) > 0):
         for i in range(len(ungrouped)):
             category = objects[ungrouped[i]]["type"]
             print(category)
-            x1 = int(objects[ungrouped[i]]['dimensions'][0]*dimensions[0])
-            x2 = int(objects[ungrouped[i]]['dimensions'][2]*dimensions[0])
-            y1 = int(objects[ungrouped[i]]['dimensions'][1]*dimensions[1])
-            y2 = int(objects[ungrouped[i]]['dimensions'][3]*dimensions[1])
-            width = abs(x2-x1)
-            height = abs(y2-y1)
+            x1 = int(objects[ungrouped[i]]['dimensions'][0] * dimensions[0])
+            x2 = int(objects[ungrouped[i]]['dimensions'][2] * dimensions[0])
+            y1 = int(objects[ungrouped[i]]['dimensions'][1] * dimensions[1])
+            y2 = int(objects[ungrouped[i]]['dimensions'][3] * dimensions[1])
+            width = abs(x2 - x1)
+            height = abs(y2 - y1)
             start_y1 = abs(dimensions[1] - y1)
-            svg.append(draw.Rectangle(x1,start_y1,width,height,stroke="#dd4477",fill_opacity=0))
-            svg_layers.append({"label":category,"svg":svg.asDataUri()})
+            svg.append(
+                draw.Rectangle(
+                    x1,
+                    start_y1,
+                    width,
+                    height,
+                    stroke="#dd4477",
+                    fill_opacity=0))
+            svg_layers.append({"label": category, "svg": svg.asDataUri()})
     data = {
-            "layers": svg_layers
+        "layers": svg_layers
     }
     rendering = {
-            "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
-            "description": "SVG visualization",
-            "data": data
+        "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
+        "description": "SVG visualization",
+        "data": data
     }
     try:
         validator = jsonschema.Draft7Validator(
-                renderer_schema, resolver=resolver
+            renderer_schema, resolver=resolver
         )
         validator.validate(data)
     except ValidationError as e:
@@ -171,13 +190,13 @@ def handle():
         logging.error("Failed to validate the response renderer!")
         return jsonify("Failed to validate the response renderer"), 500
     response = {
-            "request_uuid": contents["request_uuid"],
-            "timestamp": int(time.time()),
-            "renderings": [rendering]
+        "request_uuid": contents["request_uuid"],
+        "timestamp": int(time.time()),
+        "renderings": [rendering]
     }
     try:
         validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver
+            response_schema, resolver=resolver
         )
         validator.validate(response)
     except ValidationError as e:
