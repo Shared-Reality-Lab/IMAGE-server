@@ -39,19 +39,19 @@ def handle():
     with open("./schemas/renderers/svglayers.schema.json") as f:
         renderer_schema = json.load(f)
     store = {
-            definitions_schema["$id"]: definitions_schema,
-            request_schema["$id"]: request_schema,
-            response_schema["$id"]: response_schema,
-            renderer_schema["$id"]: renderer_schema,
+        definitions_schema["$id"]: definitions_schema,
+        request_schema["$id"]: request_schema,
+        response_schema["$id"]: response_schema,
+        renderer_schema["$id"]: renderer_schema,
     }
     resolver = jsonschema.RefResolver.from_schema(
-            request_schema, store=store
+        request_schema, store=store
     )
     # Get and validate request contents
     contents = request.get_json()
     try:
         validator = jsonschema.Draft7Validator(
-                request_schema, resolver=resolver
+            request_schema, resolver=resolver
         )
         validator.validate(contents)
     except ValidationError as e:
@@ -60,7 +60,8 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
-    if( "ca.mcgill.a11y.image.capability.DebugMode" not in contents['capabilities']):
+    if "ca.mcgill.a11y.image.capability.DebugMode" \
+            not in contents['capabilities']:
         logging.debug("Debug mode inactive")
         print("debug inactive")
         response = {
@@ -69,7 +70,8 @@ def handle():
             "renderings": []
         }
         try:
-            validator = jsonschema.Draft7Validator(response_schema, resolver=resolver)
+            validator = jsonschema.Draft7Validator(
+                response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
             logging.error(error)
@@ -78,7 +80,8 @@ def handle():
         return response
 
     # No Object Detector found
-    if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation" not in preprocessors:
+    if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
+            not in preprocessors:
         logging.debug("No Semantic Segmenter found")
         response = {
             "request_uuid": contents["request_uuid"],
@@ -86,7 +89,8 @@ def handle():
             "renderings": []
         }
         try:
-            validator = jsonschema.Draft7Validator(response_schema, resolver=resolver)
+            validator = jsonschema.Draft7Validator(
+                response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
             logging.error(error)
@@ -107,7 +111,8 @@ def handle():
             "renderings": []
         }
         try:
-            validator = jsonschema.Draft7Validator(response_schema, resolver=resolver)
+            validator = jsonschema.Draft7Validator(
+                response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
             logging.error(error)
@@ -115,44 +120,58 @@ def handle():
         logging.debug("Sending response")
         return response
 
-
-    segments = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]["segments"]
+    s = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]
+    segments = s["segments"]
     svg = draw.Drawing(dimensions[0], dimensions[1])
     svg_layers = []
-    colors = ["red","blue","yellow","green","pink","orange","purple","cyan","coral","teal","indigo","lime","chocolate"]
-    new_contour = []
-    if(len(segments)>0):
+    colors = [
+        "red",
+        "blue",
+        "yellow",
+        "green",
+        "pink",
+        "orange",
+        "purple",
+        "cyan",
+        "coral",
+        "teal",
+        "indigo",
+        "lime",
+        "chocolate"]
+    if (len(segments) > 0):
         for j in range(len(segments)):
             contour = segments[j]["contours"]
             print(str(hex(random.randint(0, 0xFFFFFF))))
-            color = '#'+str(hex(random.randint(0, 0xFFFFFF)))
             try:
                 p = draw.Path(stroke=colors[j], stroke_width=4, fill='none',)
-            except:
+            except BaseException:
                 p = draw.Path(stroke="red", stroke_width=4, fill='none',)
             for k in range(len(contour)):
                 coord = contour[k]["coordinates"]
                 for i in range(len(coord)):
-                    if(i==0):
+                    if (i == 0):
                         continue
-                    if(i==1):
-                        p.M(coord[i][0]*dimensions[0], (dimensions[1] - coord[i][1]*dimensions[1]))
-                    p.L(coord[i][0]*dimensions[0],dimensions[1] - coord[i][1]*dimensions[1])
+                    if (i == 1):
+                        p.M(coord[i][0] * dimensions[0],
+                            (dimensions[1] - coord[i][1] * dimensions[1]))
+                    p.L(coord[i][0] * dimensions[0],
+                        dimensions[1] - coord[i][1] * dimensions[1])
             svg.append(p)
-            svg_layers.append({"label":segments[j]["name"],"svg":svg.asDataUri()})
-            if(j==1):
+            svg_layers.append(
+                {"label": segments[j]["name"], "svg": svg.asDataUri()})
+            if (j == 1):
                 break
     data = {
-            "layers": svg_layers
+        "layers": svg_layers
     }
     rendering = {
-            "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
-            "description": "Semantic Segmentation Visualisation",
-            "data": data
+        "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
+        "description": "Semantic Segmentation Visualisation",
+        "data": data
     }
     try:
         validator = jsonschema.Draft7Validator(
-                renderer_schema, resolver=resolver
+            renderer_schema, resolver=resolver
         )
         validator.validate(data)
     except ValidationError as e:
@@ -160,13 +179,13 @@ def handle():
         logging.error("Failed to validate the response renderer!")
         return jsonify("Failed to validate the response renderer"), 500
     response = {
-            "request_uuid": contents["request_uuid"],
-            "timestamp": int(time.time()),
-            "renderings": [rendering]
+        "request_uuid": contents["request_uuid"],
+        "timestamp": int(time.time()),
+        "renderings": [rendering]
     }
     try:
         validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver
+            response_schema, resolver=resolver
         )
         validator.validate(response)
     except ValidationError as e:
