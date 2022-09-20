@@ -28,6 +28,7 @@ from flask import Flask, request, jsonify
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes # noqa
 from msrest.authentication import CognitiveServicesCredentials
+from google.cloud import vision
 
 app = Flask(__name__)
 
@@ -222,7 +223,25 @@ def analyze_image(source, width, height, cld_srv_optn):
         text = text[:-1]
         ocr_results.append({
             'text': text,
-            'bounding_box': [0,0,0,0]#bounding_box
+            'bounding_box': [0,0,0,0] #NOT ACCURATE
+        })
+        return ocr_results
+
+    elif cld_srv_optn == "VISION_GOOGLE":
+        client = vision.ImageAnnotatorClient()
+        image = vision.Image(content=image_b64)
+        response = client.text_detection(image=image)
+
+        ocr_results = []
+        text = str(response.full_text_annotation.text).replace("\n", " ")
+        
+        if response.error.message:
+            logging.error(response.error.message)
+            return None
+        
+        ocr_results.append({
+            'text': text,
+            'bounding_box': [0,0,0,0] #NOT ACCURATE
         })
         return ocr_results
 
