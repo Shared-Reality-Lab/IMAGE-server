@@ -1,6 +1,6 @@
 services:
-  ocr-preprocessor-modif:
-    image: "ocr-preprocessor-modif:test"
+  ocr-clouds-preprocessor:
+    image: "ocr-clouds-preprocessor:test"
     build:
       context: /home/danpecor/repo/IMAGE-server
       dockerfile: /home/danpecor/repo/IMAGE-server/preprocessors/ocr/Dockerfile

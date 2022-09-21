@@ -87,7 +87,7 @@ def get_ocr_text():
     if ocr_result is None:
         return jsonify("Could not retreive Azure results"), 500
 
-    name = 'ca.mcgill.a11y.image.preprocessor.ocr.modif'
+    name = 'ca.mcgill.a11y.image.preprocessor.ocr.clouds'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
     data = {'lines': ocr_result, 'cloud_service': cld_srv_optn}
