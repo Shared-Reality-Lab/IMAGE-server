@@ -227,10 +227,14 @@ def analyze_image(source, width, height, cld_srv_optn):
         })
         return ocr_results
 
-    elif cld_srv_optn == "VISION_GOOGLE":
+    elif "VISION_GOOGLE" in cld_srv_optn:
         client = vision.ImageAnnotatorClient()
         image = vision.Image(content=image_b64)
-        response = client.text_detection(image=image)
+
+        if "TEXT" in cld_srv_optn:
+            response = client.text_detection(image=image)
+        elif "DOC" in cld_srv_optn:
+            response = client.document_text_detection(image=image)
 
         ocr_results = []
         text = str(response.full_text_annotation.text).replace("\n", " ")
@@ -243,7 +247,7 @@ def analyze_image(source, width, height, cld_srv_optn):
             'text': text,
             'bounding_box': [0,0,0,0] #NOT ACCURATE
         })
-        return ocr_results
+        return ocr_results        
 
 def normalize_bounding_box(bb, w, h):
     for i, val in enumerate(bb):
