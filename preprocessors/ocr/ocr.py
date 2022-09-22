@@ -87,7 +87,7 @@ def get_ocr_text():
     if ocr_result is None:
         return jsonify("Could not retreive Azure results"), 500
 
-    name = 'ca.mcgill.a11y.image.preprocessor.ocr.clouds'
+    name = 'ca.mcgill.a11y.image.preprocessor.ocrClouds'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
     data = {'lines': ocr_result, 'cloud_service': cld_srv_optn}
@@ -163,9 +163,9 @@ def analyze_image(source, width, height, cld_srv_optn):
             for region in read_result.analyze_result.read_results:
                 for line in region.lines:
                     line_text = line.text
-                    # Get normalized bounding box - NOT ACCURATE
+                    # Get normalized bounding box
                     bbx = line.bounding_box
-                    bndng_bx = [bbx[0], bbx[5], (bbx[2]-bbx[0]), (bbx[7]-bbx[3])]
+                    bndng_bx = [bbx[0], bbx[7], (bbx[2]-bbx[0]), (bbx[5]-bbx[3])]
                     bounding_box = normalize_bounding_box(bndng_bx, width, height)
                     ocr_results.append({
                         'text': line_text,
@@ -213,18 +213,21 @@ def analyze_image(source, width, height, cld_srv_optn):
         response = requests.post(freeocr_endpoint, data=payload)
         read_result = response.json()
         
+        if not read_result['ParsedResults']:
+            return None
+        
         ocr_results = []
-        text = ""
         for line in read_result['ParsedResults'][0]['TextOverlay']['Lines']:
-            text += line['LineText'] + " "
-            # Get normalized bounding box - NOT ACCURATE
-            bndng_bx = [0, 0, line['MaxHeight'], line['MinTop']]
+            line_text = line['LineText']
+            # Get normalized bounding box
+            lineDown = line['MaxHeight'] + line['MinTop']
+            lineWidth = line['Words'][-1]['Left'] - line['Words'][0]['Left']
+            bndng_bx = [line['Words'][0]['Left'], lineDown, lineWidth, line['MaxHeight']]
             bounding_box = normalize_bounding_box(bndng_bx, width, height)
-        text = text[:-1]
-        ocr_results.append({
-            'text': text,
-            'bounding_box': [0,0,0,0] #NOT ACCURATE
-        })
+            ocr_results.append({
+                'text': line_text,
+                'bounding_box': bounding_box
+            })
         return ocr_results
 
     elif "VISION_GOOGLE" in cld_srv_optn:
@@ -236,12 +239,12 @@ def analyze_image(source, width, height, cld_srv_optn):
         elif "DOC" in cld_srv_optn:
             response = client.document_text_detection(image=image)
 
-        ocr_results = []
-        text = str(response.full_text_annotation.text).replace("\n", " ")
-        
         if response.error.message:
             logging.error(response.error.message)
             return None
+
+        ocr_results = []
+        text = str(response.full_text_annotation.text).replace("\n", " ")
         
         ocr_results.append({
             'text': text,
