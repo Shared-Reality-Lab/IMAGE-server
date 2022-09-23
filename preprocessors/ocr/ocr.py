@@ -203,6 +203,8 @@ def analyze_image(source, width, height, cld_srv_optn):
                 'text': region_text,
                 'bounding_box': bounding_box
             })
+        if not ocr_results:
+            return None
         return ocr_results
 
     elif cld_srv_optn == "OCR_FREE":
