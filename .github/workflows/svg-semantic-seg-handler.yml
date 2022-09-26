@@ -1,7 +1,7 @@
 name: Semantic Segmentation Handler
 on:
   push:
-    branches: [ main ]
+    branches: [ sem_svg ]
     tags: [ "svg-semantic-seg-[0-9]+.[0-9]+.[0-9]+" ]
     paths: [ "handlers/svg-semantic-seg/**" ]
   pull_request:
