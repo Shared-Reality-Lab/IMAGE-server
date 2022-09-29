@@ -119,18 +119,19 @@ def get_ocr_text():
 
 def analyze_image(source, width, height, cld_srv_optn):
     """
-    Gets OCR text data from Azure API
+    Gets OCR text data from desired API
     """
 
     # Convert URI to binary stream
-
     image_b64 = source.split(",")[1]
     binary = base64.b64decode(image_b64)
     stream = io.BytesIO(binary)
 
+    # Pull key value and declare endpoint for Azure OCR API
     azure_subscription_key = os.environ["AZURE_API_KEY"]
     azure_endpoint = "https://image-cv.cognitiveservices.azure.com/"
 
+    # Pull key value and declare endpoint for Free OCR API
     freeocr_subscription_key = os.environ["FREEOCR_API_KEY"]
     freeocr_endpoint = "https://api.ocr.space/parse/image"
 
@@ -163,7 +164,7 @@ def analyze_image(source, width, height, cld_srv_optn):
             for region in read_result.analyze_result.read_results:
                 for line in region.lines:
                     line_text = line.text
-                    # Get normalized bounding box
+                    # Get normalized bounding box for each line
                     bbx = line.bounding_box
                     bndng_bx = [bbx[0], bbx[7], (bbx[2]-bbx[0]), (bbx[5]-bbx[3])]
                     bounding_box = normalize_bounding_box(bndng_bx, width, height)
@@ -196,7 +197,7 @@ def analyze_image(source, width, height, cld_srv_optn):
                 for word in line['words']:
                     region_text += word['text'] + " "
             region_text = region_text[:-1]
-            # Get normalized bounding box
+            # Get normalized bounding box for each region
             bndng_bx = region['boundingBox'].split(",")
             bounding_box = normalize_bounding_box(bndng_bx, width, height)
             ocr_results.append({
@@ -215,13 +216,14 @@ def analyze_image(source, width, height, cld_srv_optn):
         response = requests.post(freeocr_endpoint, data=payload)
         read_result = response.json()
         
+        # Check for success
         if not read_result['ParsedResults']:
             return None
         
         ocr_results = []
         for line in read_result['ParsedResults'][0]['TextOverlay']['Lines']:
             line_text = line['LineText']
-            # Get normalized bounding box
+            # Get normalized bounding box for each line
             lineDown = line['MaxHeight'] + line['MinTop']
             lineWidth = line['Words'][-1]['Left'] - line['Words'][0]['Left']
             bndng_bx = [line['Words'][0]['Left'], lineDown, lineWidth, line['MaxHeight']]
@@ -237,6 +239,7 @@ def analyze_image(source, width, height, cld_srv_optn):
         image = vision.Image(content=image_b64)
         response = client.text_detection(image=image)
         
+        # Check for success
         if response.error.message:
             logging.error(response.error.message)
             return None
@@ -245,7 +248,7 @@ def analyze_image(source, width, height, cld_srv_optn):
         
         for word in response.text_annotations[1:]:
             text = word.description
-            # Get normalized bounding box
+            # Get normalized bounding box for each word
             wordWidth = word.bounding_poly.vertices[1].x - word.bounding_poly.vertices[0].x
             wordHeight = word.bounding_poly.vertices[2].y - word.bounding_poly.vertices[1].y
             bndng_bx = [word.bounding_poly.vertices[0].x,
