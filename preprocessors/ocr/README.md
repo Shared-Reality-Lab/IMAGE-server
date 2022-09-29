@@ -25,3 +25,28 @@ FREEOCR_API_KEY = [INSERT KEY STRING]
 GOOGLE_APPLICATION_CREDENTIALS = [INSERT KEY FILE PATH AS STRING]
 CLOUD_SERVICE = [INSERT OPTION STRING (see options above)]
 ```
+## More about the used cloud services
+Here are some helpful facts about the APIs that can be used for this preprocessor.
+### Microsoft Azure OCR API
+* Accepts only image files.
+* It's synchronous, which means it obtains an immediate response.
+* It can recognize text from a wide variety of languages.
+* Uses older recognition models.
+* Extracts small text quickly.
+### Microsoft Azure Read API
+* Accepts image files and PDFs.
+* It's asynchronous, which means there is a small waiting time for the response.
+* It recognizes text from many languages, but less than with Azure's OCR API.
+* Uses the latest recognition models.
+* It is optimized for files with significant amount of text and visual noise, as well as handwriting.
+[Here](https://learn.microsoft.com/en-us/training/modules/read-text-computer-vision/2-ocr-azure) is more information on the differences between Microsoft Azure's APIs.
+### Google Cloud Vision API
+* Accepts only image files.
+* It's synchronous, which means it obtains an immediate response.
+* It can also be used asynchronously with the `DOCUMENT_TEXT_DETECTION` feature, which is very similar to Azure's Read API.
+* Language hints can be given to get better results.
+### Free OCR API
+* There is a daily limit for the requests sent from the same computer.
+* Performance can be checked in the API status page.
+* The Engine to use can be changed, they have different characteristics.
+* Language can be specified optionally. The default is English in Engine1, only Engine2 has automatic western language detection.
