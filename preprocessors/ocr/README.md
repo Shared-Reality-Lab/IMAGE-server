@@ -8,6 +8,7 @@ The preprocessor can use one of the following API options:
 * [Microsoft Azure Read API](https://learn.microsoft.com/en-us/azure/cognitive-services/computer-vision/how-to/call-read-api)
 * [Google Cloud Vision API](https://cloud.google.com/vision/docs/ocr)
 * [Free OCR API](https://ocr.space/OCRAPI)
+
 Either way, it returns regions of text with corresponding bounding boxes in normalized pixel coordinates.
 Note that the return codes and body used by the APIs do not necessarily match [those specified for IMAGE preprocessors](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#preprocessors=).
 ## API selection feature
@@ -16,6 +17,7 @@ The desired cloud service is determined by an environment variable called `CLOUD
 * `CLOUD_SERVICE="READ_AZURE"`
 * `CLOUD_SERVICE="VISION_GOOGLE"`
 * `CLOUD_SERVICE="OCR_FREE"`
+
 The path to an environment file containing this variable should be provided in the `docker-compose.yml`, right in the `env_file` field of the `ocr-clouds-preprocessor` service.
 ## Environment setup
 The environment file should also include the necessary keys for using the desired cloud service(s). The format is provided since the specific variable names are used in the code.
@@ -39,6 +41,7 @@ Here are some helpful facts about the APIs that can be used for this preprocesso
 * It recognizes text from many languages, but less than with Azure's OCR API.
 * Uses the latest recognition models.
 * It is optimized for files with significant amount of text and visual noise, as well as handwriting.
+
 [Here](https://learn.microsoft.com/en-us/training/modules/read-text-computer-vision/2-ocr-azure) is more information on the differences between Microsoft Azure's APIs.
 ### Google Cloud Vision API
 * Accepts only image files.
