@@ -5,7 +5,7 @@ services:
       context: /home/danpecor/repo/IMAGE-server
       dockerfile: /home/danpecor/repo/IMAGE-server/preprocessors/ocr/Dockerfile
     env_file:
-        - /home/danpecor/repo/IMAGE-server/preprocessors/ocr/config/modif.env
+        - /home/danpecor/repo/IMAGE-server/preprocessors/ocr/config/apis-and-selection.env
     labels:
         ca.mcgill.a11y.image.preprocessor: 2
         ca.mcgill.a11y.image.port: 5000
