@@ -9,3 +9,4 @@ preprocessors/ocr/config/modif.env
 preprocessors/ocr/config/vision_api_key.json
 preprocessors/ocr/clean-ocr-clouds.sh
 preprocessors/ocr/init-ocr-clouds.sh
+preprocessors/ocr/actual-docker-compose.yml

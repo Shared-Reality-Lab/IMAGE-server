@@ -45,6 +45,13 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
+    ocr-clouds-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:unstable
+        env_file:
+            - ./config/apis-and-selection.env
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 2
+            ca.mcgill.a11y.image.port: 5000
     object-detection:
         image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection:unstable
         labels:
