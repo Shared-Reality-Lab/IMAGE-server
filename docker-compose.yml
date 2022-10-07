@@ -169,6 +169,17 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+    osm-streets-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-osm-streets:unstable
+        env_file:
+            - ./config/express-common.env
+        depends_on:
+            - supercollider
+            - espnet-tts
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
 volumes:
     sc-store:
     user-logs:
