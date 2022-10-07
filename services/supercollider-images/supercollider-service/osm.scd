@@ -39,7 +39,7 @@ renderOsmStreets = { |json, ttsData, outPath, addr|
     ]);
 
     // Set up data
-    streets = json.at("data").at("streets");
+    streets = json.at("data").at("streets").select({|street| (street.at("street_type") != "footway") && (street.at("street_type") != "service") && (street.at("street_type") != "steps")});
     pois = json.at("data").at("points_of_interest");
     // Determine min and max of latitude and longitude
     // TODO use provided limits in header once standardized
@@ -122,13 +122,11 @@ renderOsmStreets = { |json, ttsData, outPath, addr|
                     [\n_free, 1002]
                 ]);
 
-                node.at("POIs_ID").postln; //debug
                 poi = pois.select({|item| node.at("POIs_ID").includesEqual(item.at("id")) });
-                poi.size.postln; //debug
                 if(poi.notNil, {
                     poi.do({|item|
                         var duration, offset;
-                        //if(item.at("cat") != "intersection", {
+                        if(item.at("cat") != "intersection", {
                             duration = item.at("audio").at("duration").asInteger / ttsData.sampleRate;
                             offset = item.at("audio").at("offset").asInteger;
                             score.add([
@@ -136,7 +134,7 @@ renderOsmStreets = { |json, ttsData, outPath, addr|
                                 [\s_new, \playBufferStereo, -1, 0, 1, \buffNum, 210, \start, offset, \duration, duration, \gain, baseGainTTS]
                             ]);
                             timing = timing + duration;
-                        //});
+                        });
                     });
                 });
 
