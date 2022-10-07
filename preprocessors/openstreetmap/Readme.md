@@ -94,11 +94,7 @@ docker run --rm -p 5000:5000 osm-preprocessors
 
 ```
 
-5. Test with the requests below, using either sample A or B.
-   Use sample A if you're okay with the default map size, and sample B if you prefer to 
-   scale the map, by changing the value of the "distance" key. 
-   
-   A:
+5. Test with the requests below, using the sample below:
 ```
 curl -X 'POST' \
   'http://localhost:5000/preprocessor/' \
@@ -123,28 +119,7 @@ curl -X 'POST' \
 }'
 
 ```
-B:
-```
-{
-  "request_uuid": "a3d7b6be-8f3b-47ba-8b17-4b0557e7a8ce",
-  "timestamp": 1637789517,
-  "coordinates": {
-      "latitude": 49.8974309,
-      "longitude": -97.2033944
-  },
-  "distance": 150,
-  "context": "",
-  "language": "en",
-  "url": "https://fake.site.com/some-url",
-  "capabilities": [],
-  "renderers": [
-    "ca.mcgill.a11y.image.renderer.Text",
-    "ca.mcgill.a11y.image.renderer.SimpleAudio",
-    "ca.mcgill.a11y.image.renderer.SegmentAudio"
-  ]
-}
 
-```
 In this case, 49.8974309 and -97.2033944 are latitude and longitude on the OpenStreetMap. 
 
 
@@ -173,28 +148,7 @@ After the installation, copy and paste this URL http://localhost:5000/preprocess
   ]
 }
 '''
-or
-```
-{
-  "request_uuid": "a3d7b6be-8f3b-47ba-8b17-4b0557e7a8ce",
-  "timestamp": 1637789517,
-  "coordinates": {
-      "latitude": 49.8974309,
-      "longitude": -97.2033944
-  },
-  "distance": 150,
-  "context": "",
-  "language": "en",
-  "url": "https://fake.site.com/some-url",
-  "capabilities": [],
-  "renderers": [
-    "ca.mcgill.a11y.image.renderer.Text",
-    "ca.mcgill.a11y.image.renderer.SimpleAudio",
-    "ca.mcgill.a11y.image.renderer.SegmentAudio"
-  ]
-}
 
-```
  You may also like to use postman if you so wish. The displayed results should be the same as that of (5) above, but in a more user-friendly format.
 
 ####
