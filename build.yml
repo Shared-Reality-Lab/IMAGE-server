@@ -152,11 +152,11 @@ services:
             context: .
             dockerfile: ./handlers/high-charts/Dockerfile
         image: "high-charts-handler:latest"
-    osm-handler:
+    osm-streets-handler:
         build:
             context: .
-            dockerfile: ./handlers/osm-handler/Dockerfile
-        image: "osm-handler:latest"
+            dockerfile: ./handlers/osm-streets-handler/Dockerfile
+        image: "osm-streets-handler:latest"
 
     # Supercollider on Fedora 34
     supercollider-base:
