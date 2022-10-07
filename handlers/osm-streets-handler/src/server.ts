@@ -40,7 +40,7 @@ const ajv = new Ajv({
 const app = express();
 const port = 80;
 const scPort = 57120;
-const filePrefix = "/tmp/sc-store/osm-handler-";
+const filePrefix = "/tmp/sc-store/osm-streets-handler-";
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 

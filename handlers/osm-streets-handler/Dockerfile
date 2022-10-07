@@ -2,7 +2,7 @@ FROM node:alpine as builder
 
 RUN addgroup -g 4322 storage && addgroup node storage
 WORKDIR /usr/src/app
-COPY /handlers/osm-handler/ /usr/src/app
+COPY /handlers/osm-streets-handler/ /usr/src/app
 RUN npm ci
 COPY /schemas src/schemas
 RUN npm run build && npm prune --production

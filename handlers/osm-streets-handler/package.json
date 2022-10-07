@@ -1,5 +1,5 @@
 {
-  "name": "osm-handler",
+  "name": "osm-streets-handler",
   "version": "0.1.0",
   "description": "Audio renderings for OpenStreetMaps ways and POIs.",
   "main": "dist/server.js",
