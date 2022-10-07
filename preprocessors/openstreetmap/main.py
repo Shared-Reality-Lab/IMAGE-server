@@ -14,7 +14,6 @@ from osm_service import (
     OSM_preprocessor,
     validate,
     get_coordinates,
-    scale_distance,
 )
 
 app = Flask(__name__)
@@ -65,7 +64,8 @@ def get_map_data():
 
     latitude = coords["latitude"]
     longitude = coords["longitude"]
-    distance = scale_distance(content)
+    # distance in metres
+    distance = 100
     time_stamp = int(get_timestamp())
     bbox_coordinates = create_bbox_coordinates(distance, latitude, longitude)
     name = "ca.mcgill.a11y.image.preprocessor.openstreetmap"

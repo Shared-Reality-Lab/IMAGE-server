@@ -545,15 +545,3 @@ def get_coordinates(content):
     """
     if 'coordinates' in content.keys():
         return content['coordinates']
-
-
-def scale_distance(content):
-    # Make distance scalable.
-    # The distance is measured in metres.
-    try:
-        distance = content["distance"]
-        if distance <= 0:
-            distance: float = 200
-    except Exception:
-        distance: float = 200
-    return distance
