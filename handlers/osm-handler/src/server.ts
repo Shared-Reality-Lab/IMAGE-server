@@ -59,7 +59,7 @@ app.post("/handler", async (req, res) => {
     const preprocessors = req.body["preprocessors"];
     const osmPreprocessor = preprocessors["ca.mcgill.a11y.image.preprocessor.openstreetmap"];
 
-    if (osmPreprocessor?.streets.length === 0) {
+    if (osmPreprocessor === undefined || osmPreprocessor.streets.length === 0) {
         console.debug("No streets returned, can't render.");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
         res.json(response);
