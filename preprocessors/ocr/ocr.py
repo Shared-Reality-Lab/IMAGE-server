@@ -21,7 +21,6 @@ import logging
 import jsonschema
 import os
 import io
-import re
 import base64
 import requests
 from flask import Flask, request, jsonify
@@ -128,7 +127,7 @@ def analyze_image(source, width, height, cld_srv_optn):
     stream = io.BytesIO(binary)
 
     # Pull key value and declare endpoint for Azure OCR API
-    azure_subscription_key = os.environ["AZURE_API_KEY"]
+    azure_subscr_key = os.environ["AZURE_API_KEY"]
     azure_endpoint = "https://image-cv.cognitiveservices.azure.com/"
 
     # Pull key value and declare endpoint for Free OCR API
@@ -137,7 +136,7 @@ def analyze_image(source, width, height, cld_srv_optn):
 
     if cld_srv_optn == "READ_AZURE":
         computervision_client = ComputerVisionClient(
-            azure_endpoint, CognitiveServicesCredentials(azure_subscription_key))
+            azure_endpoint, CognitiveServicesCredentials(azure_subscr_key))
         read_response = computervision_client.read_in_stream(stream,  raw=True)
 
         read_operation_location = read_response.headers["Operation-Location"]
@@ -166,8 +165,8 @@ def analyze_image(source, width, height, cld_srv_optn):
                     line_text = line.text
                     # Get normalized bounding box for each line
                     bbx = line.bounding_box
-                    bndng_bx = [bbx[0], bbx[7], (bbx[2]-bbx[0]), (bbx[5]-bbx[3])]
-                    bounding_box = normalize_bounding_box(bndng_bx, width, height)
+                    bg_bx = [bbx[0], bbx[7], (bbx[2]-bbx[0]), (bbx[5]-bbx[3])]
+                    bounding_box = normalize_bdg_box(bg_bx, width, height)
                     ocr_results.append({
                         'text': line_text,
                         'bounding_box': bounding_box
@@ -176,11 +175,11 @@ def analyze_image(source, width, height, cld_srv_optn):
         else:
             logging.error("OCR text: {}".format(read_result.status))
             return None
-        
+
     elif cld_srv_optn == "OCR_AZURE":
         headers = {
             'Content-Type': 'application/octet-stream',
-            'Ocp-Apim-Subscription-Key': azure_subscription_key,
+            'Ocp-Apim-Subscription-Key': azure_subscr_key,
         }
 
         ocr_url = azure_endpoint + "vision/v3.2/ocr"
@@ -199,7 +198,7 @@ def analyze_image(source, width, height, cld_srv_optn):
             region_text = region_text[:-1]
             # Get normalized bounding box for each region
             bndng_bx = region['boundingBox'].split(",")
-            bounding_box = normalize_bounding_box(bndng_bx, width, height)
+            bounding_box = normalize_bdg_box(bndng_bx, width, height)
             ocr_results.append({
                 'text': region_text,
                 'bounding_box': bounding_box
@@ -209,25 +208,27 @@ def analyze_image(source, width, height, cld_srv_optn):
         return ocr_results
 
     elif cld_srv_optn == "OCR_FREE":
-        payload = {'base64Image': source,
+        payload = {
+            'base64Image': source,
             'apikey': freeocr_subscription_key,
             'isOverlayRequired': True
-            }
+        }
         response = requests.post(freeocr_endpoint, data=payload)
         read_result = response.json()
-        
+
         # Check for success
         if not read_result['ParsedResults']:
             return None
-        
+
         ocr_results = []
         for line in read_result['ParsedResults'][0]['TextOverlay']['Lines']:
             line_text = line['LineText']
             # Get normalized bounding box for each line
-            lineDown = line['MaxHeight'] + line['MinTop']
-            lineWidth = line['Words'][-1]['Left'] - line['Words'][0]['Left']
-            bndng_bx = [line['Words'][0]['Left'], lineDown, lineWidth, line['MaxHeight']]
-            bounding_box = normalize_bounding_box(bndng_bx, width, height)
+            lnDown = line['MaxHeight'] + line['MinTop']
+            lnWidth = line['Words'][-1]['Left'] - line['Words'][0]['Left']
+            bndng_bx = [line['Words'][0]['Left'], lnDown,
+                        lnWidth, line['MaxHeight']]
+            bounding_box = normalize_bdg_box(bndng_bx, width, height)
             ocr_results.append({
                 'text': line_text,
                 'bounding_box': bounding_box
@@ -238,36 +239,40 @@ def analyze_image(source, width, height, cld_srv_optn):
         client = vision.ImageAnnotatorClient()
         image = vision.Image(content=image_b64)
         response = client.text_detection(image=image)
-        
+
         # Check for success
         if response.error.message:
             logging.error(response.error.message)
             return None
 
         ocr_results = []
-        
+
         for word in response.text_annotations[1:]:
             text = word.description
             # Get normalized bounding box for each word
-            wordWidth = word.bounding_poly.vertices[1].x - word.bounding_poly.vertices[0].x
-            wordHeight = word.bounding_poly.vertices[2].y - word.bounding_poly.vertices[1].y
+            wordWidth = (word.bounding_poly.vertices[1].x
+                        - word.bounding_poly.vertices[0].x)
+            wordHeight = (word.bounding_poly.vertices[2].y
+                        - word.bounding_poly.vertices[1].y)
             bndng_bx = [word.bounding_poly.vertices[0].x,
-                    word.bounding_poly.vertices[3].y,
-                    wordWidth, wordHeight]
-            bounding_box = normalize_bounding_box(bndng_bx, width, height)   
+                        word.bounding_poly.vertices[3].y,
+                        wordWidth, wordHeight]
+            bounding_box = normalize_bdg_box(bndng_bx, width, height)
             ocr_results.append({
                 'text': text,
                 'bounding_box': bounding_box
             })
-        return ocr_results        
+        return ocr_results
 
-def normalize_bounding_box(bb, w, h):
+
+def normalize_bdg_box(bb, w, h):
     for i, val in enumerate(bb):
-                if i % 2 == 0:
-                    bb[i] = int(val) / w
-                else:
-                    bb[i] = int(val) / h
+        if i % 2 == 0:
+            bb[i] = int(val) / w
+        else:
+            bb[i] = int(val) / h
     return bb
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
