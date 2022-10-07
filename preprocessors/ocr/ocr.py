@@ -251,9 +251,9 @@ def analyze_image(source, width, height, cld_srv_optn):
             text = word.description
             # Get normalized bounding box for each word
             wordWidth = (word.bounding_poly.vertices[1].x
-                        - word.bounding_poly.vertices[0].x)
+                            - word.bounding_poly.vertices[0].x)
             wordHeight = (word.bounding_poly.vertices[2].y
-                        - word.bounding_poly.vertices[1].y)
+                            - word.bounding_poly.vertices[1].y)
             bndng_bx = [word.bounding_poly.vertices[0].x,
                         word.bounding_poly.vertices[3].y,
                         wordWidth, wordHeight]
