@@ -63,8 +63,8 @@ def render_ocr():
     preprocessors = content['preprocessors']
 
     # No OCR preprocessor
-    if 'ca.mcgill.a11y.image.preprocessor.ocr' not in preprocessors:
-        logging.debug("No OCR preprocessor found")
+    if 'ca.mcgill.a11y.image.preprocessor.ocrClouds' not in preprocessors:
+        logging.debug("No ocr-clouds preprocessor found")
         response = {
             "request_uuid": content["request_uuid"],
             "timestamp": int(time.time()),
@@ -79,7 +79,7 @@ def render_ocr():
         logging.debug("Sending response")
         return response
 
-    ocr_data = preprocessors['ca.mcgill.a11y.image.preprocessor.ocr']
+    ocr_data = preprocessors['ca.mcgill.a11y.image.preprocessor.ocrClouds']
 
     # OCR lines empty
     if len(ocr_data['lines']) == 0:
@@ -130,8 +130,8 @@ def render_ocr():
         for obj in remaining_objects:
             obj_dims = get_dims(obj)
             obj_text = ""
+            lines_to_remove = []
             for i, line in enumerate(retmaining_text):
-                lines_to_remove = []
                 text_dims = get_dims(line)
                 if is_contained(text_dims, obj_dims):
                     obj_text += line['text'] + ", "
@@ -143,8 +143,7 @@ def render_ocr():
                 obj_text = obj_text[:-2]
                 text += "containing the text: " + obj_text + ". "
             # Remove lines already found
-            for i in lines_to_remove:
-                retmaining_text.pop(i)
+            retmaining_text = [line for x, line in enumerate(retmaining_text) if x not in lines_to_remove]
         if len(retmaining_text) > 0:
             text += "The remaining text not contained in any detected object: "
             for line in retmaining_text:
