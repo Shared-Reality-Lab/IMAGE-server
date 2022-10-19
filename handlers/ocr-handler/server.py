@@ -130,12 +130,12 @@ def render_ocr():
         for obj in remaining_objects:
             obj_dims = get_dims(obj)
             obj_text = ""
-            lines_to_remove = []
+            ln_del = []
             for i, line in enumerate(retmaining_text):
                 text_dims = get_dims(line)
                 if is_contained(text_dims, obj_dims):
                     obj_text += line['text'] + ", "
-                    lines_to_remove.append(i)
+                    ln_del.append(i)
             # Add the appropraite article of the object
             # as well as the object type to the text
             text += get_article(obj['type']) + obj['type']
@@ -143,7 +143,9 @@ def render_ocr():
                 obj_text = obj_text[:-2]
                 text += "containing the text: " + obj_text + ". "
             # Remove lines already found
-            retmaining_text = [line for x, line in enumerate(retmaining_text) if x not in lines_to_remove]
+            retmaining_text = [
+                ln for x, ln in enumerate(retmaining_text) if x not in ln_del
+            ]
         if len(retmaining_text) > 0:
             text += "The remaining text not contained in any detected object: "
             for line in retmaining_text:
