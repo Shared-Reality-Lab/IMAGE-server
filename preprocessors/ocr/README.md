@@ -27,6 +27,10 @@ FREEOCR_API_KEY = [INSERT KEY STRING]
 GOOGLE_APPLICATION_CREDENTIALS = [INSERT KEY FILE PATH AS STRING]
 CLOUD_SERVICE = [INSERT OPTION STRING (see options above)]
 ```
+## Recommended API
+According to the tests, the best APIs for the preprocessor's needs are Microsoft Azure Read and Google Cloud Vision. However, the `Read API` has been selected as the default one because it gets the correct order of the words or lines of text, as opposed to Vision API. This matters because currently there is no structure that corrects the order of the recognized text; the output from the API is used as it is in the handler.
+
+Another downside of the Vision API is that it recognizes more words than the Read API, but it is mostly noise or forms in the background recognized as characters.
 ## More about the used cloud services
 Here are some helpful facts about the APIs that can be used for this preprocessor.
 ### Microsoft Azure OCR API
