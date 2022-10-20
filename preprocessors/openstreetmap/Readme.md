@@ -79,7 +79,7 @@ git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.gi
 2. Run 
 
 ```
-git checkout openStreetM
+git checkout OpenStreetMap
 
 ```
 3. Set your DOCKER_GID variable 
@@ -94,7 +94,7 @@ docker run --rm -p 5000:5000 osm-preprocessors
 
 ```
 
-5. Test with the request below to get sample result
+5. Test with the requests below, using the sample below:
 ```
 curl -X 'POST' \
   'http://localhost:5000/preprocessor/' \
@@ -119,6 +119,7 @@ curl -X 'POST' \
 }'
 
 ```
+
 In this case, 49.8974309 and -97.2033944 are latitude and longitude on the OpenStreetMap. 
 
 
@@ -147,6 +148,7 @@ After the installation, copy and paste this URL http://localhost:5000/preprocess
   ]
 }
 '''
+
  You may also like to use postman if you so wish. The displayed results should be the same as that of (5) above, but in a more user-friendly format.
 
 ####

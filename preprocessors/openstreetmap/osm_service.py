@@ -43,9 +43,8 @@ def server_config1(url, bbox_coord):
     street_data = api.query(
         f"""
     way({lat_min},{lon_min},{lat_max},{lon_max})[highway];
-
     (._;>;);
-    out geom;
+    out body;
     """
     )
     return street_data
@@ -123,21 +122,23 @@ def process_streets_data(OSM_data):
                 oneway = bool(oneway)
             else:
                 oneway = oneway
-                way_object = {
-                    "street_id": int(way.id),
-                    "street_name": way.tags.get("name"),
-                    "street_type": way.tags.get("highway"),
-                    "addr:street": way.tags.get("addr:street"),
-                    "surface": way.tags.get("surface"),
-                    "oneway": oneway,
-                    "sidewalk": way.tags.get("sidewalk"),
-                    "maxspeed": way.tags.get("maxspeed"),
-                    "lanes": lanes,
-                    "nodes": node_list,
-                }
-                # Delete key if value is empty
-                way_object = dict(x for x in way_object.items() if all(x))
-                processed_OSM_data.append(way_object)
+            way_object = {
+                "street_id": int(way.id),
+                "street_name": way.tags.get("name"),
+                "street_type": way.tags.get("highway"),
+                "addr:street": way.tags.get("addr:street"),
+                "surface": way.tags.get("surface"),
+                "oneway": oneway,
+                "sidewalk": way.tags.get("sidewalk"),
+                "maxspeed": way.tags.get("maxspeed"),
+                "lanes": lanes,
+
+            }
+            # Fetch as many tags as possible
+            way_object["nodes"] = node_list
+            # Delete key if value is empty
+            way_object = dict(x for x in way_object.items() if all(x))
+            processed_OSM_data.append(way_object)
     except AttributeError:
         error = 'Overpass Attibute error. Retry again'
         logging.error(error)
@@ -394,9 +395,10 @@ def enlist_POIs(processed_OSM_data1, amenity):
                 # check if "cat" key is in the node
                 if key_to_check in nodes[node]:
                     if nodes[node]["cat"]:  # ensure the "cat" key has a value
-                        POIs.append(nodes[node])
+                        # Check to remove duplicate intersections
+                        if nodes[node] not in POIs:
+                            POIs.append(nodes[node])
     if amenity is not None and len(amenity) != 0:
-        # POIs = [objs for objs in amenity]
         for objs in range(len(amenity)):
             POIs.append(amenity[objs])
     return POIs  # POIs is a list of all points of interest
