@@ -387,6 +387,7 @@ def get_amenities(bbox_coord):
 def enlist_POIs(processed_OSM_data1, amenity):
     # Keep all identified points of interest in a single list
     POIs = []
+    nodes_id = []
     if len(processed_OSM_data1):
         for obj in range(len(processed_OSM_data1)):
             nodes = processed_OSM_data1[obj]["nodes"]
