@@ -387,7 +387,8 @@ def get_amenities(bbox_coord):
 def enlist_POIs(processed_OSM_data1, amenity):
     # Keep all identified points of interest in a single list
     POIs = []
-    nodes_id = []
+    nodes_ids = []
+    unique_POIs = []
     if len(processed_OSM_data1):
         for obj in range(len(processed_OSM_data1)):
             nodes = processed_OSM_data1[obj]["nodes"]
@@ -399,10 +400,17 @@ def enlist_POIs(processed_OSM_data1, amenity):
                         # Check to remove duplicate intersections
                         if nodes[node] not in POIs:
                             POIs.append(nodes[node])
+                            if nodes[node]["id"] not in nodes_ids:
+                                nodes_ids.append(nodes[node]["id"])
+                                unique_POIs.append(nodes[node])
+
     if amenity is not None and len(amenity) != 0:
         for objs in range(len(amenity)):
             POIs.append(amenity[objs])
-    return POIs  # POIs is a list of all points of interest
+            unique_POIs.append(amenity[objs])
+            # POIs is a list of all points of interest
+            # unique_POIs is an unduplicated list of all points of interest
+    return POIs, unique_POIs
 
 
 def OSM_preprocessor(processed_OSM_data, POIs, amenity):
