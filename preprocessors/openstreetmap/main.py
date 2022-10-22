@@ -83,7 +83,7 @@ def get_map_data():
     request_uuid = content["request_uuid"]
     amenity = get_amenities(bbox_coordinates)
     if OSM_data is not None:
-        processed_OSM_data = process_streets_data(OSM_data)
+        processed_OSM_data = process_streets_data(OSM_data, bbox_coordinates)
         if processed_OSM_data is None:
             POD1 = None
         else:

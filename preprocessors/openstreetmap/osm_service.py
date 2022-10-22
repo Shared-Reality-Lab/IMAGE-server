@@ -27,6 +27,11 @@ def create_bbox_coordinates(distance, lat, lon):
     """ Convert lat/lon from radians back to degrees """
     lat_min, lon_min = degrees(lat_min), degrees(lon_min)
     lat_max, lon_max = degrees(lat_max), degrees(lon_max)
+    """ Convert lat/lon to 7 decimal places """
+    lat_min = round(lat_min, 7)
+    lat_max = round(lat_max, 7)
+    lon_min = round(lon_min, 7)
+    lon_max = round(lon_max, 7)
     bbox_coordinates = [lat_min, lon_min, lat_max, lon_max]
     return bbox_coordinates
 
@@ -96,20 +101,27 @@ def get_timestamp():
     return timestamp
 
 
-def process_streets_data(OSM_data):
+def process_streets_data(OSM_data, bbox_coordinates):
     """Retrieve inteterested street information from the requested OSM data"""
     try:
         processed_OSM_data = []
+        lat_min = bbox_coordinates[0]
+        lat_max = bbox_coordinates[2]
+        lon_min = bbox_coordinates[1]
+        lon_max = bbox_coordinates[3]
         for way in OSM_data.ways:
             node_list = []
             for node in way.nodes:
-                node_object = {
-                    "id": int(node.id),
-                    "lat": float(node.lat),
-                    "lon": float(node.lon),
-                }
-                if node_object not in node_list:
-                    node_list.append(node_object)
+                # Extract only nodes within the boundary
+                if node.lat >= lat_min and node.lat <= lat_max:
+                    if node.lon >= lon_min and node.lon <= lon_max:
+                        node_object = {
+                            "id": int(node.id),
+                            "lat": float(node.lat),
+                            "lon": float(node.lon),
+                        }
+                        if node_object not in node_list:
+                            node_list.append(node_object)
             # Convert lanes to integer if its value is not None
             lanes = way.tags.get("lanes")
             if lanes is not None:
@@ -297,6 +309,10 @@ def allot_intersection(processed_OSM_data, inters_rec_up
 def get_amenities(bbox_coord):
     # Send request to OSM to get amenities which are part of
     # points of interest (POIs)
+    lat_min = bbox_coord[0]
+    lat_max = bbox_coord[2]
+    lon_min = bbox_coord[1]
+    lon_max = bbox_coord[3]
     try:
         amenities = server_config2(defaultServer, bbox_coord)
     except Exception:
@@ -314,74 +330,86 @@ def get_amenities(bbox_coord):
                 logging.error(error)
                 amenities = None
 
-    # Filter the amenity tags to the basic useful ones
+    # Fetch the basic amenity tags
     amenity = []
     if amenities is not None:
         if amenities.nodes:
             for node in amenities.nodes:
-                if node.tags.get("amenity") is not None:
-                    amenity_record = {
-                        "id": int(node.id),
-                        "lat": float(node.lat),
-                        "lon": float(node.lon),
-                        "name": node.tags.get("name"),
-                        "cat": node.tags.get("amenity"),
-                    }
-                    # Fetch as many tags possible
+                # Extract only amenities(under nodes) within the boundary
+                if node.lat >= lat_min and node.lat <= lat_max:
+                    if node.lon >= lon_min and node.lon <= lon_max:
+                        if node.tags.get("amenity") is not None:
+                            amenity_record = {
+                                "id": int(node.id),
+                                "lat": float(node.lat),
+                                "lon": float(node.lon),
+                                "name": node.tags.get("name"),
+                                "cat": node.tags.get("amenity"),
+                            }
+                            # Fetch as many tags possible beyond the basic
 
-                    for key, value in node.tags.items():
-                        if value != node.tags.get(
-                                "name") and value != node.tags.get("amenity"):
-                            if key not in amenity_record:
-                                amenity_record[key] = value
+                            for key, value in node.tags.items():
+                                if (value != node.tags.get(
+                                        "name") and
+                                        value != node.tags.get("amenity")):
+                                    if key not in amenity_record:
+                                        amenity_record[key] = value
 
-                # Delete keys with no value
-                amenity_record = dict(
-                    x for x in amenity_record.items() if all(x))
-                amenity.append(amenity_record)
+                        # Delete keys with no value
+                        amenity_record = dict(
+                            x for x in amenity_record.items() if all(x))
+                        amenity.append(amenity_record)
 
         if amenities.ways:
             for way in amenities.ways:
-                if way.tags.get("amenity") is not None:
-                    amenity_record = {
-                        "id": int(way.id),
-                        "lat": float(way.center_lat),
-                        "lon": float(way.center_lon),
-                        "name": way.tags.get("name"),
-                        "cat": way.tags.get("amenity"),
-                    }
-                    # Fetch as many tags possible
-                    for key, value in way.tags.items():
-                        if value != way.tags.get(
-                                "name") and value != way.tags.get("amenity"):
-                            if key not in amenity_record:
-                                amenity_record[key] = value
-                # Delete keys with no value
-                amenity_record = dict(
-                    x for x in amenity_record.items() if all(x))
-                amenity.append(amenity_record)
+                # Extract only amenities(under ways) within the boundary
+                if way.center_lat >= lat_min and way.center_lat <= lat_max:
+                    if way.center_lon >= lon_min and way.center_lon <= lon_max:
+                        if way.tags.get("amenity") is not None:
+                            amenity_record = {
+                                "id": int(way.id),
+                                "lat": float(way.center_lat),
+                                "lon": float(way.center_lon),
+                                "name": way.tags.get("name"),
+                                "cat": way.tags.get("amenity"),
+                            }
+                            # Fetch as many tags possible
+                            for key, value in way.tags.items():
+                                if (value != way.tags.get(
+                                        "name") and
+                                        value != way.tags.get("amenity")):
+                                    if key not in amenity_record:
+                                        amenity_record[key] = value
+                        # Delete keys with no value
+                        amenity_record = dict(
+                            x for x in amenity_record.items() if all(x))
+                        amenity.append(amenity_record)
 
         if amenities.relations:
             for rel in amenities.relations:
-                if rel.tags.get("amenity") is not None:
-                    amenity_record = {
-                        "id": int(rel.id),
-                        "lat": float(rel.center_lat),
-                        "lon": float(rel.center_lon),
-                        "name": rel.tags.get("name"),
-                        "cat": rel.tags.get("amenity"),
-                    }
-                    # Fetch as many tags possible
-                    for key, value in rel.tags.items():
-                        if value != rel.tags.get(
-                                "name") and value != rel.tags.get("amenity"):
-                            if key not in amenity_record:
-                                amenity_record[key] = value
-                # Delete keys with no value
-                amenity_record = dict(
-                    x for x in amenity_record.items() if all(x))
-                amenity.append(amenity_record)
-    return amenity
+                # Extract only amenities(under relations) within the boundary
+                if rel.center_lat >= lat_min and rel.center_lat <= lat_max:
+                    if rel.center_lon >= lon_min and rel.center_lon <= lon_max:
+                        if rel.tags.get("amenity") is not None:
+                            amenity_record = {
+                                "id": int(rel.id),
+                                "lat": float(rel.center_lat),
+                                "lon": float(rel.center_lon),
+                                "name": rel.tags.get("name"),
+                                "cat": rel.tags.get("amenity"),
+                            }
+                            # Fetch as many tags possible
+                            for key, value in rel.tags.items():
+                                if (value != rel.tags.get(
+                                        "name") and
+                                        value != rel.tags.get("amenity")):
+                                    if key not in amenity_record:
+                                        amenity_record[key] = value
+                        # Delete keys with no value
+                        amenity_record = dict(
+                            x for x in amenity_record.items() if all(x))
+                        amenity.append(amenity_record)
+            return amenity
 
 
 def enlist_POIs(processed_OSM_data1, amenity):
