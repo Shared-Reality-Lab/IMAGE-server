@@ -122,35 +122,39 @@ def process_streets_data(OSM_data, bbox_coordinates):
                         }
                         if node_object not in node_list:
                             node_list.append(node_object)
-            # Convert lanes to integer if its value is not None
-            lanes = way.tags.get("lanes")
-            if lanes is not None:
-                lanes = int(lanes)
-            else:
-                lanes = lanes
-            # Convert oneway tag to boolean if its value is not None
-            oneway = way.tags.get("oneway")
-            if oneway is not None:
-                oneway = bool(oneway)
-            else:
-                oneway = oneway
-            way_object = {
-                "street_id": int(way.id),
-                "street_name": way.tags.get("name"),
-                "street_type": way.tags.get("highway"),
-                "addr:street": way.tags.get("addr:street"),
-                "surface": way.tags.get("surface"),
-                "oneway": oneway,
-                "sidewalk": way.tags.get("sidewalk"),
-                "maxspeed": way.tags.get("maxspeed"),
-                "lanes": lanes,
+            # Check if the "node_list" for a way is not empty.
+            # Otherwise all its nodes are outside the boundary, so exclude the
+            # way.
+            if node_list:
+                # Convert lanes to integer if its value is not None
+                lanes = way.tags.get("lanes")
+                if lanes is not None:
+                    lanes = int(lanes)
+                else:
+                    lanes = lanes
+                # Convert oneway tag to boolean if its value is not None
+                oneway = way.tags.get("oneway")
+                if oneway is not None:
+                    oneway = bool(oneway)
+                else:
+                    oneway = oneway
+                way_object = {
+                    "street_id": int(way.id),
+                    "street_name": way.tags.get("name"),
+                    "street_type": way.tags.get("highway"),
+                    "addr:street": way.tags.get("addr:street"),
+                    "surface": way.tags.get("surface"),
+                    "oneway": oneway,
+                    "sidewalk": way.tags.get("sidewalk"),
+                    "maxspeed": way.tags.get("maxspeed"),
+                    "lanes": lanes,
 
-            }
-            # Fetch as many tags as possible
-            way_object["nodes"] = node_list
-            # Delete key if value is empty
-            way_object = dict(x for x in way_object.items() if all(x))
-            processed_OSM_data.append(way_object)
+                }
+                # Fetch as many tags as possible
+                way_object["nodes"] = node_list
+                # Delete key if value is empty
+                way_object = dict(x for x in way_object.items() if all(x))
+                processed_OSM_data.append(way_object)
     except AttributeError:
         error = 'Overpass Attibute error. Retry again'
         logging.error(error)
@@ -409,7 +413,7 @@ def get_amenities(bbox_coord):
                         amenity_record = dict(
                             x for x in amenity_record.items() if all(x))
                         amenity.append(amenity_record)
-            return amenity
+    return amenity
 
 
 def enlist_POIs(processed_OSM_data1, amenity):
