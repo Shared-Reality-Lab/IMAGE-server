@@ -32,6 +32,7 @@ azure_endpoint = "https://image-cv.cognitiveservices.azure.com/"
 freeocr_subscription_key = os.environ["FREEOCR_API_KEY"]
 freeocr_endpoint = "https://api.ocr.space/parse/image"
 
+
 def process_read_azure(stream, width, height):
     computervision_client = ComputerVisionClient(
         azure_endpoint, CognitiveServicesCredentials(azure_subscr_key))
