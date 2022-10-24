@@ -5,9 +5,7 @@ __pycache__/
 config/maps.env
 config/azure-api.env
 config/chart.env
-preprocessors/ocr/config/apis-and-selection.env
-preprocessors/ocr/config/vision_api_key.json
-preprocessors/ocr/clean-ocr-clouds.sh
-preprocessors/ocr/init-ocr-clouds.sh
-preprocessors/ocr/actual-docker-compose.yml
+config/apis-and-selection.env
+config/vision_api_key.json
+*.sh
 docker-compose.override.yml

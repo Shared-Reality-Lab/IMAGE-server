@@ -269,13 +269,13 @@ def analyze_image(source, width, height, cld_srv_optn):
         return ocr_results
 
 
-def normalize_bdg_box(bb, w, h):
-    for i, val in enumerate(bb):
+def normalize_bdg_box(bndng_bx, width, height):
+    for i, val in enumerate(bndng_bx):
         if i % 2 == 0:
-            bb[i] = int(val) / w
+            bndng_bx[i] = int(val) / width
         else:
-            bb[i] = int(val) / h
-    return bb
+            bndng_bx[i] = int(val) / height
+    return bndng_bx
 
 
 if __name__ == "__main__":
