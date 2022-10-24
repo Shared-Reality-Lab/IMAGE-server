@@ -91,7 +91,7 @@ def get_map_data():
             POD1 = allot_intersection(
                 processed_OSM_data,
                 intersection_record_updated)
-        POIs, unique_POIs = enlist_POIs(POD1, amenity)
+        POIs = enlist_POIs(POD1, amenity)
         if processed_OSM_data is not None and len(processed_OSM_data) != 0:
             response = OSM_preprocessor(processed_OSM_data, POIs, amenity)
             response = {
@@ -100,7 +100,7 @@ def get_map_data():
                 "name": name,
                 "data": {
                     "bounds": header_info,
-                    "points_of_interest": unique_POIs,
+                    "points_of_interest": POIs,
                     "streets": response
                 }
             }
