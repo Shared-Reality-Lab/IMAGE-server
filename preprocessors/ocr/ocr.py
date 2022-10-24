@@ -23,7 +23,12 @@ import os
 import io
 import base64
 from flask import Flask, request, jsonify
-from ocr_utils import process_read_azure, process_ocr_azure, process_ocr_free, process_vision_google
+from ocr_utils import (
+    process_read_azure,
+    process_ocr_azure,
+    process_ocr_free,
+    process_vision_google
+)
 
 app = Flask(__name__)
 
