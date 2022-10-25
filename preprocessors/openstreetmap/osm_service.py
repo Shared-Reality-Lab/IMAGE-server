@@ -28,11 +28,6 @@ def create_bbox_coordinates(distance, lat, lon):
     """ Convert lat/lon from radians back to degrees """
     lat_min, lon_min = degrees(lat_min), degrees(lon_min)
     lat_max, lon_max = degrees(lat_max), degrees(lon_max)
-    """ Convert lat/lon to 7 decimal places """
-    lat_min = round(lat_min, 7)
-    lat_max = round(lat_max, 7)
-    lon_min = round(lon_min, 7)
-    lon_max = round(lon_max, 7)
     bbox_coordinates = [lat_min, lon_min, lat_max, lon_max]
     return bbox_coordinates
 
@@ -131,14 +126,10 @@ def process_streets_data(OSM_data, bbox_coordinates):
                 lanes = way.tags.get("lanes")
                 if lanes is not None:
                     lanes = int(lanes)
-                else:
-                    lanes = lanes
                 # Convert oneway tag to boolean if its value is not None
                 oneway = way.tags.get("oneway")
                 if oneway is not None:
                     oneway = bool(oneway)
-                else:
-                    oneway = oneway
                 way_object = {
                     "street_id": int(way.id),
                     "street_name": way.tags.get("name"),
