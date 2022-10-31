@@ -1,0 +1,11 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/ner.schema.json",
+    "type": "object",
+    "title": "NER tagger",
+    "description": "NER tagger for alt text. Accessed as 'ca.mcgill.a11y.image.preprocessor.ner'.",
+    "properties": {
+        "ner": { "enum": ["URL", "photograph", "alt","other"] }
+    },
+    "required": [ "ner"]
+}
