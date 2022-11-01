@@ -1,6 +1,8 @@
 import os, sys
 import json
 import logging
+import tempfile
+
 from html2image import Html2Image
 from bs4 import BeautifulSoup
 import clipscore
@@ -9,10 +11,12 @@ from nltk.tag.stanford import StanfordNERTagger
 
 
 
+with tempfile.NamedTemporaryFile() as tmp:
+    output_dir = tmp.name
+    os.makedirs(output_dir+'/images')
+
 jar = './stanford-ner/stanford-ner.jar'
 model = './stanford-ner/ner-model-english.ser.gz'
-output_dir = os.path.abspath('')+'/temp'
-
 
 
 """
@@ -22,7 +26,7 @@ Save a html contaning an image to a given location
 :out_dir: directory to save the image to
 """
 def save_pic(my_html, name, out_dir):
-    path = f"{out_dir}/images/"
+    path = f"{out_dir}/images"
     hti = Html2Image()
     path_ = os.path.abspath(path)
     hti._output_path = path_
@@ -101,7 +105,7 @@ def main():
         return "", 204
 
     # create path parameters for clipscore
-    parameters = Namespace(candidates_json='./temp/captions.json', compute_other_ref_metrics=1, image_dir='./temp/images/', references_json=None, save_per_instance='./temp/scores.json')
+    parameters = Namespace(candidates_json=output_dir+'/captions.json', compute_other_ref_metrics=1, image_dir=output_dir+'/images/', references_json=None, save_per_instance=output_dir+'/scores.json')
     
     # calculate the clipscore
     score = clipscore.main(parameters)['1']['CLIPScore']
