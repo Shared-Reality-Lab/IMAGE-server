@@ -1,20 +1,19 @@
+
 import os, sys
 import json
+import shutil
 import logging
 import tempfile
 
-from html2image import Html2Image
-from bs4 import BeautifulSoup
-import clipscore
 import nltk
+import clipscore
+from bs4 import BeautifulSoup
+from html2image import Html2Image
 from nltk.tag.stanford import StanfordNERTagger
 
 
-
-with tempfile.NamedTemporaryFile() as tmp:
-    output_dir = tmp.name
-    os.makedirs(output_dir+'/images')
-
+CONTEXT_DIR = tempfile.mkdtemp()
+IMAGE_DIR = tempfile.mkdtemp()
 jar = './stanford-ner/stanford-ner.jar'
 model = './stanford-ner/ner-model-english.ser.gz'
 
@@ -26,7 +25,7 @@ Save a html contaning an image to a given location
 :out_dir: directory to save the image to
 """
 def save_pic(my_html, name, out_dir):
-    path = f"{out_dir}/images"
+    path = f"{out_dir}"
     hti = Html2Image()
     path_ = os.path.abspath(path)
     hti._output_path = path_
@@ -95,9 +94,10 @@ def main():
     url = content["URL"]                     # extract image url
     
     # save pic and caption to directory for clipscore evaluation
-    with open(f"{output_dir}/captions.json", "w") as outfile:
+    with open(CONTEXT_DIR+'/captions.json', "w") as outfile:
         json.dump(captions, outfile)
-    save_pic(html_, name_+".png", output_dir)
+
+    save_pic(html_, name_+'.png', IMAGE_DIR)
     
     # check if we have an alt text
     if len(text) < 2:
@@ -105,7 +105,7 @@ def main():
         return "", 204
 
     # create path parameters for clipscore
-    parameters = Namespace(candidates_json=output_dir+'/captions.json', compute_other_ref_metrics=1, image_dir=output_dir+'/images/', references_json=None, save_per_instance=output_dir+'/scores.json')
+    parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json', compute_other_ref_metrics=1, image_dir=IMAGE_DIR, references_json=None, save_per_instance=CONTEXT_DIR+'/score.json')
     
     # calculate the clipscore
     score = clipscore.main(parameters)['1']['CLIPScore']
