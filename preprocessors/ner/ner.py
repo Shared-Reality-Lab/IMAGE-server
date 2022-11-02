@@ -1,4 +1,3 @@
-
 import os, sys
 import json
 import shutil
@@ -115,8 +114,7 @@ def main():
     
     # create final json
     rtn = {'clipscore': score,
-           'url': url,
-           'ner': ners,
+           'ner': [[i[0], i[1]] for i in ners],
            'alttxt': captions['1']
           }
     

@@ -1,18 +1,20 @@
 import os, sys
 import json
+import shutil
 import logging
-from html2image import Html2Image
-from bs4 import BeautifulSoup
-import clipscore
+import tempfile
+
 import nltk
+import clipscore
+from bs4 import BeautifulSoup
+from html2image import Html2Image
 from nltk.tag.stanford import StanfordNERTagger
 
 
-
+CONTEXT_DIR = tempfile.mkdtemp()
+IMAGE_DIR = tempfile.mkdtemp()
 jar = './stanford-ner/stanford-ner.jar'
 model = './stanford-ner/ner-model-english.ser.gz'
-output_dir = os.path.abspath('')+'/temp'
-
 
 
 """
@@ -122,12 +124,11 @@ def main():
     text = get_alt(content)                  # extract alt text and save it in the caption dict
     captions[name_] = text
     html_ = get_img_html(content['graphic']) # get the image html content
-    url = content["URL"]                     # extract image url
     
     # save pic and caption to directory for clipscore evaluation
-    with open(f"{output_dir}/captions.json", "w") as outfile:
+    with open(CONTEXT_DIR+'/captions.json', "w") as outfile:
         json.dump(captions, outfile)
-    save_pic(html_, name_+".png", output_dir)
+    save_pic(html_, name_+'.png', IMAGE_DIR)
     
     # check if we have an alt text
     if len(text) < 2:
@@ -135,21 +136,21 @@ def main():
         return "", 204
 
     # create path parameters for clipscore
-    parameters = Namespace(candidates_json='./temp/captions.json', compute_other_ref_metrics=1, image_dir='./temp/images/', references_json=None, save_per_instance='./temp/scores.json')
+    parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json', compute_other_ref_metrics=1, image_dir=IMAGE_DIR, references_json=None, save_per_instance=CONTEXT_DIR+'/score.json')
     
     # calculate the clipscore
     score = clipscore.main(parameters)['1']['CLIPScore']
     
     # compute the NERs
     ners = stanford_ner(text)
-
+    
+    # create final json
     rtn = {
         'clipscore': score,
-        'url': url,
-        'ner': ners,
+        'ner': [[i[0], i[1]] for i in ners],
         'alttxt': captions['1']
-    }
-
+        }
+    
     # ------ END COMPUTATION ------ #
     
     request_uuid = content["request_uuid"]
