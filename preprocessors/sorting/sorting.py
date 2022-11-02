@@ -88,7 +88,7 @@ def readImage():
     # sorting)
     for i in range(len(objects)):
         left2right.append([objects[i]["ID"], centroid[i][0]])
-        top2bottom.append([objects[i]["ID"], centroid[i][1]])
+        top2bottom.append([objects[i]["ID"], centroid[i][0]])
         small2big.append([objects[i]["ID"], area[i]])
     # sort the lists
     top2bottom = sorted(top2bottom, key=lambda x: x[1])
