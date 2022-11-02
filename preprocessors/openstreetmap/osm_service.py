@@ -537,13 +537,43 @@ def OSM_preprocessor(processed_OSM_data, POIs, amenity):
                                         else:
                                             nodes[node]["POIs_ID"] = existingid
     # Use Python Sort function
+    processed_OSM_data2 = compute_street_length(processed_OSM_data2)
     processed_OSM_data2 = (
         sorted(
             processed_OSM_data2,
-            key=lambda x: len(
-                x['nodes']),
+            key=lambda x:
+                x['distance'],
             reverse=True))
+
+    # Delete the distance key
+    for obj in range(len(processed_OSM_data2)):
+        processed_OSM_data2[obj].pop('distance', None)
     return processed_OSM_data2
+
+
+def compute_street_length(processed_OSM_data):
+    # Compute the overall path length
+    for obj in range(len(processed_OSM_data)):
+        nodes = processed_OSM_data[obj]["nodes"]
+        for node in range(len(nodes)):
+            if node <= 0:
+                i = 0
+                sum = 0
+                for j in range(i + 1, len(nodes)):
+                    lat1 = nodes[i]["lat"]
+                    lon1 = nodes[i]["lon"]
+                    lat2 = nodes[j]["lat"]
+                    lon2 = nodes[j]["lon"]
+                    location1 = (float(lat1), float(lon1))
+                    location2 = (float(lat2), float(lon2))
+                    # Compute the distance between two adjacent nodes of a way
+                    # (in metres)
+                    distance = (hs.haversine(location1, location2) * 1000)
+                    # Sum up the distance
+                    sum = sum + distance
+                    i = i + 1
+        processed_OSM_data[obj]["distance"] = sum
+    return processed_OSM_data
 
 
 def validate(schema, data, resolver, json_message, error_code):
