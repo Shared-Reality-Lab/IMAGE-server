@@ -63,7 +63,7 @@ def process_read_azure(stream, width, height):
                 line_text = line.text
                 # Get normalized bounding box for each line
                 bbx = line.bounding_box
-                bg_bx = [bbx[0], bbx[7], (bbx[2]-bbx[0]), (bbx[5]-bbx[3])]
+                bg_bx = [bbx[0], bbx[1], (bbx[2]-bbx[0]), (bbx[5]-bbx[3])]
                 bounding_box = normalize_bdg_box(bg_bx, width, height)
                 ocr_results.append({
                     'text': line_text,
@@ -124,9 +124,8 @@ def process_ocr_free(source, width, height):
     for line in read_result['ParsedResults'][0]['TextOverlay']['Lines']:
         line_text = line['LineText']
         # Get normalized bounding box for each line
-        lnDown = line['MaxHeight'] + line['MinTop']
         lnWidth = line['Words'][-1]['Left'] - line['Words'][0]['Left']
-        bndng_bx = [line['Words'][0]['Left'], lnDown,
+        bndng_bx = [line['Words'][0]['Left'], line['MinTop'],
                     lnWidth, line['MaxHeight']]
         bounding_box = normalize_bdg_box(bndng_bx, width, height)
         ocr_results.append({
@@ -160,7 +159,7 @@ def process_vision_google(image_b64, width, height):
             - word.bounding_poly.vertices[1].y
         )
         bndng_bx = [word.bounding_poly.vertices[0].x,
-                    word.bounding_poly.vertices[3].y,
+                    word.bounding_poly.vertices[0].y,
                     wordWidth, wordHeight]
         bounding_box = normalize_bdg_box(bndng_bx, width, height)
         ocr_results.append({
