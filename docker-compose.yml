@@ -38,6 +38,13 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
+    ner:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-ner:unstable
+        env_file:
+            - ./config/ner.env
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 2
+            ca.mcgill.a11y.image.port: 5000
     ocr-preprocessor:
         image: ghcr.io/shared-reality-lab/image-preprocessor-ocr:unstable
         env_file:
@@ -183,3 +190,4 @@ services:
 volumes:
     sc-store:
     user-logs:
+
