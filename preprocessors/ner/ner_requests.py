@@ -1,3 +1,19 @@
+# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# and our Additional Terms along with this program.
+# If not, see
+# <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
+
 import os, sys
 import json
 import shutil
@@ -83,27 +99,29 @@ def stanford_ner(sentence, only_ner = True):
 def main():
     
     logging.debug("Received request")
-    # Load schemas
+
     with open('./schemas/preprocessors/ner.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
-        # 
+
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
-        # 
+
     with open('./schemas/definitions.json') as jsonfile:
         definition_schema = json.load(jsonfile)
-        # 
+
+    with open('./schemas/request.schema.json') as jsonfile:
+        first_schema = json.load(jsonfile)
+
     schema_store = {
         data_schema['$id']: data_schema,
         schema['$id']: schema,
         definition_schema['$id']: definition_schema
     }
-        # 
+
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
-        # 
+
     content = request.get_json()
-        # 
 
     try:
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
@@ -112,7 +130,7 @@ def main():
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
 
-    # check content keys
+    # # check content keys. TODO
     # if "graphic" not in content:
     #     logging.info("Request is not a graphic. Skipping...")
     #     return "", 204  # No content
@@ -145,7 +163,7 @@ def main():
     ners = stanford_ner(text)
     
     # create final json
-    rtn = {
+    data = {
         'clipscore': score,
         'ner': [[i[0], i[1]] for i in ners],
         'alttxt': captions['1']
@@ -156,23 +174,13 @@ def main():
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.ner"
-    labels_dict = {"0": "chart", "1": "photograph", "2": "other", "3": "text"}
-    type = {"category": labels_dict[pred]}
 
-    # create final json
-
-    try:
-        validator = jsonschema.Draft7Validator(data_schema)
-        validator.validate(type)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
-        return jsonify("Invalid Preprocessor JSON format"), 500
-
+    # TODO
     response = {
         'request_uuid': request_uuid,
         'timestamp': int(timestamp),
         'name': name,
-        'data': rtn
+        'data': data
     }
 
     try:
@@ -188,6 +196,6 @@ def main():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-    main()
+    # main()
 
 
