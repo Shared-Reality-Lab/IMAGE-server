@@ -180,6 +180,10 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+    svg-semantic-seg-handler:
+        image: ghcr.io/shared-reality-lab/image-svg-semantic-seg:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
 volumes:
     sc-store:
     user-logs:
