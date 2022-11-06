@@ -1,4 +1,4 @@
-# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+# Copyright (c) 2022 IMAGE Project, Shared Reality Lab, McGill University
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -19,29 +19,23 @@ import json
 import time
 import logging
 import jsonschema
-import os
-import io
-import base64
 from flask import Flask, request, jsonify
-from ocr_utils import (
-    process_read_azure,
-    process_ocr_azure,
-    process_ocr_free,
-    process_vision_google
-)
+
+from charts_utils import getLowerPointsOnLeft, getHigherPointsOnLeft
+from charts_utils import getLowerPointsOnRight, getHigherPointsOnRight
 
 app = Flask(__name__)
 
 
 @app.route('/preprocessor', methods=['POST', 'GET'])
-def get_ocr_text():
+def get_chart_info():
     """
-    Gets data on locations nearby a map from the Autour API
+    The preprocessor currently handles only single-line charts,
+    functionality to be extended later
     """
-
     logging.debug("Received request")
     # Load schemas
-    with open('./schemas/preprocessors/ocr.schema.json') as jsonfile:
+    with open('./schemas/preprocessors/line-charts.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') as jsonfile:
         schema = json.load(jsonfile)
@@ -54,9 +48,9 @@ def get_ocr_text():
     }
     content = request.get_json()
 
-    # Check if request is for a map
-    if 'graphic' not in content:
-        logging.info("Map request. Skipping...")
+    # Check if request is for a chart
+    if 'highChartsData' not in content:
+        logging.info("Not a highcharts charts request. Skipping...")
         return "", 204
 
     with open('./schemas/request.schema.json') as jsonfile:
@@ -76,21 +70,37 @@ def get_ocr_text():
     # Use response schema to validate response
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
-    # Get OCR text response
-    width = content['dimensions'][0]
-    height = content['dimensions'][1]
 
-    cld_srv_optn = os.environ["CLOUD_SERVICE"]
-
-    ocr_result = analyze_image(content['graphic'], width, height, cld_srv_optn)
-
-    if ocr_result is None:
-        return jsonify("Could not retreive Azure results"), 500
-
-    name = 'ca.mcgill.a11y.image.preprocessor.ocrClouds'
+    name = 'ca.mcgill.a11y.image.preprocessor.lineChart'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
-    data = {'lines': ocr_result, 'cloud_service': cld_srv_optn}
+
+    series_object = content['highChartsData']['series'][0]
+    series_data = series_object['data']
+
+    for index, point in enumerate(series_data):
+        point['lowerPointsOnLeft'] = getLowerPointsOnLeft(
+                                        index,
+                                        point,
+                                        series_data
+                                    )
+        point['higherPointsOnLeft'] = getHigherPointsOnLeft(
+                                        index,
+                                        point,
+                                        series_data
+                                    )
+        point['lowerPointsOnRight'] = getLowerPointsOnRight(
+                                        index,
+                                        point,
+                                        series_data
+                                    )
+        point['higherPointsOnRight'] = getHigherPointsOnRight(
+                                        index,
+                                        point,
+                                        series_data
+                                    )
+
+    data = {'dataPoints': series_data}
 
     try:
         validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
@@ -114,30 +124,8 @@ def get_ocr_text():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")
+    # print(data)
     return response
-
-
-def analyze_image(source, width, height, cld_srv_optn):
-    """
-    Gets OCR text data from desired API
-    """
-
-    # Convert URI to binary stream
-    image_b64 = source.split(",")[1]
-    binary = base64.b64decode(image_b64)
-    stream = io.BytesIO(binary)
-
-    if cld_srv_optn == "READ_AZURE":
-        return process_read_azure(stream, width, height)
-
-    elif cld_srv_optn == "OCR_AZURE":
-        return process_ocr_azure(stream, width, height)
-
-    elif cld_srv_optn == "OCR_FREE":
-        return process_ocr_free(source, width, height)
-
-    elif cld_srv_optn == "VISION_GOOGLE":
-        return process_vision_google(image_b64, width, height)
 
 
 if __name__ == "__main__":

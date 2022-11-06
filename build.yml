@@ -16,6 +16,11 @@ services:
             context: .
             dockerfile: services/espnet-tts/Dockerfile
         image: "espnet-tts:latest"
+    line-charts-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/line-charts/Dockerfile
+        image: "line-charts-preprocessor:latest"
     hello-preprocessor:
         build:
             context: .
@@ -26,11 +31,11 @@ services:
             context: .
             dockerfile: ./preprocessors/autour/Dockerfile
         image: "autour:latest"
-    ocr-preprocessor:
+    ocr-clouds-preprocessor:
         build:
             context: .
             dockerfile: ./preprocessors/ocr/Dockerfile
-        image: "ocr:latest"
+        image: "ocr-clouds:latest"
     hello-handler:
         build:
             context: .
@@ -56,6 +61,11 @@ services:
             context: .
             dockerfile: ./preprocessors/graphic-tagger/Dockerfile
         image: "graphic-tagger:latest"
+    openstreetmap:
+        build:
+            context: .
+            dockerfile: ./preprocessors/openstreetmap/Dockerfile
+        image: "osm-preprocessors:latest"
     object-grouping:
         build:
             context: .
@@ -147,6 +157,12 @@ services:
             context: .
             dockerfile: ./handlers/high-charts/Dockerfile
         image: "high-charts-handler:latest"
+    osm-streets-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/osm-streets-handler/Dockerfile
+        image: "osm-streets-handler:latest"
+
     # Supercollider on Fedora 34
     supercollider-base:
         build:

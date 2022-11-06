@@ -17,7 +17,7 @@
 var singleLineChart;
 "Single Line Chart".postln;
 singleLineChart = { |json, ttsData, outPath, addr|
-    var score, timing, order=5, baseGain=(-8.dbamp), audio, seriesData, miny, maxy;
+    var score, timing, order=5, baseGain=(-4.dbamp), audio, seriesData, miny, maxy;
     timing = 0;
     score = IMAGE.newScore(order);
     // Set up b-format decoder

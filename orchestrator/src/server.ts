@@ -24,6 +24,7 @@ import { validate, version } from "uuid";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
+import preprocessorResponseSchemaJSON from "./schemas/preprocessor-response.schema.json";
 import responseSchemaJSON from "./schemas/response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
@@ -31,7 +32,7 @@ import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
 const app = express();
 const port = 8080;
 const ajv = new Ajv2020({
-    "schemas": [definitionsJSON, querySchemaJSON, responseSchemaJSON, handlerResponseSchemaJSON]
+    "schemas": [definitionsJSON, querySchemaJSON, responseSchemaJSON, handlerResponseSchemaJSON, preprocessorResponseSchemaJSON]
 });
 
 const PREPROCESSOR_TIME_MS = 15000;
@@ -54,7 +55,12 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             if (resp.status === 200) {
                 try {
                     const json = await resp.json();
-                    (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+                    if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
+                        (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+                    } else {
+                        console.error("Preprocessor response failed validation!");
+                        console.error(JSON.stringify(ajv.errors));
+                    }
                 } catch (err) {
                     console.error("Error occured on fetch from " + resp.url);
                     console.error(err);
@@ -147,7 +153,12 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
         if (resp.status === 200) {
             try {
                 const json = await resp.json();
-                (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+                if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
+                    (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+                } else {
+                    console.error("Preprocessor response failed validation!");
+                    console.error(JSON.stringify(ajv.errors));
+                }
             } catch (err) {
                 console.error("Error occured on fetch from " + preprocessor[0]);
                 console.error(err);
