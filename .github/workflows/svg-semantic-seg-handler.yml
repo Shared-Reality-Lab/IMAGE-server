@@ -1,8 +1,8 @@
-name: Semantic Segmentation Handler
+name: Semantic Segmentation Handler 
 on:
   push:
-    branches: [ sem_svg ]
-    tags: [ "svg-semantic-seg-[0-9]+.[0-9]+.[0-9]+" ]
+    branches: [ main ]
+    tags: [ "handler-svg-semantic-seg-[0-9]+.[0-9]+.[0-9]+" ]
     paths: [ "handlers/svg-semantic-seg/**" ]
   pull_request:
     branches: [ main ]
@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: shared-reality-lab/image-svg-semantic-seg
+  IMAGE_NAME: shared-reality-lab/image-handler-svg-semantic-seg
 jobs:
   lint:
     name: PEP 8 style check.
@@ -48,7 +48,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Get Correct Tags
         run: |
-          if [[ ${{ github.ref }} =~ ^refs/tags/svg-semantic-seg-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ ${{ github.ref }} =~ ^refs/tags/handler-svg-semantic-seg-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "TAGGED=true" >> $GITHUB_ENV
           else
             echo "TAGGED=false" >> $GITHUB_ENV
@@ -63,7 +63,7 @@ jobs:
           flavor: |
             latest=${{ env.TAGGED }}
           tags: |
-            type=match,enable=${{ env.TAGGED }},priority=300,pattern=svg-semantic-seg-(\d+.\d+.\d+),group=1
+            type=match,enable=${{ env.TAGGED }},priority=300,pattern=handler-svg-semantic-seg-(\d+.\d+.\d+),group=1
             type=raw,priority=200,value=unstable
             type=raw,priority=100,value=${{ env.timestamp }}
           labels: |
