@@ -1,3 +1,19 @@
+# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# and our Additional Terms along with this program.
+# If not, see
+# <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
+
 import os, sys
 import json
 import shutil
@@ -24,7 +40,7 @@ Save a html contaning an image to a given location
 :out_dir: directory to save the image to
 """
 def save_pic(my_html, name, out_dir):
-    path = f"{out_dir}"
+    path = f"{out_dir}/images/"
     hti = Html2Image()
     path_ = os.path.abspath(path)
     hti._output_path = path_
@@ -79,23 +95,52 @@ def stanford_ner(sentence, only_ner = True):
     return words
 
 
-# @app.route('/preprocessor', methods=['POST', 'GET'])
+@app.route('/preprocessor', methods=['POST', 'GET'])
 def main():
+    
+    logging.debug("Received request")
 
-    with open('./example_input.json') as f:
-        content = json.load(f)
+    with open('./schemas/preprocessors/ner.schema.json') as jsonfile:
+        data_schema = json.load(jsonfile)
+
+    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+        schema = json.load(jsonfile)
+
+    with open('./schemas/definitions.json') as jsonfile:
+        definition_schema = json.load(jsonfile)
+
+    with open('./schemas/request.schema.json') as jsonfile:
+        first_schema = json.load(jsonfile)
+
+    schema_store = {
+        data_schema['$id']: data_schema,
+        schema['$id']: schema,
+        definition_schema['$id']: definition_schema
+    }
+
+    resolver = jsonschema.RefResolver.from_schema(
+        schema, store=schema_store)
+
+    content = request.get_json()
+
+    try:
+        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
+        validator.validate(content)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 400
+
+    # ------ START COMPUTATION ------ #
 
     name_ = "1"
     captions = {}                            # dict to store the captions
     text = get_alt(content)                  # extract alt text and save it in the caption dict
     captions[name_] = text
     html_ = get_img_html(content['graphic']) # get the image html content
-    url = content["URL"]                     # extract image url
     
     # save pic and caption to directory for clipscore evaluation
     with open(CONTEXT_DIR+'/captions.json', "w") as outfile:
         json.dump(captions, outfile)
-
     save_pic(html_, name_+'.png', IMAGE_DIR)
     
     # check if we have an alt text
@@ -113,15 +158,39 @@ def main():
     ners = stanford_ner(text)
     
     # create final json
-    rtn = {'clipscore': score,
-           'ner': [[i[0], i[1]] for i in ners],
-           'alttxt': captions['1']
-          }
+    data = {
+        'clipscore': score,
+        'ner': [[i[0], i[1]] for i in ners],
+        'alttxt': captions['1']
+        }
     
-    print(rtn)
+    # ------ END COMPUTATION ------ #
     
+    request_uuid = content["request_uuid"]
+    timestamp = time.time()
+    name = "ca.mcgill.a11y.image.preprocessor.ner"
+
+    # TODO
+    response = {
+        'request_uuid': request_uuid,
+        'timestamp': int(timestamp),
+        'name': name,
+        'data': data
+    }
+
+    try:
+        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+        validator.validate(response)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
+
+    logging.debug("Sending response")
+    return response
+
 
 if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
     main()
 
 
