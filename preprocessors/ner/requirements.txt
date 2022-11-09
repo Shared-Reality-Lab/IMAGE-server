@@ -3,4 +3,18 @@ imgkit
 IPython
 html2image
 nltk
+gunicorn
+clip
+pillow
+torch
+tqdm
+torchvision
+clip_by_openai
+scikit-learn
+sklearn
+packaging
+git+https://github.com/openai/CLIP
+jsonschema
+flask
+pycocoevalcap
 

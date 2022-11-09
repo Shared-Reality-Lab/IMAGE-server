@@ -16,9 +16,12 @@
 
 import os, sys
 import json
+import time
 import shutil
 import logging
 import tempfile
+import jsonschema
+from flask import Flask, request, jsonify
 
 import nltk
 import clipscore
@@ -27,6 +30,7 @@ from html2image import Html2Image
 from nltk.tag.stanford import StanfordNERTagger
 
 
+app = Flask(__name__)
 CONTEXT_DIR = tempfile.mkdtemp()
 IMAGE_DIR = tempfile.mkdtemp()
 jar = './stanford-ner/stanford-ner.jar'
