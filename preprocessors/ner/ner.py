@@ -44,7 +44,7 @@ Save a html contaning an image to a given location
 :out_dir: directory to save the image to
 """
 def save_pic(my_html, name, out_dir):
-    path = f"{out_dir}/images/"
+    path = f"{out_dir}"
     hti = Html2Image()
     path_ = os.path.abspath(path)
     hti._output_path = path_
