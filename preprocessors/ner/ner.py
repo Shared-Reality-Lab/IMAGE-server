@@ -14,6 +14,8 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
+import shutil
+import warnings
 import os, sys
 import json
 import time
@@ -31,8 +33,33 @@ from nltk.tag.stanford import StanfordNERTagger
 
 
 app = Flask(__name__)
-CONTEXT_DIR = tempfile.mkdtemp()
-IMAGE_DIR = tempfile.mkdtemp()
+
+CONTEXT_DIR = str("/tmp/context")
+IMAGE_DIR = str("/tmp/image")
+
+try:
+    shutil.rmtree(CONTEXT_DIR)
+except:
+    pass
+
+try:
+    shutil.rmtree(IMAGE_DIR)
+except:
+    pass
+
+
+#warnings.warn(f"li ---> {os.listdir(CONTEXT_DIR)}")
+#warnings.warn(f"os.path.isdir(os.getcwd()+/context) ----> {os.path.isdir(CONTEXT_DIR)}")
+#warnings.warn(f"os.path.isfile(os.getcwd()+/context) ----> {os.path.isfile(CONTEXT_DIR)}")
+
+os.mkdir(CONTEXT_DIR)
+os.mkdir(IMAGE_DIR)
+    
+#CONTEXT_DIR = "/home/namdarn/test/IMAGE-server/preprocessors/ner/context"
+#IMAGE_DIR = "/home/namdarn/test/IMAGE-server/preprocessors/ner/image"
+
+#CONTEXT_DIR = tempfile.mkdtemp()
+#IMAGE_DIR = tempfile.mkdtemp()
 jar = './stanford-ner/stanford-ner.jar'
 model = './stanford-ner/ner-model-english.ser.gz'
 
@@ -46,8 +73,12 @@ Save a html contaning an image to a given location
 def save_pic(my_html, name, out_dir):
     path = f"{out_dir}"
     hti = Html2Image()
+    #warnings.warn(f"{my_html}")
     path_ = os.path.abspath(path)
+    warnings.warn(f"abspath for save pic --> {path_}")
     hti._output_path = path_
+    warnings.warn(f"os.listdir({IMAGE_DIR}) ---> {os.listdir(IMAGE_DIR)}")
+    warnings.warn(f"name --> {name}")
     hti.screenshot(html_str=my_html, save_as=name)
      
 """
@@ -101,7 +132,6 @@ def stanford_ner(sentence, only_ner = True):
 
 @app.route('/preprocessor', methods=['POST', 'GET'])
 def main():
-    
     logging.debug("Received request")
 
     with open('./schemas/preprocessors/ner.schema.json') as jsonfile:
@@ -147,17 +177,24 @@ def main():
         json.dump(captions, outfile)
     save_pic(html_, name_+'.png', IMAGE_DIR)
     
+
+
     # check if we have an alt text
     if len(text) < 2:
         logging.info("No alttxt")
         return "", 204
 
+    
+    warnings.warn(f"os.listdir({CONTEXT_DIR}) ---> {os.listdir(CONTEXT_DIR)}")
+    warnings.warn(f"os.listdir({IMAGE_DIR}) ---> {os.listdir(IMAGE_DIR)}")
+
     # create path parameters for clipscore
-    parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json', compute_other_ref_metrics=1, image_dir=IMAGE_DIR, references_json=None, save_per_instance=CONTEXT_DIR+'/score.json')
+    #parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json', compute_other_ref_metrics=1, image_dir=IMAGE_DIR, references_json=None, save_per_instance=CONTEXT_DIR+'/score.json')
     
     # calculate the clipscore
-    score = clipscore.main(parameters)['1']['CLIPScore']
-    
+    #score = clipscore.main(parameters)['1']['CLIPScore']
+    score = 0.98
+    warnings.warn(f"score --> {score}")
     # compute the NERs
     ners = stanford_ner(text)
     
@@ -194,6 +231,10 @@ def main():
 
 
 if __name__ == '__main__':
+    
+    #file = open("test.txt", "w")
+    #file.write("+++++")
+    #print("Hi")
     app.run(host='0.0.0.0', port=5000, debug=True)
     main()
 
