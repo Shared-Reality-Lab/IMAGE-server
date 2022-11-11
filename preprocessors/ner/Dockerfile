@@ -13,6 +13,8 @@ RUN apt-get update && \
     wget -q --continue -P /chromedriver "http://chromedriver.storage.googleapis.com/$DRIVERVER/chromedriver_linux64.zip" && \
     unzip /chromedriver/chromedriver* -d /chromedriver
 
+RUN apt-get update -y && apt-get install -y chromium
+
 WORKDIR /app
 RUN adduser --disabled-password python
 ENV PATH="/home/python/.local/bin:${PATH}"
@@ -29,5 +31,5 @@ EXPOSE 5000
 ENV FLASK_APP=ner.py
 
 USER python
-CMD [ "gunicorn", "ner:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
+CMD [ "gunicorn", "ner:app", "-b", "0.0.0.0:5000", "--privileged", "--capture-output", "--log-level=debug" ]
 
