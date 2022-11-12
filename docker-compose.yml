@@ -159,7 +159,7 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
-    svg-semantic-seg-handler:
+    svg-od-handler:
          image: ghcr.io/shared-reality-lab/image-handler-svg-od:unstable
          labels:
              ca.mcgill.a11y.image.handler: enable
