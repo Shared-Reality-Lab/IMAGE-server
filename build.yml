@@ -122,6 +122,11 @@ services:
             context: .
             dockerfile: ./handlers/hello-svg-handler/Dockerfile
         image: "hello-svg-handler:latest"
+    od-handler:
+         build:
+             context: .
+             dockerfile: ./handlers/svg-object-detection/Dockerfile
+         image: "od-svg:latest"
     photo-audio-haptics-handler:
         build:
             context: .
