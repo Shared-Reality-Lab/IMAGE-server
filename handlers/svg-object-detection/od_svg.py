@@ -176,8 +176,8 @@ def handle():
         "layers": svg_layers
     }
     rendering = {
-        "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
-        "description": "SVG visualization",
+        "type_id": "ca.mcgill.a11y.image.renderer.ODSVGLayers",
+        "description": "Object Detection SVG visualization",
         "data": data
     }
     try:
