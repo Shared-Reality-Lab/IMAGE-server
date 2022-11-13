@@ -130,7 +130,7 @@ IMAGE {
             }).store;
 
             // Discrete Sine Pings Length 5 For earcons
-            SynthDef((\playDiscreteSinePingHOA++(i+1)).asSymbol, {|note = 80, int0=0, int1=1, int2=1, int3=0, int4=2, phi=0, theta=0, radius=1, gain=0, decay=0.02, imp=48|
+            SynthDef((\playDiscreteSinePingAutourHOA++(i+1)).asSymbol, {|note = 80, int0=0, int1=1, int2=1, int3=0, int4=2, phi=0, theta=0, radius=1, gain=0, decay=0.02, imp=48|
                 var env1, ping1, env2, ping2, env3, ping3, env4, ping4, env5, ping5, encoded, excitation, reverb, spread=0.05, envDec=0.02, attack=0.01, resonzDecay=3;
                 // excitation = Dust.ar(100);
                 env1 = EnvGen.ar(Env(levels: [0, 0, 1, 0], times: [0, attack, envDec], curve: [1, 8, -9]), 1, doneAction: Done.none);
@@ -159,6 +159,22 @@ IMAGE {
                 Out.ar(2, encoded);
             }).store;
 
+            // Play discrete sine ping
+            SynthDef((\playDiscreteSinePingHOA++(i+1)).asSymbol, {|freq = 200, phi = 0, theta = 0.0, radius = 1, gain = 0, decay = 0.02, imp = 48|
+              var sig, encoded, env, excitation, reverb;
+              env = EnvGen.ar(Env.perc(0.1, 0.3), 1, doneAction: 2);
+              sig = SinOsc.ar(freq, 0.0);
+              reverb = FreeVerb.ar(sig, 0.1, 0.3, damp: 0.6, mul: 1);
+              encoded = HoaEncodeDirection.ar(reverb * gain * env * AmpComp.kr(freq, 200),
+                theta,
+                phi,
+                2.0,
+                order.asInteger
+              );
+              Out.ar(2, encoded);
+            }).store;
+
+
             // Continuous noise for pie charts v2 from Florian
             SynthDef((\playContinuousResonzNoiseHOA++(i+1)).asSymbol, { |freq = 200, phi = 0, theta = 0, radius = 2, gain = 0, decay = 0.02, imp = 48, lag = 10|
               var sig, encoded, reverb;
@@ -170,6 +186,20 @@ IMAGE {
                 radius,
                 order.asInteger
               );
+              Out.ar(2, encoded);
+            }).store;
+
+            // Continous noise for OSM streets from Florian
+            SynthDef((\playDiscreteResonzPingHOA++(i+1)).asSymbol, {|freq = 200, phi = 0, theta = 0.0, radius = 1, gain = 0, decay = 0.02, imp = 48|
+              var sig, encoded, env, excitation, reverb;
+              env = EnvGen.ar(Env.perc(0.1, 0.3), 1, doneAction: 2);
+              sig = Ringz.ar(BrownNoise.ar(0.05), freq, decay);
+              reverb = FreeVerb.ar(sig, 0.1, 0.3, damp: 0.6, mul: 1);
+              encoded = HoaEncodeDirection.ar(reverb * gain * env,
+                theta,
+                phi,
+                2.0,
+                order.asInteger);
               Out.ar(2, encoded);
             }).store;
         });

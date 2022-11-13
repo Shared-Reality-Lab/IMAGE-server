@@ -17,7 +17,7 @@
  var pieChart;
  "Simple Pie Chart".postln;
  pieChart = { |json, ttsData, outPath, addr|
-     var score, timing=0, order=5, baseGain=(1.dbamp), seriesData, wedgeStart = 0;
+     var score, timing=0, order=5, baseGain=(5.dbamp), seriesData, wedgeStart = 0;
      score = IMAGE.newScore(order);
      score.add([
          timing,

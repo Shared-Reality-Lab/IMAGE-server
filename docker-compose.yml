@@ -38,10 +38,10 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
-    ocr-preprocessor:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-ocr:unstable
+    ocr-clouds-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:unstable
         env_file:
-            - ./config/azure-api.env
+            - ./config/apis-and-selection.env
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
@@ -61,6 +61,11 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
+    line-charts-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-line-charts:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 5000
     graphic-tagger:
         image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:unstable
         labels:
@@ -72,6 +77,11 @@ services:
         image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 4
+            ca.mcgill.a11y.image.port: 5000
+    openstreetmap:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
     object-sorting:
         image: ghcr.io/shared-reality-lab/image-preprocessor-sorting:unstable
@@ -159,10 +169,28 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+
     svg-od-handler:
          image: ghcr.io/shared-reality-lab/image-handler-svg-od:unstable
          labels:
              ca.mcgill.a11y.image.handler: enable
+
+
+    osm-streets-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-osm-streets:unstable
+        env_file:
+            - ./config/express-common.env
+        depends_on:
+            - supercollider
+            - espnet-tts
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+    svg-semantic-seg-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-svg-semantic-seg:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
 
 volumes:
     sc-store:

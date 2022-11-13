@@ -22,8 +22,13 @@ import jsonschema
 import os
 import io
 import base64
-import requests
 from flask import Flask, request, jsonify
+from ocr_utils import (
+    process_read_azure,
+    process_ocr_azure,
+    process_ocr_free,
+    process_vision_google
+)
 
 app = Flask(__name__)
 
@@ -74,15 +79,18 @@ def get_ocr_text():
     # Get OCR text response
     width = content['dimensions'][0]
     height = content['dimensions'][1]
-    ocr_result = analyze_image(content['graphic'], width, height)
+
+    cld_srv_optn = os.environ["CLOUD_SERVICE"]
+
+    ocr_result = analyze_image(content['graphic'], width, height, cld_srv_optn)
 
     if ocr_result is None:
         return jsonify("Could not retreive Azure results"), 500
 
-    name = 'ca.mcgill.a11y.image.preprocessor.ocr'
+    name = 'ca.mcgill.a11y.image.preprocessor.ocrClouds'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
-    data = {'lines': ocr_result}
+    data = {'lines': ocr_result, 'cloud_service': cld_srv_optn}
 
     try:
         validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
@@ -109,51 +117,27 @@ def get_ocr_text():
     return response
 
 
-def analyze_image(source, width, height):
+def analyze_image(source, width, height, cld_srv_optn):
     """
-    Gets OCR text data from Azure API
+    Gets OCR text data from desired API
     """
 
     # Convert URI to binary stream
-
     image_b64 = source.split(",")[1]
     binary = base64.b64decode(image_b64)
     stream = io.BytesIO(binary)
 
-    subscription_key = os.environ["AZURE_API_KEY"]
-    endpoint = "https://image-cv.cognitiveservices.azure.com/"
+    if cld_srv_optn == "READ_AZURE":
+        return process_read_azure(stream, width, height)
 
-    headers = {
-        'Content-Type': 'application/octet-stream',
-        'Ocp-Apim-Subscription-Key': subscription_key,
-    }
+    elif cld_srv_optn == "OCR_AZURE":
+        return process_ocr_azure(stream, width, height)
 
-    ocr_url = endpoint + "vision/v3.2/ocr"
+    elif cld_srv_optn == "OCR_FREE":
+        return process_ocr_free(source, width, height)
 
-    response = requests.post(ocr_url, headers=headers, data=stream)
-    response.raise_for_status()
-
-    read_result = response.json()
-
-    ocr_results = []
-    for region in read_result['regions']:
-        region_text = ""
-        for line in region['lines']:
-            for word in line['words']:
-                region_text += word['text'] + " "
-        region_text = region_text[:-1]
-        # Get normalized bounding box
-        bounding_box = region['boundingBox'].split(",")
-        for i, val in enumerate(bounding_box):
-            if i % 2 == 0:
-                bounding_box[i] = int(val) / width
-            else:
-                bounding_box[i] = int(val) / height
-        ocr_results.append({
-            'text': region_text,
-            'bounding_box': bounding_box
-        })
-    return ocr_results
+    elif cld_srv_optn == "VISION_GOOGLE":
+        return process_vision_google(image_b64, width, height)
 
 
 if __name__ == "__main__":
