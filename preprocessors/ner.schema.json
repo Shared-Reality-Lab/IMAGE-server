@@ -1,0 +1,31 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/ner.schema.json",
+    "type": "object",
+    "title": "NER tagger",
+    "description": "NER tagger for alt text. Accessed as 'ca.mcgill.a11y.image.preprocessor.ner'.",
+    "properties": {
+	    "clipscore": {
+	        "description": "The CLIPScore of the image, a metric used to evaluate the quality of an automatic image captioning system. (CLIPScore: A Reference-free Evaluation Metric for Image Captioning)",
+	        "title": "clipscore",
+	        "type": "number",
+	        "minimum": 0,
+	        "maximum": 1
+	    },
+        "alttxt": {
+        	"description": "The alt text extracted from the html",
+        	"title": "alt text",
+        	"type": "string"
+        },
+        "ner": {
+            "description": "A list of pairs of [word, NER tag] detected by the NER model.e.g. [['Toronto', 'LOCATION'], ['Services', 'ORGANIZATION']]",
+            "title": "ner",
+            "type": "array",
+            "minItems": 0,
+            "items": {
+                "type": "array"
+            }
+        }
+    },
+    "required": ["clipscore", "alttxt", "ner"]
+}
