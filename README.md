@@ -1,6 +1,6 @@
 
 ```
-git clone https://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@github.com/namdar-nejad/IMAGE-server.git
+git clone https://github.com/namdar-nejad/IMAGE-server.git
 cd IMAGE-server
 git checkout docker-debugging
 git submodule init
