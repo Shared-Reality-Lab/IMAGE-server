@@ -123,7 +123,7 @@ def render_ocr():
     if od in preprocessors and len(preprocessors[od]['objects']) > 0:
         object_data = preprocessors[od]['objects']
         text_lines = ocr_data['lines']
-        text += "**The following objects were detected: "
+        text += "The following objects were detected: "
         done_once = False
         text_free_lines = ""
         for obj in object_data:
@@ -134,9 +134,10 @@ def render_ocr():
             for line in text_lines:
                 eb = 'enclosed_by'
                 if eb in line.keys() and len(line[eb]) > 0:
-                    prepr = next((i for i in line[eb] if i['preprocessor'] == od), False)
+                    prepr = next((i for i in line[eb] if
+                                  i['preprocessor'] == od), False)
                     if prepr and prepr['ID'] == obj['ID']:
-                            obj_text += line['text'] + ", "
+                        obj_text += line['text'] + ", "
                 elif not done_once:
                     # collect the lines not contained by any object
                     text_free_lines += line['text'] + ", "

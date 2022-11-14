@@ -178,7 +178,7 @@ def normalize_bdg_box(bndng_bx, width, height):
 def find_obj_enclosing(prepr_name, list_data, ocr_lines):
     objs = [{key: obj[key] for key
              in ['ID', 'dimensions']} for
-             obj in list_data['objects']]
+            obj in list_data['objects']]
     for line in ocr_lines:
         obj_enclosing = [
             obj for obj in objs if is_contained(get_dims(line), get_dims(obj))
@@ -209,10 +209,10 @@ def get_dims(obj):
     else:
         key = "bounding_box"
     obj_box = {
-        'ulx': obj[key][0], # x - left edge
-        'uly': obj[key][1], # y - top edge
-        'lrx': obj[key][2], # x - right edge
-        'lry': obj[key][3]  # y - bottom edge
+        'ulx': obj[key][0],  # x - left edge
+        'uly': obj[key][1],  # y - top edge
+        'lrx': obj[key][2],  # x - right edge
+        'lry': obj[key][3]   # y - bottom edge
     }
     return obj_box
 
