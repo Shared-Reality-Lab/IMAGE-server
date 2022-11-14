@@ -32,7 +32,7 @@ freeocr_subscription_key = os.environ["FREEOCR_API_KEY"]
 freeocr_endpoint = "https://api.ocr.space/parse/image"
 
 
-def process_read_azure(stream, width, height):
+def process_azure_read(stream, width, height):
     computervision_client = ComputerVisionClient(
         azure_endpoint, CognitiveServicesCredentials(azure_subscr_key))
     read_response = computervision_client.read_in_stream(stream,  raw=True)
@@ -63,7 +63,7 @@ def process_read_azure(stream, width, height):
                 line_text = line.text
                 # Get normalized bounding box for each line
                 bbx = line.bounding_box
-                bg_bx = [bbx[0], bbx[1], (bbx[2]-bbx[0]), (bbx[5]-bbx[3])]
+                bg_bx = [bbx[0], bbx[1], bbx[4], bbx[5]]
                 bounding_box = normalize_bdg_box(bg_bx, width, height)
                 ocr_results.append({
                     'text': line_text,
@@ -75,7 +75,7 @@ def process_read_azure(stream, width, height):
         return None
 
 
-def process_ocr_azure(stream, width, height):
+def process_azure_ocr(stream, width, height):
     headers = {
         'Content-Type': 'application/octet-stream',
         'Ocp-Apim-Subscription-Key': azure_subscr_key,
@@ -96,7 +96,10 @@ def process_ocr_azure(stream, width, height):
                 region_text += word['text'] + " "
         region_text = region_text[:-1]
         # Get normalized bounding box for each region
-        bndng_bx = region['boundingBox'].split(",")
+        bb = region['boundingBox'].split(",")
+        maxX = float(bb[0]) + float(bb[2])
+        maxY = float(bb[1]) + float(bb[3])
+        bndng_bx = [float(bb[0]), float(bb[1]), maxX, maxY]
         bounding_box = normalize_bdg_box(bndng_bx, width, height)
         ocr_results.append({
             'text': region_text,
@@ -107,7 +110,7 @@ def process_ocr_azure(stream, width, height):
     return ocr_results
 
 
-def process_ocr_free(source, width, height):
+def process_free_ocr(source, width, height):
     payload = {
         'base64Image': source,
         'apikey': freeocr_subscription_key,
@@ -124,9 +127,10 @@ def process_ocr_free(source, width, height):
     for line in read_result['ParsedResults'][0]['TextOverlay']['Lines']:
         line_text = line['LineText']
         # Get normalized bounding box for each line
-        lnWidth = line['Words'][-1]['Left'] - line['Words'][0]['Left']
+        maxY = line['MinTop'] + line['MaxHeight']
+        maxX = line['Words'][-1]['Left'] + line['Words'][-1]['Width']
         bndng_bx = [line['Words'][0]['Left'], line['MinTop'],
-                    lnWidth, line['MaxHeight']]
+                    maxX, maxY]
         bounding_box = normalize_bdg_box(bndng_bx, width, height)
         ocr_results.append({
             'text': line_text,
@@ -135,7 +139,7 @@ def process_ocr_free(source, width, height):
     return ocr_results
 
 
-def process_vision_google(image_b64, width, height):
+def process_google_vision(image_b64, width, height):
     client = vision.ImageAnnotatorClient()
     image = vision.Image(content=image_b64)
     response = client.text_detection(image=image)
@@ -150,17 +154,10 @@ def process_vision_google(image_b64, width, height):
     for word in response.text_annotations[1:]:
         text = word.description
         # Get normalized bounding box for each word
-        wordWidth = (
-            word.bounding_poly.vertices[1].x
-            - word.bounding_poly.vertices[0].x
-        )
-        wordHeight = (
-            word.bounding_poly.vertices[2].y
-            - word.bounding_poly.vertices[1].y
-        )
         bndng_bx = [word.bounding_poly.vertices[0].x,
                     word.bounding_poly.vertices[0].y,
-                    wordWidth, wordHeight]
+                    word.bounding_poly.vertices[2].x,
+                    word.bounding_poly.vertices[2].y]
         bounding_box = normalize_bdg_box(bndng_bx, width, height)
         ocr_results.append({
             'text': text,
@@ -176,3 +173,77 @@ def normalize_bdg_box(bndng_bx, width, height):
         else:
             bndng_bx[i] = int(val) / height
     return bndng_bx
+
+
+def find_obj_enclosing(prepr_name, list_data, ocr_lines):
+    objs = [{key: obj[key] for key
+             in ['ID', 'dimensions']} for
+             obj in list_data['objects']]
+    for line in ocr_lines:
+        obj_enclosing = [
+            obj for obj in objs if is_contained(get_dims(line), get_dims(obj))
+        ]
+        if len(obj_enclosing) > 0:
+            oid_dim = {obj['ID']: get_area(obj) for obj in obj_enclosing}
+            if 'enclosed_by' not in line.keys():
+                line['enclosed_by'] = []
+            line['enclosed_by'].append({
+                'preprocessor': prepr_name,
+                'ID': min(oid_dim, key=oid_dim.get)
+            })
+    return ocr_lines
+
+
+def get_dims(obj):
+    """
+    Returns a dict with [ulx, uly, lrx, lry]
+    of the object box
+    """
+    # If the object is not a region of text
+    # its bounding box is called "dimensions"
+    # so the key is set accordingly
+    if "dimensions" in obj:
+        key = "dimensions"
+    # Otherwise, the key is "bounding_box"
+    # for regions of text
+    else:
+        key = "bounding_box"
+    obj_box = {
+        'ulx': obj[key][0], # x - left edge
+        'uly': obj[key][1], # y - top edge
+        'lrx': obj[key][2], # x - right edge
+        'lry': obj[key][3]  # y - bottom edge
+    }
+    return obj_box
+
+
+def is_contained(text_dims, obj_dims):
+    """
+    Checks if text is contained in object
+    """
+    if text_dims['ulx'] < obj_dims['ulx']:
+        return False
+    if text_dims['uly'] < obj_dims['uly']:
+        return False
+    if text_dims['lrx'] > obj_dims['lrx']:
+        return False
+    if text_dims['lry'] > obj_dims['lry']:
+        return False
+    return True
+
+
+def get_area(obj):
+    """
+    Returns the area
+    of the object box
+    """
+    # If the object is not a region of text
+    # its bounding box is called "dimensions"
+    # so the key is set accordingly
+    if "dimensions" in obj:
+        key = "dimensions"
+    # Otherwise, the key is "bounding_box"
+    # for regions of text
+    else:
+        key = "bounding_box"
+    return obj[key][2] * obj[key][3]

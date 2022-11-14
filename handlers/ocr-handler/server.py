@@ -63,7 +63,7 @@ def render_ocr():
     preprocessors = content['preprocessors']
 
     # No OCR preprocessor
-    if 'ca.mcgill.a11y.image.preprocessor.ocrClouds' not in preprocessors:
+    if 'ca.mcgill.a11y.image.preprocessor.ocrEnclosedBy' not in preprocessors:
         logging.debug("No ocr-clouds preprocessor found")
         response = {
             "request_uuid": content["request_uuid"],
@@ -79,7 +79,7 @@ def render_ocr():
         logging.debug("Sending response")
         return response
 
-    ocr_data = preprocessors['ca.mcgill.a11y.image.preprocessor.ocrClouds']
+    ocr_data = preprocessors['ca.mcgill.a11y.image.preprocessor.ocrEnclosedBy']
 
     # OCR lines empty
     if len(ocr_data['lines']) == 0:
@@ -121,45 +121,40 @@ def render_ocr():
     # Object detection data is present
     od = 'ca.mcgill.a11y.image.preprocessor.objectDetection'
     if od in preprocessors and len(preprocessors[od]['objects']) > 0:
-        object_data = preprocessors[od]
-        retmaining_text = ocr_data['lines']
-        remaining_objects = [{key: obj[key] for key
-                              in ['type', 'dimensions']} for
-                             obj in object_data['objects']]
-        text += "The following objects were detected: "
-        for obj in remaining_objects:
-            obj_dims = get_dims(obj)
-            obj_text = ""
-            ln_del = []
-            for i, line in enumerate(retmaining_text):
-                text_dims = get_dims(line)
-                if is_contained(text_dims, obj_dims):
-                    obj_text += line['text'] + ", "
-                    ln_del.append(i)
+        object_data = preprocessors[od]['objects']
+        text_lines = ocr_data['lines']
+        text += "**The following objects were detected: "
+        done_once = False
+        text_free_lines = ""
+        for obj in object_data:
             # Add the appropraite article of the object
             # as well as the object type to the text
-            text += get_article(obj['type']) + obj['type']
+            text += get_article(obj['type']) + obj['type'][:-1]
+            obj_text = ""
+            for line in text_lines:
+                eb = 'enclosed_by'
+                if eb in line.keys() and len(line[eb]) > 0:
+                    prepr = next((i for i in line[eb] if i['preprocessor'] == od), False)
+                    if prepr and prepr['ID'] == obj['ID']:
+                            obj_text += line['text'] + ", "
+                elif not done_once:
+                    # collect the lines not contained by any object
+                    text_free_lines += line['text'] + ", "
+            done_once = True
             if len(obj_text) > 0:
-                obj_text = obj_text[:-2]
-                text += "containing the text: " + obj_text + ". "
-            # Remove lines already found
-            retmaining_text = [
-                ln for x, ln in enumerate(retmaining_text) if x not in ln_del
-            ]
-        if len(retmaining_text) > 0:
-            text += "The remaining text not contained in any detected object: "
-            for line in retmaining_text:
-                text += line['text'] + ", "
-        text = text[:-1]
+                text += " containing the text: " + obj_text[:-2]
+            text += ". "
+        if len(text_free_lines) > 0:
+            text += "The text not contained in any detected object is: "
+            text += text_free_lines[:-2] + "."
 
     else:
         # Get text renderer data
         text += 'The following ' + str(len(ocr_data['lines']))
         text += ' lines were found in the image: '
         for line in ocr_data['lines']:
-            line_text = line['text'] + ', '
-            text += line_text
-        text = text[:-2]
+            text += line['text'] + ', '
+        text = text[:-2] + "."
 
     response = {
         "request_uuid": content["request_uuid"],
@@ -182,44 +177,6 @@ def render_ocr():
         return jsonify("Invalid Preprocessor JSON format"), 500
     logging.debug("Sending response")
     return response
-
-
-def get_dims(obj):
-    """
-    Returns a dict with [ulx, uly, lrx, lry]
-    of the object box
-    """
-    # If the object is not a region of text
-    # its bounding box is called "dimensions"
-    # so the key is set accordingly
-    if "dimensions" in obj:
-        key = "dimensions"
-    # Otherwise, the key is "bounding_box"
-    # for regions of text
-    else:
-        key = "bounding_box"
-    obj_box = {
-        'ulx': obj[key][0],
-        'uly': obj[key][1],
-        'lrx': obj[key][2],
-        'lry': obj[key][3]
-    }
-    return obj_box
-
-
-def is_contained(text_dims, obj_dims):
-    """
-    Checks if text is contained in object
-    """
-    if text_dims['ulx'] < obj_dims['ulx']:
-        return False
-    if text_dims['uly'] < obj_dims['uly']:
-        return False
-    if text_dims['lrx'] > obj_dims['lrx']:
-        return False
-    if text_dims['lry'] > obj_dims['lry']:
-        return False
-    return True
 
 
 def get_article(word):

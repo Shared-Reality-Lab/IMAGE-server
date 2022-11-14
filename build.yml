@@ -31,11 +31,11 @@ services:
             context: .
             dockerfile: ./preprocessors/autour/Dockerfile
         image: "autour:latest"
-    ocr-clouds-preprocessor:
+    ocr-enclosed-by-preprocessor:
         build:
             context: .
             dockerfile: ./preprocessors/ocr/Dockerfile
-        image: "ocr-clouds:latest"
+        image: "ocr-enclosed-by:latest"
     hello-handler:
         build:
             context: .
