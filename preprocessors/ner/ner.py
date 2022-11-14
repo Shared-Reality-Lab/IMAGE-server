@@ -22,7 +22,7 @@ import time
 import shutil
 import logging
 import tempfile
-import jsonschema
+# import jsonschema
 from flask import Flask, request, jsonify
 
 import nltk
@@ -31,6 +31,9 @@ from bs4 import BeautifulSoup
 from html2image import Html2Image
 from nltk.tag.stanford import StanfordNERTagger
 
+nltk.download('punkt')
+
+warnings.warn('///////')
 
 app = Flask(__name__)
 
@@ -110,7 +113,7 @@ Function to extarct the NERs from a given english sentence, using the Stanford n
 :sentence: the sentence to check
 """
 def stanford_ner(sentence, only_ner = True):
-    
+    nltk.download('punkt') 
     # Prepare NER tagger with english model
     ner_tagger = StanfordNERTagger(model, jar, encoding='utf8')
 
@@ -132,6 +135,9 @@ def stanford_ner(sentence, only_ner = True):
 
 @app.route('/preprocessor', methods=['POST', 'GET'])
 def main():
+    
+    warnings.warn('+++++++')
+
     logging.debug("Received request")
 
     with open('./schemas/preprocessors/ner.schema.json') as jsonfile:
@@ -151,19 +157,19 @@ def main():
         schema['$id']: schema,
         definition_schema['$id']: definition_schema
     }
-
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
-
+#
+#    resolver = jsonschema.RefResolver.from_schema(
+#        schema, store=schema_store)
+#
     content = request.get_json()
 
-    try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
-        return jsonify("Invalid Preprocessor JSON format"), 400
-
+#    try:
+#        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
+#        validator.validate(content)
+#    except jsonschema.exceptions.ValidationError as e:
+#        logging.error(e)
+#        return jsonify("Invalid Preprocessor JSON format"), 400
+#
     # ------ START COMPUTATION ------ #
 
     name_ = "1"
@@ -196,8 +202,9 @@ def main():
     score = 0.98
     warnings.warn(f"score --> {score}")
     # compute the NERs
-    ners = stanford_ner(text)
+    #ners = stanford_ner(text)
     
+    ners = [['test1', 'test1'], ['test2', 'test2']]
     # create final json
     data = {
         'clipscore': score,
@@ -219,13 +226,13 @@ def main():
         'data': data
     }
 
-    try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
-        return jsonify("Invalid Preprocessor JSON format"), 500
-
+#    try:
+#        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+#        validator.validate(response)
+#    except jsonschema.exceptions.ValidationError as e:
+#        logging.error(e)
+#        return jsonify("Invalid Preprocessor JSON format"), 500
+#
     logging.debug("Sending response")
     return response
 
@@ -235,6 +242,7 @@ if __name__ == '__main__':
     #file = open("test.txt", "w")
     #file.write("+++++")
     #print("Hi")
+    warnings.warn('----------')
     app.run(host='0.0.0.0', port=5000, debug=True)
     main()
 
