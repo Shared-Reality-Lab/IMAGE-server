@@ -1,3 +1,24 @@
+
+```
+git clone https://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@github.com/namdar-nejad/IMAGE-server.git
+cd IMAGE-server
+git checkout docker-debugging
+git submodule init
+git submodule update --remote
+cp /home/juliette/Documents/IMAGE-server/config/* ./config/
+docker-compose -f build.yml build ner 
+docker-compose up -d orchestrator ner 
+cp /home/namdarn/testinput.json ./
+/var/docker/image/bin/sendimagereq ./testinput.json http://192.168.224.3:8080/render/preprocess
+```
+
+Current problem that I'm facing:
+A problem with the chrome drive, which I haven't been able to figure out yet. Even with bypassing this, I had a few problems with the imports and dependencies, whhich makes me think there's a problem with my Dockerfile, even though I've been trouble shooting I'm not sure what the problme exactly is.
+```
+Failed to move to new namespace: PID namespaces supported, Network namespace supported, but failed: errno = Operation not permitted
+```
+
+
 # IMAGE-server
 IMAGE server components, including Handlers
 
