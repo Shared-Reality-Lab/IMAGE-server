@@ -14,6 +14,7 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
+import re
 import json
 import time
 import base64
@@ -32,8 +33,12 @@ from nltk.tag.stanford import StanfordNERTagger
 
 nltk.download('punkt')
 app = Flask(__name__)
+
+# using python's tmp file to store the image and context json
 CONTEXT_DIR = tempfile.mkdtemp()
 IMAGE_DIR = tempfile.mkdtemp()
+
+# path to the stanford ner models (https://nlp.stanford.edu/software/CRF-NER.shtml)
 jar = '/app/stanford-ner/stanford-ner.jar'
 model = '/app/stanford-ner/ner-model-english.ser.gz'
 
@@ -51,6 +56,7 @@ def save_image(my_html, name, out_dir):
     with open(f"{path_}/{name}.png","wb") as file:
         file.write(eval(str(binary)))
 
+
 """
 Given a json from the raw data, this function will extract the alt text
 :my_json: json from raw data
@@ -61,13 +67,15 @@ def get_alt(my_json):
     alt = soup.find('img', alt=True)['alt']
     return alt
 
+
 """
 Object to pass parameters to clipscore module
 """
 class Namespace:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
-        
+
+
 """
 Function to extarct the NERs from a given english sentence, using the Stanford ner model
 :sentence: the sentence to check
@@ -90,6 +98,21 @@ def stanford_ner(sentence, only_ner = True):
         return rtn
     
     return words
+
+
+"""
+Function to find the index of a given substring (without whitespace) in a string, interms of words starting with index 1.
+e.g. find_index("Hello I'm Namdar.", "Namdar") = 3
+:text: the string to check
+:word: the word to check for
+"""
+def find_index(text, word):
+    index = 1
+    for i in text.split():
+        if word in i:
+            return index
+        index += 1
+    return -1
 
 
 @app.route('/preprocessor', methods=['POST', 'GET'])
@@ -152,11 +175,17 @@ def main():
     score = round(clipscore.main(parameters)['1']['CLIPScore'], 3)
     # compute the NERs
     ners = stanford_ner(text)
-    
-    # create final json
+    ner_data = []
+    for i in ners:
+        my_dict = {}
+        my_dict['value'] = i[0]
+        my_dict['tag'] = i[1]
+        my_dict['index'] = find_index(text, i[0])
+        ner_data.append(my_dict)
+
     data = {
         'clipscore': score,
-        'ner': [[i[0], i[1]] for i in ners],
+        'ner': ner_data,
         'alttxt': captions['1']
         }
     
