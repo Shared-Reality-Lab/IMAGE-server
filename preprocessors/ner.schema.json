@@ -12,18 +12,36 @@
 	        "minimum": 0,
 	        "maximum": 1
 	    },
-        "alttxt": {
+        "alt text": {
         	"description": "The alt text extracted from the html",
         	"title": "alt text",
         	"type": "string"
         },
         "ner": {
-            "description": "A list of pairs of [word, NER tag] detected by the NER model.e.g. [['Toronto', 'LOCATION'], ['Services', 'ORGANIZATION']]",
+            "description": "A list object of {word, tag, index} detected by the NER model.e.g. [{'value': 'UN', 'tag': 'ORGANIZATION', 'index': 5}, {'value': 'Manhattan', 'tag': 'LOCATION', 'index': 7}]",
             "title": "ner",
             "type": "array",
             "minItems": 0,
             "items": {
-                "type": "array"
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "type": "string",
+                        "description": "The entity recognized from the input alt text string."
+                    },
+                    "tag": {
+                        "type": "enum",
+                        "enum": ["PERSON", "LOCATION", "ORGANIZATION", "MISC"],
+                        "description": "The entity tag recognized by the model."
+                    },
+                    "index": {
+                        "description": "Zero-index of where this entity is if the text input is split by word.",
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "The index of the entity within the sentence - the n'th word in the alt text (starting from 1)"
+                    }
+                },
+                "description": "An entity detected by the NER model."
             }
         }
     },
