@@ -1,4 +1,4 @@
-# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+# Copyright (c) 2022 IMAGE Project, Shared Reality Lab, McGill University
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -14,57 +14,28 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
-import shutil
-import warnings
-import os, sys
 import json
 import time
-import shutil
+import base64
 import logging
+import warnings
+import os, sys
 import tempfile
-# import jsonschema
+import jsonschema
+from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify
 
 import nltk
 import clipscore
-from bs4 import BeautifulSoup
-from html2image import Html2Image
 from nltk.tag.stanford import StanfordNERTagger
 
+
 nltk.download('punkt')
-
-warnings.warn('///////')
-
 app = Flask(__name__)
-
-CONTEXT_DIR = str("/tmp/context")
-IMAGE_DIR = str("/tmp/image")
-
-try:
-    shutil.rmtree(CONTEXT_DIR)
-except:
-    pass
-
-try:
-    shutil.rmtree(IMAGE_DIR)
-except:
-    pass
-
-
-#warnings.warn(f"li ---> {os.listdir(CONTEXT_DIR)}")
-#warnings.warn(f"os.path.isdir(os.getcwd()+/context) ----> {os.path.isdir(CONTEXT_DIR)}")
-#warnings.warn(f"os.path.isfile(os.getcwd()+/context) ----> {os.path.isfile(CONTEXT_DIR)}")
-
-os.mkdir(CONTEXT_DIR)
-os.mkdir(IMAGE_DIR)
-    
-#CONTEXT_DIR = "/home/namdarn/test/IMAGE-server/preprocessors/ner/context"
-#IMAGE_DIR = "/home/namdarn/test/IMAGE-server/preprocessors/ner/image"
-
-#CONTEXT_DIR = tempfile.mkdtemp()
-#IMAGE_DIR = tempfile.mkdtemp()
-jar = './stanford-ner/stanford-ner.jar'
-model = './stanford-ner/ner-model-english.ser.gz'
+CONTEXT_DIR = tempfile.mkdtemp()
+IMAGE_DIR = tempfile.mkdtemp()
+jar = '/app/stanford-ner/stanford-ner.jar'
+model = '/app/stanford-ner/ner-model-english.ser.gz'
 
 
 """
@@ -73,23 +44,12 @@ Save a html contaning an image to a given location
 :name: name of the to save
 :out_dir: directory to save the image to
 """
-def save_pic(my_html, name, out_dir):
-    path = f"{out_dir}"
-    hti = Html2Image()
-    #warnings.warn(f"{my_html}")
-    path_ = os.path.abspath(path)
-    warnings.warn(f"abspath for save pic --> {path_}")
-    hti._output_path = path_
-    warnings.warn(f"os.listdir({IMAGE_DIR}) ---> {os.listdir(IMAGE_DIR)}")
-    warnings.warn(f"name --> {name}")
-    hti.screenshot(html_str=my_html, save_as=name)
-     
-"""
-Creates the image from the image data
-:my_image: image data extracted from the raw data json
-"""
-def get_img_html(my_image):
-    return f"<html> <body> <img src=\"{my_image}\"> </body> </html>"
+def save_image(my_html, name, out_dir):
+    path_ = os.path.abspath(f"{out_dir}")
+    image_b64 = my_html.split(",")[1]
+    binary = base64.b64decode(image_b64)
+    with open(f"{path_}/{name}.png","wb") as file:
+        file.write(eval(str(binary)))
 
 """
 Given a json from the raw data, this function will extract the alt text
@@ -113,7 +73,6 @@ Function to extarct the NERs from a given english sentence, using the Stanford n
 :sentence: the sentence to check
 """
 def stanford_ner(sentence, only_ner = True):
-    nltk.download('punkt') 
     # Prepare NER tagger with english model
     ner_tagger = StanfordNERTagger(model, jar, encoding='utf8')
 
@@ -136,8 +95,6 @@ def stanford_ner(sentence, only_ner = True):
 @app.route('/preprocessor', methods=['POST', 'GET'])
 def main():
     
-    warnings.warn('+++++++')
-
     logging.debug("Received request")
 
     with open('./schemas/preprocessors/ner.schema.json') as jsonfile:
@@ -157,54 +114,45 @@ def main():
         schema['$id']: schema,
         definition_schema['$id']: definition_schema
     }
-#
-#    resolver = jsonschema.RefResolver.from_schema(
-#        schema, store=schema_store)
-#
+
+    resolver = jsonschema.RefResolver.from_schema(
+        schema, store=schema_store)
+
     content = request.get_json()
 
-#    try:
-#        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-#        validator.validate(content)
-#    except jsonschema.exceptions.ValidationError as e:
-#        logging.error(e)
-#        return jsonify("Invalid Preprocessor JSON format"), 400
-#
+    try:
+        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
+        validator.validate(content)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 400
+
     # ------ START COMPUTATION ------ #
 
     name_ = "1"
     captions = {}                            # dict to store the captions
     text = get_alt(content)                  # extract alt text and save it in the caption dict
     captions[name_] = text
-    html_ = get_img_html(content['graphic']) # get the image html content
+    html_ = content['graphic'] # get the image html content
     
     # save pic and caption to directory for clipscore evaluation
     with open(CONTEXT_DIR+'/captions.json', "w") as outfile:
         json.dump(captions, outfile)
-    save_pic(html_, name_+'.png', IMAGE_DIR)
-    
-
+    save_image(html_, name_, IMAGE_DIR)
 
     # check if we have an alt text
     if len(text) < 2:
         logging.info("No alttxt")
         return "", 204
 
-    
-    warnings.warn(f"os.listdir({CONTEXT_DIR}) ---> {os.listdir(CONTEXT_DIR)}")
-    warnings.warn(f"os.listdir({IMAGE_DIR}) ---> {os.listdir(IMAGE_DIR)}")
-
     # create path parameters for clipscore
-    #parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json', compute_other_ref_metrics=1, image_dir=IMAGE_DIR, references_json=None, save_per_instance=CONTEXT_DIR+'/score.json')
+    parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json', compute_other_ref_metrics=1, image_dir=IMAGE_DIR, references_json=None, save_per_instance=CONTEXT_DIR+'/score.json')
     
     # calculate the clipscore
-    #score = clipscore.main(parameters)['1']['CLIPScore']
-    score = 0.98
-    warnings.warn(f"score --> {score}")
+    score = round(clipscore.main(parameters)['1']['CLIPScore'], 3)
     # compute the NERs
-    #ners = stanford_ner(text)
+    ners = stanford_ner(text)
     
-    ners = [['test1', 'test1'], ['test2', 'test2']]
     # create final json
     data = {
         'clipscore': score,
@@ -218,7 +166,6 @@ def main():
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.ner"
 
-    # TODO
     response = {
         'request_uuid': request_uuid,
         'timestamp': int(timestamp),
@@ -226,24 +173,18 @@ def main():
         'data': data
     }
 
-#    try:
-#        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-#        validator.validate(response)
-#    except jsonschema.exceptions.ValidationError as e:
-#        logging.error(e)
-#        return jsonify("Invalid Preprocessor JSON format"), 500
-#
+    try:
+        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+        validator.validate(response)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
+
     logging.debug("Sending response")
     return response
 
 
 if __name__ == '__main__':
-    
-    #file = open("test.txt", "w")
-    #file.write("+++++")
-    #print("Hi")
-    warnings.warn('----------')
     app.run(host='0.0.0.0', port=5000, debug=True)
     main()
-
 

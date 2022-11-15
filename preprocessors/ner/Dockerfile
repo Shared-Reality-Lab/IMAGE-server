@@ -1,29 +1,27 @@
-FROM python:3.8-slim-buster
+FROM ubuntu:20.04
+
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
+
+RUN apt-get update -y \
+        && apt-get install -y software-properties-common \
+        && add-apt-repository ppa:deadsnakes/ppa \
+        && apt-get install openjdk-8-jdk -y \
+        && apt-get install python3-pip -y \
+        && export JAVA_HOME \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/* \
+        && apt install python3-pip
 
 WORKDIR /app
 RUN adduser --disabled-password python
 ENV PATH="/home/python/.local/bin:${PATH}"
-COPY /preprocessors/ner/requirements.txt /app/requirements.txt
-
-# intstalling chrome driver
-RUN apt-get update && \
-    apt-get install -y gnupg wget curl unzip --no-install-recommends && \
-    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list && \
-    apt-get update -y && \
-    apt-get install -y google-chrome-stable && \
-    CHROMEVER=$(google-chrome --product-version | grep -o "[^\.]*\.[^\.]*\.[^\.]*") && \
-    DRIVERVER=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROMEVER") && \
-    wget -q --continue -P /chromedriver "http://chromedriver.storage.googleapis.com/$DRIVERVER/chromedriver_linux64.zip" && \
-    unzip /chromedriver/chromedriver* -d /chromedriver
-
-# installing gcc
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv gcc wget git && rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install -r requirements.txt
 
 COPY /schemas /app/schemas
 COPY /preprocessors/ner/ /app
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv gcc wget git && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install -r requirements.txt
 
 EXPOSE 5000
 ENV FLASK_APP=ner.py
