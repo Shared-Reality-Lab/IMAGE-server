@@ -8,8 +8,7 @@ git submodule update --remote
 cp /home/juliette/Documents/IMAGE-server/config/* ./config/
 docker-compose -f build.yml build ner 
 docker-compose up -d orchestrator ner 
-cp /home/namdarn/testinput.json ./
-/var/docker/image/bin/sendimagereq ./testinput.json http://192.168.224.3:8080/render/preprocess
+/var/docker/image/bin/sendimagereq ~/testdata/all_data/News/0ec01e31-ae3e-4cb5-8d36-f1c984884cfc.json  http://172.19.0.2:5000/preprocessor
 ```
 
 Current problem that I'm facing:
