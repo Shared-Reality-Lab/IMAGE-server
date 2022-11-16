@@ -152,11 +152,13 @@ def process_streets_data(OSM_data, bbox_coordinates):
         logging.error(error)
     else:
         return processed_OSM_data
-
+        
+# Create a new function to extrapolate nodes
 
 def compare_street(street1, street2):  # Compare two streets
     intersecting_points = [x for x in street1 if x in street2]
     return intersecting_points
+
 
 
 def extract_street(processed_OSM_data):  # extract two streets
