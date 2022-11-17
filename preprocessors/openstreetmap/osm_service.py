@@ -173,12 +173,12 @@ def process_streets_data(OSM_data, bbox_coordinates):
 
 
 def extrapolate_node(node_list1, node_list, bbox_coordinates):
-    #
+    # node_list1 contains the unbounded nodes
+    # node_list  contains the bounded nodes
     lat_min = bbox_coordinates[0]
     lat_max = bbox_coordinates[2]
     lon_min = bbox_coordinates[1]
     lon_max = bbox_coordinates[3]
-
     i = len(node_list)
     j = len(node_list1)
     if i < 2 and j > 1:
@@ -289,10 +289,6 @@ def extrapolate_node(node_list1, node_list, bbox_coordinates):
                 x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
                 lat2 = degrees(y2)
                 lon2 = degrees(x2 + lon1)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
             elif bearing == 225:
                 lat2 = lat_min
                 lon2 = lon_min
@@ -413,10 +409,6 @@ def extrapolate_node(node_list1, node_list, bbox_coordinates):
                 x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
                 lat2 = degrees(y2)
                 lon2 = degrees(x2 + lon1)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
             elif bearing == 225:
                 lat2 = lat_min
                 lon2 = lon_min
@@ -537,10 +529,6 @@ def extrapolate_node(node_list1, node_list, bbox_coordinates):
                 x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
                 lat2 = degrees(y2)
                 lon2 = degrees(x2 + lon1)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
             elif bearing == 225:
                 lat2 = lat_min
                 lon2 = lon_min
@@ -662,10 +650,6 @@ def extrapolate_node(node_list1, node_list, bbox_coordinates):
                 x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
                 lat2 = degrees(y2)
                 lon2 = degrees(x2 + lon1)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
             elif bearing == 225:
                 lat2 = lat_min
                 lon2 = lon_min
