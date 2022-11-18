@@ -129,11 +129,8 @@ def process_streets_data(OSM_data, bbox_coordinates):
                         }
                         if node_object not in node_list:
                             node_list.append(node_object)
-            i = len(node_list)
-            # Check if only a point (node) appears within the bounds
-            if i < 2:
-                node_list = extrapolate_node(
-                    node_list1, node_list, bbox_coordinates)
+            node_list = extrapolate_node(
+                node_list1, node_list, bbox_coordinates)
             # Check if the "node_list" for a way is not empty.
             # Otherwise all its nodes are outside the boundary, so exclude the
             # way.
@@ -181,258 +178,509 @@ def extrapolate_node(node_list1, node_list, bbox_coordinates):
     lon_max = bbox_coordinates[3]
     i = len(node_list)
     j = len(node_list1)
-    if i < 2 and j > 1:
-        index = node_list1.index(node_list[0])
-        lat1 = node_list[0]["lat"]
-        lon1 = node_list[0]["lon"]
-        # Check if there are missing nodes both before and after
-        # the node under consideration.
-        # If there is a node after,
-        # then use it to estimate the likely point(node)
-        # within the "bounds".
-        if index < j - 1 and index > 0:
-            index = index + 1
-            lat2 = node_list1[index]["lat"]
-            lon2 = node_list1[index]["lon"]
-            a = (lat1, lon1)
-            b = (lat2, lon2)
-            result = Geodesic.WGS84.Inverse(*a, *b)
-            # Distance is in metres.
-            # Bearing is in degrees.
-            bearing = result["azi1"]
-            if bearing < 0:
-                bearing = bearing + 360
-            # Convert to radians
-            theta = radians(bearing)
-            lat1 = radians(lat1)
-            lon1 = radians(lon1)
-            lat2 = radians(lat2)
-            lon2 = radians(lon2)
-            if bearing > 0 and bearing < 90:
-                y2 = radians(lat_max)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1)) + lon1
-                y2 = degrees(y2)
-                x2 = degrees(x2)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
-                else:
-                    x2 = radians(lon_max)
-                    y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-                    lat2 = degrees(y2 + lat1)
-                    lon2 = degrees(x2)
-            elif bearing > 90 and bearing < 180:
-                y2 = radians(lat_min)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1)) + lon1
-                y2 = degrees(y2)
-                x2 = degrees(x2)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
-                else:
-                    x2 = radians(lon_max)
-                    y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-                    lat2 = degrees(y2 + lat1)
-                    lon2 = degrees(x2)
-            elif bearing > 180 and bearing < 270:
-                y2 = radians(lat_min)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-                y2 = degrees(y2)
-                x2 = degrees(x2 + lon1)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
-                else:
-                    x2 = radians(lon_min)
-                    y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-                    lat2 = degrees(y2 + lat1)
-                    lon2 = degrees(x2)
-            elif bearing > 270 and bearing < 360:
-                y2 = radians(lat_max)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-                y2 = degrees(y2)
-                x2 = degrees(x2 + lon1)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
-                else:
-                    x2 = radians(lon_min)
-                    y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-                    lat2 = degrees(y2 + lat1)
-                    lon2 = degrees(x2)
-            elif bearing >= 0 or bearing == 360:
-                y2 = radians(lat_max)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-                y2 = degrees(y2)
-                x2 = degrees(x2 + lon1)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
-            elif bearing == 45:
-                lat2 = lat_max
-                lon2 = lon_max
-            elif bearing == 90:
-                x2 = radians(lon_max)
-                y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-                lat2 = degrees(y2 + lat1)
-                lon2 = degrees(x2)
-            elif bearing == 135:
-                lat2 = lat_min
-                lon2 = lon_max
-            elif bearing == 180:
-                y2 = radians(lat_min)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-                lat2 = degrees(y2)
-                lon2 = degrees(x2 + lon1)
-            elif bearing == 225:
-                lat2 = lat_min
-                lon2 = lon_min
-            elif bearing == 270:
-                x2 = radians(lon_min)
-                y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-                lat2 = degrees(y2 + lat1)
-                lon2 = degrees(x2)
-            elif bearing == 315:
-                lat2 = lat_max
-                lon2 = lon_min
-            else:
-                pass
-            extrapolated_node = {
-                "id": int(node_list1[index]["id"]),
-                "lat": float(lat2),
-                "lon": float(lon2),
-            }
-            node_list.append(extrapolated_node)
-            # Use the node before to estimate the likely point(node)
-            # within the "bounds".
-            index = index - 2
-            lat2 = node_list1[index]["lat"]
-            lon2 = node_list1[index]["lon"]
+    # Check if only a point (node) appears within the bounds
+    if i < 2:
+        if i < 2 and j > 1:
+            index = node_list1.index(node_list[0])
             lat1 = node_list[0]["lat"]
             lon1 = node_list[0]["lon"]
-            a = (lat1, lon1)
-            b = (lat2, lon2)
-            result = Geodesic.WGS84.Inverse(*a, *b)
-            # Bearing in degrees
-            bearing = result["azi1"]
-            if bearing < 0:
-                bearing = bearing + 360
-            # Convert to radians
-            theta = radians(bearing)
-            lat1 = radians(lat1)
-            lon1 = radians(lon1)
-            lat2 = radians(lat2)
-            lon2 = radians(lon2)
-            if bearing > 0 and bearing < 90:
-                y2 = radians(lat_max)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-                y2 = degrees(y2)
-                x2 = degrees(x2 + lon1)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
-                else:
+            # Check if there are missing nodes both before and after
+            # the node under consideration.
+            # If there is a node after,
+            # then use it to estimate the likely point(node)
+            # within the "bounds".
+            if index < j - 1 and index > 0:
+                index = index + 1
+                lat2 = node_list1[index]["lat"]
+                lon2 = node_list1[index]["lon"]
+                a = (lat1, lon1)
+                b = (lat2, lon2)
+                result = Geodesic.WGS84.Inverse(*a, *b)
+                # Distance is in metres.
+                # Bearing is in degrees.
+                bearing = result["azi1"]
+                if bearing < 0:
+                    bearing = bearing + 360
+                # Convert to radians
+                theta = radians(bearing)
+                lat1 = radians(lat1)
+                lon1 = radians(lon1)
+                lat2 = radians(lat2)
+                lon2 = radians(lon2)
+                if bearing > 0 and bearing < 90:
+                    y2 = radians(lat_max)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) /
+                          math.cos(lat1)) + lon1
+                    y2 = degrees(y2)
+                    x2 = degrees(x2)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_max)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing > 90 and bearing < 180:
+                    y2 = radians(lat_min)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) /
+                          math.cos(lat1)) + lon1
+                    y2 = degrees(y2)
+                    x2 = degrees(x2)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_max)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing > 180 and bearing < 270:
+                    y2 = radians(lat_min)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_min)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing > 270 and bearing < 360:
+                    y2 = radians(lat_max)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_min)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing >= 0 or bearing == 360:
+                    y2 = radians(lat_max)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                elif bearing == 45:
+                    lat2 = lat_max
+                    lon2 = lon_max
+                elif bearing == 90:
                     x2 = radians(lon_max)
                     y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
                     lat2 = degrees(y2 + lat1)
                     lon2 = degrees(x2)
-            elif bearing > 90 and bearing < 180:
-                y2 = radians(lat_min)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-                y2 = degrees(y2)
-                x2 = degrees(x2 + lon1)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
+                elif bearing == 135:
+                    lat2 = lat_min
+                    lon2 = lon_max
+                elif bearing == 180:
+                    y2 = radians(lat_min)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    lat2 = degrees(y2)
+                    lon2 = degrees(x2 + lon1)
+                elif bearing == 225:
+                    lat2 = lat_min
+                    lon2 = lon_min
+                elif bearing == 270:
+                    x2 = radians(lon_min)
+                    y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                    lat2 = degrees(y2 + lat1)
+                    lon2 = degrees(x2)
+                elif bearing == 315:
+                    lat2 = lat_max
+                    lon2 = lon_min
                 else:
+                    pass
+                extrapolated_node = {
+                    "id": int(node_list1[index]["id"]),
+                    "lat": float(lat2),
+                    "lon": float(lon2),
+                }
+                node_list.append(extrapolated_node)
+                # Use the node before to estimate the likely point(node)
+                # within the "bounds".
+                index = index - 2
+                lat2 = node_list1[index]["lat"]
+                lon2 = node_list1[index]["lon"]
+                lat1 = node_list[0]["lat"]
+                lon1 = node_list[0]["lon"]
+                a = (lat1, lon1)
+                b = (lat2, lon2)
+                result = Geodesic.WGS84.Inverse(*a, *b)
+                # Bearing in degrees
+                bearing = result["azi1"]
+                if bearing < 0:
+                    bearing = bearing + 360
+                # Convert to radians
+                theta = radians(bearing)
+                lat1 = radians(lat1)
+                lon1 = radians(lon1)
+                lat2 = radians(lat2)
+                lon2 = radians(lon2)
+                if bearing > 0 and bearing < 90:
+                    y2 = radians(lat_max)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_max)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing > 90 and bearing < 180:
+                    y2 = radians(lat_min)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_max)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing > 180 and bearing < 270:
+                    y2 = radians(lat_min)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_min)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing > 270 and bearing < 360:
+                    y2 = radians(lat_max)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_min)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing >= 0 or bearing == 360:
+                    y2 = radians(lat_max)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                elif bearing == 45:
+                    lat2 = lat_max
+                    lon2 = lon_max
+                elif bearing == 90:
                     x2 = radians(lon_max)
                     y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
                     lat2 = degrees(y2 + lat1)
                     lon2 = degrees(x2)
-            elif bearing > 180 and bearing < 270:
-                y2 = radians(lat_min)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-                y2 = degrees(y2)
-                x2 = degrees(x2 + lon1)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
-                else:
+                elif bearing == 135:
+                    lat2 = lat_min
+                    lon2 = lon_max
+                elif bearing == 180:
+                    y2 = radians(lat_min)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    lat2 = degrees(y2)
+                    lon2 = degrees(x2 + lon1)
+                elif bearing == 225:
+                    lat2 = lat_min
+                    lon2 = lon_min
+                elif bearing == 270:
                     x2 = radians(lon_min)
                     y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
                     lat2 = degrees(y2 + lat1)
                     lon2 = degrees(x2)
-            elif bearing > 270 and bearing < 360:
-                y2 = radians(lat_max)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-                y2 = degrees(y2)
-                x2 = degrees(x2 + lon1)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
+                elif bearing == 315:
+                    lat2 = lat_max
+                    lon2 = lon_min
                 else:
+                    pass
+                extrapolated_node = {
+                    "id": int(node_list1[index]["id"]),
+                    "lat": float(lat2),
+                    "lon": float(lon2),
+                }
+                node_list.insert(0, extrapolated_node)
+            # Check if there is a missing node only after
+            # the node under consideration
+            # and use it to estimate the likely point within the bounds.
+            elif index < j - 1:
+                index = index + 1
+                lat2 = node_list1[index]["lat"]
+                lon2 = node_list1[index]["lon"]
+                a = (lat1, lon1)
+                b = (lat2, lon2)
+                result = Geodesic.WGS84.Inverse(*a, *b)
+                bearing = result["azi1"]
+                # Bearing is in degrees
+                if bearing < 0:
+                    bearing = bearing + 360
+                # Convert to radians
+                theta = radians(bearing)
+                lat1 = radians(lat1)
+                lon1 = radians(lon1)
+                lat2 = radians(lat2)
+                lon2 = radians(lon2)
+                if bearing > 0 and bearing < 90:
+                    y2 = radians(lat_max)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) /
+                          math.cos(lat1)) + lon1
+                    y2 = degrees(y2)
+                    x2 = degrees(x2)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_max)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing > 90 and bearing < 180:
+                    y2 = radians(lat_min)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) /
+                          math.cos(lat1)) + lon1
+                    y2 = degrees(y2)
+                    x2 = degrees(x2)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_max)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing > 180 and bearing < 270:
+                    y2 = radians(lat_min)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_min)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing > 270 and bearing < 360:
+                    y2 = radians(lat_max)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_min)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing >= 0 or bearing == 360:
+                    y2 = radians(lat_max)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                elif bearing == 45:
+                    lat2 = lat_max
+                    lon2 = lon_max
+                elif bearing == 90:
+                    x2 = radians(lon_max)
+                    y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                    lat2 = degrees(y2 + lat1)
+                    lon2 = degrees(x2)
+                elif bearing == 135:
+                    lat2 = lat_min
+                    lon2 = lon_max
+                elif bearing == 180:
+                    y2 = radians(lat_min)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    lat2 = degrees(y2)
+                    lon2 = degrees(x2 + lon1)
+                elif bearing == 225:
+                    lat2 = lat_min
+                    lon2 = lon_min
+                elif bearing == 270:
                     x2 = radians(lon_min)
                     y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
                     lat2 = degrees(y2 + lat1)
                     lon2 = degrees(x2)
-            elif bearing >= 0 or bearing == 360:
-                y2 = radians(lat_max)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-                y2 = degrees(y2)
-                x2 = degrees(x2 + lon1)
-                if ((y2 >= lat_min and y2 <= lat_max) and
-                        (x2 >= lon_min and x2 <= lon_max)):
-                    lat2 = y2
-                    lon2 = x2
-            elif bearing == 45:
-                lat2 = lat_max
-                lon2 = lon_max
-            elif bearing == 90:
-                x2 = radians(lon_max)
-                y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-                lat2 = degrees(y2 + lat1)
-                lon2 = degrees(x2)
-            elif bearing == 135:
-                lat2 = lat_min
-                lon2 = lon_max
-            elif bearing == 180:
-                y2 = radians(lat_min)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-                lat2 = degrees(y2)
-                lon2 = degrees(x2 + lon1)
-            elif bearing == 225:
-                lat2 = lat_min
-                lon2 = lon_min
-            elif bearing == 270:
-                x2 = radians(lon_min)
-                y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-                lat2 = degrees(y2 + lat1)
-                lon2 = degrees(x2)
-            elif bearing == 315:
-                lat2 = lat_max
-                lon2 = lon_min
+                elif bearing == 315:
+                    lat2 = lat_max
+                    lon2 = lon_min
+                else:
+                    pass
+                extrapolated_node = {
+                    "id": int(node_list1[index]["id"]),
+                    "lat": float(lat2),
+                    "lon": float(lon2),
+                }
+                node_list.append(extrapolated_node)
+
             else:
-                pass
-            extrapolated_node = {
-                "id": int(node_list1[index]["id"]),
-                "lat": float(lat2),
-                "lon": float(lon2),
-            }
-            node_list.insert(0, extrapolated_node)
-        # Check if there is a missing node only after
-        # the node under consideration
-        # and use it to estimate the likely point within the bounds.
-        elif index < j - 1:
+                # Check if there is a missing node only before
+                # the node under consideration
+                # and use it to estimate the likely point within the bounds.
+                index = index - 1
+                lat2 = node_list1[index]["lat"]
+                lon2 = node_list1[index]["lon"]
+                a = (lat1, lon1)
+                b = (lat2, lon2)
+                result = Geodesic.WGS84.Inverse(*a, *b)
+                # Bearing is in degrees
+                bearing = result["azi1"]
+                if bearing < 0:
+                    bearing = bearing + 360
+                # Convert to radians
+                theta = radians(bearing)
+                lat1 = radians(lat1)
+                lon1 = radians(lon1)
+                lat2 = radians(lat2)
+                lon2 = radians(lon2)
+                if bearing > 0 and bearing < 90:
+                    y2 = radians(lat_max)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_max)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing > 90 and bearing < 180:
+                    y2 = radians(lat_min)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_max)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing > 180 and bearing < 270:
+                    y2 = radians(lat_min)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_min)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing > 270 and bearing < 360:
+                    y2 = radians(lat_max)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                    else:
+                        x2 = radians(lon_min)
+                        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                        lat2 = degrees(y2 + lat1)
+                        lon2 = degrees(x2)
+                elif bearing >= 0 or bearing == 360:
+                    y2 = radians(lat_max)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    y2 = degrees(y2)
+                    x2 = degrees(x2 + lon1)
+                    if ((y2 >= lat_min and y2 <= lat_max) and
+                            (x2 >= lon_min and x2 <= lon_max)):
+                        lat2 = y2
+                        lon2 = x2
+                elif bearing == 45:
+                    lat2 = lat_max
+                    lon2 = lon_max
+                elif bearing == 90:
+                    x2 = radians(lon_max)
+                    y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                    lat2 = degrees(y2 + lat1)
+                    lon2 = degrees(x2)
+                elif bearing == 135:
+                    lat2 = lat_min
+                    lon2 = lon_max
+                elif bearing == 180:
+                    y2 = radians(lat_min)
+                    x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                    lat2 = degrees(y2)
+                    lon2 = degrees(x2 + lon1)
+                elif bearing == 225:
+                    lat2 = lat_min
+                    lon2 = lon_min
+                elif bearing == 270:
+                    x2 = radians(lon_min)
+                    y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
+                    lat2 = degrees(y2 + lat1)
+                    lon2 = degrees(x2)
+                elif bearing == 315:
+                    lat2 = lat_max
+                    lon2 = lon_min
+                else:
+                    pass
+                extrapolated_node = {
+                    "id": int(node_list1[index]["id"]),
+                    "lat": float(lat2),
+                    "lon": float(lon2),
+                }
+                node_list.insert(0, extrapolated_node)
+    # When more than one point (node) fall within the bounds.
+    else:
+        # Get the index of the last element(node) in the bounded
+        # list (node_list) from the unbounded list.
+        index = node_list1.index(node_list[i - 1])
+        if index < j - 1:
             index = index + 1
+            lat1 = node_list[i - 1]["lat"]
+            lon1 = node_list[i - 1]["lon"]
             lat2 = node_list1[index]["lat"]
             lon2 = node_list1[index]["lon"]
             a = (lat1, lon1)
@@ -548,19 +796,20 @@ def extrapolate_node(node_list1, node_list, bbox_coordinates):
                 "lon": float(lon2),
             }
             node_list.append(extrapolated_node)
-
-        else:
-            # Check if there is a missing node only before
-            # the node under consideration
-            # and use it to estimate the likely point within the bounds.
+        # # Get the index of the first element(node) in the bounded list
+        # (node_list)from the unbounded list
+        index = node_list1.index(node_list[0])
+        if index > 0:
             index = index - 1
+            lat1 = node_list[0]["lat"]
+            lon1 = node_list[0]["lon"]
             lat2 = node_list1[index]["lat"]
             lon2 = node_list1[index]["lon"]
             a = (lat1, lon1)
             b = (lat2, lon2)
             result = Geodesic.WGS84.Inverse(*a, *b)
-            # Bearing is in degrees
             bearing = result["azi1"]
+            # Bearing is in degrees
             if bearing < 0:
                 bearing = bearing + 360
             # Convert to radians
@@ -571,9 +820,9 @@ def extrapolate_node(node_list1, node_list, bbox_coordinates):
             lon2 = radians(lon2)
             if bearing > 0 and bearing < 90:
                 y2 = radians(lat_max)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1)) + lon1
                 y2 = degrees(y2)
-                x2 = degrees(x2 + lon1)
+                x2 = degrees(x2)
                 if ((y2 >= lat_min and y2 <= lat_max) and
                         (x2 >= lon_min and x2 <= lon_max)):
                     lat2 = y2
@@ -585,9 +834,9 @@ def extrapolate_node(node_list1, node_list, bbox_coordinates):
                     lon2 = degrees(x2)
             elif bearing > 90 and bearing < 180:
                 y2 = radians(lat_min)
-                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
+                x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1)) + lon1
                 y2 = degrees(y2)
-                x2 = degrees(x2 + lon1)
+                x2 = degrees(x2)
                 if ((y2 >= lat_min and y2 <= lat_max) and
                         (x2 >= lon_min and x2 <= lon_max)):
                     lat2 = y2
