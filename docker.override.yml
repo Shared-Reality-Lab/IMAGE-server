@@ -1,9 +1,0 @@
-version: "3.9"
-
-services:
-        autour-preprocessor:
-                image: autour:latest
-        object-detection:
-                image: object-detection:latest
-        ner:
-        		image: ner:latest
