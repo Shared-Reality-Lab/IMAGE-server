@@ -8,9 +8,10 @@ RUN apt-get update -y \
         && apt-get install openjdk-8-jdk -y \
         && apt-get install python3-pip -y \
         && export JAVA_HOME \
+        && apt install python3-pip \
         && apt-get clean \
-        && rm -rf /var/lib/apt/lists/* \
-        && apt install python3-pip
+        && rm -rf /var/lib/apt/lists/*
+
 
 WORKDIR /app
 RUN adduser --disabled-password python
@@ -19,7 +20,7 @@ ENV PATH="/home/python/.local/bin:${PATH}"
 COPY /schemas /app/schemas
 COPY /preprocessors/ner/ /app
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv gcc wget git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y gcc git && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install -r requirements.txt
 

@@ -23,8 +23,10 @@ import warnings
 import os, sys
 import tempfile
 import jsonschema
+from random import randint
 from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify
+
 
 import nltk
 import clipscore
@@ -35,12 +37,13 @@ nltk.download('punkt')
 app = Flask(__name__)
 
 # using python's tmp file to store the image and context json
-CONTEXT_DIR = tempfile.mkdtemp()
-IMAGE_DIR = tempfile.mkdtemp()
+dir_prefix = 'ner_'+str(randint(0, 999))
+CONTEXT_DIR = tempfile.mkdtemp(prefix=dir_prefix)
+IMAGE_DIR = tempfile.mkdtemp(prefix=dir_prefix)
 
 # path to the stanford ner models (https://nlp.stanford.edu/software/CRF-NER.shtml)
-jar = '/app/stanford-ner/stanford-ner.jar'
-model = '/app/stanford-ner/ner-model-english.ser.gz'
+STANFORD_JAR = '/app/stanford-ner/stanford-ner.jar'
+STANFORD_MODEL = '/app/stanford-ner/ner-model-english.ser.gz'
 
 
 """
@@ -75,10 +78,27 @@ class Namespace:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
+"""
+Removes temp dirs created
+"""
+def remove_dirs():
+    try:
+        shutil.rmtree(CONTEXT_DIR)
+        logging.info(f"Deleted {str(CONTEXT_DIR)}")
+    except Exception as e:
+        logging.error(e)
+
+    try:
+        shutil.rmtree(IMAGE_DIR)
+        logging.info(f"Deleted {str(IMAGE_DIR)}")
+    except Exception as e:
+        logging.error(e)
+
 
 """
 Function to extarct the NERs from a given english sentence, using the Stanford ner model
 :sentence: the sentence to check
+:only_ner: the stanford model also tags pos, set the only_ner to only extract the ner tags
 """
 def stanford_ner(sentence, only_ner = True):
     # Prepare NER tagger with english model
@@ -101,17 +121,15 @@ def stanford_ner(sentence, only_ner = True):
 
 
 """
-Function to find the index of a given substring (without whitespace) in a string, interms of words starting with index 1.
-e.g. find_index("Hello I'm Namdar.", "Namdar") = 3
-:text: the string to check
-:word: the word to check for
+Given a tuple of strings and their index, the function returns the index of the first string contaning a given substring.
+e.g. find_index("Namdar", [("Hello", 0), ("I", 1), ("am", 2), ("Namdar", 3), ("Namdar", 4)]) = 3
+:word: the string to check
+:arr: list of (word, index) tuples
 """
-def find_index(text, word):
-    index = 1
-    for i in text.split():
-        if word in i:
-            return index
-        index += 1
+def find_first_index(word, arr):
+    for i in arr:
+        if word in i[0]:
+            return i[1]
     return -1
 
 
@@ -152,11 +170,16 @@ def main():
 
     # ------ START COMPUTATION ------ #
 
-    name_ = "1"
-    captions = {}                            # dict to store the captions
-    text = get_alt(content)                  # extract alt text and save it in the caption dict
-    captions[name_] = text
-    html_ = content['graphic'] # get the image html content
+    # check if 'graphic' and 'context' keys are in the content dict
+    if 'graphic' in content and 'context' in content:
+        name_ = "1"
+        captions = {}              # dict to store the captions
+        text = get_alt(content)    # extract alt text and save it in the caption dict
+        captions[name_] = text
+        html_ = content['graphic'] # get the image html content
+    else:
+        logging.info("No 'graphic' or 'context' tag")
+        return "", 204
     
     # save pic and caption to directory for clipscore evaluation
     with open(CONTEXT_DIR+'/captions.json', "w") as outfile:
@@ -175,13 +198,19 @@ def main():
     score = round(clipscore.main(parameters)['1']['CLIPScore'], 3)
     # compute the NERs
     ners = stanford_ner(text)
+
+    # create ner object and add index
+    indexed_list = list(zip(arr, range(len(arr))))
+    index = 0
     ner_data = []
     for i in ners:
         my_dict = {}
         my_dict['value'] = i[0]
         my_dict['tag'] = i[1]
-        my_dict['index'] = find_index(text, i[0])
+        index = find_index(i[0], indexed_list[index:]) + 1
+        my_dict['index'] = index
         ner_data.append(my_dict)
+
 
     data = {
         'clipscore': score,
@@ -216,4 +245,5 @@ def main():
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
     main()
+    remove_dirs()
 
