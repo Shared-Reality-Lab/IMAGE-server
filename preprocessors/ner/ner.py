@@ -102,7 +102,7 @@ Function to extarct the NERs from a given english sentence, using the Stanford n
 """
 def stanford_ner(sentence, only_ner = True):
     # Prepare NER tagger with english model
-    ner_tagger = StanfordNERTagger(model, jar, encoding='utf8')
+    ner_tagger = StanfordNERTagger(STANFORD_MODEL, STANFORD_JAR, encoding='utf8')
 
     # Tokenize: Split sentence into words
     words = nltk.word_tokenize(sentence)
@@ -200,6 +200,7 @@ def main():
     ners = stanford_ner(text)
 
     # create ner object and add index
+    arr = text.split()
     indexed_list = list(zip(arr, range(len(arr))))
     index = 0
     ner_data = []
@@ -207,7 +208,7 @@ def main():
         my_dict = {}
         my_dict['value'] = i[0]
         my_dict['tag'] = i[1]
-        index = find_index(i[0], indexed_list[index:]) + 1
+        index = find_first_index(i[0], indexed_list[index:]) + 1
         my_dict['index'] = index
         ner_data.append(my_dict)
 
