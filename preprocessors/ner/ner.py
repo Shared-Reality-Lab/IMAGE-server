@@ -23,7 +23,6 @@ import warnings
 import os, sys
 import tempfile
 import jsonschema
-from random import randint
 from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify
 
@@ -37,7 +36,7 @@ nltk.download('punkt')
 app = Flask(__name__)
 
 # using python's tmp file to store the image and context json
-dir_prefix = 'ner_'+str(randint(0, 999))
+dir_prefix = 'ner_'
 CONTEXT_DIR = tempfile.mkdtemp(prefix=dir_prefix)
 IMAGE_DIR = tempfile.mkdtemp(prefix=dir_prefix)
 
