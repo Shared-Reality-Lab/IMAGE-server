@@ -232,6 +232,13 @@ def main():
     }
 
     try:
+        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
+        validator.validate(response['data'])
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
+
+    try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
