@@ -43,10 +43,10 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
-    ocr-preprocessor:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-ocr:unstable
+    ocr-clouds-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:unstable
         env_file:
-            - ./config/azure-api.env
+            - ./config/apis-and-selection.env
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
@@ -174,6 +174,13 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+
+    svg-od-handler:
+         image: ghcr.io/shared-reality-lab/image-handler-svg-od:unstable
+         labels:
+             ca.mcgill.a11y.image.handler: enable
+
+
     osm-streets-handler:
         image: ghcr.io/shared-reality-lab/image-handler-osm-streets:unstable
         env_file:
@@ -185,7 +192,11 @@ services:
             ca.mcgill.a11y.image.handler: enable
         volumes:
             - sc-store:/tmp/sc-store
+    svg-semantic-seg-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-svg-semantic-seg:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+
 volumes:
     sc-store:
     user-logs:
-
