@@ -36,11 +36,11 @@ services:
             context: .
             dockerfile: ./preprocessors/ner/Dockerfile
         image: "ner:latest"
-    ocr-preprocessor:
+    ocr-clouds-preprocessor:
         build:
             context: .
             dockerfile: ./preprocessors/ocr/Dockerfile
-        image: "ocr:latest"
+        image: "ocr-clouds:latest"
     hello-handler:
         build:
             context: .
@@ -152,6 +152,17 @@ services:
             context: .
             dockerfile: ./handlers/motd/Dockerfile
         image: "motd-handler:latest"
+    od-svg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-object-detection/Dockerfile
+        image: "od-svg-handler:latest"
+    semseg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-semantic-seg/Dockerfile
+        image: "semseg-svg:latest"
+
     high-charts-handler:
         build:
             context: .
