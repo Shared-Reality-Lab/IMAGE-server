@@ -30,7 +30,7 @@
                         "description": "The entity recognized from the input alt text string."
                     },
                     "tag": {
-                        "type": "enum",
+                        "type": "string",
                         "enum": ["PERSON", "LOCATION", "ORGANIZATION", "MISC"],
                         "description": "The entity tag recognized by the model."
                     },
