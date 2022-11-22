@@ -1,4 +1,4 @@
-# noqa
+# flake8: noqa
 
 # Copyright (c) 2022 IMAGE Project, Shared Reality Lab, McGill University
 #
