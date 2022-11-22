@@ -1,4 +1,5 @@
-# noqa: E501
+# noqa
+
 # Copyright (c) 2022 IMAGE Project, Shared Reality Lab, McGill University
 #
 # This program is free software: you can redistribute it and/or modify

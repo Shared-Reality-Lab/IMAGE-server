@@ -1,4 +1,5 @@
-# noqa: E501
+# noqa
+
 '''
 Code for CLIPScore (https://arxiv.org/abs/2104.08718)
 @inproceedings{hessel2021clipscore,
