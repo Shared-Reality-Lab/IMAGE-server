@@ -1,4 +1,4 @@
-
+# flake8: noqa
 # Copyright (c) 2022 IMAGE Project, Shared Reality Lab, McGill University
 #
 # This program is free software: you can redistribute it and/or modify
@@ -15,13 +15,12 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
-import re
+import os
 import json
 import time
 import base64
+import shutil
 import logging
-import warnings
-import os, sys
 import tempfile
 import jsonschema
 from bs4 import BeautifulSoup
@@ -77,6 +76,7 @@ Object to pass parameters to clipscore module
 class Namespace:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
 
 """
 Removes temp dirs created
