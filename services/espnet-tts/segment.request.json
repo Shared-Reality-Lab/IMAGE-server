@@ -1,0 +1,27 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/services/tts/segment.request.json",
+    "title": "TTS Segment Request",
+    "type": "object",
+    "description": "Request for a timestamped TTS audio from an array of segments.",
+    "type": "object",
+    "properties": {
+        "segments": {
+            "description": "",
+            "type": "array",
+            "items": {
+              "description": "Strings to pass through TTS.",
+              "type": "string"
+            }
+        },
+        "speed_control_alpha": {
+            "description": "A parameter controlling the speed of a synthesized voice. 1 is normal, lower values are faster, and higher values are slower.",
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "default": 1
+        }
+    },
+    "required": [
+      "segments"
+    ]
+}
