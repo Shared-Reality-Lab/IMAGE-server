@@ -181,7 +181,7 @@ def main():
     else:
         logging.info("No 'graphic' or 'context' tag")
         return "", 204
-    
+
     # save pic and caption to directory for clipscore evaluation
     with open(CONTEXT_DIR+'/captions.json', "w") as outfile:
         json.dump(captions, outfile)
@@ -193,10 +193,10 @@ def main():
         return "", 204
 
     # create path parameters for clipscore
-    parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json', 
+    parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json',
                            compute_other_ref_metrics=1,
                            image_dir=IMAGE_DIR,
-                           references_json=None, 
+                           references_json=None,
                            save_per_instance=CONTEXT_DIR+'/score.json')
 
     # calculate the clipscore
