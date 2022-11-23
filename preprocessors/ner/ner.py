@@ -39,7 +39,7 @@ dir_prefix = 'ner_'
 CONTEXT_DIR = tempfile.mkdtemp(prefix=dir_prefix)
 IMAGE_DIR = tempfile.mkdtemp(prefix=dir_prefix)
 
-# path to the stanford ner models (https://nlp.stanford.edu/software/CRF-NER.shtml)
+# path to the stanford ner models
 STANFORD_JAR = '/app/stanford-ner/stanford-ner.jar'
 STANFORD_MODEL = '/app/stanford-ner/ner-model-english.ser.gz'
 
@@ -58,29 +58,29 @@ def save_image(my_html, name, out_dir):
         file.write(eval(str(binary)))
 
 
-"""
-Given a json from the raw data, this function will extract the alt text
-:my_json: json from raw data
-"""
 def get_alt(my_json):
+    """
+    Given a json from the raw data, this function will extract the alt text
+    :my_json: json from raw data
+    """
     context = my_json['context']
     soup = BeautifulSoup(context, 'html.parser')
     alt = soup.find('img', alt=True)['alt']
     return alt
 
 
-"""
-Object to pass parameters to clipscore module
-"""
 class Namespace:
+    """
+    Object to pass parameters to clipscore module
+    """
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
 
-"""
-Removes temp dirs created
-"""
 def remove_dirs():
+    """
+    Removes temp dirs created
+    """
     try:
         shutil.rmtree(CONTEXT_DIR)
         logging.info(f"Deleted {str(CONTEXT_DIR)}")
@@ -94,23 +94,26 @@ def remove_dirs():
         logging.error(e)
 
 
-"""
-Function to extarct the NERs from a given english sentence, using the Stanford ner model
-:sentence: the sentence to check
-:only_ner: the stanford model also tags pos, set the only_ner to only extract the ner tags
-"""
 def stanford_ner(sentence, only_ner = True):
+    """
+    Function to extarct the NERs from a given english sentence,
+        using the Stanford ner model
+    :sentence: the sentence to check
+    :only_ner: the stanford model also tags pos,
+        set the only_ner to only extract the ner tags
+    """
     # Prepare NER tagger with english model
-    ner_tagger = StanfordNERTagger(STANFORD_MODEL, STANFORD_JAR, encoding='utf8')
+    ner_tagger = StanfordNERTagger(
+        STANFORD_MODEL, STANFORD_JAR, encoding='utf8')
 
     # Tokenize: Split sentence into words
     words = nltk.word_tokenize(sentence)
 
     # Run NER tagger on words
-    words =  ner_tagger.tag(words)
+    words = ner_tagger.tag(words)
     
     if only_ner:
-        rtn  = []
+        rtn = []
         for i in words:
             if len(i[1]) > 4:
                 rtn.append(i)
@@ -119,13 +122,15 @@ def stanford_ner(sentence, only_ner = True):
     return words
 
 
-"""
-Given a tuple of strings and their index, the function returns the index of the first string contaning a given substring.
-e.g. find_index("Namdar", [("Hello", 0), ("I", 1), ("am", 2), ("Namdar", 3), ("Namdar", 4)]) = 3
-:word: the string to check
-:arr: list of (word, index) tuples
-"""
 def find_first_index(word, arr):
+    """
+    Given a tuple of strings and their index, the function returns
+    the index of the first string contaning a given substring.
+    e.g. find_index("Namdar", [("Hello", 0), ("I", 1), ("am", 2),
+        ("Namdar", 3), ("Namdar", 4)]) = 3
+    :word: the string to check
+    :arr: list of (word, index) tuples
+    """
     for i in arr:
         if word in i[0]:
             return i[1]
@@ -191,7 +196,9 @@ def main():
         return "", 204
 
     # create path parameters for clipscore
-    parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json', compute_other_ref_metrics=1, image_dir=IMAGE_DIR, references_json=None, save_per_instance=CONTEXT_DIR+'/score.json')
+    parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json', \
+        compute_other_ref_metrics=1, image_dir=IMAGE_DIR, references_json=None, \
+        save_per_instance=CONTEXT_DIR+'/score.json')
     
     # calculate the clipscore
     score = round(clipscore.main(parameters)['1']['CLIPScore'], 3)
@@ -210,7 +217,6 @@ def main():
         index = find_first_index(i[0], indexed_list[index:]) + 1
         my_dict['index'] = index
         ner_data.append(my_dict)
-
 
     data = {
         'clipscore': score,
