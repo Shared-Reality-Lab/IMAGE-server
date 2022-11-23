@@ -44,17 +44,17 @@ STANFORD_JAR = '/app/stanford-ner/stanford-ner.jar'
 STANFORD_MODEL = '/app/stanford-ner/ner-model-english.ser.gz'
 
 
-"""
-Save a html contaning an image to a given location
-:my_html: the html to save
-:name: name of the to save
-:out_dir: directory to save the image to
-"""
 def save_image(my_html, name, out_dir):
+    """
+    Save a html contaning an image to a given location
+    :my_html: the html to save
+    :name: name of the to save
+    :out_dir: directory to save the image to
+    """
     path_ = os.path.abspath(f"{out_dir}")
     image_b64 = my_html.split(",")[1]
     binary = base64.b64decode(image_b64)
-    with open(f"{path_}/{name}.png","wb") as file:
+    with open(f"{path_}/{name}.png", "wb") as file:
         file.write(eval(str(binary)))
 
 
@@ -94,7 +94,7 @@ def remove_dirs():
         logging.error(e)
 
 
-def stanford_ner(sentence, only_ner = True):
+def stanford_ner(sentence, only_ner=True):
     """
     Function to extarct the NERs from a given english sentence,
         using the Stanford ner model
@@ -111,7 +111,6 @@ def stanford_ner(sentence, only_ner = True):
 
     # Run NER tagger on words
     words = ner_tagger.tag(words)
-    
     if only_ner:
         rtn = []
         for i in words:
@@ -120,7 +119,6 @@ def stanford_ner(sentence, only_ner = True):
         return rtn
     
     return words
-
 
 def find_first_index(word, arr):
     """
@@ -139,7 +137,6 @@ def find_first_index(word, arr):
 
 @app.route('/preprocessor', methods=['POST', 'GET'])
 def main():
-    
     logging.debug("Received request")
 
     with open('./schemas/preprocessors/ner.schema.json') as jsonfile:
@@ -177,10 +174,10 @@ def main():
     # check if 'graphic' and 'context' keys are in the content dict
     if 'graphic' in content and 'context' in content:
         name_ = "1"
-        captions = {}              # dict to store the captions
-        text = get_alt(content)    # extract alt text and save it in the caption dict
+        captions = {}               # dict to store the captions
+        text = get_alt(content)     # extract alt text and save it
         captions[name_] = text
-        html_ = content['graphic'] # get the image html content
+        html_ = content['graphic']  # get the image html content
     else:
         logging.info("No 'graphic' or 'context' tag")
         return "", 204
@@ -196,10 +193,12 @@ def main():
         return "", 204
 
     # create path parameters for clipscore
-    parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json', \
-        compute_other_ref_metrics=1, image_dir=IMAGE_DIR, references_json=None, \
-        save_per_instance=CONTEXT_DIR+'/score.json')
-    
+    parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json', 
+                            compute_other_ref_metrics=1,
+                            image_dir=IMAGE_DIR,
+                            references_json=None, 
+                            save_per_instance=CONTEXT_DIR+'/score.json')
+
     # calculate the clipscore
     score = round(clipscore.main(parameters)['1']['CLIPScore'], 3)
     # compute the NERs
@@ -254,9 +253,7 @@ def main():
     logging.debug("Sending response")
     return response
 
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
     main()
     remove_dirs()
-
