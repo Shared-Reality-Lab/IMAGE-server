@@ -12,7 +12,7 @@
 	        "minimum": 0,
 	        "maximum": 1
 	    },
-        "alt text": {
+        "alttext": {
         	"description": "The alt text extracted from the html",
         	"title": "alt text",
         	"type": "string"
@@ -35,10 +35,9 @@
                         "description": "The entity tag recognized by the model."
                     },
                     "index": {
-                        "description": "Zero-index of where this entity is if the text input is split by word.",
                         "type": "integer",
-                        "minimum": 0,
-                        "description": "The index of the entity within the sentence - the n'th word in the alt text (starting from 1)"
+                        "minimum": 1,
+                        "description": "The index of the entity within the sentence - the n'th word in the alt text (starting from 1)."
                     }
                 },
                 "description": "An entity detected by the NER model."
