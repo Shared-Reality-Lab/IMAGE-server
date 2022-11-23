@@ -187,21 +187,22 @@ def get_new_nodes(unbounded_node_list, node_list, bbox_coordinates):
     # for failing to meet the bounds conditions.
     if i < 2 and j > 1:
         # index gives the location of this
+        # "single point node" in the original list (i.e., unbounded_node_list).
         index = node_list1.index(node_list[0])
-        # single point node in the original list (i.e., unbounded_node_list).
         lat1 = node_list[0]["lat"]
         lon1 = node_list[0]["lon"]
 
-        # If the only point above has both preceding and succeeding nodes
-        # in the original node list
+        # If the "single point node" above has both preceding and succeeding
+        # nodes in the original node list
         # (i.e., in the unbounded_node_list/node_list1).
-        # Then compute the possible points for both, that will satisfy the
-        # bounds conditions.
+        # Then compute the possible points for both the preceding and
+        # succeeding nodes, that will satisfy the bounds conditions.
         if index < j - 1 and index > 0:  # If true, the point
             # has both preceding & succeeding nodes.
 
             # Compute the succeeding node.
-            # this gives the location of the succeeding node.
+            # The index is incremented by 1 to give the location
+            # of the succeeding node.
             index = index + 1
             lat2 = node_list1[index]["lat"]  # Latitude of the succeeding node
             lon2 = node_list1[index]["lon"]  # Longitude of the succeeding
@@ -244,10 +245,11 @@ def get_new_nodes(unbounded_node_list, node_list, bbox_coordinates):
             preceding_node = compute_new_node(
                 node_params, bearing, bbox_coordinates)
             node_list.insert(0, preceding_node)
-        # In this case, the single point node is the first node in
-        # the original node list, so there is no preceding node,
-        # asides the succeeding nodes.
+
         elif index < j - 1:  # If true, compute for succeeding nodes only.
+            # Because, in this case, the single point node is the first node
+            # in the original node list, so there is no preceding node,
+            # asides the succeeding nodes.
             index = index + 1
             lat2 = node_list1[index]["lat"]
             lon2 = node_list1[index]["lon"]
@@ -291,14 +293,14 @@ def get_new_nodes(unbounded_node_list, node_list, bbox_coordinates):
                 node_params, bearing, bbox_coordinates)
             node_list.insert(0, preceding_node)
 
-    # Case II:  When more than one point (node) of the restricted node list
-    # (i.e., node_list)fall within the bounds, but in which more points may
+    # Case II:  When there are more than one point (node) in the restricted
+    # node list (i.e., node_list), but in which more points may
     # still be needed to create the complete street path.
-    # In this case, only the first and last node of the node_list are needed.
+    # In this case, only the first and last nodes of the node_list are needed.
 
     else:
-        # Get the index of the last element(node) in the restricted
-        # list (node_list) from the unbounded list (node_list1).
+        # Get the index of the last element(node) in the restricted list
+        # (node_list) from the unbounded list (node_list1).
         index = node_list1.index(node_list[i - 1])
         if index < j - 1:  # If true, the last node
             # in node_list has a succeeding node in the original node list
