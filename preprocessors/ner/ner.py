@@ -117,8 +117,8 @@ def stanford_ner(sentence, only_ner=True):
             if len(i[1]) > 4:
                 rtn.append(i)
         return rtn
-    
     return words
+
 
 def find_first_index(word, arr):
     """
@@ -194,10 +194,10 @@ def main():
 
     # create path parameters for clipscore
     parameters = Namespace(candidates_json=CONTEXT_DIR+'/captions.json', 
-                            compute_other_ref_metrics=1,
-                            image_dir=IMAGE_DIR,
-                            references_json=None, 
-                            save_per_instance=CONTEXT_DIR+'/score.json')
+                           compute_other_ref_metrics=1,
+                           image_dir=IMAGE_DIR,
+                           references_json=None, 
+                           save_per_instance=CONTEXT_DIR+'/score.json')
 
     # calculate the clipscore
     score = round(clipscore.main(parameters)['1']['CLIPScore'], 3)
@@ -222,9 +222,9 @@ def main():
         'ner': ner_data,
         'alttxt': captions['1']
         }
-    
+
     # ------ END COMPUTATION ------ #
-    
+
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.ner"
@@ -252,6 +252,7 @@ def main():
 
     logging.debug("Sending response")
     return response
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
