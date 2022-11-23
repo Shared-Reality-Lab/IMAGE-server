@@ -1,0 +1,48 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/ner.schema.json",
+    "type": "object",
+    "title": "NER tagger",
+    "description": "NER tagger for alt text. Accessed as 'ca.mcgill.a11y.image.preprocessor.ner'.",
+    "properties": {
+	    "clipscore": {
+	        "description": "The CLIPScore of the image, a metric used to evaluate the quality of an automatic image captioning system. (CLIPScore: A Reference-free Evaluation Metric for Image Captioning)",
+	        "title": "clipscore",
+	        "type": "number",
+	        "minimum": 0,
+	        "maximum": 1
+	    },
+        "alttext": {
+        	"description": "The alt text extracted from the html",
+        	"title": "alt text",
+        	"type": "string"
+        },
+        "ner": {
+            "description": "A list object of {word, tag, index} detected by the NER model.e.g. [{'value': 'UN', 'tag': 'ORGANIZATION', 'index': 5}, {'value': 'Manhattan', 'tag': 'LOCATION', 'index': 7}]",
+            "title": "ner",
+            "type": "array",
+            "minItems": 0,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "type": "string",
+                        "description": "The entity recognized from the input alt text string."
+                    },
+                    "tag": {
+                        "type": "string",
+                        "enum": ["PERSON", "LOCATION", "ORGANIZATION", "MISC"],
+                        "description": "The entity tag recognized by the model."
+                    },
+                    "index": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "The index of the entity within the sentence - the n'th word in the alt text (starting from 1)."
+                    }
+                },
+                "description": "An entity detected by the NER model."
+            }
+        }
+    },
+    "required": ["clipscore", "alttxt", "ner"]
+}
