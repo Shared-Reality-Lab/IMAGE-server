@@ -55,7 +55,7 @@ def save_image(my_html, name, out_dir):
     image_b64 = my_html.split(",")[1]
     binary = base64.b64decode(image_b64)
     with open(f"{path_}/{name}.png", "wb") as file:
-        file.write(eval(str(binary)))
+        file.write(binary)
 
 
 def get_alt(my_json):
