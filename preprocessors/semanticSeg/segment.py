@@ -110,7 +110,7 @@ def findContour(pred_color, width, height):
         flag = True
     else:
         max_value = max(area)
-    if(flag is True):
+    if flag is True:
         return ([0, 0], [0, 0], 0)
     centre1 = centres[area.index(max_value)][0] / width
     centre2 = centres[area.index(max_value)][1] / height
@@ -118,7 +118,7 @@ def findContour(pred_color, width, height):
     totArea = totArea / (width * height)
     result = np.concatenate(contours, dtype=np.float32)
     # if contour is very small then delete it
-    if(totArea < 0.05):
+    if totArea < 0.05:
         return ([0, 0], [0, 0], 0)
     result = np.squeeze(result)
     result = np.swapaxes(result, 0, 1)
@@ -142,7 +142,7 @@ def run_segmentation(url,
     height, width, channels = pil_image.shape
     scale_size = np.float(1500.0 / np.float(max(height, width)))
     # scale down an image to avoid OOM error
-    if(scale_size <= 1.0):
+    if scale_size <= 1.0:
         height = np.int(height * scale_size)
         width = np.int(width * scale_size)
         pil_image = cv2.resize(pil_image, (width, height),
@@ -173,7 +173,7 @@ def run_segmentation(url,
         color, name = visualize_result(img_original, pred, c)
         # find contours for every class
         send, center, area = findContour(color, width, height)
-        if(area == 0):
+        if area == 0:
             continue
         dictionary.append(
             {"name": name, "contours": send,
