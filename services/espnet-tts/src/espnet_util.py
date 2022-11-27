@@ -14,6 +14,9 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
+
+## denied on adding new branches in IMAGE-server
+
 import logging
 import torch
 import time
@@ -23,6 +26,7 @@ from functools import lru_cache
 from os import environ
 from parallel_wavegan.utils import download_pretrained_model
 from parallel_wavegan.utils import load_model
+import parallel_wavegan
 
 fs = 22050
 
@@ -30,7 +34,8 @@ fs = 22050
 # vocoder_tag = "ljspeech_parallel_wavegan.v3"
 
 vocoder_tag = "ljspeech_full_band_melgan.v2"
-
+v_tag = "parallel_wavegan/ljspeech_full_band_melgan.v2"
+vocoder_file = "/home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2"
 
 
 logging.basicConfig(format="%(asctime)s %(message)s")
@@ -61,15 +66,23 @@ logger.info(f"Device: {device}")
 #     speed_control_alpha=1.0
 # )
 
+
+
 text2speech = Text2Speech.from_pretrained(
-    model_file=tag,
+    model_file="/home/python/.cache/models/siwis-tacotron-300epoch.pth",
     # device=device
-    vocoder_tag=vocoder_tag
+    vocoder_tag = v_tag
+    # vocoder_file="/home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2"
+    
+    
 )
 
-# text2speech.spc2wav = None
 # vocoder = load_model(download_pretrained_model(vocoder_tag)).to(device).eval()
 # vocoder.remove_weight_norm()
+# text2speech.spc2wav = None
+
+
+
 
 
 @lru_cache()
@@ -85,4 +98,6 @@ def tts(text):
     logger.info(f"RTF: {rtf}")
     logger.info(f"Elapsed text2speech: {t2 - start}")
     logger.info(f"Elapsed vocoder: {t3 - t2}")
+
+    # audio = Audio(wav.view(-1).cpu().numpy(), rate=text2speech.fs)
     return wav.view(-1).cpu().numpy()

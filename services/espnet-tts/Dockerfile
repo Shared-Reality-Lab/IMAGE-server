@@ -1,7 +1,9 @@
 FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime
 
 RUN apt-get update && apt-get install -y libsndfile1 build-essential && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y espeak-ng
 
+## phonemizedf 
 WORKDIR /run/tts
 RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 RUN adduser --disabled-password python
@@ -14,9 +16,12 @@ COPY ./requirements.txt .
 # COPY /services/espnet-tts/requirements.txt .
 RUN pip install -r requirements.txt
 
+
 # COPY /services/espnet-tts/src/predownload.py .
-COPY ./src/predownload.py .
-RUN python predownload.py
+# COPY ./src/predownload.py .
+# RUN python predownload.py
+
+
 RUN mkdir -p /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2
 RUN wget https://image.a11y.mcgill.ca/models/espnet/train_nodev_ljspeech_full_band_melgan.v2.tar.gz -O /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2.tar.gz
 
@@ -24,8 +29,14 @@ RUN tar xzvf /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2.t
 
 RUN mkdir -p /home/python/.cache/models
 
+
 RUN wget https://image.a11y.mcgill.ca/resources/models/espnet/siwis-tacotron-300epoch.pth -O /home/python/.cache/models/siwis-tacotron-300epoch.pth
 
+RUN mkdir -p /home/python/.cache/conf
+
+COPY ./conf/* /home/python/.cache/conf/
+
+COPY ./config.yaml /home/python/.cache/models/
 
 # COPY /services/espnet-tts/src/* ./
 COPY ./src/* ./
@@ -33,6 +44,8 @@ COPY ./src/* ./
 
 COPY ./segment.request.json ./
 COPY ./segment.response.json ./
+
+COPY ./feats_stats.npz ./
 
 ENV TORCH_DEVICE="cpu"
 EXPOSE 80
