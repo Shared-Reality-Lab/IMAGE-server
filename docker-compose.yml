@@ -43,8 +43,8 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
             ca.mcgill.a11y.image.port: 5000
-    ocr-enclosed-by-preprocessor:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-enclosed-by:unstable
+    ocr-clouds-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:unstable
         env_file:
             - ./config/apis-and-selection.env
         labels:

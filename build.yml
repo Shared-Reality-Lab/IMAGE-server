@@ -36,11 +36,11 @@ services:
             context: .
             dockerfile: ./preprocessors/ner/Dockerfile
         image: "ner:latest"
-    ocr-enclosed-by-preprocessor:
+    ocr-clouds-preprocessor:
         build:
             context: .
             dockerfile: ./preprocessors/ocr/Dockerfile
-        image: "ocr-enclosed-by:latest"
+        image: "ocr-clouds:latest"
     hello-handler:
         build:
             context: .

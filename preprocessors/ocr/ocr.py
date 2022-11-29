@@ -93,7 +93,7 @@ def get_ocr_text():
     if od in preprocessors and len(preprocessors[od]['objects']) > 0:
         ocr_result = find_obj_enclosing(od, preprocessors[od], ocr_result)
 
-    name = 'ca.mcgill.a11y.image.preprocessor.ocrEnclosedBy'
+    name = 'ca.mcgill.a11y.image.preprocessor.ocrClouds'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
     data = {'lines': ocr_result, 'cloud_service': cld_srv_optn}

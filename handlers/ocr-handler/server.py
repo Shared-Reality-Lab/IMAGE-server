@@ -63,7 +63,7 @@ def render_ocr():
     preprocessors = content['preprocessors']
 
     # No OCR preprocessor
-    if 'ca.mcgill.a11y.image.preprocessor.ocrEnclosedBy' not in preprocessors:
+    if 'ca.mcgill.a11y.image.preprocessor.ocrClouds' not in preprocessors:
         logging.debug("No ocr-clouds preprocessor found")
         response = {
             "request_uuid": content["request_uuid"],
@@ -79,7 +79,7 @@ def render_ocr():
         logging.debug("Sending response")
         return response
 
-    ocr_data = preprocessors['ca.mcgill.a11y.image.preprocessor.ocrEnclosedBy']
+    ocr_data = preprocessors['ca.mcgill.a11y.image.preprocessor.ocrClouds']
 
     # OCR lines empty
     if len(ocr_data['lines']) == 0:
