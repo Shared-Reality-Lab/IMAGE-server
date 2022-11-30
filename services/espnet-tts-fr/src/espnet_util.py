@@ -32,8 +32,8 @@ logging.basicConfig(format="%(asctime)s %(message)s")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-## place the model here
-tag ="/home/python/.cache/models/siwis-tacotron-300epoch.pth"
+# place the model here
+tag = "/home/python/.cache/models/siwis-tacotron-300epoch.pth"
 
 d = ModelDownloader()
 device = environ["TORCH_DEVICE"]
@@ -41,18 +41,17 @@ logger.info(f"Device: {device}")
 
 text2speech = Text2Speech.from_pretrained(
     model_file="/home/python/.cache/models/siwis-tacotron-300epoch.pth",
-   
-    vocoder_tag = v_tag
-)
+    vocoder_tag=v_tag)
+
 
 @lru_cache()
 def tts(text):
     with torch.no_grad():
-        start=time.time()
-        wav=text2speech(text)["wav"]
-        t2=time.time()
-        t3=time.time()
-    rtf=(t3 - start) / (len(wav) / fs)
+        start = time.time()
+        wav = text2speech(text)["wav"]
+        t2 = time.time()
+        t3 = time.time()
+    rtf = (t3 - start) / (len(wav) / fs)
     logger.info(f"RTF: {rtf}")
     logger.info(f"Elapsed text2speech: {t2 - start}")
     logger.info(f"Elapsed vocoder: {t3 - t2}")
