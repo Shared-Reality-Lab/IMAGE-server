@@ -1,9 +1,9 @@
 FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime
 
-RUN apt-get update && apt-get install -y libsndfile1 build-essential && rm -rf /var/lib/apt/lists/*
-RUN apt-get update && apt-get install -y espeak-ng
+RUN apt-get update && apt-get install -y libsndfile1 espeak-ng build-essential && rm -rf /var/lib/apt/lists/*
 
-## phonemizedf 
+
+## phonemizedf
 WORKDIR /run/tts
 RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 RUN adduser --disabled-password python
@@ -12,15 +12,10 @@ USER python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip install --upgrade pip
-COPY ./requirements.txt .
-# COPY /services/espnet-tts/requirements.txt .
+
+COPY /services/espnet-tts-fr/requirements.txt .
+
 RUN pip install -r requirements.txt
-
-
-# COPY /services/espnet-tts/src/predownload.py .
-# COPY ./src/predownload.py .
-# RUN python predownload.py
-
 
 RUN mkdir -p /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2
 RUN wget https://image.a11y.mcgill.ca/models/espnet/train_nodev_ljspeech_full_band_melgan.v2.tar.gz -O /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2.tar.gz
@@ -34,18 +29,14 @@ RUN wget https://image.a11y.mcgill.ca/resources/models/espnet/siwis-tacotron-300
 
 RUN mkdir -p /home/python/.cache/conf
 
-COPY ./conf/* /home/python/.cache/conf/
+COPY /services/espnet-tts-fr/conf/* /home/python/.cache/conf/
 
-COPY ./config.yaml /home/python/.cache/models/
+COPY /services/espnet-tts-fr/conf/model-conf/config.yaml /home/python/.cache/models/
 
-# COPY /services/espnet-tts/src/* ./
-COPY ./src/* ./
-# COPY /schemas/services/tts/* ./
+COPY /services/espnet-tts-fr/src/* ./
+COPY /schemas/services/tts/* ./
 
-COPY ./segment.request.json ./
-COPY ./segment.response.json ./
-
-COPY ./feats_stats.npz ./
+COPY /services/espnet-tts-fr/conf/model-conf/feats_stats.npz ./
 
 ENV TORCH_DEVICE="cpu"
 EXPOSE 80
