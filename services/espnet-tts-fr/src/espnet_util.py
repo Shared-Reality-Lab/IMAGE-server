@@ -14,9 +14,6 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
-
-## denied on adding new branches in IMAGE-server
-
 import logging
 import torch
 import time
@@ -24,55 +21,38 @@ from espnet_model_zoo.downloader import ModelDownloader
 from espnet2.bin.tts_inference import Text2Speech
 from functools import lru_cache
 from os import environ
-from parallel_wavegan.utils import download_pretrained_model
-from parallel_wavegan.utils import load_model
-import parallel_wavegan
-
 fs = 22050
-
-
 
 vocoder_tag = "ljspeech_full_band_melgan.v2"
 v_tag = "parallel_wavegan/ljspeech_full_band_melgan.v2"
-vocoder_file = "/home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2"
-
+vocoder_file = "/home/python/.cache/parallel_wavegan/" + \
+    "ljspeech_full_band_melgan.v2"
 
 logging.basicConfig(format="%(asctime)s %(message)s")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 ## place the model here
-## as the model downloaded 
-
 tag ="/home/python/.cache/models/siwis-tacotron-300epoch.pth"
 
 d = ModelDownloader()
 device = environ["TORCH_DEVICE"]
 logger.info(f"Device: {device}")
 
-
-
-
 text2speech = Text2Speech.from_pretrained(
     model_file="/home/python/.cache/models/siwis-tacotron-300epoch.pth",
    
     vocoder_tag = v_tag
-    
 )
-
-
-
 
 @lru_cache()
 def tts(text):
     with torch.no_grad():
-        start = time.time()
-        wav = text2speech(text)["wav"]
-
-        t2 = time.time()
-
-        t3 = time.time()
-    rtf = (t3 - start) / (len(wav) / fs)
+        start=time.time()
+        wav=text2speech(text)["wav"]
+        t2=time.time()
+        t3=time.time()
+    rtf=(t3 - start) / (len(wav) / fs)
     logger.info(f"RTF: {rtf}")
     logger.info(f"Elapsed text2speech: {t2 - start}")
     logger.info(f"Elapsed vocoder: {t3 - t2}")
