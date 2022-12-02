@@ -1,11 +1,11 @@
-# ESPnet TTS Service
+# ESPnet French TTS Service
 
-![license: AGPL](https://img.shields.io/badge/license-AGPL-success) [GitHub Container Registry Package](https://github.com/Shared-Reality-Lab/IMAGE-server/pkgs/container/image-service-espnet-tts)
+![license: AGPL](https://img.shields.io/badge/license-AGPL-success) [GitHub Container Registry Package](https://github.com/Shared-Reality-Lab/IMAGE-server/pkgs/container/image-service-espnet-tts-fr)
 
 ## Overview
 
 This is a container that performs text-to-speech for IMAGE using the [ESPnet](https://github.com/espnet/espnet) platform.
-As of the time of writing (2022-03-24), the `kan-bayashi/ljspeech_conformer_fastspeech2` model from the [espnet-model-zoo](https://github.com/espnet/espnet_model_zoo) and the [parallel_wavegan](https://pypi.org/project/parallel-wavegan/) `ljspeech_full_band_melgan.v2` models are used.
+As of the time of writing (2022-12-02), a Tacotron model trained on the SIWIS dataset for 300 epochs and the [parallel_wavegan](https://pypi.org/project/parallel-wavegan/) `ljspeech_full_band_melgan.v2` model are used.
 All audio files are returned in the WAVE format.
 This container runs on port 80.
 
