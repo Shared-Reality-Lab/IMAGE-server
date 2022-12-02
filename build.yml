@@ -16,7 +16,7 @@ services:
             context: .
             dockerfile: services/espnet-tts/Dockerfile
         image: "espnet-tts:latest"
-    espent-tts-fr:
+    espnet-tts-fr:
         build:
             context: .
             dockerfile: services/espnet-tts-fr/Dockerfile
