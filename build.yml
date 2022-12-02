@@ -16,6 +16,11 @@ services:
             context: .
             dockerfile: services/espnet-tts/Dockerfile
         image: "espnet-tts:latest"
+    espnet-tts-fr:
+        build:
+            context: .
+            dockerfile: services/espnet-tts-fr/Dockerfile
+        image: "espnet-tts-fr:latest"
     line-charts-preprocessor:
         build:
             context: .
