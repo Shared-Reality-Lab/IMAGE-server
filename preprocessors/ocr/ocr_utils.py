@@ -75,6 +75,40 @@ def process_azure_read(stream, width, height):
         return None
 
 
+def process_azure_read_v4_preview(stream, width, height):
+    headers = {
+        'Content-Type': 'application/octet-stream',
+        'Ocp-Apim-Subscription-Key': azure_subscr_key,
+    }
+
+    param = "features=Read&model-version=latest&api-version=2022-10-12-preview"
+    ocr_url = azure_endpoint + "computervision/imageanalysis:analyze?" + param
+
+    response = requests.post(ocr_url, headers=headers, data=stream)
+    response.raise_for_status()
+
+    read_result = response.json()
+
+    # Check for success
+    if (len(read_result['readResult']) == 0):
+        logging.error("No READ response")
+        return None
+    else:
+        ocr_results = []
+        for page in read_result['readResult']['pages']:
+            for line in page['lines']:
+                line_text = line['content']
+                # Get normalized bounding box for each line
+                bbx = line['boundingBox']
+                bg_bx = [bbx[0], bbx[1], bbx[4], bbx[5]]
+                bounding_box = normalize_bdg_box(bg_bx, width, height)
+                ocr_results.append({
+                    'text': line_text,
+                    'bounding_box': bounding_box
+                })
+        return ocr_results
+
+
 def process_azure_ocr(stream, width, height):
     headers = {
         'Content-Type': 'application/octet-stream',

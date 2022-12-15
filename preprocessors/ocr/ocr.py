@@ -28,7 +28,8 @@ from ocr_utils import (
     process_azure_ocr,
     process_free_ocr,
     process_google_vision,
-    find_obj_enclosing
+    find_obj_enclosing,
+    process_azure_read_v4_preview
 )
 
 app = Flask(__name__)
@@ -135,6 +136,9 @@ def analyze_image(source, width, height, cld_srv_optn):
 
     if cld_srv_optn == "AZURE_READ":
         return process_azure_read(stream, width, height)
+
+    elif cld_srv_optn == "AZURE_READ_v4_PREVIEW":
+        return process_azure_read_v4_preview(stream, width, height)
 
     elif cld_srv_optn == "AZURE_OCR":
         return process_azure_ocr(stream, width, height)
