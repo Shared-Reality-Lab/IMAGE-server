@@ -185,175 +185,176 @@ def get_new_nodes(unbounded_node_list, node_list, bbox_coordinates):
     # but more points in the unbounded_node_list, meaning that some
     # of the street nodes have been excluded
     # for failing to meet the bounds conditions.
-    if i < 2 and j > 1:
-        # index gives the location of this
-        # "single point node" in the original list (i.e., unbounded_node_list).
-        index = node_list1.index(node_list[0])
-        lat1 = node_list[0]["lat"]
-        lon1 = node_list[0]["lon"]
-
-        # If the "single point node" above has both preceding and succeeding
-        # nodes in the original node list
-        # (i.e., in the unbounded_node_list/node_list1).
-        # Then compute the possible points for both the preceding and
-        # succeeding nodes, that will satisfy the bounds conditions.
-        if index < j - 1 and index > 0:  # If true, the point
-            # has both preceding & succeeding nodes.
-
-            # Compute the succeeding node.
-            # The index is incremented by 1 to give the location
-            # of the succeeding node.
-            index = index + 1
-            lat2 = node_list1[index]["lat"]  # Latitude of the succeeding node
-            lon2 = node_list1[index]["lon"]  # Longitude of the succeeding
-            a = (lat1, lon1)
-            b = (lat2, lon2)
-            result = Geodesic.WGS84.Inverse(*a, *b)
-            # Bearing between the single point node and the succeeding node
-            # in degrees
-            bearing = result["azi1"]
-            node_params = {
-                "id": node_list1[index]["id"],
-                "lat1": lat1,
-                "lon1": lon1,
-                "lat2": lat2,
-                "lon2": lon2
-            }
-            succeeding_node = compute_new_node(
-                node_params, bearing, bbox_coordinates)
-            node_list.append(succeeding_node)
-
-            # Compute the preceding node
-            index = index - 2
-            lat2 = node_list1[index]["lat"]
-            lon2 = node_list1[index]["lon"]
+    if node_list:
+        if i == 1 and j > i:
+            # index gives the location of this
+            # "single point node" in the original list (i.e., unbounded_node_list).
+            index = node_list1.index(node_list[0])
             lat1 = node_list[0]["lat"]
             lon1 = node_list[0]["lon"]
-            a = (lat1, lon1)
-            b = (lat2, lon2)
-            result = Geodesic.WGS84.Inverse(*a, *b)
-            # # Bearing between the single point node and the preceding node
-            # in degrees
-            bearing = result["azi1"]
-            node_params = {
-                "id": node_list1[index]["id"],
-                "lat1": lat1,
-                "lon1": lon1,
-                "lat2": lat2,
-                "lon2": lon2
-            }
-            preceding_node = compute_new_node(
-                node_params, bearing, bbox_coordinates)
-            node_list.insert(0, preceding_node)
 
-        elif index < j - 1:  # If true, compute for succeeding nodes only.
-            # Because, in this case, the single point node is the first node
-            # in the original node list, so there is no preceding node,
-            # asides the succeeding nodes.
-            index = index + 1
-            lat2 = node_list1[index]["lat"]
-            lon2 = node_list1[index]["lon"]
-            a = (lat1, lon1)
-            b = (lat2, lon2)
-            result = Geodesic.WGS84.Inverse(*a, *b)
-            # Bearing between the single point node and the succeeding node
-            # in degrees
-            bearing = result["azi1"]
-            node_params = {
-                "id": node_list1[index]["id"],
-                "lat1": lat1,
-                "lon1": lon1,
-                "lat2": lat2,
-                "lon2": lon2
-            }
-            succeeding_node = compute_new_node(
-                node_params, bearing, bbox_coordinates)
-            node_list.append(succeeding_node)
-        else:  # If true, there is no succeeding node,
-            # since it is the last node in the original list.
+            # If the "single point node" above has both preceding and succeeding
+            # nodes in the original node list
+            # (i.e., in the unbounded_node_list/node_list1).
+            # Then compute the possible points for both the preceding and
+            # succeeding nodes, that will satisfy the bounds conditions.
+            if index < j - 1 and index > 0:  # If true, the point
+                # has both preceding & succeeding nodes.
 
-            # Compute for preceding node
-            index = index - 1
-            lat2 = node_list1[index]["lat"]
-            lon2 = node_list1[index]["lon"]
-            a = (lat1, lon1)
-            b = (lat2, lon2)
-            result = Geodesic.WGS84.Inverse(*a, *b)
-            # # Bearing between the single point node and the preceding node
-            # in degrees
-            bearing = result["azi1"]
-            node_params = {
-                "id": node_list1[index]["id"],
-                "lat1": lat1,
-                "lon1": lon1,
-                "lat2": lat2,
-                "lon2": lon2
-            }
-            preceding_node = compute_new_node(
-                node_params, bearing, bbox_coordinates)
-            node_list.insert(0, preceding_node)
+                # Compute the succeeding node.
+                # The index is incremented by 1 to give the location
+                # of the succeeding node.
+                index = index + 1
+                lat2 = node_list1[index]["lat"]  # Latitude of the succeeding node
+                lon2 = node_list1[index]["lon"]  # Longitude of the succeeding
+                a = (lat1, lon1)
+                b = (lat2, lon2)
+                result = Geodesic.WGS84.Inverse(*a, *b)
+                # Bearing between the single point node and the succeeding node
+                # in degrees
+                bearing = result["azi1"]
+                node_params = {
+                    "id": node_list1[index]["id"],
+                    "lat1": lat1,
+                    "lon1": lon1,
+                    "lat2": lat2,
+                    "lon2": lon2
+                }
+                succeeding_node = compute_new_node(
+                    node_params, bearing, bbox_coordinates)
+                node_list.append(succeeding_node)
 
-    # Case II:  When there are more than one point (node) in the restricted
-    # node list (i.e., node_list), but in which more points may
-    # still be needed to create the complete street path.
-    # In this case, only the first and last nodes of the node_list are needed.
+                # Compute the preceding node
+                index = index - 2
+                lat2 = node_list1[index]["lat"]
+                lon2 = node_list1[index]["lon"]
+                lat1 = node_list[0]["lat"]
+                lon1 = node_list[0]["lon"]
+                a = (lat1, lon1)
+                b = (lat2, lon2)
+                result = Geodesic.WGS84.Inverse(*a, *b)
+                # # Bearing between the single point node and the preceding node
+                # in degrees
+                bearing = result["azi1"]
+                node_params = {
+                    "id": node_list1[index]["id"],
+                    "lat1": lat1,
+                    "lon1": lon1,
+                    "lat2": lat2,
+                    "lon2": lon2
+                }
+                preceding_node = compute_new_node(
+                    node_params, bearing, bbox_coordinates)
+                node_list.insert(0, preceding_node)
 
-    else:
-        # Get the index of the last element(node) in the restricted list
-        # (node_list) from the unbounded list (node_list1).
-        index = node_list1.index(node_list[i - 1])
-        if index < j - 1:  # If true, the last node
-            # in node_list has a succeeding node in the original node list
-            # (node_list1), so compute for the succeeding node.
-            index = index + 1
-            lat1 = node_list[i - 1]["lat"]
-            lon1 = node_list[i - 1]["lon"]
-            lat2 = node_list1[index]["lat"]
-            lon2 = node_list1[index]["lon"]
-            a = (lat1, lon1)
-            b = (lat2, lon2)
-            result = Geodesic.WGS84.Inverse(*a, *b)
-            # Bearing between the single point node and the succeeding node
-            # in degrees
-            bearing = result["azi1"]
-            node_params = {
-                "id": node_list1[index]["id"],
-                "lat1": lat1,
-                "lon1": lon1,
-                "lat2": lat2,
-                "lon2": lon2
-            }
-            succeeding_node = compute_new_node(
-                node_params, bearing, bbox_coordinates)
-            node_list.append(succeeding_node)
+            elif index < j - 1:  # If true, compute for succeeding nodes only.
+                # Because, in this case, the single point node is the first node
+                # in the original node list, so there is no preceding node,
+                # asides the succeeding nodes.
+                index = index + 1
+                lat2 = node_list1[index]["lat"]
+                lon2 = node_list1[index]["lon"]
+                a = (lat1, lon1)
+                b = (lat2, lon2)
+                result = Geodesic.WGS84.Inverse(*a, *b)
+                # Bearing between the single point node and the succeeding node
+                # in degrees
+                bearing = result["azi1"]
+                node_params = {
+                    "id": node_list1[index]["id"],
+                    "lat1": lat1,
+                    "lon1": lon1,
+                    "lat2": lat2,
+                    "lon2": lon2
+                }
+                succeeding_node = compute_new_node(
+                    node_params, bearing, bbox_coordinates)
+                node_list.append(succeeding_node)
+            else:  # If true, there is no succeeding node,
+                # since it is the last node in the original list.
 
-        # Get the index of the first element(node) in the bounded list
-        # (node_list)from the unbounded list (node_list1)
-        index = node_list1.index(node_list[0])
-        if index > 0:  # If true, the first node
-            # in node_list has a preceding node in the original node list
-            # (node_list1), so, compute for the preceding node.
-            index = index - 1
-            lat1 = node_list[0]["lat"]
-            lon1 = node_list[0]["lon"]
-            lat2 = node_list1[index]["lat"]
-            lon2 = node_list1[index]["lon"]
-            a = (lat1, lon1)
-            b = (lat2, lon2)
-            result = Geodesic.WGS84.Inverse(*a, *b)
-            bearing = result["azi1"]
-            # Bearing between the single point node and the succeeding node
-            # in degrees
-            node_params = {
-                "id": node_list1[index]["id"],
-                "lat1": lat1,
-                "lon1": lon1,
-                "lat2": lat2,
-                "lon2": lon2
-            }
-            preceding_node = compute_new_node(
-                node_params, bearing, bbox_coordinates)
-            node_list.insert(0, preceding_node)
+                # Compute for preceding node
+                index = index - 1
+                lat2 = node_list1[index]["lat"]
+                lon2 = node_list1[index]["lon"]
+                a = (lat1, lon1)
+                b = (lat2, lon2)
+                result = Geodesic.WGS84.Inverse(*a, *b)
+                # # Bearing between the single point node and the preceding node
+                # in degrees
+                bearing = result["azi1"]
+                node_params = {
+                    "id": node_list1[index]["id"],
+                    "lat1": lat1,
+                    "lon1": lon1,
+                    "lat2": lat2,
+                    "lon2": lon2
+                }
+                preceding_node = compute_new_node(
+                    node_params, bearing, bbox_coordinates)
+                node_list.insert(0, preceding_node)
+
+        # Case II:  When there are more than one point (node) in the restricted
+        # node list (i.e., node_list), but in which more points may
+        # still be needed to create the complete street path.
+        # In this case, only the first and last nodes of the node_list are needed.
+
+        elif i > 1 and j > i:
+            # Get the index of the last element(node) in the restricted list
+            # (node_list) from the unbounded list (node_list1).
+            index = node_list1.index(node_list[i - 1])
+            if index < j - 1:  # If true, the last node
+                # in node_list has a succeeding node in the original node list
+                # (node_list1), so compute for the succeeding node.
+                index = index + 1
+                lat1 = node_list[i - 1]["lat"]
+                lon1 = node_list[i - 1]["lon"]
+                lat2 = node_list1[index]["lat"]
+                lon2 = node_list1[index]["lon"]
+                a = (lat1, lon1)
+                b = (lat2, lon2)
+                result = Geodesic.WGS84.Inverse(*a, *b)
+                # Bearing between the single point node and the succeeding node
+                # in degrees
+                bearing = result["azi1"]
+                node_params = {
+                    "id": node_list1[index]["id"],
+                    "lat1": lat1,
+                    "lon1": lon1,
+                    "lat2": lat2,
+                    "lon2": lon2
+                }
+                succeeding_node = compute_new_node(
+                    node_params, bearing, bbox_coordinates)
+                node_list.append(succeeding_node)
+
+            # Get the index of the first element(node) in the bounded list
+            # (node_list)from the unbounded list (node_list1)
+            index = node_list1.index(node_list[0])
+            if index > 0:  # If true, the first node
+                # in node_list has a preceding node in the original node list
+                # (node_list1), so, compute for the preceding node.
+                index = index - 1
+                lat1 = node_list[0]["lat"]
+                lon1 = node_list[0]["lon"]
+                lat2 = node_list1[index]["lat"]
+                lon2 = node_list1[index]["lon"]
+                a = (lat1, lon1)
+                b = (lat2, lon2)
+                result = Geodesic.WGS84.Inverse(*a, *b)
+                bearing = result["azi1"]
+                # Bearing between the single point node and the succeeding node
+                # in degrees
+                node_params = {
+                    "id": node_list1[index]["id"],
+                    "lat1": lat1,
+                    "lon1": lon1,
+                    "lat2": lat2,
+                    "lon2": lon2
+                }
+                preceding_node = compute_new_node(
+                    node_params, bearing, bbox_coordinates)
+                node_list.insert(0, preceding_node)
     return node_list
 
 # Create a new node
@@ -503,6 +504,7 @@ def compute_new_node(node_params, bearing, bbox_coordinates):
         pass
     new_node = {
         "id": node_params["id"],
+        "node_type": "displaced",
         "lat": float(lat2),
         "lon": float(lon2)
     }
