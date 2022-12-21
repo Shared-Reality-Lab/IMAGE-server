@@ -160,7 +160,6 @@ def handle():
             svg_layers.append(
                 {"label": segments[j]["name"], "svg": svg.asDataUri()})
             svg = draw.Drawing(dimensions[0], dimensions[1])
-            
     data = {
         "layers": svg_layers
     }
