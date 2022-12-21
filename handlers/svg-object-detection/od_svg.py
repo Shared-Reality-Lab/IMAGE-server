@@ -29,33 +29,33 @@ app = Flask(__name__)
 def handle():
     logging.debug("Received request")
     # Load necessary schema files
-    with open("./schemas/definitions.json") as f:
-        definitions_schema = json.load(f)
-    with open("./schemas/request.schema.json") as f:
-        request_schema = json.load(f)
-    with open("./schemas/handler-response.schema.json") as f:
-        response_schema = json.load(f)
-    with open("./schemas/renderers/svglayers.schema.json") as f:
-        renderer_schema = json.load(f)
-    store = {
-        definitions_schema["$id"]: definitions_schema,
-        request_schema["$id"]: request_schema,
-        response_schema["$id"]: response_schema,
-        renderer_schema["$id"]: renderer_schema,
-    }
-    resolver = jsonschema.RefResolver.from_schema(
-        request_schema, store=store
-    )
+    # with open("./schemas/definitions.json") as f:
+    #     definitions_schema = json.load(f)
+    # with open("./schemas/request.schema.json") as f:
+    #     request_schema = json.load(f)
+    # with open("./schemas/handler-response.schema.json") as f:
+    #     response_schema = json.load(f)
+    # with open("./schemas/renderers/svglayers.schema.json") as f:
+    #     renderer_schema = json.load(f)
+    # store = {
+    #     definitions_schema["$id"]: definitions_schema,
+    #     request_schema["$id"]: request_schema,
+    #     response_schema["$id"]: response_schema,
+    #     renderer_schema["$id"]: renderer_schema,
+    # }
+    # resolver = jsonschema.RefResolver.from_schema(
+    #     request_schema, store=store
+    # )
     # Get and validate request contents
     contents = request.get_json()
-    try:
-        validator = jsonschema.Draft7Validator(
-            request_schema, resolver=resolver
-        )
-        validator.validate(contents)
-    except ValidationError as e:
-        logging.error(e)
-        return jsonify("Invalid request received!"), 400
+    # try:
+    #     validator = jsonschema.Draft7Validator(
+    #         request_schema, resolver=resolver
+    #     )
+    #     validator.validate(contents)
+    # except ValidationError as e:
+    #     logging.error(e)
+    #     return jsonify("Invalid request received!"), 400
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
@@ -68,13 +68,13 @@ def handle():
             "timestamp": int(time.time()),
             "renderings": []
         }
-        try:
-            validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
-            return jsonify("Invalid Preprocessor JSON format"), 500
+        # try:
+        #     validator = jsonschema.Draft7Validator(
+        #         response_schema, resolver=resolver)
+        #     validator.validate(response)
+        # except jsonschema.exceptions.ValidationError as error:
+        #     logging.error(error)
+        #     return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
 
@@ -87,13 +87,13 @@ def handle():
             "timestamp": int(time.time()),
             "renderings": []
         }
-        try:
-            validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
-            return jsonify("Invalid Preprocessor JSON format"), 500
+        # try:
+        #     validator = jsonschema.Draft7Validator(
+        #         response_schema, resolver=resolver)
+        #     validator.validate(response)
+        # except jsonschema.exceptions.ValidationError as error:
+        #     logging.error(error)
+        #     return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
     if "dimensions" in contents:
@@ -109,13 +109,13 @@ def handle():
             "timestamp": int(time.time()),
             "renderings": []
         }
-        try:
-            validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
-            return jsonify("Invalid Preprocessor JSON format"), 500
+        # try:
+        #     validator = jsonschema.Draft7Validator(
+        #         response_schema, resolver=resolver)
+        #     validator.validate(response)
+        # except jsonschema.exceptions.ValidationError as error:
+        #     logging.error(error)
+        #     return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
 
@@ -148,10 +148,11 @@ def handle():
                         width,
                         height,
                         stroke="#ff4477",
+                        stroke_width=2.5,
                         fill_opacity=0))
             svg_layers.append({"label": category, "svg": svg.asDataUri()})
             svg = draw.Drawing(dimensions[0], dimensions[1])
-            # break
+            break
 
     if (len(ungrouped) > 0):
         for i in range(len(ungrouped)):
@@ -181,29 +182,29 @@ def handle():
         "description": "Object Detection SVG visualization",
         "data": data
     }
-    try:
-        validator = jsonschema.Draft7Validator(
-            renderer_schema, resolver=resolver
-        )
-        validator.validate(data)
-    except ValidationError as e:
-        logging.error(e)
-        logging.error("Failed to validate the response renderer!")
-        return jsonify("Failed to validate the response renderer"), 500
+    # try:
+    #     validator = jsonschema.Draft7Validator(
+    #         renderer_schema, resolver=resolver
+    #     )
+    #     validator.validate(data)
+    # except ValidationError as e:
+    #     logging.error(e)
+    #     logging.error("Failed to validate the response renderer!")
+    #     return jsonify("Failed to validate the response renderer"), 500
     response = {
         "request_uuid": contents["request_uuid"],
         "timestamp": int(time.time()),
         "renderings": [rendering]
     }
-    try:
-        validator = jsonschema.Draft7Validator(
-            response_schema, resolver=resolver
-        )
-        validator.validate(response)
-    except ValidationError as e:
-        logging.error("Failed to generate a valid response")
-        logging.error(e)
-        return jsonify("Failed to generate a valid response"), 500
+    # try:
+    #     validator = jsonschema.Draft7Validator(
+    #         response_schema, resolver=resolver
+    #     )
+    #     validator.validate(response)
+    # except ValidationError as e:
+    #     logging.error("Failed to generate a valid response")
+    #     logging.error(e)
+    #     return jsonify("Failed to generate a valid response"), 500
     logging.debug("Sending response")
     return response
 
