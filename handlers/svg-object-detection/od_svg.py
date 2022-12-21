@@ -152,7 +152,7 @@ def handle():
                         fill_opacity=0))
             svg_layers.append({"label": category, "svg": svg.asDataUri()})
             svg = draw.Drawing(dimensions[0], dimensions[1])
-            break
+            # break
 
     if (len(ungrouped) > 0):
         for i in range(len(ungrouped)):
