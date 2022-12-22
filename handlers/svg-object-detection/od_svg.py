@@ -148,8 +148,10 @@ def handle():
                         width,
                         height,
                         stroke="#ff4477",
+                        stroke_width=2.5,
                         fill_opacity=0))
             svg_layers.append({"label": category, "svg": svg.asDataUri()})
+            svg = draw.Drawing(dimensions[0], dimensions[1])
             # break
 
     if (len(ungrouped) > 0):
