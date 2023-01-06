@@ -164,16 +164,18 @@ def handle():
             y2 = int(objects[ungrouped[i]]['dimensions'][3] * dimensions[1])
             width = abs(x2 - x1)
             height = abs(y2 - y1)
-            start_y1 = abs(dimensions[1] - y1)
+            start_y1 = abs(dimensions[1] - y1 - height)
             svg.append(
                 draw.Rectangle(
                     x1,
                     start_y1,
                     width,
                     height,
+                    stroke_width=2.5,
                     stroke="#dd4477",
                     fill_opacity=0))
             svg_layers.append({"label": category, "svg": svg.asDataUri()})
+            svg = draw.Drawing(dimensions[0], dimensions[1])
     data = {
         "layers": svg_layers
     }
