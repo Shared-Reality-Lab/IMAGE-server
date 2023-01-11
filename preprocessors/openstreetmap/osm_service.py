@@ -108,19 +108,22 @@ def process_streets_data(OSM_data, bbox_coordinates):
         lon_min = bbox_coordinates[1]
         lon_max = bbox_coordinates[3]
         for way in OSM_data.ways:
-            node_list = []  # List contains only nodes within the bounds.
-            # List contains all the nodes (no bounds restriction).
-            unbounded_node_list = []
+            # List contains only nodes of a street within the bounding box.
+            bounded_nodes = []
+            # List contains all the nodes of a street (i.e., no boundary
+            # restriction).
+            unbounded_nodes = []
             for node in way.nodes:
-                # Extract all nodes
-                node_object1 = {
+                # Extract all nodes of a street.
+                node_object = {
                     "id": int(node.id),
                     "lat": float(node.lat),
                     "lon": float(node.lon),
                 }
-                if node_object1 not in unbounded_node_list:
-                    unbounded_node_list.append(node_object1)
-                # Extract only nodes within the boundary
+                if node_object not in unbounded_nodes:
+                    unbounded_nodes.append(node_object)
+                # Apply the boundary conditions to extract only nodes
+                # of a street that are within the bounding box.
                 if node.lat >= lat_min and node.lat <= lat_max:
                     if node.lon >= lon_min and node.lon <= lon_max:
                         node_object = {
@@ -128,19 +131,19 @@ def process_streets_data(OSM_data, bbox_coordinates):
                             "lat": float(node.lat),
                             "lon": float(node.lon),
                         }
-                        if node_object not in node_list:
-                            node_list.append(node_object)
-            # After the bounds restrictions are applied, it is
-            # possible that the node_list may no longer have enough points
-            # (nodes) to represent its street path.
+                        if node_object not in bounded_nodes:
+                            bounded_nodes.append(node_object)
+            # After the boundary restrictions are applied, it is
+            # possible that the list containing the bounded_nodes of
+            # a street may no longer have enough points
+            # (nodes) to represent the street shape.
             # This is addressed by the function "get_new_nodes",
             # which creates more possible points for the path
-            # within the bounds conditions.
+            # within the boundary conditions.
             node_list = get_new_nodes(
-                unbounded_node_list, node_list, bbox_coordinates)
-            # Check if the "node_list" for a way is not empty.
-            # Otherwise all its nodes are outside the boundary, so exclude the
-            # way.
+                bounded_nodes, unbounded_nodes, bbox_coordinates)
+            # Check if the "bounded_nodes" for a street/way is not empty.
+            # Otherwise all its nodes might have fallen outside the boundary.
             if node_list:
                 # Convert lanes to integer if its value is not None
                 lanes = way.tags.get("lanes")
@@ -174,193 +177,147 @@ def process_streets_data(OSM_data, bbox_coordinates):
         return processed_OSM_data
 
 
-def get_new_nodes(unbounded_node_list, node_list, bbox_coordinates):
-    # node_list1 contains the unbounded nodes
-    # node_list  contains the bounded nodes
-    node_list1 = unbounded_node_list
-    i = len(node_list)
-    j = len(node_list1)
+def get_new_nodes(bounded_nodes, unbounded_nodes, bbox_coordinates):
+    # - bounded_nodes is a list of only nodes of a street that fall within
+    # the bounding box.
+    # - unbounded_nodes on the other hand has all the nodes of a street.
+    i = len(bounded_nodes)
+    j = len(unbounded_nodes)
+    if bounded_nodes:
+        if i > 0 and j > i:
+            if i == 1:  # true if bounded_nodes has only one node element.
 
-    # Case I: When there is only one point (node) in the node_list,
-    # but more points in the unbounded_node_list, meaning that some
-    # of the street nodes have been excluded
-    # for failing to meet the bounds conditions.
-    if node_list:
-        if i == 1 and j > i:
-            # index gives the location of this
-            # "single point node" in the original list
-            # (i.e., unbounded_node_list).
-            index = node_list1.index(node_list[0])
-            lat1 = node_list[0]["lat"]
-            lon1 = node_list[0]["lon"]
+                # variable index gives the position of this node in
+                # the "unbounded_nodes" list.
+                index = unbounded_nodes.index(bounded_nodes[i - 1])
+                if index < j - 1 and index > 0:  # If true,
+                    # this single node element has both
+                    # succeeding & preceding nodes in the
+                    # "unbounded_nodes" list.
+                    # However, these nodes are out of the range.
+                    # So, update the "bounded_nodes" list
+                    # with the estimated values
+                    # for both the succeeding  and the preceding nodes
+                    # that meet the boundary conditions.
+                    flag = True
+                    # update the "bounded_nodes" list with
+                    # the estimated value for the succeeding node.
+                    bounded_nodes = add_new_node(
+                        flag, index, bounded_nodes,
+                        unbounded_nodes, bbox_coordinates)
+                    flag = False
+                    # update the "bounded_nodes" list with the
+                    # estimated value for the preceding node.
+                    bounded_nodes = add_new_node(
+                        flag, index, bounded_nodes,
+                        unbounded_nodes, bbox_coordinates)
+                elif index < j - 1:  # if true, this single node element
+                    # has only the succeeding node.
+                    flag = True
+                    # update the "bounded_nodes" list with the estimated value
+                    # for the succeeding node.
+                    bounded_nodes = add_new_node(
+                        flag, index, bounded_nodes,
+                        unbounded_nodes, bbox_coordinates)
+                else:  # If true, then it has only the preceding node.
+                    flag = False
+                    # update the "bounded_nodes" list with the estimated value
+                    # for the preceding node.
+                    bounded_nodes = add_new_node(
+                        flag, index, bounded_nodes,
+                        unbounded_nodes, bbox_coordinates)
 
-            # If the "single point node" above has both preceding
-            # and succeeding nodes in the original node list
-            # (i.e., in the unbounded_node_list/node_list1).
-            # Then compute the possible points for both the preceding and
-            # succeeding nodes, that will satisfy the bounds conditions.
-            if index < j - 1 and index > 0:  # If true, the point
-                # has both preceding & succeeding nodes.
+            elif i > 1:  # true if bounded_nodes has more than one
+                # node element. Only the first and the last nodes
+                # in the list are needed.
+                # So, if applicable, estimate a preceding node for the
+                # first node and a succeeding node for the last node.
 
-                # Compute the succeeding node.
-                # The index is incremented by 1 to give the location
-                # of the succeeding node.
-                index = index + 1
-                # Latitude of the succeeding node
-                lat2 = node_list1[index]["lat"]
-                lon2 = node_list1[index]["lon"]  # Longitude of the succeeding
-                a = (lat1, lon1)
-                b = (lat2, lon2)
-                result = Geodesic.WGS84.Inverse(*a, *b)
-                # Bearing between the single point node and the succeeding node
-                # in degrees
-                bearing = result["azi1"]
-                node_params = {
-                    "id": node_list1[index]["id"],
-                    "lat1": lat1,
-                    "lon1": lon1,
-                    "lat2": lat2,
-                    "lon2": lon2
-                }
-                succeeding_node = compute_new_node(
-                    node_params, bearing, bbox_coordinates)
-                node_list.append(succeeding_node)
+                # variable index gives the position of the first node element
+                # of the "bounded_nodes" list in the "unbounded_nodes" list.
+                index = unbounded_nodes.index(bounded_nodes[0])
+                if index > 0:  # if true, this first node element has
+                    # has a preceding node in the "unbounded_nodes" list.
+                    flag = False
+                    # so, update the "bounded_nodes" list with
+                    # the estimated value for the preceding node.
+                    bounded_nodes = add_new_node(
+                        flag, index, bounded_nodes,
+                        unbounded_nodes, bbox_coordinates)
 
-                # Compute the preceding node
-                index = index - 2
-                lat2 = node_list1[index]["lat"]
-                lon2 = node_list1[index]["lon"]
-                lat1 = node_list[0]["lat"]
-                lon1 = node_list[0]["lon"]
-                a = (lat1, lon1)
-                b = (lat2, lon2)
-                result = Geodesic.WGS84.Inverse(*a, *b)
-                # # Bearing between the single point node
-                # and the preceding node in degrees
-                bearing = result["azi1"]
-                node_params = {
-                    "id": node_list1[index]["id"],
-                    "lat1": lat1,
-                    "lon1": lon1,
-                    "lat2": lat2,
-                    "lon2": lon2
-                }
-                preceding_node = compute_new_node(
-                    node_params, bearing, bbox_coordinates)
-                node_list.insert(0, preceding_node)
+                # variable index gives the position of the last node element of
+                # the "bounded_nodes" list in the "unbounded_nodes" list.
+                index = unbounded_nodes.index(bounded_nodes[i - 1])
+                if index < j - 1:  # If true, this last node element has
+                    # has a succeeding node in the "unbounded_nodes" list.
+                    flag = True
+                    # so, update the "bounded_nodes" list with
+                    # the estimated value for the succeeding node.
+                    bounded_nodes = add_new_node(
+                        flag, index, bounded_nodes,
+                        unbounded_nodes, bbox_coordinates)
+    return bounded_nodes
 
-            elif index < j - 1:  # If true, compute for succeeding nodes only.
-                # Because, in this case, the single point node
-                # is the first node in the original node list, so there
-                # is no preceding node, asides the succeeding nodes.
-                index = index + 1
-                lat2 = node_list1[index]["lat"]
-                lon2 = node_list1[index]["lon"]
-                a = (lat1, lon1)
-                b = (lat2, lon2)
-                result = Geodesic.WGS84.Inverse(*a, *b)
-                # Bearing between the single point node and the succeeding node
-                # in degrees
-                bearing = result["azi1"]
-                node_params = {
-                    "id": node_list1[index]["id"],
-                    "lat1": lat1,
-                    "lon1": lon1,
-                    "lat2": lat2,
-                    "lon2": lon2
-                }
-                succeeding_node = compute_new_node(
-                    node_params, bearing, bbox_coordinates)
-                node_list.append(succeeding_node)
-            else:  # If true, there is no succeeding node,
-                # since it is the last node in the original list.
 
-                # Compute for preceding node
-                index = index - 1
-                lat2 = node_list1[index]["lat"]
-                lon2 = node_list1[index]["lon"]
-                a = (lat1, lon1)
-                b = (lat2, lon2)
-                result = Geodesic.WGS84.Inverse(*a, *b)
-                # # Bearing between the single point node
-                # and the preceding node in degrees
-                bearing = result["azi1"]
-                node_params = {
-                    "id": node_list1[index]["id"],
-                    "lat1": lat1,
-                    "lon1": lon1,
-                    "lat2": lat2,
-                    "lon2": lon2
-                }
-                preceding_node = compute_new_node(
-                    node_params, bearing, bbox_coordinates)
-                node_list.insert(0, preceding_node)
+def add_new_node(
+        flag, index, bounded_nodes,
+        unbounded_nodes, bbox_coordinates):
+    # Note: Immediate nodes could mean the preceding node, or the
+    # succeeding node  or both.
 
-        # Case II:  When there are more than one point (node) in the restricted
-        # node list (i.e., node_list), but in which more points may
-        # still be needed to create the complete street path.
-        # In this case, only the first and last nodes of the node_list are
-        # needed.
+    # Latitude of the node element under consideration, that
+    # has its immediate node(s) outside the bounding box.
+    lat1 = unbounded_nodes[index]["lat"]
+    # Longitude of the node element under consideration, that
+    # has its immediate node(s) outside the bounding box.
+    lon1 = unbounded_nodes[index]["lon"]
 
-        elif i > 1 and j > i:
-            # Get the index of the last element(node) in the restricted list
-            # (node_list) from the unbounded list (node_list1).
-            index = node_list1.index(node_list[i - 1])
-            if index < j - 1:  # If true, the last node
-                # in node_list has a succeeding node in the original node list
-                # (node_list1), so compute for the succeeding node.
-                index = index + 1
-                lat1 = node_list[i - 1]["lat"]
-                lon1 = node_list[i - 1]["lon"]
-                lat2 = node_list1[index]["lat"]
-                lon2 = node_list1[index]["lon"]
-                a = (lat1, lon1)
-                b = (lat2, lon2)
-                result = Geodesic.WGS84.Inverse(*a, *b)
-                # Bearing between the single point node and the succeeding node
-                # in degrees
-                bearing = result["azi1"]
-                node_params = {
-                    "id": node_list1[index]["id"],
-                    "lat1": lat1,
-                    "lon1": lon1,
-                    "lat2": lat2,
-                    "lon2": lon2
-                }
-                succeeding_node = compute_new_node(
-                    node_params, bearing, bbox_coordinates)
-                node_list.append(succeeding_node)
+    if flag:  # Do for a succeeding node
+        index = index + 1  # Get the position of the succeeding node
+        # The real latitude of the succeeding node
+        lat2 = unbounded_nodes[index]["lat"]
+        # The real longitude of the succeeding node
+        lon2 = unbounded_nodes[index]["lon"]
+        a = (lat1, lon1)
+        b = (lat2, lon2)
+        result = Geodesic.WGS84.Inverse(*a, *b)
+        # Bearing between the node element and the succeeding node
+        # in degrees
+        bearing = result["azi1"]
+        node_params = {
+            "id": unbounded_nodes[index]["id"],
+            "lat1": lat1,
+            "lon1": lon1,
+            "lat2": lat2,
+            "lon2": lon2
+        }
+        succeeding_node = compute_new_node(
+            node_params, bearing, bbox_coordinates)
+        bounded_nodes.append(succeeding_node)
 
-            # Get the index of the first element(node) in the bounded list
-            # (node_list)from the unbounded list (node_list1)
-            index = node_list1.index(node_list[0])
-            if index > 0:  # If true, the first node
-                # in node_list has a preceding node in the original node list
-                # (node_list1), so, compute for the preceding node.
-                index = index - 1
-                lat1 = node_list[0]["lat"]
-                lon1 = node_list[0]["lon"]
-                lat2 = node_list1[index]["lat"]
-                lon2 = node_list1[index]["lon"]
-                a = (lat1, lon1)
-                b = (lat2, lon2)
-                result = Geodesic.WGS84.Inverse(*a, *b)
-                bearing = result["azi1"]
-                # Bearing between the single point node and the succeeding node
-                # in degrees
-                node_params = {
-                    "id": node_list1[index]["id"],
-                    "lat1": lat1,
-                    "lon1": lon1,
-                    "lat2": lat2,
-                    "lon2": lon2
-                }
-                preceding_node = compute_new_node(
-                    node_params, bearing, bbox_coordinates)
-                node_list.insert(0, preceding_node)
-    return node_list
-
-# Create a new node
+    else:  # Do for a preceeding node
+        index = index - 1  # Get the position of the preceeding node
+        # The real latitude of the preceeding node
+        lat2 = unbounded_nodes[index]["lat"]
+        # The real longitude of the preceeding node
+        lon2 = unbounded_nodes[index]["lon"]
+        a = (lat1, lon1)
+        b = (lat2, lon2)
+        result = Geodesic.WGS84.Inverse(*a, *b)
+        # Bearing between the node element and the preceeding node
+        # in degrees
+        bearing = result["azi1"]
+        node_params = {
+            "id": unbounded_nodes[index]["id"],
+            "lat1": lat1,
+            "lon1": lon1,
+            "lat2": lat2,
+            "lon2": lon2
+        }
+        preceding_node = compute_new_node(
+            node_params, bearing, bbox_coordinates)
+        bounded_nodes.insert(0, preceding_node)
+    return bounded_nodes
 
 
 def compute_new_node(node_params, bearing, bbox_coordinates):
@@ -372,135 +329,97 @@ def compute_new_node(node_params, bearing, bbox_coordinates):
         bearing = bearing + 360
     # Convert all degrees to radians
     theta = radians(bearing)
-    # Latitude of the initial point within the bounds
+    # Latitude of the node element
     lat1 = radians(node_params["lat1"])
-    # Longitude of the initial point within the bounds
+    # Longitude of the node element
     lon1 = radians(node_params["lon1"])
-    # Latitude of the final point outside the bounds
+    # Latitude of either the preceding or the succeeding node.
     lat2 = radians(node_params["lat2"])
-    # Longitude of the final point outside the bounds
+    # Longitude of either the preceding or the succeeding node.
     lon2 = radians(node_params["lon2"])
 
-    # The bearing indicates which sides of the bounds the street passes
-    # through.
-    if bearing > 0 and bearing < 90:  # The street intercepts
-        # either the top or the right side of the bounds.
-        y2 = radians(lat_max)
-        x2 = ((math.tan(theta) * (y2 - lat1)) /
-              math.cos(lat1)) + lon1
-        y2 = degrees(y2)
-        x2 = degrees(x2)
-        # If true, the intercept is at the top side,
-        if ((y2 >= lat_min and y2 <= lat_max) and
-                (x2 >= lon_min and x2 <= lon_max)):
-            lat2 = y2
-            lon2 = x2
-        else:  # Otherwise, the intercept is at the right side,
-            # so compute for latitude while set longitude to
-            # lon_max.
-            x2 = radians(lon_max)
-            y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-            lat2 = degrees(y2 + lat1)
-            lon2 = degrees(x2)
-    elif bearing > 90 and bearing < 180:  # The street intercepts
-        # either the bottom or the right side of the bounds.
-        y2 = radians(lat_min)
-        x2 = ((math.tan(theta) * (y2 - lat1)) /
-              math.cos(lat1)) + lon1
-        y2 = degrees(y2)
-        x2 = degrees(x2)
-        # If true, the intercept is at the bottom side
-        if ((y2 >= lat_min and y2 <= lat_max) and
-                (x2 >= lon_min and x2 <= lon_max)):
-            lat2 = y2
-            lon2 = x2
-        else:  # Otherwise, the intercept is at the right side,
-            # so compute for latitude while set longitude to
-            # lon_max.
-            x2 = radians(lon_max)
-            y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-            lat2 = degrees(y2 + lat1)
-            lon2 = degrees(x2)
-    elif bearing > 180 and bearing < 270:  # The street intercepts
-        # either the bottom or the left side of the bounds.
-        y2 = radians(lat_min)
-        x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-        y2 = degrees(y2)
-        x2 = degrees(x2 + lon1)
-        # If true, the intercept is at the bottom side
-        if ((y2 >= lat_min and y2 <= lat_max) and
-                (x2 >= lon_min and x2 <= lon_max)):
-            lat2 = y2
-            lon2 = x2
-        else:  # Otherwise, the intercept is at the left side,
-            # so compute for latitude while set longitude to
-            # lon_min.
-            x2 = radians(lon_min)
-            y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-            lat2 = degrees(y2 + lat1)
-            lon2 = degrees(x2)
-    elif bearing > 270 and bearing < 360:  # The street intercepts
-        # either the top or the left side of the bounds.
-        y2 = radians(lat_max)
-        x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-        y2 = degrees(y2)
-        x2 = degrees(x2 + lon1)
-        # If true, the intercept is at the top side
-        if ((y2 >= lat_min and y2 <= lat_max) and
-                (x2 >= lon_min and x2 <= lon_max)):
-            lat2 = y2
-            lon2 = x2
-        else:  # Otherwise, the intercept is at the left side,
-            # so compute for latitude while set longitude to
-            # lon_min.
-            x2 = radians(lon_min)
-            y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-            lat2 = degrees(y2 + lat1)
-            lon2 = degrees(x2)
-    elif bearing >= 0 or bearing == 360:  # The street intercepts only
-        # at the top side of the bounds, so compute for longitude while
-        # setting the latitude to lat_max.
-        y2 = radians(lat_max)
-        x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-        y2 = degrees(y2)
-        x2 = degrees(x2 + lon1)
-        lat2 = y2
-        lon2 = x2
-    elif bearing == 45:  # The street intercepts only
-        # at the NE edge of the bounds.
+    # The bearing indicates the side of the bounding box that intercepts the
+    # street.
+    flag = False
+    if bearing > 0 and bearing < 90:  # if true,  the intercept is at
+        # the top or the right side.
+        flag = True
+        lat2 = radians(lat_max)
+        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
+        # If validation returns true, the intercept is at the top side,
+        validated = validate_new_node(lat2, lon2, bbox_coordinates)
+        if not validated:  # if true,
+            # the intercept takes place at the right side.
+            flag = False
+            lon2 = radians(lon_max)
+            lat2, lon2 = get_new_node_coordinates(
+                flag, lat1, lon1, lon2, theta)
+    elif bearing > 90 and bearing < 180:  # if true,
+        # the intercept is at the bottom or the right side.
+        flag = True
+        lat2 = radians(lat_min)
+        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
+        # If validation returns true, the intercept is at the bottom side
+        validated = validate_new_node(lat2, lon2, bbox_coordinates)
+        if not validated:  # if true,
+            # the intercept takes place at the right side.
+            flag = False
+            lon2 = radians(lon_max)
+            lat2, lon2 = get_new_node_coordinates(
+                flag, lat1, lon1, lon2, theta)
+    elif bearing > 180 and bearing < 270:  # if true,
+        # the intercept is at the bottom or the left side.
+        flag = True
+        lat2 = radians(lat_min)
+        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
+        # If validation returns true, the intercept is at the bottom side
+        validated = validate_new_node(lat2, lon2, bbox_coordinates)
+        if not validated:  # if true,
+            # the intercept takes place at the left side.
+            flag = False
+            lon2 = radians(lon_min)
+            lat2, lon2 = get_new_node_coordinates(
+                flag, lat1, lon1, lon2, theta)
+    elif bearing > 270 and bearing < 360:  # if true,
+        # the intercept is at the top or the left side.
+        flag = True
+        lat2 = radians(lat_max)
+        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
+        # If validation returns true, the intercept is at the top side
+        validated = validate_new_node(lat2, lon2, bbox_coordinates)
+        if not validated:  # if true,
+            # the intercept takes place at the left side.
+            flag = False
+            lon2 = radians(lon_min)
+            lat2, lon2 = get_new_node_coordinates(
+                flag, lat1, lon1, lon2, theta)
+    # if true, the intercept is at the top side.
+    elif bearing >= 0 or bearing == 360:
+        flag = True
+        lat2 = radians(lat_max)
+        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
+    elif bearing == 45:  # if true, intercept is at the northeast edge.
         lat2 = lat_max
         lon2 = lon_max
-    elif bearing == 90:  # The street intercepts only
-        # at the right side of the bounds, so compute for latitude while
-        # setting the longitude to lon_max.
-        x2 = radians(lon_max)
-        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-        lat2 = degrees(y2 + lat1)
-        lon2 = degrees(x2)
-    elif bearing == 135:  # The street intercepts only
-        # at the SE edge of the bounds.
+    elif bearing == 90:  # if true, the intercept is at the right side.
+        flag = False
+        lon2 = radians(lon_max)
+        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lon2, theta)
+    elif bearing == 135:  # if true, the intercept is at the southeast edge.
         lat2 = lat_min
         lon2 = lon_max
-    elif bearing == 180:  # The street intercepts only
-        # at the bottom side of the bounds, so compute for longitude while
-        # setting the latitude to lat_min.
-        y2 = radians(lat_min)
-        x2 = ((math.tan(theta) * (y2 - lat1)) / math.cos(lat1))
-        lat2 = degrees(y2)
-        lon2 = degrees(x2 + lon1)
-    elif bearing == 225:  # The street intercepts only
-        # at the SW edge of the bounds.
+    elif bearing == 180:  # if true, the intercept is at the bottom side.
+        flag = True
+        lat2 = radians(lat_min)
+        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
+    elif bearing == 225:  # if true, the intercept is at the southwest edge.
         lat2 = lat_min
         lon2 = lon_min
-    elif bearing == 270:  # The street intercepts only
-        # at the left side of the bounds, so compute for latitude while
-        # setting the longitude to lon_min.
-        x2 = radians(lon_min)
-        y2 = ((x2 - lon1) * math.cos(lat1) / math.tan(theta))
-        lat2 = degrees(y2 + lat1)
-        lon2 = degrees(x2)
-    elif bearing == 315:  # The street intercepts only
-        # at the NW edge of the bounds.
+    elif bearing == 270:  # if true, the intercept is at the left side.
+        flag = False
+        lon2 = radians(lon_min)
+        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lon2, theta)
+    elif bearing == 315:  # if true, the intercept is at the northwest edge.
         lat2 = lat_max
         lon2 = lon_min
     else:
@@ -512,6 +431,39 @@ def compute_new_node(node_params, bearing, bbox_coordinates):
         "lon": float(lon2)
     }
     return new_node
+
+
+# Get the latitude and the longitude of the new (immediate) node
+
+
+def get_new_node_coordinates(flag, lat1, lon1, var2, theta):
+    if flag:  # if true, solve for longitude
+        # Latitude in radians
+        lat2 = var2
+        # Longitude in radians
+        lon2 = ((math.tan(theta) * (lat2 - lat1)) / math.cos(lat1)) + lon1
+        # Convert lat/lon back to degrees
+        lat2 = degrees(lat2)
+        lon2 = degrees(lon2)
+    else:  # solve for latitude
+        # Longitude in radians
+        lon2 = var2
+        # Latitude in radians
+        lat2 = ((lon2 - lon1) * math.cos(lat1) / math.tan(theta))
+        # Convert latitude/longitude back to degrees
+        lat2 = degrees(lat2 + lat1)
+        lon2 = degrees(lon2)
+    return lat2, lon2
+
+
+def validate_new_node(lat2, lon2, bbox_coordinates):
+    lat_min = bbox_coordinates[0]
+    lat_max = bbox_coordinates[2]
+    lon_min = bbox_coordinates[1]
+    lon_max = bbox_coordinates[3]
+    if ((lat2 >= lat_min and lat2 <= lat_max) and
+            (lon2 >= lon_min and lon2 <= lon_max)):
+        return True
 
 
 def compare_street(street1, street2):  # Compare two streets
