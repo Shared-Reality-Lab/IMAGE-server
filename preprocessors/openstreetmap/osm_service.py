@@ -264,14 +264,12 @@ def add_new_node(
         unbounded_nodes, bbox_coordinates):
     # Note: Immediate nodes could mean the preceding node, or the
     # succeeding node  or both.
-
     # Latitude of the node element under consideration, that
     # has its immediate node(s) outside the bounding box.
     lat1 = unbounded_nodes[index]["lat"]
     # Longitude of the node element under consideration, that
     # has its immediate node(s) outside the bounding box.
     lon1 = unbounded_nodes[index]["lon"]
-
     if flag:  # Do for a succeeding node
         index = index + 1  # Get the position of the succeeding node
         # The real latitude of the succeeding node
@@ -347,7 +345,7 @@ def compute_new_node(node_params, bearing, bbox_coordinates):
         lat2 = radians(lat_max)
         lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
         # If validation returns true, the intercept is at the top side,
-        validated = validate_new_node(lat2, lon2, bbox_coordinates)
+        validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
         if not validated:  # if true,
             # the intercept takes place at the right side.
             flag = False
@@ -360,7 +358,7 @@ def compute_new_node(node_params, bearing, bbox_coordinates):
         lat2 = radians(lat_min)
         lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
         # If validation returns true, the intercept is at the bottom side
-        validated = validate_new_node(lat2, lon2, bbox_coordinates)
+        validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
         if not validated:  # if true,
             # the intercept takes place at the right side.
             flag = False
@@ -373,7 +371,7 @@ def compute_new_node(node_params, bearing, bbox_coordinates):
         lat2 = radians(lat_min)
         lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
         # If validation returns true, the intercept is at the bottom side
-        validated = validate_new_node(lat2, lon2, bbox_coordinates)
+        validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
         if not validated:  # if true,
             # the intercept takes place at the left side.
             flag = False
@@ -386,7 +384,7 @@ def compute_new_node(node_params, bearing, bbox_coordinates):
         lat2 = radians(lat_max)
         lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
         # If validation returns true, the intercept is at the top side
-        validated = validate_new_node(lat2, lon2, bbox_coordinates)
+        validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
         if not validated:  # if true,
             # the intercept takes place at the left side.
             flag = False
@@ -456,7 +454,7 @@ def get_new_node_coordinates(flag, lat1, lon1, var2, theta):
     return lat2, lon2
 
 
-def validate_new_node(lat2, lon2, bbox_coordinates):
+def validate_new_node_coordinates(lat2, lon2, bbox_coordinates):
     lat_min = bbox_coordinates[0]
     lat_max = bbox_coordinates[2]
     lon_min = bbox_coordinates[1]
