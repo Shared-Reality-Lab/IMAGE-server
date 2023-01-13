@@ -273,9 +273,9 @@ def add_new_node(
     a = (lat1, lon1)
     if flag:  # Do for a succeeding node
         index = index + 1  # Get the position of the succeeding node
-        # The real latitude of the succeeding node
+        # The original/initial latitude of the succeeding node
         lat2 = unbounded_nodes[index]["lat"]
-        # The real longitude of the succeeding node
+        # The original/initial longitude of the succeeding node
         lon2 = unbounded_nodes[index]["lon"]
         b = (lat2, lon2)
         result = Geodesic.WGS84.Inverse(*a, *b)
