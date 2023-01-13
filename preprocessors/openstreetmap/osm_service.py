@@ -279,7 +279,7 @@ def add_new_node(
         lon2 = unbounded_nodes[index]["lon"]
         b = (lat2, lon2)
         result = Geodesic.WGS84.Inverse(*a, *b)
-        # Bearing of the succeeding node from the node element 
+        # Bearing of the succeeding node from the node element
         # in degrees.
         bearing = result["azi1"]
         node_params = {
