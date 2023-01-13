@@ -270,17 +270,17 @@ def add_new_node(
     # Longitude of the node element under consideration, that
     # has its immediate node(s) outside the bounding box.
     lon1 = unbounded_nodes[index]["lon"]
+    a = (lat1, lon1)
     if flag:  # Do for a succeeding node
         index = index + 1  # Get the position of the succeeding node
         # The real latitude of the succeeding node
         lat2 = unbounded_nodes[index]["lat"]
         # The real longitude of the succeeding node
         lon2 = unbounded_nodes[index]["lon"]
-        a = (lat1, lon1)
         b = (lat2, lon2)
         result = Geodesic.WGS84.Inverse(*a, *b)
-        # Bearing between the node element and the succeeding node
-        # in degrees
+        # Bearing of the succeeding node from the node element 
+        # in degrees.
         bearing = result["azi1"]
         node_params = {
             "id": unbounded_nodes[index]["id"],
@@ -299,11 +299,10 @@ def add_new_node(
         lat2 = unbounded_nodes[index]["lat"]
         # The real longitude of the preceeding node
         lon2 = unbounded_nodes[index]["lon"]
-        a = (lat1, lon1)
         b = (lat2, lon2)
         result = Geodesic.WGS84.Inverse(*a, *b)
-        # Bearing between the node element and the preceeding node
-        # in degrees
+        # Bearing of the preceeding node from the node element
+        # in degrees.
         bearing = result["azi1"]
         node_params = {
             "id": unbounded_nodes[index]["id"],
