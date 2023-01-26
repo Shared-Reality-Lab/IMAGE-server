@@ -8,16 +8,16 @@ Don't delete below this line.
 
 ## Required Information
 
-- [ ] Reference the issue addressed here.
-- [ ] Describe the changes made and how this addresses the issue.
-- [ ] Describe how you have tested these changes.
+- [ ] I referenced the issue addressed in this PR.
+- [ ] I described the changes made and how these address the issue.
+- [ ] I described how I tested these changes.
 
 ## Coding/Commit Requirements
 
-* [ ] Coding standards are followed (e.g., [PEP8](https://pep8.org/))
-* [ ] No models or other large files are committed.
+* [ ] I followed applicable coding standards (e.g., [PEP8](https://pep8.org/))
+* [ ] I have not committed any models or other large files.
 
 ## New Component Checklist (**mandatory** for new microservices)
 
-* [ ] An entry was added to `docker-compose.yml` and `build.yml`
-* [ ] A CI workflow was created under `.github/workflows`
+* [ ] I added an entry to `docker-compose.yml` and `build.yml`.
+* [ ] I created A CI workflow under `.github/workflows`.
