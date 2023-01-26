@@ -15,6 +15,6 @@ COPY /schemas /app/schemas
 COPY /preprocessors/collage-detector/ /app
 
 EXPOSE 5000
-ENV FLASK_APP=categoriser.py
+ENV FLASK_APP=detect.py
 USER python
 CMD [ "gunicorn", "detect:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
