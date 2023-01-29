@@ -216,7 +216,16 @@ app.post("/render", (req, res) => {
                     }
                 }).then(json => {
                     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
-                        return json["renderings"];
+                        // Check each rendering for expected renderers
+                        const renderers = data["renderers"];
+                        const renderings = json["renderings"];
+                        return renderings.filter((rendering: {"type_id": string}) => {
+                            const inList = renderers.includes(rendering["type_id"]);
+                            if (!inList) {
+                                console.warn("Excluding a renderering of type \"%s\" from handler \"%s\".\nThis renderer was not in the advertised list for this request.", rendering["type_id"], handler[0]);
+                            }
+                            return inList;
+                        });
                     } else {
                         console.error("Handler response failed validation!");
                         throw Error(JSON.stringify(ajv.errors));

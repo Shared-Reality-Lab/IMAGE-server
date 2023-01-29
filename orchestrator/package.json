@@ -1,6 +1,6 @@
 {
   "name": "orchestrator",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "Entry point for request handling",
   "main": "dist/server.js",
   "scripts": {
