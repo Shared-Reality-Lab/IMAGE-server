@@ -74,7 +74,8 @@ app.post("/handler", async (req, res) => {
         const serie = series[0] as { type: string, data: Record<string, unknown>[] };
         if (serie["data"] && serie["data"].length > 0) {
             const data = serie["data"];
-            if (serie["type"] === "line" || serie["type"] === "area") {
+            const supportedCharts = ["line", "area", "spline", "areaspline"];
+            if (supportedCharts.indexOf(serie["type"]) != -1) {
                 // We can work with this
                 console.log("Length: " + data.length);
                 try {
@@ -145,7 +146,7 @@ app.post("/handler", async (req, res) => {
                 for (const segment of data) {
                     if ("name" in segment) {
                         const name = String(segment["name"]);
-                        const value = (("y" in segment) ? String(segment["y"]) : "0") + " percent";
+                        const value = (("percentage" in segment) ? Number(segment["percentage"]).toFixed(2) : "0") + " percent";
                         segmentNames.push(name + ", " + value);
                     } else {
                         segmentNames.push("Unnamed data");
