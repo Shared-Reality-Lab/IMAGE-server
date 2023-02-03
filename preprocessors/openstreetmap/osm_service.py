@@ -178,89 +178,100 @@ def process_streets_data(OSM_data, bbox_coordinates):
 
 
 def get_new_nodes(bounded_nodes, unbounded_nodes, bbox_coordinates):
-    # - bounded_nodes is a list of only nodes of a street that fall within
+    # Bounded_nodes is a list of only nodes of a street that fall within
     # the bounding box.
-    # - unbounded_nodes on the other hand has all the nodes of a street.
-    i = len(bounded_nodes)
-    j = len(unbounded_nodes)
+    # Unbounded_nodes on the other hand has all the nodes of a street.
+    number_of_nodes_in_bounded_nodes = len(bounded_nodes)
+    number_of_nodes_in_unbounded_nodes = len(unbounded_nodes)
     if bounded_nodes:
-        if i > 0 and j > i:
-            if i == 1:  # true if bounded_nodes has only one node element.
+        if (number_of_nodes_in_bounded_nodes > 0 and
+                number_of_nodes_in_unbounded_nodes >
+                number_of_nodes_in_bounded_nodes):
+            # true if bounded_nodes has only one node element.
+            if number_of_nodes_in_bounded_nodes == 1:
 
                 # variable index gives the position of this node in
                 # the "unbounded_nodes" list.
-                index = unbounded_nodes.index(bounded_nodes[i - 1])
-                if index < j - 1 and index > 0:  # If true,
-                    # this single node element has both
+                index = unbounded_nodes.index(
+                    bounded_nodes[number_of_nodes_in_bounded_nodes - 1])
+                if (index < number_of_nodes_in_unbounded_nodes - 1 and
+                        index > 0):  # If true,
+                    # this single node element should have both
                     # succeeding & preceding nodes in the
                     # "unbounded_nodes" list.
-                    # However, these nodes are out of the range.
+                    # However, these nodes may be out of the range.
                     # So, update the "bounded_nodes" list
                     # with the estimated values
-                    # for both the succeeding  and the preceding nodes
+                    # for both the succeeding and the preceding nodes
                     # that meet the boundary conditions.
-                    flag = True
-                    # update the "bounded_nodes" list with
+                    there_is_a_succeeding_node = True
+                    # Update the "bounded_nodes" list with
                     # the estimated value for the succeeding node.
                     bounded_nodes = add_new_node(
-                        flag, index, bounded_nodes,
+                        there_is_a_succeeding_node, index, bounded_nodes,
                         unbounded_nodes, bbox_coordinates)
-                    flag = False
-                    # update the "bounded_nodes" list with the
+                    there_is_a_succeeding_node = False
+                    # Update the "bounded_nodes" list with the
                     # estimated value for the preceding node.
                     bounded_nodes = add_new_node(
-                        flag, index, bounded_nodes,
+                        there_is_a_succeeding_node, index, bounded_nodes,
                         unbounded_nodes, bbox_coordinates)
-                elif index < j - 1:  # if true, this single node element
-                    # has only the succeeding node.
-                    flag = True
-                    # update the "bounded_nodes" list with the estimated value
+                elif index < number_of_nodes_in_unbounded_nodes - 1:
+                    # if true, this single node element
+                    # should have a succeeding node.
+                    there_is_a_succeeding_node = True
+                    # Update the "bounded_nodes" list with the estimated value
                     # for the succeeding node.
                     bounded_nodes = add_new_node(
-                        flag, index, bounded_nodes,
+                        there_is_a_succeeding_node, index, bounded_nodes,
                         unbounded_nodes, bbox_coordinates)
-                else:  # If true, then it has only the preceding node.
-                    flag = False
-                    # update the "bounded_nodes" list with the estimated value
+                else:  # If true, then it should only have a preceding node.
+                    there_is_a_succeeding_node = False
+                    # Update the "bounded_nodes" list with the estimated value
                     # for the preceding node.
                     bounded_nodes = add_new_node(
-                        flag, index, bounded_nodes,
+                        there_is_a_succeeding_node, index, bounded_nodes,
                         unbounded_nodes, bbox_coordinates)
 
-            elif i > 1:  # true if bounded_nodes has more than one
+            elif number_of_nodes_in_bounded_nodes > 1:
+                # True if bounded_nodes has more than one
                 # node element. Only the first and the last nodes
                 # in the list are needed.
                 # So, if applicable, estimate a preceding node for the
                 # first node and a succeeding node for the last node.
 
-                # variable index gives the position of the first node element
+                # Variable index gives the position of the first node element
                 # of the "bounded_nodes" list in the "unbounded_nodes" list.
                 index = unbounded_nodes.index(bounded_nodes[0])
-                if index > 0:  # if true, this first node element has
-                    # has a preceding node in the "unbounded_nodes" list.
-                    flag = False
-                    # so, update the "bounded_nodes" list with
+                if index > 0:  # If true, this first node element
+                    # should have a preceding node in the "unbounded_nodes"
+                    # list.
+                    there_is_a_succeeding_node = False
+                    # Update the "bounded_nodes" list with
                     # the estimated value for the preceding node.
                     bounded_nodes = add_new_node(
-                        flag, index, bounded_nodes,
+                        there_is_a_succeeding_node, index, bounded_nodes,
                         unbounded_nodes, bbox_coordinates)
 
-                # variable index gives the position of the last node element of
+                # Variable index gives the position of the last node element of
                 # the "bounded_nodes" list in the "unbounded_nodes" list.
-                index = unbounded_nodes.index(bounded_nodes[i - 1])
-                if index < j - 1:  # If true, this last node element has
-                    # has a succeeding node in the "unbounded_nodes" list.
-                    flag = True
-                    # so, update the "bounded_nodes" list with
+                index = unbounded_nodes.index(
+                    bounded_nodes[number_of_nodes_in_bounded_nodes - 1])
+                if index < number_of_nodes_in_unbounded_nodes - \
+                        1:  # If true, this last node element
+                    # should have a succeeding node in the "unbounded_nodes"
+                    # list.
+                    there_is_a_succeeding_node = True
+                    # Update the "bounded_nodes" list with
                     # the estimated value for the succeeding node.
                     bounded_nodes = add_new_node(
-                        flag, index, bounded_nodes,
+                        there_is_a_succeeding_node, index, bounded_nodes,
                         unbounded_nodes, bbox_coordinates)
     return bounded_nodes
 
 
 def add_new_node(
-        flag, index, bounded_nodes,
+        there_is_a_succeeding_node, index, bounded_nodes,
         unbounded_nodes, bbox_coordinates):
     # Note: Immediate nodes could mean the preceding node, or the
     # succeeding node  or both.
@@ -271,7 +282,7 @@ def add_new_node(
     # has its immediate node(s) outside the bounding box.
     lon1 = unbounded_nodes[index]["lon"]
     a = (lat1, lon1)
-    if flag:  # Do for a succeeding node
+    if there_is_a_succeeding_node:  # Do for a succeeding node
         index = index + 1  # Get the position of the succeeding node
         # The original/initial latitude of the succeeding node
         lat2 = unbounded_nodes[index]["lat"]
@@ -279,10 +290,10 @@ def add_new_node(
         lon2 = unbounded_nodes[index]["lon"]
         b = (lat2, lon2)
         result = Geodesic.WGS84.Inverse(*a, *b)
-        # Bearing of the succeeding node from the node element
+        # street_boundingbox_angle of the succeeding node from the node element
         # in degrees.
-        bearing = result["azi1"]
-        node_params = {
+        street_boundingbox_angle = result["azi1"]
+        node_parameters = {
             "id": unbounded_nodes[index]["id"],
             "lat1": lat1,
             "lon1": lon1,
@@ -290,7 +301,7 @@ def add_new_node(
             "lon2": lon2
         }
         succeeding_node = compute_new_node(
-            node_params, bearing, bbox_coordinates)
+            node_parameters, street_boundingbox_angle, bbox_coordinates)
         bounded_nodes.append(succeeding_node)
 
     else:  # Do for a preceeding node
@@ -301,10 +312,10 @@ def add_new_node(
         lon2 = unbounded_nodes[index]["lon"]
         b = (lat2, lon2)
         result = Geodesic.WGS84.Inverse(*a, *b)
-        # Bearing of the preceeding node from the node element
-        # in degrees.
-        bearing = result["azi1"]
-        node_params = {
+        # Angular difference between a street and the intersecting side
+        # of the bounding box in degrees.
+        street_boundingbox_angle = result["azi1"]
+        node_parameters = {
             "id": unbounded_nodes[index]["id"],
             "lat1": lat1,
             "lon1": lon1,
@@ -312,117 +323,156 @@ def add_new_node(
             "lon2": lon2
         }
         preceding_node = compute_new_node(
-            node_params, bearing, bbox_coordinates)
+            node_parameters, street_boundingbox_angle, bbox_coordinates)
         bounded_nodes.insert(0, preceding_node)
     return bounded_nodes
 
 
-def compute_new_node(node_params, bearing, bbox_coordinates):
+def compute_new_node(
+        node_parameters,
+        street_boundingbox_angle,
+        bbox_coordinates):
     lat_min = bbox_coordinates[0]
     lat_max = bbox_coordinates[2]
     lon_min = bbox_coordinates[1]
     lon_max = bbox_coordinates[3]
-    if bearing < 0:
-        bearing = bearing + 360
-    # Convert all degrees to radians
-    theta = radians(bearing)
+    if street_boundingbox_angle < 0:
+        street_boundingbox_angle = street_boundingbox_angle + 360
     # Latitude of the node element
-    lat1 = radians(node_params["lat1"])
+    lat1 = node_parameters["lat1"]
     # Longitude of the node element
-    lon1 = radians(node_params["lon1"])
+    lon1 = node_parameters["lon1"]
     # Latitude of either the preceding or the succeeding node.
-    lat2 = radians(node_params["lat2"])
+    lat2 = node_parameters["lat2"]
     # Longitude of either the preceding or the succeeding node.
-    lon2 = radians(node_params["lon2"])
+    lon2 = node_parameters["lon2"]
 
-    # The bearing indicates the side of the bounding box that intercepts the
-    # street.
-    flag = False
-    if bearing > 0 and bearing < 90:  # if true,  the intercept is at
-        # the top or the right side.
-        flag = True
-        lat2 = radians(lat_max)
-        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
-        # If validation returns true, the intercept is at the top side,
-        validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
-        if not validated:  # if true,
-            # the intercept takes place at the right side.
-            flag = False
-            lon2 = radians(lon_max)
-            lat2, lon2 = get_new_node_coordinates(
-                flag, lat1, lon1, lon2, theta)
-    elif bearing > 90 and bearing < 180:  # if true,
-        # the intercept is at the bottom or the right side.
-        flag = True
-        lat2 = radians(lat_min)
-        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
-        # If validation returns true, the intercept is at the bottom side
-        validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
-        if not validated:  # if true,
-            # the intercept takes place at the right side.
-            flag = False
-            lon2 = radians(lon_max)
-            lat2, lon2 = get_new_node_coordinates(
-                flag, lat1, lon1, lon2, theta)
-    elif bearing > 180 and bearing < 270:  # if true,
-        # the intercept is at the bottom or the left side.
-        flag = True
-        lat2 = radians(lat_min)
-        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
-        # If validation returns true, the intercept is at the bottom side
-        validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
-        if not validated:  # if true,
-            # the intercept takes place at the left side.
-            flag = False
-            lon2 = radians(lon_min)
-            lat2, lon2 = get_new_node_coordinates(
-                flag, lat1, lon1, lon2, theta)
-    elif bearing > 270 and bearing < 360:  # if true,
-        # the intercept is at the top or the left side.
-        flag = True
-        lat2 = radians(lat_max)
-        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
-        # If validation returns true, the intercept is at the top side
-        validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
-        if not validated:  # if true,
-            # the intercept takes place at the left side.
-            flag = False
-            lon2 = radians(lon_min)
-            lat2, lon2 = get_new_node_coordinates(
-                flag, lat1, lon1, lon2, theta)
-    # if true, the intercept is at the top side.
-    elif bearing >= 0 or bearing == 360:
-        flag = True
-        lat2 = radians(lat_max)
-        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
-    elif bearing == 45:  # if true, intercept is at the northeast edge.
+    # The street_boundingbox_angle indicates the side of the bounding
+    # box that intercepts the street.
+    if (street_boundingbox_angle >= 0 and
+            street_boundingbox_angle < 90):
+        # If a street makes an angular intersection of
+        # between 0 and 90 with the
+        # bounding box, it is likely such a street passes through either the
+        # top side or the right side of the bounding box.
+        # Validation is used to determine which of the two
+        # gives the true result.
+        # We first assume the street passes via the top side and validate.
+        # If validation fails, then it is the right side.
+        top_side_intersection = True
         lat2 = lat_max
-        lon2 = lon_max
-    elif bearing == 90:  # if true, the intercept is at the right side.
-        flag = False
-        lon2 = radians(lon_max)
-        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lon2, theta)
-    elif bearing == 135:  # if true, the intercept is at the southeast edge.
+        # Get longitude for the new node
+        lon2 = get_new_node_coordinates(
+            top_side_intersection,
+            lat1,
+            lon1,
+            lat2,
+            street_boundingbox_angle)
+        # Validate the latitude/longitude pair. # If validation fails,
+        # then intersection will be at the right side.
+        validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
+        if not validated:  # If validation fails,
+            right_side_intersection = True
+            # Set the top_side intersection to False.
+            top_side_intersection = not(right_side_intersection)
+            lon2 = lon_max
+            lat2 = get_new_node_coordinates(
+                top_side_intersection, lat1, lon1,
+                lon2, street_boundingbox_angle)
+    elif (street_boundingbox_angle >= 90 and
+          street_boundingbox_angle < 180):
+        # If a street makes an angular intersection of
+        # between 90 and 180 with the
+        # bounding box, it is likely such a street passes through either the
+        # bottom side or the right side of the bounding box.
+        # Validation is used to determine which of the two
+        # gives the true result.
+        # We first assume the street passes via the bottom side and validate.
+        # If validation fails, then it is the right side.
+        bottom_side_intersection = True
         lat2 = lat_min
-        lon2 = lon_max
-    elif bearing == 180:  # if true, the intercept is at the bottom side.
-        flag = True
-        lat2 = radians(lat_min)
-        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lat2, theta)
-    elif bearing == 225:  # if true, the intercept is at the southwest edge.
+        # Get longitude for the new node
+        lon2 = get_new_node_coordinates(
+            bottom_side_intersection,
+            lat1,
+            lon1,
+            lat2,
+            street_boundingbox_angle)
+        # Validate the latitude/longitude pair. # If validation fails,
+        # then intersection will be at the right side.
+        validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
+        if not validated:  # If validation fails,
+            right_side_intersection = True
+            # Set the bottom_side intersection to False.
+            bottom_side_intersection = not(right_side_intersection)
+            lon2 = lon_max
+            lat2 = get_new_node_coordinates(
+                bottom_side_intersection, lat1, lon1,
+                lon2, street_boundingbox_angle)
+    elif (street_boundingbox_angle >= 180 and
+          street_boundingbox_angle < 270):
+        # If a street makes an angular intersection of
+        # between 180 and 270
+        # with the bounding box, it is likely such a street passes
+        # through either the bottom side or the left side of the bounding box.
+        # Validation is used to determine which of the
+        # two gives the true result.
+        # We first assume the street passes via the bottom side and validate.
+        # If validation fails, then it is the left side.
+        bottom_side_intersection = True
         lat2 = lat_min
-        lon2 = lon_min
-    elif bearing == 270:  # if true, the intercept is at the left side.
-        flag = False
-        lon2 = radians(lon_min)
-        lat2, lon2 = get_new_node_coordinates(flag, lat1, lon1, lon2, theta)
-    elif bearing == 315:  # if true, the intercept is at the northwest edge.
+        # Get longitude for the new node
+        lon2 = get_new_node_coordinates(
+            bottom_side_intersection,
+            lat1,
+            lon1,
+            lat2,
+            street_boundingbox_angle)
+        # Validate the latitude/longitude pair. # If validation fails,
+        # then intersection will be at the left side.
+        validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
+        if not validated:  # If validation fails,
+            left_side_intersection = True
+            # Set the bottom_side intersection to False.
+            bottom_side_intersection = not left_side_intersection
+            lon2 = lon_min
+            lat2 = get_new_node_coordinates(
+                bottom_side_intersection, lat1, lon1,
+                lon2, street_boundingbox_angle)
+    elif (street_boundingbox_angle >= 270 and
+          street_boundingbox_angle <= 360):
+        # If a street makes an angular intersection of
+        # between 270 and 360 with the
+        # bounding box, it is likely such a street
+        # passes through either the
+        # top side or the left side of the bounding box.
+        # Validation is used to determine which of the
+        # two gives the true result.
+        # We first assume the street passes via the
+        # top side and validate. If validation fails, then it is the left side.
+        top_side_intersection = True
         lat2 = lat_max
-        lon2 = lon_min
-    else:
-        pass
+        # Get longitude for the new node
+        lon2 = get_new_node_coordinates(
+            top_side_intersection,
+            lat1,
+            lon1,
+            lat2,
+            street_boundingbox_angle)
+        # Validate the latitude/longitude pair. # If validation fails,
+        # then intersection will be at the left side.
+        validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
+        if not validated:  # If  validation fails,
+            # the intercept takes place at the left side.
+            left_side_intersection = True
+            # Set the top_side intersection to False.
+            top_side_intersection = not left_side_intersection
+            lon2 = lon_min
+            lat2 = get_new_node_coordinates(
+                top_side_intersection, lat1, lon1,
+                lon2, street_boundingbox_angle)
     new_node = {
-        "id": node_params["id"],
+        "id": node_parameters["id"],
         "node_type": "displaced",
         "lat": float(lat2),
         "lon": float(lon2)
@@ -433,24 +483,24 @@ def compute_new_node(node_params, bearing, bbox_coordinates):
 # Get the latitude and the longitude of the new (immediate) node
 
 
-def get_new_node_coordinates(flag, lat1, lon1, var2, theta):
-    if flag:  # if true, solve for longitude
-        # Latitude in radians
-        lat2 = var2
-        # Longitude in radians
-        lon2 = ((math.tan(theta) * (lat2 - lat1)) / math.cos(lat1)) + lon1
-        # Convert lat/lon back to degrees
-        lat2 = degrees(lat2)
-        lon2 = degrees(lon2)
+def get_new_node_coordinates(
+        side_intersection,
+        lat1,
+        lon1,
+        node_coordinates,
+        street_boundingbox_angle):
+    if side_intersection:  # if true, solve for longitude
+        lat2 = node_coordinates
+        # Compute longitude
+        lon2 = ((math.tan(radians(street_boundingbox_angle)) *
+                (lat2 - lat1)) / math.cos(radians(lat1))) + lon1
+        return lon2
     else:  # solve for latitude
-        # Longitude in radians
-        lon2 = var2
-        # Latitude in radians
-        lat2 = ((lon2 - lon1) * math.cos(lat1) / math.tan(theta))
-        # Convert latitude/longitude back to degrees
-        lat2 = degrees(lat2 + lat1)
-        lon2 = degrees(lon2)
-    return lat2, lon2
+        lon2 = node_coordinates
+        # Compute latitude
+        lat2 = ((lon2 - lon1) * math.cos(radians(lat1)) /
+                math.tan(radians(street_boundingbox_angle))) + lat1
+        return lat2
 
 
 def validate_new_node_coordinates(lat2, lon2, bbox_coordinates):
