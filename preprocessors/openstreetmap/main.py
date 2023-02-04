@@ -49,8 +49,8 @@ def get_map_data():
         schema=request_schema,
         data=content,
         resolver=resolver,
-        json_message="Invalid Request JSON format",
-        error_code=400)
+        json_message="Not map content. Skipping...",
+        error_code=204)
 
     if validated is not None:
         return validated
@@ -58,7 +58,7 @@ def get_map_data():
     # Build OpenStreetMap request
     coords = get_coordinates(content)
     if coords is None:
-        error = 'Unable to find Lat/Lng'
+        error = 'Invalid map place received. Unable to find Lat/Lng'
         logging.error(error)
         return jsonify(error), 400
 
