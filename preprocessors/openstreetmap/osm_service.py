@@ -180,90 +180,84 @@ def process_streets_data(OSM_data, bbox_coordinates):
 def get_new_nodes(bounded_nodes, unbounded_nodes, bbox_coordinates):
     # Bounded_nodes is a list of only nodes of a street that fall within
     # the bounding box.
-    # Unbounded_nodes on the other hand has all the nodes of a street.
+    # Unbounded_nodes is a list of all the nodes of a street.
     number_of_nodes_in_bounded_nodes = len(bounded_nodes)
     number_of_nodes_in_unbounded_nodes = len(unbounded_nodes)
     if bounded_nodes:
         if (number_of_nodes_in_bounded_nodes > 0 and
                 number_of_nodes_in_unbounded_nodes >
                 number_of_nodes_in_bounded_nodes):
-            # true if bounded_nodes has only one node element.
             if number_of_nodes_in_bounded_nodes == 1:
+                # The condition is when the
+                # "bounded" list has just a node element.
 
-                # variable index gives the position of this node in
-                # the "unbounded_nodes" list.
-                index = unbounded_nodes.index(
-                    bounded_nodes[number_of_nodes_in_bounded_nodes - 1])
+                # Variable index gives the position of this node in
+                # the unbounded_nodes.
+                index = unbounded_nodes.index(bounded_nodes[0])
                 if (index < number_of_nodes_in_unbounded_nodes - 1 and
-                        index > 0):  # If true,
-                    # this single node element should have both
-                    # succeeding & preceding nodes in the
-                    # "unbounded_nodes" list.
-                    # However, these nodes may be out of the range.
-                    # So, update the "bounded_nodes" list
-                    # with the estimated values
-                    # for both the succeeding and the preceding nodes
-                    # that meet the boundary conditions.
+                        index > 0):
+                    # The above condition is true for
+                    # a node element that has both the succeeding
+                    # and preceding nodes.
                     there_is_a_succeeding_node = True
-                    # Update the "bounded_nodes" list with
-                    # the estimated value for the succeeding node.
+                    # Estimate a value for the succeeding node.
                     bounded_nodes = add_new_node(
                         there_is_a_succeeding_node, index, bounded_nodes,
                         unbounded_nodes, bbox_coordinates)
+                    # Equally estimate a value for the preceding node.
                     there_is_a_succeeding_node = False
-                    # Update the "bounded_nodes" list with the
-                    # estimated value for the preceding node.
                     bounded_nodes = add_new_node(
                         there_is_a_succeeding_node, index, bounded_nodes,
                         unbounded_nodes, bbox_coordinates)
                 elif index < number_of_nodes_in_unbounded_nodes - 1:
-                    # if true, this single node element
-                    # should have a succeeding node.
+                    # This above condition holds if
+                    # a node element has just the succeeding node.
                     there_is_a_succeeding_node = True
-                    # Update the "bounded_nodes" list with the estimated value
-                    # for the succeeding node.
+                    # Estimate a value for the succeeding node.
                     bounded_nodes = add_new_node(
                         there_is_a_succeeding_node, index, bounded_nodes,
                         unbounded_nodes, bbox_coordinates)
-                else:  # If true, then it should only have a preceding node.
+                else:
+                    # This holds the node has only a
+                    # preceding node.
                     there_is_a_succeeding_node = False
-                    # Update the "bounded_nodes" list with the estimated value
-                    # for the preceding node.
+                    # Estimate value for the preceding node.
                     bounded_nodes = add_new_node(
                         there_is_a_succeeding_node, index, bounded_nodes,
                         unbounded_nodes, bbox_coordinates)
 
             elif number_of_nodes_in_bounded_nodes > 1:
-                # True if bounded_nodes has more than one
-                # node element. Only the first and the last nodes
-                # in the list are needed.
-                # So, if applicable, estimate a preceding node for the
-                # first node and a succeeding node for the last node.
+                # This is the case when the " bounded" list has
+                # more than one node element.
+                # Here we will only consider only the
+                # first and the last node element of
+                # the list.
 
                 # Variable index gives the position of the first node element
-                # of the "bounded_nodes" list in the "unbounded_nodes" list.
+                # of the "bounded" in the "unbounded" list.
                 index = unbounded_nodes.index(bounded_nodes[0])
-                if index > 0:  # If true, this first node element
-                    # should have a preceding node in the "unbounded_nodes"
-                    # list.
+                if index > 0:
+                    # If the above condition holds true,
+                    # then the node has a preceding node.
+
                     there_is_a_succeeding_node = False
-                    # Update the "bounded_nodes" list with
-                    # the estimated value for the preceding node.
+                    # Estimate a value for the preceding node.
                     bounded_nodes = add_new_node(
                         there_is_a_succeeding_node, index, bounded_nodes,
                         unbounded_nodes, bbox_coordinates)
-
+                # The position of the last node element may
+                # have increased by one if a preceding node is added to
+                # the "bounded". So, get the current length of the "bounded".
+                number_of_nodes_in_bounded_nodes = len(bounded_nodes)
                 # Variable index gives the position of the last node element of
-                # the "bounded_nodes" list in the "unbounded_nodes" list.
+                # the "bounded" in the "unbounded" list.
                 index = unbounded_nodes.index(
                     bounded_nodes[number_of_nodes_in_bounded_nodes - 1])
                 if index < number_of_nodes_in_unbounded_nodes - \
-                        1:  # If true, this last node element
-                    # should have a succeeding node in the "unbounded_nodes"
-                    # list.
+                        1:
+                    # If true, there is a succeeding node.
                     there_is_a_succeeding_node = True
-                    # Update the "bounded_nodes" list with
-                    # the estimated value for the succeeding node.
+                    # Estimate a value for a succeeding node.
                     bounded_nodes = add_new_node(
                         there_is_a_succeeding_node, index, bounded_nodes,
                         unbounded_nodes, bbox_coordinates)
@@ -273,13 +267,9 @@ def get_new_nodes(bounded_nodes, unbounded_nodes, bbox_coordinates):
 def add_new_node(
         there_is_a_succeeding_node, index, bounded_nodes,
         unbounded_nodes, bbox_coordinates):
-    # Note: Immediate nodes could mean the preceding node, or the
-    # succeeding node  or both.
-    # Latitude of the node element under consideration, that
-    # has its immediate node(s) outside the bounding box.
+    # Latitude of the node element.
     lat1 = unbounded_nodes[index]["lat"]
-    # Longitude of the node element under consideration, that
-    # has its immediate node(s) outside the bounding box.
+    # Longitude of the node element.
     lon1 = unbounded_nodes[index]["lon"]
     a = (lat1, lon1)
     if there_is_a_succeeding_node:  # Do for a succeeding node
@@ -484,12 +474,12 @@ def compute_new_node(
 
 
 def get_new_node_coordinates(
-        side_intersection,
+        coordinates_indicator,
         lat1,
         lon1,
         node_coordinates,
         street_boundingbox_angle):
-    if side_intersection:  # if true, solve for longitude
+    if coordinates_indicator:  # if true, solve for longitude
         lat2 = node_coordinates
         # Compute longitude
         lon2 = ((math.tan(radians(street_boundingbox_angle)) *
