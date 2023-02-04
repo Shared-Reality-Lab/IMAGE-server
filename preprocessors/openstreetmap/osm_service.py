@@ -363,12 +363,13 @@ def compute_new_node(
         validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
         if not validated:  # If validation fails,
             right_side_intersection = True
-            # Set the top_side intersection to False.
-            top_side_intersection = not(right_side_intersection)
-            lon2 = lon_max
-            lat2 = get_new_node_coordinates(
-                top_side_intersection, lat1, lon1,
-                lon2, street_boundingbox_angle)
+            if right_side_intersection:
+                # Set the top_side intersection to False.
+                top_side_intersection = False
+                lon2 = lon_max
+                lat2 = get_new_node_coordinates(
+                    top_side_intersection, lat1, lon1,
+                    lon2, street_boundingbox_angle)
     elif (street_boundingbox_angle >= 90 and
           street_boundingbox_angle < 180):
         # If a street makes an angular intersection of
@@ -393,12 +394,13 @@ def compute_new_node(
         validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
         if not validated:  # If validation fails,
             right_side_intersection = True
-            # Set the bottom_side intersection to False.
-            bottom_side_intersection = not(right_side_intersection)
-            lon2 = lon_max
-            lat2 = get_new_node_coordinates(
-                bottom_side_intersection, lat1, lon1,
-                lon2, street_boundingbox_angle)
+            if right_side_intersection:
+                # Set the bottom_side intersection to False.
+                bottom_side_intersection = False
+                lon2 = lon_max
+                lat2 = get_new_node_coordinates(
+                    bottom_side_intersection, lat1, lon1,
+                    lon2, street_boundingbox_angle)
     elif (street_boundingbox_angle >= 180 and
           street_boundingbox_angle < 270):
         # If a street makes an angular intersection of
@@ -423,12 +425,13 @@ def compute_new_node(
         validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
         if not validated:  # If validation fails,
             left_side_intersection = True
-            # Set the bottom_side intersection to False.
-            bottom_side_intersection = not left_side_intersection
-            lon2 = lon_min
-            lat2 = get_new_node_coordinates(
-                bottom_side_intersection, lat1, lon1,
-                lon2, street_boundingbox_angle)
+            if left_side_intersection:
+                # Set the bottom_side intersection to False.
+                bottom_side_intersection = False
+                lon2 = lon_min
+                lat2 = get_new_node_coordinates(
+                    bottom_side_intersection, lat1, lon1,
+                    lon2, street_boundingbox_angle)
     elif (street_boundingbox_angle >= 270 and
           street_boundingbox_angle <= 360):
         # If a street makes an angular intersection of
@@ -455,12 +458,13 @@ def compute_new_node(
         if not validated:  # If  validation fails,
             # the intercept takes place at the left side.
             left_side_intersection = True
-            # Set the top_side intersection to False.
-            top_side_intersection = not left_side_intersection
-            lon2 = lon_min
-            lat2 = get_new_node_coordinates(
-                top_side_intersection, lat1, lon1,
-                lon2, street_boundingbox_angle)
+            if left_side_intersection:
+                # Set the top_side intersection to False.
+                top_side_intersection = False
+                lon2 = lon_min
+                lat2 = get_new_node_coordinates(
+                    top_side_intersection, lat1, lon1,
+                    lon2, street_boundingbox_angle)
     new_node = {
         "id": node_parameters["id"],
         "node_type": "displaced",
