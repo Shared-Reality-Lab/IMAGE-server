@@ -57,6 +57,7 @@ def visualize_result(img, pred, index=None):
     if index is not None:
         pred = pred.copy()
         pred[pred != index] = -1
+    logging.info("encoding detected segmets with unique colors")
     pred_color = colorEncode(pred, colors).astype(numpy.uint8)
     nameofobj = names[index + 1]
     return pred_color, nameofobj
@@ -72,8 +73,10 @@ def findContour(pred_color, width, height):
     ret, thresh = cv2.threshold(gray_image, 10, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(
         thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    logging.info("drawing all contours")
     cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
     # removes the remaining part of image and keeps the contours of segments
+    logging.info("deleting remainder of the image except the contours")
     image = image - dummy
     centres = []
     area = []
@@ -81,6 +84,7 @@ def findContour(pred_color, width, height):
     send_contour = []
     flag = False
     # calculate the centre and area of individual contours
+    logging.info("computing individual contour metrics")
     for i in range(len(contours)):
         moments = cv2.moments(contours[i])
         if moments['m00'] == 0:
@@ -106,12 +110,14 @@ def findContour(pred_color, width, height):
             contour_indi[j][1] = float(float(contour_indi[j][1]) / height)
         send_contour.append({"coordinates": contour_indi,
                             "centroid": centre_down, "area": area_down})
+    logging.info("computed all metrics!!")
     if not area:
         flag = True
     else:
         max_value = max(area)
     if flag is True:
         return ([0, 0], [0, 0], 0)
+    logging.info("generating overall centroid and area")
     centre1 = centres[area.index(max_value)][0] / width
     centre2 = centres[area.index(max_value)][1] / height
     centre = [centre1, centre2]
@@ -135,6 +141,7 @@ def run_segmentation(url,
     # convert an image from base64 format
     # Following 4 lines refered from
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
+    logging.info("converting base64 to numpy array")
     image_b64 = url.split(",")[1]
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
@@ -143,6 +150,7 @@ def run_segmentation(url,
     scale_size = np.float(1500.0 / np.float(max(height, width)))
     # scale down an image to avoid OOM error
     if scale_size <= 1.0:
+        logging.info("scaling down an image")
         height = np.int(height * scale_size)
         width = np.int(width * scale_size)
         pil_image = cv2.resize(pil_image, (width, height),
@@ -162,6 +170,7 @@ def run_segmentation(url,
     output_size = img_data.shape[1:]
     with torch.no_grad():
         # get segmentation results
+        logging.info("running segmentation model")
         scores = segmentation_module(singleton_batch,
                                      segSize=output_size)
     _, pred = torch.max(scores, dim=1)
