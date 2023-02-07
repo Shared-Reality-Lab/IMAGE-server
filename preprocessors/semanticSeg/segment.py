@@ -73,7 +73,7 @@ def findContour(pred_color, width, height):
     ret, thresh = cv2.threshold(gray_image, 10, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(
         thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    logging.info("drawing all contours")
+    logging.info("Total contours detected are: {}".format(len(contours)))
     cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
     # removes the remaining part of image and keeps the contours of segments
     logging.info("deleting remainder of the image except the contours")
@@ -105,9 +105,11 @@ def findContour(pred_color, width, height):
         centre_down = [centre_indi[0] / width, centre_indi[1] / height]
         area_down = area_indi / (width * height)
         contour_indi = contour_indi.tolist()
+        logging.info("Iterating through individual contour points with starting time: {}".format(str(time.time())))
         for j in range(len(contour_indi)):
             contour_indi[j][0] = float(float(contour_indi[j][0]) / width)
             contour_indi[j][1] = float(float(contour_indi[j][1]) / height)
+        logging.info("Iteration completed with time: {}".format(str(time.time())))
         send_contour.append({"coordinates": contour_indi,
                             "centroid": centre_down, "area": area_down})
     logging.info("computed all metrics!!")
@@ -149,12 +151,14 @@ def run_segmentation(url,
     height, width, channels = pil_image.shape
     scale_size = np.float(1500.0 / np.float(max(height, width)))
     # scale down an image to avoid OOM error
+    logging.info("original size of image: {}".format(pil_image.shape ))
     if scale_size <= 1.0:
         logging.info("scaling down an image")
         height = np.int(height * scale_size)
         width = np.int(width * scale_size)
         pil_image = cv2.resize(pil_image, (width, height),
                                interpolation=cv2.INTER_AREA)
+        logging.info("scaled down image size is: {}".format(pil_image.shape))
     img = pil_image
     height, width, channels = img.shape
     img_original = numpy.array(img)
@@ -170,18 +174,24 @@ def run_segmentation(url,
     output_size = img_data.shape[1:]
     with torch.no_grad():
         # get segmentation results
-        logging.info("running segmentation model")
+        logging.info("running segmentation model with start time: {}".format(str(time.time())))
         scores = segmentation_module(singleton_batch,
                                      segSize=output_size)
+        logging.info("run successful with end time: {}".format(str(time.time())))
     _, pred = torch.max(scores, dim=1)
     pred = pred.cpu()[0].numpy()
     color, name = visualize_result(img_original, pred, 0)
     predicted_classes = numpy.bincount(pred.flatten()).argsort()[::-1]
     logging.info("Segments detected, Runnning contour code")
     for c in predicted_classes[:5]:
+        logging.info("starting new loop")
+        logging.info("visualizing results with starting time of: {}".format(str(time.time())))
         color, name = visualize_result(img_original, pred, c)
+        logging.info("finished visualisation with ending time of: {}".format(str(time.time())))
         # find contours for every class
+        logging.info("Starting computations on contours with a time: {}".format(str(time.time())))
         send, center, area = findContour(color, width, height)
+        logging.info("finished contour computation with time: {}".format(str(time.time())))
         if area == 0:
             continue
         dictionary.append(
