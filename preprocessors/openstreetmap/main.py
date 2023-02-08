@@ -55,6 +55,11 @@ def get_map_data():
     if validated is not None:
         return validated
 
+    # Check if request is for an openstreetmap
+    if 'coordinates' not in content:
+        logging.info("Not map content. Skipping...")
+        return "", 204
+
     # Build OpenStreetMap request
     coords = get_coordinates(content)
     if coords is None:
