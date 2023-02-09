@@ -72,10 +72,8 @@ def visualize_result(img, pred, index=None):
 def findContour(pred_color, width, height):
     image = pred_color
     dummy = pred_color.copy()
-    gray_image = cv2.cvtColor(
-        image, cv2.COLOR_BGR2GRAY)
-    ret, thresh = cv2.threshold(
-        gray_image, 10, 255, cv2.THRESH_BINARY)
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    ret, thresh = cv2.threshold(gray_image, 10, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(
         thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     logging.info(
@@ -117,16 +115,13 @@ def findContour(pred_color, width, height):
                        width, centre_indi[1] / height]
         area_down = area_indi / (width * height)
         contour_indi = contour_indi.tolist()
-        logging.info("Iterating through individual "
-                     "contour points with starting time: {}".format(
-                         str(time.time())))
+        logging.info("Iterating through individual contours")
         for j in range(len(contour_indi)):
             contour_indi[j][0] = float(
                 float(contour_indi[j][0]) / width)
             contour_indi[j][1] = float(
                 float(contour_indi[j][1]) / height)
-        logging.info(
-            "Iteration completed with time: {}".format(str(time.time())))
+        logging.info("End contour iteration ")
         send_contour.append({"coordinates": contour_indi,
                             "centroid": centre_down, "area": area_down})
     logging.info("computed all metrics!!")
@@ -136,8 +131,7 @@ def findContour(pred_color, width, height):
         max_value = max(area)
     if flag is True:
         return ([0, 0], [0, 0], 0)
-    logging.info(
-        "generating overall centroid and area")
+    logging.info("generating overall centroid and area")
     centre1 = centres[area.index(
         max_value)][0] / width
     centre2 = centres[area.index(
@@ -176,7 +170,7 @@ def run_segmentation(url,
     scale_size = np.float(
         1500.0 / np.float(max(height, width)))
     # scale down an image to avoid OOM error
-    logging.info("original size of image: {}".format(
+    logging.info("graphic oiginal dimension {}".format(
         pil_image.shape))
     if scale_size <= 1.0:
         logging.info("scaling down an image")
@@ -185,7 +179,7 @@ def run_segmentation(url,
         pil_image = cv2.resize(pil_image, (width, height),
                                interpolation=cv2.INTER_AREA)
         logging.info(
-            "scaled down image size is: {}".format(pil_image.shape))
+            "graphic scaled dimension: {}".format(pil_image.shape))
     img = pil_image
     height, width, channels = img.shape
     img_original = numpy.array(img)
@@ -202,13 +196,11 @@ def run_segmentation(url,
     with torch.no_grad():
         # get segmentation results
         logging.info(
-            "running segmentation model"
-            " with start time: {}".format(str(time.time())))
+            "running segmentation model")
         scores = segmentation_module(singleton_batch,
                                      segSize=output_size)
         logging.info(
-            "run successful with"
-            " end time: {}".format(str(time.time())))
+            "run successful with")
     _, pred = torch.max(scores, dim=1)
     pred = pred.cpu()[0].numpy()
     color, name = visualize_result(
@@ -218,24 +210,15 @@ def run_segmentation(url,
     logging.info(
         "Segments detected, Runnning contour code")
     for c in predicted_classes[:5]:
-        logging.info("starting new loop")
-        logging.info(
-            "visualizing results with"
-            " starting time of: {}".format(str(time.time())))
+        logging.info("starting new loop for class: {}".format(str(c)))
         color, name = visualize_result(
             img_original, pred, c)
-        logging.info(
-            "finished visualisation with"
-            " ending time of: {}".format(str(time.time())))
+        logging.info("finished visualisation")
         # find contours for every class
-        logging.info(
-            "Starting computations on"
-            " contours with a time: {}".format(str(time.time())))
+        logging.info("Starting contour computation")
         send, center, area = findContour(
             color, width, height)
-        logging.info(
-            "finished contour computation"
-            " with time: {}".format(str(time.time())))
+        logging.info("finished contour computation")
         if area == 0:
             continue
         dictionary.append(
