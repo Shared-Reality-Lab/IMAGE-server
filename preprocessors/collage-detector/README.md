@@ -1,8 +1,42 @@
+# Per-image Classifier for Identifying Collages or Non-collages
+
+## Overview
+
 This preprocessor classifies whether the input image is a collage or a non-collage.
 
-The following libraries were used for creating this preprocessor.
+This preprocessor contains the implementation of a collage classification algorithm called SbRIF (Strong-biased Regional Identity Filtering for Collage Detection). The algorithm requires an image of any size as an input, and returns a boolean result. The diagrams below illustrate the 
+SbRIF pipeline and its performance on a small dataset ([link](https://drive.google.com/drive/folders/1EdXZ4889YC5iMV1Pa8UzF_KMybvACxjC?usp=sharing)).
+
+![](materials/SBRIF(whitebkgd).png)  
+*The block diagram of SbRIF.*
+
+![](materials/cm(whitebkgd).png)  
+*The testing results on 220 images (110 collages as positive samples, 110 non-collages as negative samples).*
+
+## Usage as a Standalone Module
+
+The below example illustrates how to use the function generally (not as an IMAGE Preprocessor). For a legal IMAGE Preprocessor, please refer to detect.py and you can see similar function calls there. 
+
+    # This is an example usage
+    from SBRIF import SbRIF
+    import cv2
+    
+    # Instantiating an object with the sugguesting hyper-parameter
+    model = SbRIF(t=0.75)
+    
+    # Reading the image and perform inference
+    img = cv2.imread('image.jpg', 0)
+    is_collage = model.inference(img)
+    
+    # Parsing the result
+    if is_collage:
+        print('The image is identified as a collage.')
+    else:
+        print('The image does not be identified as a collage.')
 
 ## Libraries Used
+
+The following libraries were used for creating this preprocessor.
 
 | Library | Link | Distribution License |
 | ------------- | ------------- | -------------|
