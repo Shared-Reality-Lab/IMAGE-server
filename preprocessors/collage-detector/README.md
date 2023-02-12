@@ -2,7 +2,7 @@
 
 ## Overview
 
-This preprocessor classifies whether the input image is a collage or a non-collage.
+This preprocessor classifies whether the input image is a collage or a non-collage. The Dockerfile builds a fully functioning IMAGE preprocessor.
 
 This preprocessor contains the implementation of a collage classification algorithm called SbRIF (Strong-biased Regional Identity Filtering for Collage Detection). The algorithm requires an image of any size as an input, and returns a boolean result. The diagrams below illustrate the 
 SbRIF pipeline and its performance on a small dataset ([link](https://drive.google.com/drive/folders/1EdXZ4889YC5iMV1Pa8UzF_KMybvACxjC?usp=sharing)).
