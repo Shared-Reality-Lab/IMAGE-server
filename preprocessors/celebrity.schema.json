@@ -1,0 +1,30 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/celebrity-detector.schema.json",
+    "type": "object",
+    "title": "Celebrity Detector",
+    "description": "Preprocessor to determine detect celebrities in an image. The associated information can be found in preprocessor named 'ca.mcgill.a11y.image.preprocessor.celebrityDetector'. ",
+    "properties":{
+        "celebrity":{
+            "type":"array",
+            "description": "Conatains a list of all celebrities",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "ID":{
+                        "description": "A number identifying this object in the set.",
+                        "type": "integer"
+                    },
+                    "celebrity_name":{
+                        "description": "Name of the detected celebrity",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "ID",
+                    "celebrity_name"
+                  ]
+            }
+        }
+    }
+}
