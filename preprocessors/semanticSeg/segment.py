@@ -195,12 +195,10 @@ def run_segmentation(url,
     output_size = img_data.shape[1:]
     with torch.no_grad():
         # get segmentation results
-        logging.info(
-            "running segmentation model")
+        logging.info("running segmentation model")
         scores = segmentation_module(singleton_batch,
                                      segSize=output_size)
-        logging.info(
-            "run successful with")
+        logging.info("run successful")
     _, pred = torch.max(scores, dim=1)
     pred = pred.cpu()[0].numpy()
     color, name = visualize_result(
