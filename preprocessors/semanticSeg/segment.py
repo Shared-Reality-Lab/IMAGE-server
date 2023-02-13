@@ -42,7 +42,8 @@ logging.basicConfig(level=logging.NOTSET)
 # assigns different colors to different segments. This helps in
 # determining contour or different segments. Refer Line 136 to see how
 # unique color helps in contour determination
-colors = scipy.io.loadmat('data/color150.mat')['colors']
+colors = scipy.io.loadmat(
+    'data/color150.mat')['colors']
 names = {}
 with open('data/object150_info.csv') as f:
     reader = csv.reader(f)
@@ -57,8 +58,10 @@ def visualize_result(img, pred, index=None):
     if index is not None:
         pred = pred.copy()
         pred[pred != index] = -1
-    logging.info("encoding detected segmets with unique colors")
-    pred_color = colorEncode(pred, colors).astype(numpy.uint8)
+    logging.info(
+        "encoding detected segmets with unique colors")
+    pred_color = colorEncode(
+        pred, colors).astype(numpy.uint8)
     nameofobj = names[index + 1]
     return pred_color, nameofobj
 
@@ -73,10 +76,13 @@ def findContour(pred_color, width, height):
     ret, thresh = cv2.threshold(gray_image, 10, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(
         thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    logging.info("drawing all contours")
-    cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
+    logging.info(
+        "Total contours detected are: {}".format(len(contours)))
+    cv2.drawContours(
+        image, contours, -1, (0, 255, 0), 2)
     # removes the remaining part of image and keeps the contours of segments
-    logging.info("deleting remainder of the image except the contours")
+    logging.info(
+        "deleting remainder of the image except the contours")
     image = image - dummy
     centres = []
     area = []
@@ -84,7 +90,8 @@ def findContour(pred_color, width, height):
     send_contour = []
     flag = False
     # calculate the centre and area of individual contours
-    logging.info("computing individual contour metrics")
+    logging.info(
+        "computing individual contour metrics")
     for i in range(len(contours)):
         moments = cv2.moments(contours[i])
         if moments['m00'] == 0:
@@ -92,7 +99,8 @@ def findContour(pred_color, width, height):
         # if contour area for a given class is very small then omit that
         if cv2.contourArea(contours[i]) < 2000:
             continue
-        totArea = totArea + cv2.contourArea(contours[i])
+        totArea = totArea + \
+            cv2.contourArea(contours[i])
         area.append(cv2.contourArea(contours[i]))
         centres.append(
             (int(moments['m10'] / moments['m00']),
@@ -100,14 +108,20 @@ def findContour(pred_color, width, height):
         area_indi = cv2.contourArea(contours[i])
         centre_indi = (int(moments['m10'] / moments['m00']),
                        int(moments['m01'] / moments['m00']))
-        contour_indi = [list(x) for x in contours[i]]
+        contour_indi = [list(x)
+                        for x in contours[i]]
         contour_indi = np.squeeze(contour_indi)
-        centre_down = [centre_indi[0] / width, centre_indi[1] / height]
+        centre_down = [centre_indi[0] /
+                       width, centre_indi[1] / height]
         area_down = area_indi / (width * height)
         contour_indi = contour_indi.tolist()
+        logging.info("Iterating through individual contours")
         for j in range(len(contour_indi)):
-            contour_indi[j][0] = float(float(contour_indi[j][0]) / width)
-            contour_indi[j][1] = float(float(contour_indi[j][1]) / height)
+            contour_indi[j][0] = float(
+                float(contour_indi[j][0]) / width)
+            contour_indi[j][1] = float(
+                float(contour_indi[j][1]) / height)
+        logging.info("End contour iteration ")
         send_contour.append({"coordinates": contour_indi,
                             "centroid": centre_down, "area": area_down})
     logging.info("computed all metrics!!")
@@ -118,11 +132,14 @@ def findContour(pred_color, width, height):
     if flag is True:
         return ([0, 0], [0, 0], 0)
     logging.info("generating overall centroid and area")
-    centre1 = centres[area.index(max_value)][0] / width
-    centre2 = centres[area.index(max_value)][1] / height
+    centre1 = centres[area.index(
+        max_value)][0] / width
+    centre2 = centres[area.index(
+        max_value)][1] / height
     centre = [centre1, centre2]
     totArea = totArea / (width * height)
-    result = np.concatenate(contours, dtype=np.float32)
+    result = np.concatenate(
+        contours, dtype=np.float32)
     # if contour is very small then delete it
     if totArea < 0.05:
         return ([0, 0], [0, 0], 0)
@@ -141,20 +158,28 @@ def run_segmentation(url,
     # convert an image from base64 format
     # Following 4 lines refered from
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
-    logging.info("converting base64 to numpy array")
+    logging.info(
+        "converting base64 to numpy array")
     image_b64 = url.split(",")[1]
     binary = base64.b64decode(image_b64)
-    image = np.asarray(bytearray(binary), dtype="uint8")
-    pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+    image = np.asarray(
+        bytearray(binary), dtype="uint8")
+    pil_image = cv2.imdecode(
+        image, cv2.IMREAD_COLOR)
     height, width, channels = pil_image.shape
-    scale_size = np.float(1500.0 / np.float(max(height, width)))
+    scale_size = np.float(
+        1500.0 / np.float(max(height, width)))
     # scale down an image to avoid OOM error
+    logging.info("graphic oiginal dimension {}".format(
+        pil_image.shape))
     if scale_size <= 1.0:
         logging.info("scaling down an image")
         height = np.int(height * scale_size)
         width = np.int(width * scale_size)
         pil_image = cv2.resize(pil_image, (width, height),
                                interpolation=cv2.INTER_AREA)
+        logging.info(
+            "graphic scaled dimension: {}".format(pil_image.shape))
     img = pil_image
     height, width, channels = img.shape
     img_original = numpy.array(img)
@@ -173,15 +198,25 @@ def run_segmentation(url,
         logging.info("running segmentation model")
         scores = segmentation_module(singleton_batch,
                                      segSize=output_size)
+        logging.info("run successful")
     _, pred = torch.max(scores, dim=1)
     pred = pred.cpu()[0].numpy()
-    color, name = visualize_result(img_original, pred, 0)
-    predicted_classes = numpy.bincount(pred.flatten()).argsort()[::-1]
-    logging.info("Segments detected, Runnning contour code")
+    color, name = visualize_result(
+        img_original, pred, 0)
+    predicted_classes = numpy.bincount(
+        pred.flatten()).argsort()[::-1]
+    logging.info(
+        "Segments detected, Runnning contour code")
     for c in predicted_classes[:5]:
-        color, name = visualize_result(img_original, pred, c)
+        logging.info("starting new loop for class: {}".format(str(c)))
+        color, name = visualize_result(
+            img_original, pred, c)
+        logging.info("finished visualisation")
         # find contours for every class
-        send, center, area = findContour(color, width, height)
+        logging.info("Starting contour computation")
+        send, center, area = findContour(
+            color, width, height)
+        logging.info("finished contour computation")
         if area == 0:
             continue
         dictionary.append(
@@ -226,7 +261,8 @@ def segment():
         weights='decoder_epoch_20.pth',
         use_softmax=True)
     crit = torch.nn.NLLLoss(ignore_index=-1)
-    segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)
+    segmentation_module = SegmentationModule(
+        net_encoder, net_decoder, crit)
     segmentation_module.eval()
     try:
         segmentation_module.cuda()
@@ -244,13 +280,15 @@ def segment():
     content = request.get_json()
     # check if the input json is a valid json
     try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
+        validator = jsonschema.Draft7Validator(
+            first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
     if "graphic" not in content:
-        logging.info("Not image content. Skipping...")
+        logging.info(
+            "Not image content. Skipping...")
         return "", 204
     request_uuid = content["request_uuid"]
     timestamp = time.time()
@@ -266,7 +304,8 @@ def segment():
         classifier_1_output = preprocess_output[classifier_1]
         classifier_1_label = classifier_1_output["category"]
         if classifier_1_label != "photograph":
-            logging.info("Not photograph content. Skipping...")
+            logging.info(
+                "Not photograph content. Skipping...")
 
             return "", 204
         if classifier_2 in preprocess_output:
@@ -299,7 +338,8 @@ def segment():
                                    pil_to_tensor)
     torch.cuda.empty_cache()
     try:
-        validator = jsonschema.Draft7Validator(data_schema)
+        validator = jsonschema.Draft7Validator(
+            data_schema)
         validator.validate(segment)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
@@ -312,7 +352,8 @@ def segment():
     }
     # validate the output using schemas
     try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+        validator = jsonschema.Draft7Validator(
+            schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
