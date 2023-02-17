@@ -16,6 +16,11 @@ services:
             context: .
             dockerfile: services/espnet-tts/Dockerfile
         image: "espnet-tts:latest"
+    espnet-tts-fr:
+        build:
+            context: .
+            dockerfile: services/espnet-tts-fr/Dockerfile
+        image: "espnet-tts-fr:latest"
     line-charts-preprocessor:
         build:
             context: .
@@ -31,6 +36,11 @@ services:
             context: .
             dockerfile: ./preprocessors/autour/Dockerfile
         image: "autour:latest"
+    ner:
+        build:
+            context: .
+            dockerfile: ./preprocessors/ner/Dockerfile
+        image: "ner:latest"
     ocr-clouds-preprocessor:
         build:
             context: .
@@ -147,11 +157,17 @@ services:
             context: .
             dockerfile: ./handlers/motd/Dockerfile
         image: "motd-handler:latest"
+    od-svg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-object-detection/Dockerfile
+        image: "od-svg-handler:latest"
     semseg-handler:
         build:
             context: .
             dockerfile: ./handlers/svg-semantic-seg/Dockerfile
         image: "semseg-svg:latest"
+
     high-charts-handler:
         build:
             context: .
@@ -183,3 +199,4 @@ services:
             context: ./schemas
             dockerfile: Dockerfile
         image: "schemas:latest"
+

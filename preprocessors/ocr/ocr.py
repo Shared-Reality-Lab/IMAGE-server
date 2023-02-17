@@ -24,10 +24,12 @@ import io
 import base64
 from flask import Flask, request, jsonify
 from ocr_utils import (
-    process_read_azure,
-    process_ocr_azure,
-    process_ocr_free,
-    process_vision_google
+    process_azure_read,
+    process_azure_ocr,
+    process_free_ocr,
+    process_google_vision,
+    find_obj_enclosing,
+    process_azure_read_v4_preview
 )
 
 app = Flask(__name__)
@@ -87,6 +89,11 @@ def get_ocr_text():
     if ocr_result is None:
         return jsonify("Could not retreive Azure results"), 500
 
+    od = 'ca.mcgill.a11y.image.preprocessor.objectDetection'
+    preprocessors = content['preprocessors']
+    if od in preprocessors and len(preprocessors[od]['objects']) > 0:
+        ocr_result = find_obj_enclosing(od, preprocessors[od], ocr_result)
+
     name = 'ca.mcgill.a11y.image.preprocessor.ocrClouds'
     request_uuid = content['request_uuid']
     timestamp = int(time.time())
@@ -127,17 +134,20 @@ def analyze_image(source, width, height, cld_srv_optn):
     binary = base64.b64decode(image_b64)
     stream = io.BytesIO(binary)
 
-    if cld_srv_optn == "READ_AZURE":
-        return process_read_azure(stream, width, height)
+    if cld_srv_optn == "AZURE_READ":
+        return process_azure_read(stream, width, height)
 
-    elif cld_srv_optn == "OCR_AZURE":
-        return process_ocr_azure(stream, width, height)
+    elif cld_srv_optn == "AZURE_READ_v4_PREVIEW":
+        return process_azure_read_v4_preview(stream, width, height)
 
-    elif cld_srv_optn == "OCR_FREE":
-        return process_ocr_free(source, width, height)
+    elif cld_srv_optn == "AZURE_OCR":
+        return process_azure_ocr(stream, width, height)
 
-    elif cld_srv_optn == "VISION_GOOGLE":
-        return process_vision_google(image_b64, width, height)
+    elif cld_srv_optn == "FREE_OCR":
+        return process_free_ocr(source, width, height)
+
+    elif cld_srv_optn == "GOOGLE_VISION":
+        return process_google_vision(image_b64, width, height)
 
 
 if __name__ == "__main__":

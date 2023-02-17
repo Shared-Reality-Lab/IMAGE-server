@@ -44,6 +44,7 @@ def readImage():
     top_id = []
     left_id = []
     small_id = []
+    centroid = []
     # loading schemas to check of the received and returned outputs are correct
     with open('./schemas/preprocessors/sorting.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
@@ -82,11 +83,12 @@ def readImage():
         object_type.append(objects[i]["type"])
         dimensions.append(objects[i]["dimensions"])
         area.append(objects[i]["area"])
+        centroid.append(objects[i]["centroid"])
     # create 3 lists for 3 sortings(refer readme for finding the type of
     # sorting)
     for i in range(len(objects)):
-        left2right.append([objects[i]["ID"], dimensions[i][2]])
-        top2bottom.append([objects[i]["ID"], dimensions[i][1]])
+        left2right.append([objects[i]["ID"], centroid[i][0]])
+        top2bottom.append([objects[i]["ID"], centroid[i][1]])
         small2big.append([objects[i]["ID"], area[i]])
     # sort the lists
     top2bottom = sorted(top2bottom, key=lambda x: x[1])
