@@ -11,7 +11,7 @@ COPY /handlers/svg-open-street-map/requirements.txt /usr/src/app/requirements.tx
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
-COPY /handlers/svg-semantic-seg/ /usr/src/app
+COPY /handlers/svg-open-street-map/ /usr/src/app
 
 EXPOSE 5000
 USER python
