@@ -28,11 +28,6 @@
                 "required": [ "svg", "label" ]
             },
             "minItems": 1
-        },
-        "description": {
-            "description": "Optional. A short, description of the overall information contained in the layers.",
-            "type": "string",
-            "maxLength": 500
         }
     },
     "required": [ "layers" ]
