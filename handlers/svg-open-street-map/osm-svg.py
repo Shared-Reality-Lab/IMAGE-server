@@ -79,7 +79,7 @@ def handle():
     colors = [
         "red",
         "blue",
-        "yellow",
+        "springgreen",
         "green",
         "pink",
         "orange",
@@ -89,7 +89,15 @@ def handle():
         "teal",
         "indigo",
         "lime",
-        "chocolate"]
+        "chocolate",
+        "magenta",
+        "crimson",
+        "deepskyblue",
+        "greenyellow",
+        "gold",
+        "aqua",
+        "navy"
+    ]
     streets = preprocessor["streets"]
     lat = preprocessor["bounds"]["latitude"]
     lon = preprocessor["bounds"]["longitude"]
@@ -175,4 +183,4 @@ def handle():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
