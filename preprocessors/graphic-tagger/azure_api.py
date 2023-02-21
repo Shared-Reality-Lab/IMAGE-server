@@ -42,7 +42,7 @@ def process_results(response, labels):
         if any(search(i, label) for i in labels):
             for i in labels:
                 if i in label:
-                    return(i)
+                    return i
         else:
             return labels[0]
 

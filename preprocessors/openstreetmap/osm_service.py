@@ -187,6 +187,8 @@ def get_new_nodes(bounded_nodes, unbounded_nodes, bbox_coordinates):
         if (number_of_nodes_in_bounded_nodes > 0 and
                 number_of_nodes_in_unbounded_nodes >
                 number_of_nodes_in_bounded_nodes):
+            # Set "there_is_a_succeding_node" flag variable to True.
+            there_is_a_succeeding_node = True
             if number_of_nodes_in_bounded_nodes == 1:
                 # The condition above is true when the
                 # "bounded" list has just a node element.
@@ -199,63 +201,39 @@ def get_new_nodes(bounded_nodes, unbounded_nodes, bbox_coordinates):
                     # The above condition is true for
                     # a node element that has both the succeeding
                     # and preceding nodes.
-                    there_is_a_succeeding_node = True
-                    if there_is_a_succeeding_node:
-                        # Estimate a value for the succeeding node.
-                        bounded_nodes = add_new_node(
-                            there_is_a_succeeding_node, index, bounded_nodes,
-                            unbounded_nodes, bbox_coordinates)
-                    there_is_a_preceding_node = True
-                    if there_is_a_preceding_node:
-                        # Equally estimate a value for the preceding node.
-                        there_is_a_succeeding_node = False
-                        bounded_nodes = add_new_node(
-                            there_is_a_succeeding_node, index, bounded_nodes,
-                            unbounded_nodes, bbox_coordinates)
+                    # So, estimate a value for the succeeding node.
+                    bounded_nodes = add_new_node(
+                        there_is_a_succeeding_node, index, bounded_nodes,
+                        unbounded_nodes, bbox_coordinates)
+                    # Set "there_is_a_succeeding_node" flag to False
+                    # to estimate a value for the preceding node.
+                    there_is_a_succeeding_node = False
+                    bounded_nodes = add_new_node(
+                        there_is_a_succeeding_node, index, bounded_nodes,
+                        unbounded_nodes, bbox_coordinates)
                 elif index < number_of_nodes_in_unbounded_nodes - 1:
                     # This above condition holds if
                     # a node element has just the succeeding node.
-                    there_is_a_succeeding_node = True
-                    if there_is_a_succeeding_node:
-                        # Estimate a value for the succeeding node.
-                        bounded_nodes = add_new_node(
-                            there_is_a_succeeding_node, index, bounded_nodes,
-                            unbounded_nodes, bbox_coordinates)
+                    # Estimate a value for the succeeding node.
+                    bounded_nodes = add_new_node(
+                        there_is_a_succeeding_node, index, bounded_nodes,
+                        unbounded_nodes, bbox_coordinates)
                 else:
                     # This holds if the node has only a
-                    # preceding node.
-                    there_is_a_preceding_node = True
-                    if there_is_a_preceding_node:
-                        there_is_a_succeeding_node = False
-                        # Estimate value for the preceding node.
-                        bounded_nodes = add_new_node(
-                            there_is_a_succeeding_node, index, bounded_nodes,
-                            unbounded_nodes, bbox_coordinates)
+                    # preceding node. So, set "there_is_a_succeeding_node"
+                    # flag variable to False to get the preceding node.
+                    there_is_a_succeeding_node = False
+                    # So, estimate value for the preceding node.
+                    bounded_nodes = add_new_node(
+                        there_is_a_succeeding_node, index, bounded_nodes,
+                        unbounded_nodes, bbox_coordinates)
 
             elif number_of_nodes_in_bounded_nodes > 1:
                 # This is the case when the " bounded" list has
                 # more than one node element.
                 # Here we will only consider only the
-                # first and the last node element of
+                # last and the first node element of
                 # the list.
-
-                # Variable index gives the position of the first node element
-                # of the "bounded" in the "unbounded" list.
-                index = unbounded_nodes.index(bounded_nodes[0])
-                if index > 0:
-                    # If the above condition holds true,
-                    # then the node has a preceding node.
-                    there_is_a_preceding_node = True
-                    if there_is_a_preceding_node:
-                        there_is_a_succeeding_node = False
-                        # Estimate a value for the preceding node.
-                        bounded_nodes = add_new_node(
-                            there_is_a_succeeding_node, index, bounded_nodes,
-                            unbounded_nodes, bbox_coordinates)
-                # The position of the last node element may
-                # have increased by one if a preceding node is added to
-                # the "bounded". So, get the current length of the "bounded".
-                number_of_nodes_in_bounded_nodes = len(bounded_nodes)
                 # Variable index gives the position of the last node element of
                 # the "bounded" in the "unbounded" list.
                 index = unbounded_nodes.index(
@@ -263,12 +241,21 @@ def get_new_nodes(bounded_nodes, unbounded_nodes, bbox_coordinates):
                 if index < number_of_nodes_in_unbounded_nodes - \
                         1:
                     # If true, there is a succeeding node.
-                    there_is_a_succeeding_node = True
-                    if there_is_a_succeeding_node:
-                        # Estimate a value for a succeeding node.
-                        bounded_nodes = add_new_node(
-                            there_is_a_succeeding_node, index, bounded_nodes,
-                            unbounded_nodes, bbox_coordinates)
+                    # Estimate a value for a succeeding node.
+                    bounded_nodes = add_new_node(
+                        there_is_a_succeeding_node, index, bounded_nodes,
+                        unbounded_nodes, bbox_coordinates)
+                # Variable index gives the position of the first node element
+                # of the "bounded" in the "unbounded" list.
+                index = unbounded_nodes.index(bounded_nodes[0])
+                if index > 0:
+                    # If the above condition holds true,
+                    # then the node has a preceding node. So, estimate a value
+                    # for the preceding node.
+                    there_is_a_succeeding_node = False
+                    bounded_nodes = add_new_node(
+                        there_is_a_succeeding_node, index, bounded_nodes,
+                        unbounded_nodes, bbox_coordinates)
     return bounded_nodes
 
 
@@ -344,7 +331,8 @@ def compute_new_node(
     lat2 = node_parameters["lat2"]
     # Longitude of either the preceding or the succeeding node.
     lon2 = node_parameters["lon2"]
-
+    top_side_intersection = True
+    bottom_side_intersection = True
     # The street_boundingbox_angle indicates the side of the bounding
     # box that intercepts the street.
     if (street_boundingbox_angle >= 0 and
@@ -357,7 +345,6 @@ def compute_new_node(
         # gives the true result.
         # We first assume the street passes via the top side and validate.
         # If validation fails, then it is the right side.
-        top_side_intersection = True
         lat2 = lat_max
         # Get longitude for the new node
         lon2 = get_new_node_coordinates(
@@ -370,14 +357,12 @@ def compute_new_node(
         # then intersection will be at the right side.
         validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
         if not validated:  # If validation fails,
-            right_side_intersection = True
-            if right_side_intersection:
-                # Set the top_side intersection to False.
-                top_side_intersection = False
-                lon2 = lon_max
-                lat2 = get_new_node_coordinates(
-                    top_side_intersection, lat1, lon1,
-                    lon2, street_boundingbox_angle)
+            # Set the top_side intersection to False.
+            top_side_intersection = False
+            lon2 = lon_max
+            lat2 = get_new_node_coordinates(
+                top_side_intersection, lat1, lon1,
+                lon2, street_boundingbox_angle)
     elif (street_boundingbox_angle >= 90 and
           street_boundingbox_angle < 180):
         # If a street makes an angular intersection of
@@ -388,7 +373,6 @@ def compute_new_node(
         # gives the true result.
         # We first assume the street passes via the bottom side and validate.
         # If validation fails, then it is the right side.
-        bottom_side_intersection = True
         lat2 = lat_min
         # Get longitude for the new node
         lon2 = get_new_node_coordinates(
@@ -401,14 +385,12 @@ def compute_new_node(
         # then intersection will be at the right side.
         validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
         if not validated:  # If validation fails,
-            right_side_intersection = True
-            if right_side_intersection:
-                # Set the bottom_side intersection to False.
-                bottom_side_intersection = False
-                lon2 = lon_max
-                lat2 = get_new_node_coordinates(
-                    bottom_side_intersection, lat1, lon1,
-                    lon2, street_boundingbox_angle)
+            # Set the bottom_side intersection to False.
+            bottom_side_intersection = False
+            lon2 = lon_max
+            lat2 = get_new_node_coordinates(
+                bottom_side_intersection, lat1, lon1,
+                lon2, street_boundingbox_angle)
     elif (street_boundingbox_angle >= 180 and
           street_boundingbox_angle < 270):
         # If a street makes an angular intersection of
@@ -419,7 +401,6 @@ def compute_new_node(
         # two gives the true result.
         # We first assume the street passes via the bottom side and validate.
         # If validation fails, then it is the left side.
-        bottom_side_intersection = True
         lat2 = lat_min
         # Get longitude for the new node
         lon2 = get_new_node_coordinates(
@@ -432,14 +413,12 @@ def compute_new_node(
         # then intersection will be at the left side.
         validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
         if not validated:  # If validation fails,
-            left_side_intersection = True
-            if left_side_intersection:
-                # Set the bottom_side intersection to False.
-                bottom_side_intersection = False
-                lon2 = lon_min
-                lat2 = get_new_node_coordinates(
-                    bottom_side_intersection, lat1, lon1,
-                    lon2, street_boundingbox_angle)
+            # Set the bottom_side intersection to False.
+            bottom_side_intersection = False
+            lon2 = lon_min
+            lat2 = get_new_node_coordinates(
+                bottom_side_intersection, lat1, lon1,
+                lon2, street_boundingbox_angle)
     elif (street_boundingbox_angle >= 270 and
           street_boundingbox_angle <= 360):
         # If a street makes an angular intersection of
@@ -451,7 +430,6 @@ def compute_new_node(
         # two gives the true result.
         # We first assume the street passes via the
         # top side and validate. If validation fails, then it is the left side.
-        top_side_intersection = True
         lat2 = lat_max
         # Get longitude for the new node
         lon2 = get_new_node_coordinates(
@@ -465,14 +443,12 @@ def compute_new_node(
         validated = validate_new_node_coordinates(lat2, lon2, bbox_coordinates)
         if not validated:  # If  validation fails,
             # the intercept takes place at the left side.
-            left_side_intersection = True
-            if left_side_intersection:
-                # Set the top_side intersection to False.
-                top_side_intersection = False
-                lon2 = lon_min
-                lat2 = get_new_node_coordinates(
-                    top_side_intersection, lat1, lon1,
-                    lon2, street_boundingbox_angle)
+            # Set the top_side intersection to False.
+            top_side_intersection = False
+            lon2 = lon_min
+            lat2 = get_new_node_coordinates(
+                top_side_intersection, lat1, lon1,
+                lon2, street_boundingbox_angle)
     new_node = {
         "id": node_parameters["id"],
         "node_type": "displaced",

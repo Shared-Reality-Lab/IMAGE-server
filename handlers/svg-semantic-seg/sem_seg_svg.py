@@ -60,8 +60,10 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
-    if "ca.mcgill.a11y.image.capability.DebugMode" \
-            not in contents['capabilities']:
+    if ("ca.mcgill.a11y.image.capability.DebugMode"
+        not in contents['capabilities']
+            or "ca.mcgill.a11y.image.renderer.SVGLayers"
+            not in contents["renderers"]):
         logging.debug("Debug mode inactive")
         print("debug inactive")
         response = {
@@ -159,8 +161,7 @@ def handle():
             svg.append(p)
             svg_layers.append(
                 {"label": segments[j]["name"], "svg": svg.asDataUri()})
-            if (j == 1):
-                break
+            svg = draw.Drawing(dimensions[0], dimensions[1])
     data = {
         "layers": svg_layers
     }
