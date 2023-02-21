@@ -46,7 +46,7 @@ def handle():
     resolver = jsonschema.RefResolver.from_schema(
         request_schema, store=store
     )
-    # Get and validate request contents
+    # Get and validate the request contents
     contents = request.get_json()
     try:
         validator = jsonschema.Draft7Validator(
