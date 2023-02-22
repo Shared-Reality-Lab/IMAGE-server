@@ -35,7 +35,7 @@ def handle():
         request_schema = json.load(f)
     with open("./schemas/handler-response.schema.json") as f:
         response_schema = json.load(f)
-    with open("./schemas/renderers/svglayers.osm.schema.json") as f:
+    with open("./schemas/renderers/svglayers.schema.json") as f:
         renderer_schema = json.load(f)
     store = {
         definitions_schema["$id"]: definitions_schema,
