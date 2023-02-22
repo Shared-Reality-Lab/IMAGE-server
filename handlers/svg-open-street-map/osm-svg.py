@@ -105,15 +105,22 @@ def handle():
     lat_min = lat["min"]
     lon_max = lon["max"]
     lat_max = lat["max"]
-
+    # Scale the lon/lat units to svg pixels equivalent.
+    scaled_longitude = dimensions[0] / (lon_max - lon_min)
+    scaled_latitude = dimensions[1] / (lat_max - lat_min)
     bounds = [[lon_min, lat_min],
               [lon_min, lat_max],
               [lon_max, lat_max],
               [lon_max, lat_min],
               [lon_min, lat_min]]
-    # Scale the lon/lat units to svg pixels equivalent.
-    scaled_longitude = dimensions[0] / (lon_max - lon_min)
-    scaled_latitude = dimensions[1] / (lat_max - lat_min)
+    # Draw bounding box for the streets
+    for index in range(len(bounds) - 1):
+        p = draw.Path(stroke="orange", stroke_width=6, fill='none')
+        p.M(scaled_longitude * (bounds[index][0] - lon_min),
+            scaled_latitude * (bounds[index][1] - lat_min))
+        p.L(scaled_longitude * (bounds[index + 1][0] - lon_min),
+            scaled_latitude * (bounds[index + 1][1] - lat_min))
+        svg.append(p)
     # Latitude is north-south, Longitude is east-west
     for street in range(len(streets)):
         p = draw.Path(stroke=colors[street], stroke_width=1.5, fill='none')
@@ -133,20 +140,10 @@ def handle():
                                   1][1] -
                  lat_min))
             svg.append(p)
-    for index in range(len(bounds) - 1):
-        p = draw.Path(stroke="orange", stroke_width=6, fill='none')
-        p.M(scaled_longitude * (bounds[index][0] - lon_min),
-            scaled_latitude * (bounds[index][1] - lat_min))
-        p.L(scaled_longitude * (bounds[index + 1][0] - lon_min),
-            scaled_latitude * (bounds[index + 1][1] - lat_min))
-        svg.append(p)
-        if "street_name" in streets[street]:
-            svg_layers.append(
-                {"label": streets[street]["street_name"],
-                 "svg": svg.asDataUri()})
-        else:
-            svg_layers.append(
-                {"label": "No name", "svg": svg.asDataUri()})
+
+        svg_layers.append(
+            {"label": streets[street]["street_type"],
+                "svg": svg.asDataUri()})
     data = {
         "layers": svg_layers
     }
