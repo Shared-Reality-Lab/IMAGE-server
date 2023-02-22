@@ -58,7 +58,6 @@ def handle():
         return jsonify("Invalid request received!"), 400
 
     preprocessor = contents['preprocessors']
-
     # Check preprocessor data
     if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
             not in preprocessor:
@@ -98,9 +97,10 @@ def handle():
         "aqua",
         "navy"
     ]
-    streets = preprocessor["streets"]
-    lat = preprocessor["bounds"]["latitude"]
-    lon = preprocessor["bounds"]["longitude"]
+    data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
+    streets = data["streets"]
+    lat = data["bounds"]["latitude"]
+    lon = data["bounds"]["longitude"]
     lon_min = lon["min"]
     lat_min = lat["min"]
     lon_max = lon["max"]
