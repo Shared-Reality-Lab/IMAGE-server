@@ -31,6 +31,11 @@ services:
             context: .
             dockerfile: ./preprocessors/hello-preprocessor/Dockerfile
         image: "hello-preprocessor:latest"
+    collage-detector-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/collage-detector/Dockerfile
+        image: "collage-detector-preprocessor:latest"
     autour-preprocessor:
         build:
             context: .
