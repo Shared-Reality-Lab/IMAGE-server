@@ -5,7 +5,12 @@
     "title": "Collage Detector",
     "description": "Binary Classifier for collages. Accessed as 'ca.mcgill.a11y.image.preprocessor.collageDetector'.",
     "properties": {
-        "category": { "enum": ["collage", "notCollage"] }
+        "collage": {
+            "type": "boolean",
+            "description": "If the input graphic was classified as a collage or not."
+        }
     },
-    "required": [ "category"]
+    "required": [
+        "collage"
+    ]
 }
