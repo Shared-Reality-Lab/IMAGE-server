@@ -12,14 +12,20 @@ class SbRIF:
         self.rescale_size = rescale_size
 
     def edge_filter(self, img):
-        img = cv2.resize(img, (self.rescale_size, self.rescale_size), interpolation=cv2.INTER_AREA)
+        img = cv2.resize(img,
+                         (self.rescale_size, self.rescale_size),
+                         interpolation=cv2.INTER_AREA)
         edges = cv2.Canny(img, 100, 200)
         gray_edges = cv2.bitwise_not(edges)
 
         return gray_edges
 
     def morphological_operator(self, gray_edges):
-        bw = cv2.adaptiveThreshold(gray_edges, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 5, -2)
+        bw = cv2.adaptiveThreshold(
+            gray_edges,
+            255,
+            cv2.ADAPTIVE_THRESH_MEAN_C,
+            cv2.THRESH_BINARY, 5, -2)
         h = np.copy(bw)
         v = np.copy(bw)
 
@@ -41,8 +47,13 @@ class SbRIF:
     def regional_identity_filter(self, vh, crosshair, suppression):
 
         def padding(arr2d, size):
-            padded_img = np.zeros((arr2d.shape[0] + (2 * size), arr2d.shape[1] + (2 * size)))
-            padded_img[size: size + arr2d.shape[0], size: size + arr2d.shape[1]] = arr2d
+            padded_img = np.zeros(
+                (arr2d.shape[0] + (2 * size), arr2d.shape[1] + (2 * size))
+                )
+            padded_img[
+                size: size + arr2d.shape[0],
+                size: size + arr2d.shape[1]
+                ] = arr2d
 
             return padded_img
 
@@ -53,8 +64,12 @@ class SbRIF:
             intersection_list = []
             for r in range(0, arr2d.shape[0] - window_size[0] + 1):
                 for c in range(0, arr2d.shape[1] - window_size[1] + 1):
-                    current_window = arr2d[r: r + window_size[0], c: c + window_size[1]]
-                    center_idx = (int(window_size[0] / 2), int(window_size[1] / 2))
+                    current_window = arr2d[
+                        r: r + window_size[0],
+                        c: c + window_size[1]
+                        ]
+                    center_idx = (int(window_size[0] / 2),
+                                  int(window_size[1] / 2))
 
                     # check v and h intersections
                     # check v up and down
@@ -86,7 +101,8 @@ class SbRIF:
 
             return intersection_list
 
-        intersec_list = sliding_window(padded, (2 * crosshair + 1, 2 * crosshair + 1))
+        intersec_list = sliding_window(padded, (2 * crosshair + 1,
+                                                2 * crosshair + 1))
 
         def suppression_l2(list_mask, s):
 
@@ -97,8 +113,10 @@ class SbRIF:
             for i in range(0, len(list_mask) - 1):
                 if list_mask[i][2] == 1:
                     for ii in range(i + 1, len(list_mask)):
-                        if list_mask[ii][2] == 1 and dist(list_mask[i], list_mask[ii]) <= s:
-                            list_mask[ii] = (list_mask[ii][0], list_mask[ii][1], 0)
+                        if list_mask[ii][2] == 1 and dist(list_mask[i],
+                                                          list_mask[ii]) <= s:
+                            list_mask[ii] = (list_mask[ii][0],
+                                             list_mask[ii][1], 0)
 
             return list_mask
 
@@ -113,7 +131,8 @@ class SbRIF:
     def inference(self, img):
         gray_edges = self.edge_filter(img)
         vh = self.morphological_operator(gray_edges)
-        list = self.regional_identity_filter(vh, crosshair=self.c, suppression=self.s)
+        list = self.regional_identity_filter(vh, crosshair=self.c,
+                                             suppression=self.s)
         cnt = 0
         for x in list:
             if x[2] == 1:
