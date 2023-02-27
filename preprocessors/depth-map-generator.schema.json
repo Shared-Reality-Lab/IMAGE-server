@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/depth-map-generator.schema.json",
+    "type": "object",
+    "title": "Depth Map Data",
+    "description": "Generates depth graphic from a 2D scene. This contains a bitmap for a grayscale graphic which represents depth with the same dims as the original image and a scaling factor to convert depth to distance",
+    "properties": {
+        "depth-map": {
+            "description": "2D representation of Depth. Single channel float32 bitmap with the same dimensions as the original image. Low values are closer to the camera while larger values are further away.",
+            "type": "string",
+            "pattern": "^data:image/[^;]+;base64,[a-zA-Z0-9+/=]+$"
+        },
+        "scaling": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Max distance to meter conversion, 0 for no scaling. Without scaling, all distances are relative, once a scalling value is set the maximum distance will take on its value and all other distances will be modified to scale from 'scaling value' to 0"
+        }
+    },
+    "required": [ "depth-map", "scaling" ]
+}
