@@ -3,7 +3,7 @@
     "$id": "https://image.a11y.mcgill.ca/preprocessors/depth-map-generator.schema.json",
     "type": "object",
     "title": "Depth Map Data",
-    "description": "Generates depth graphic from a 2D scene. This contains a bitmap for a grayscale graphic which represents depth with the same dims as the original image and a scaling factor to convert depth to distance",
+    "description": "Generates depth graphic from a 2D scene. This contains a bitmap for a grayscale graphic which represents depth with the same dimensions as the original image and a scaling factor to convert depth to real-world distance",
     "properties": {
         "depth-map": {
             "description": "2D representation of Depth. Single channel float32 bitmap with the same dimensions as the original image. Low values are closer to the camera while larger values are further away.",
