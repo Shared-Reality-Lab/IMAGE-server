@@ -21,7 +21,7 @@ from jsonschema.exceptions import ValidationError
 import logging
 import time
 import drawSvg as draw
-
+from colour import Color
 app = Flask(__name__)
 
 
@@ -75,28 +75,6 @@ def handle():
         dimensions = 500, 500
     svg = draw.Drawing(dimensions[0], dimensions[1])
     svg_layers = []
-    colors = [
-        "red",
-        "blue",
-        "springgreen",
-        "green",
-        "pink",
-        "orange",
-        "purple",
-        "cyan",
-        "coral",
-        "teal",
-        "indigo",
-        "lime",
-        "chocolate",
-        "magenta",
-        "crimson",
-        "deepskyblue",
-        "greenyellow",
-        "gold",
-        "aqua",
-        "navy"
-    ]
     data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
     streets = data["streets"]
     lat = data["bounds"]["latitude"]
@@ -123,7 +101,12 @@ def handle():
         svg.append(p)
     # Latitude is north-south, Longitude is east-west
     for street in range(len(streets)):
-        p = draw.Path(stroke=colors[street], stroke_width=1.5, fill='none')
+        foo = object()
+        p = draw.Path(
+            stroke=Color(
+                pick_for=foo),
+            stroke_width=1.5,
+            fill='none')
         node_coordinates = [[node["lon"], node["lat"]]
                             for node in streets[street]["nodes"]]
         for index in range(len(node_coordinates) - 1):
