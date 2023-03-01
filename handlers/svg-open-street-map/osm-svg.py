@@ -55,7 +55,7 @@ def handle():
         validator.validate(contents)
     except ValidationError as e:
         logging.error(e)
-        return jsonify("Invalid request received!"), 400
+        return jsonify("None"), 204
 
     preprocessor = contents['preprocessors']
     # Check preprocessor data
