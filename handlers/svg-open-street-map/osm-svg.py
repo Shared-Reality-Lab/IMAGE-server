@@ -63,16 +63,7 @@ def handle():
             not in preprocessor:
         logging.info("Not for OSM preprocessor. Skipping ...")
         return "", 204
-
-    if "dimensions" in contents:
-        # If an existing graphic exists, often it is
-        # best to use that for convenience.
-        # see the following for SVG coordinate info:
-        # developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions
-        dimensions = contents["dimensions"]
-    else:
-        # Use default dimensions
-        dimensions = 500, 500
+    dimensions = 500, 500
     svg = draw.Drawing(dimensions[0], dimensions[1])
     svg_layers = []
     data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
