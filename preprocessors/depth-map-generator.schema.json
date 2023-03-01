@@ -13,7 +13,7 @@
         "scaling": {
             "type": "number",
             "minimum": 0,
-            "description": "Max distance to meter conversion, 0 for no scaling. Without scaling, the depth map is unchanged and will contain values from 0 to 1. With scalling, the depth can be converted to distance. Ex: Scaling value is set to 10, meaning the maximum distance in the depth map represents 10 meters, this can then be used to convert the depth to distance from 0 to 10 meters rather than a depth map with values from 0 to 1."
+            "description": "Max distance to meter conversion, 0 for no scaling. Without scaling, the depth map is unchanged and will contain values from 0 to 1. With scaling, the depth can be converted to distance. Ex: Scaling value is set to 10, meaning the maximum distance in the depth map represents 10 meters, this can then be used to convert the depth to distance from 0 to 10 meters rather than a depth map with values from 0 to 1."
         }
     },
     "required": [ "depth-map", "scaling" ]
