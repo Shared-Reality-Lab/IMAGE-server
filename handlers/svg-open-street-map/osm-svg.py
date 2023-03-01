@@ -57,8 +57,30 @@ def handle():
         logging.error(e)
         return jsonify("None"), 204
 
-    preprocessor = contents['preprocessors']
     # Check preprocessor data
+    preprocessor = contents['preprocessors']
+
+    if ("ca.mcgill.a11y.image.capability.DebugMode"
+        not in contents['capabilities']
+            or "ca.mcgill.a11y.image.renderer.SVGLayers"
+            not in contents["renderers"]):
+        logging.debug("Debug mode inactive")
+        print("debug inactive")
+        response = {
+            "request_uuid": contents["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": []
+        }
+        try:
+            validator = jsonschema.Draft7Validator(
+                response_schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+            logging.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
+        return response
+
     if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
             not in preprocessor:
         logging.info("Not for OSM preprocessor. Skipping ...")
@@ -124,9 +146,9 @@ def handle():
         }
         rendering = {
             "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
-            "description": "OpenStreetMap Visualisation",
-            "data": data
-        }
+            "description": "This is SVG data to visualize response \
+                             from the OpenStreetMap preprocessor.",
+            "data": data}
         try:
             validator = jsonschema.Draft7Validator(
                 renderer_schema, resolver=resolver
