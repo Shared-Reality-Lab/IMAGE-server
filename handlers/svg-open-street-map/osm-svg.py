@@ -113,7 +113,7 @@ def handle():
             p.L(scaled_longitude * (bounds[index + 1][0] - lon_min),
                 scaled_latitude * (bounds[index + 1][1] - lat_min))
             svg.append(p)
-        # Latitude is north-south, Longitude is east-west
+        # Draw the streets with svg.
         for street in range(len(streets)):
             foo = object()
             p = draw.Path(
