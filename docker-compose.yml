@@ -200,6 +200,7 @@ services:
         image: ghcr.io/shared-reality-lab/image-handler-svg-open-street-map:unstable
         labels:
             ca.mcgill.a11y.image.handler: enable
+            ca.mcgill.a11y.image.port: 5000
 volumes:
     sc-store:
     user-logs:
