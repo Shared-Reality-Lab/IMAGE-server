@@ -1,0 +1,14 @@
+matplotlib==3.7.0
+opencv-python==4.7.0
+plyfile==0.7.4
+pyyaml==6.0
+dill==0.3.6
+tensorboardX==2.6
+Flask==2.2.3
+flask_api==2.0.0
+numpy==1.24.0
+pillow==9.4.0
+jsonschema==4.17.3
+gunicorn==20.1.0
+torch==1.13.1
+torchvision==0.14.1
