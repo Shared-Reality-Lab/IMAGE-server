@@ -62,7 +62,7 @@ def scale_torch(img):
 def depthgenerator():
     logging.debug("Received request")
     # load the schema
-    with open('./schemas/preprocessors/DepthMapGen.schema.json') \
+    with open('./schemas/preprocessors/depth-map-generator.schema.json') \
             as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') \
@@ -97,7 +97,7 @@ def depthgenerator():
         return "", 204  # No content
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    name = "ca.mcgill.a11y.image.preprocessor.DepthMapGen"
+    name = "ca.mcgill.a11y.image.preprocessor.depth-map-gen"
 
     # convert the uri to processable image
     # Following 4 lines of code
