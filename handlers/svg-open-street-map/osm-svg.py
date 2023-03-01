@@ -76,74 +76,78 @@ def handle():
     svg = draw.Drawing(dimensions[0], dimensions[1])
     svg_layers = []
     data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
-    streets = data["streets"]
-    lat = data["bounds"]["latitude"]
-    lon = data["bounds"]["longitude"]
-    lon_min = lon["min"]
-    lat_min = lat["min"]
-    lon_max = lon["max"]
-    lat_max = lat["max"]
-    # Scale the lon/lat units to svg pixels equivalent.
-    scaled_longitude = dimensions[0] / (lon_max - lon_min)
-    scaled_latitude = dimensions[1] / (lat_max - lat_min)
-    bounds = [[lon_min, lat_min],
-              [lon_min, lat_max],
-              [lon_max, lat_max],
-              [lon_max, lat_min],
-              [lon_min, lat_min]]
-    # Draw bounding box for the streets
-    for index in range(len(bounds) - 1):
-        p = draw.Path(stroke="orange", stroke_width=6, fill='none')
-        p.M(scaled_longitude * (bounds[index][0] - lon_min),
-            scaled_latitude * (bounds[index][1] - lat_min))
-        p.L(scaled_longitude * (bounds[index + 1][0] - lon_min),
-            scaled_latitude * (bounds[index + 1][1] - lat_min))
-        svg.append(p)
-    # Latitude is north-south, Longitude is east-west
-    for street in range(len(streets)):
-        foo = object()
-        p = draw.Path(
-            stroke=Color(
-                pick_for=foo),
-            stroke_width=1.5,
-            fill='none')
-        node_coordinates = [[node["lon"], node["lat"]]
-                            for node in streets[street]["nodes"]]
-        for index in range(len(node_coordinates) - 1):
-            p.M(scaled_longitude *
-                (node_coordinates[index][0] -
-                 lon_min), scaled_latitude *
-                (node_coordinates[index][1] -
-                 lat_min))
-            p.L(scaled_longitude *
-                (node_coordinates[index +
-                                  1][0] -
-                 lon_min), scaled_latitude *
-                (node_coordinates[index +
-                                  1][1] -
-                 lat_min))
+    if "streets" in data:
+        streets = data["streets"]
+        lat = data["bounds"]["latitude"]
+        lon = data["bounds"]["longitude"]
+        lon_min = lon["min"]
+        lat_min = lat["min"]
+        lon_max = lon["max"]
+        lat_max = lat["max"]
+        # Scale the lon/lat units to svg pixels equivalent.
+        scaled_longitude = dimensions[0] / (lon_max - lon_min)
+        scaled_latitude = dimensions[1] / (lat_max - lat_min)
+        bounds = [[lon_min, lat_min],
+                  [lon_min, lat_max],
+                  [lon_max, lat_max],
+                  [lon_max, lat_min],
+                  [lon_min, lat_min]]
+        # Draw bounding box for the streets
+        for index in range(len(bounds) - 1):
+            p = draw.Path(stroke="orange", stroke_width=6, fill='none')
+            p.M(scaled_longitude * (bounds[index][0] - lon_min),
+                scaled_latitude * (bounds[index][1] - lat_min))
+            p.L(scaled_longitude * (bounds[index + 1][0] - lon_min),
+                scaled_latitude * (bounds[index + 1][1] - lat_min))
             svg.append(p)
+        # Latitude is north-south, Longitude is east-west
+        for street in range(len(streets)):
+            foo = object()
+            p = draw.Path(
+                stroke=Color(
+                    pick_for=foo),
+                stroke_width=1.5,
+                fill='none')
+            node_coordinates = [[node["lon"], node["lat"]]
+                                for node in streets[street]["nodes"]]
+            for index in range(len(node_coordinates) - 1):
+                p.M(scaled_longitude *
+                    (node_coordinates[index][0] -
+                     lon_min), scaled_latitude *
+                    (node_coordinates[index][1] -
+                     lat_min))
+                p.L(scaled_longitude *
+                    (node_coordinates[index +
+                                      1][0] -
+                     lon_min), scaled_latitude *
+                    (node_coordinates[index +
+                                      1][1] -
+                     lat_min))
+                svg.append(p)
 
-        svg_layers.append(
-            {"label": streets[street]["street_type"],
-                "svg": svg.asDataUri()})
-    data = {
-        "layers": svg_layers
-    }
-    rendering = {
-        "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
-        "description": "OpenStreetMap Visualisation",
-        "data": data
-    }
-    try:
-        validator = jsonschema.Draft7Validator(
-            renderer_schema, resolver=resolver
-        )
-        validator.validate(data)
-    except ValidationError as e:
-        logging.error(e)
-        logging.error("Failed to validate the response renderer!")
-        return jsonify("Failed to validate the response renderer"), 500
+            svg_layers.append(
+                {"label": streets[street]["street_type"],
+                    "svg": svg.asDataUri()})
+        data = {
+            "layers": svg_layers
+        }
+        rendering = {
+            "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
+            "description": "OpenStreetMap Visualisation",
+            "data": data
+        }
+        try:
+            validator = jsonschema.Draft7Validator(
+                renderer_schema, resolver=resolver
+            )
+            validator.validate(data)
+        except ValidationError as e:
+            logging.error(e)
+            logging.error("Failed to validate the response renderer!")
+            return jsonify("Failed to validate the response renderer"), 500
+    else:
+        logging.info("No data for streets. Skipping ...")
+        return "", 204
     response = {
         "request_uuid": contents["request_uuid"],
         "timestamp": int(time.time()),
