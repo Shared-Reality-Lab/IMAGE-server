@@ -2,7 +2,7 @@ FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
 
 COPY /preprocessors/depth-map-gen/requirements.txt /app/requirements.txt
 
-RUN apt-get update && apt-get install -y python3-opencv wget && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv wget git && rm -rf /var/lib/apt/lists/*
 
 RUN adduser --disabled-password python
 WORKDIR /app
@@ -21,4 +21,4 @@ EXPOSE 5000
 ENV FLASK_APP=depth-map-generator.py
 ENV TORCH_HOME=/app
 USER python
-CMD [ "gunicorn", "depthgenerator:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
+CMD [ "gunicorn", "depth-map-generator:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
