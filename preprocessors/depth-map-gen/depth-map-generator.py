@@ -92,9 +92,6 @@ def depthgenerator():
     if "graphic" not in content:
         logging.info("Request is not a graphic. Skipping...")
         return "", 204  # No content
-    if "photograph" not in content: 
-        logging.info("Request is not a photograph. Skipping...")
-        return "", 204  # No content
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.depth-map-gen"
