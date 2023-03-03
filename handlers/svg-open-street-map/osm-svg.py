@@ -21,7 +21,6 @@ from jsonschema.exceptions import ValidationError
 import logging
 import time
 import drawSvg as draw
-from colour import Color
 app = Flask(__name__)
 
 
@@ -86,7 +85,11 @@ def handle():
         logging.info("Not for OSM preprocessor. Skipping ...")
         return "", 204
     dimensions = 500, 500
-    svg = draw.Drawing(dimensions[0], dimensions[1])
+    svg = draw.Drawing(
+        dimensions[0],
+        dimensions[1],
+        context=draw.Context(
+            invert_y=True))
     svg_layers = []
     data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
     if "streets" in data:
@@ -113,12 +116,39 @@ def handle():
             p.L(scaled_longitude * (bounds[index + 1][0] - lon_min),
                 scaled_latitude * (bounds[index + 1][1] - lat_min))
             svg.append(p)
+
+        colors = [
+            "red",
+            "blue",
+            "springgreen",
+            "deeppink",
+            "orange",
+            "purple",
+            "cyan",
+            "coral",
+            "teal",
+            "indigo",
+            "lime",
+            "chocolate",
+            "magenta",
+            "crimson",
+            "deepskyblue",
+            "greenyellow",
+            "gold",
+            "green",
+            "aqua",
+            "navy",
+            "royalblue",
+            "forestgreen",
+            "dodgerblue"
+        ]
         # Draw the streets with svg.
         for street in range(len(streets)):
-            foo = object()
+            color = street
+            if street > len(colors) - 1:
+                color = len(colors) - 1
             p = draw.Path(
-                stroke=Color(
-                    pick_for=foo),
+                stroke=colors[color],
                 stroke_width=1.5,
                 fill='none')
             node_coordinates = [[node["lon"], node["lat"]]
