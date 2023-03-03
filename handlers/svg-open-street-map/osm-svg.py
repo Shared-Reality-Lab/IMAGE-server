@@ -87,9 +87,8 @@ def handle():
     dimensions = 500, 500
     svg = draw.Drawing(
         dimensions[0],
-        dimensions[1],
-        context=draw.Context(
-            invert_y=True))
+        dimensions[1])
+
     svg_layers = []
     data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
     if "streets" in data:
@@ -172,7 +171,9 @@ def handle():
                     {"label": streets[street]["street_name"],
                         "svg": svg.asDataUri()})
             else:
-                svg_layers.append({"label": "others", "svg": svg.asDataUri()})
+                svg_layers.append(
+                    {"label": streets[street]["street_id"],
+                        "svg": svg.asDataUri()})
         data = {
             "layers": svg_layers
         }
