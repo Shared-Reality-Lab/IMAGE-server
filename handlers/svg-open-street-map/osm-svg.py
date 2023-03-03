@@ -144,8 +144,8 @@ def handle():
         # Draw the streets with svg.
         for street in range(len(streets)):
             color = street
-            if street > len(colors) - 1:
-                color = len(colors) - 1
+            if street >= len(colors):
+                color = street % len(colors)
             p = draw.Path(
                 stroke=colors[color],
                 stroke_width=1.5,
@@ -175,7 +175,8 @@ def handle():
                     {"label": str(streets[street]["street_id"]),
                         "svg": svg.asDataUri()})
         data = {
-            "layers": svg_layers
+            "layers": 
+            
         }
         rendering = {
             "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
