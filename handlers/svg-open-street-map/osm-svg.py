@@ -167,10 +167,12 @@ def handle():
                                       1][1] -
                      lat_min))
                 svg.append(p)
-
-            svg_layers.append(
-                {"label": streets[street]["street_type"],
-                    "svg": svg.asDataUri()})
+            if "street_name" in streets[street]:
+                svg_layers.append(
+                    {"label": streets[street]["street_name"],
+                        "svg": svg.asDataUri()})
+            else:
+                svg_layers.append({"label": "others", "svg": svg.asDataUri()})
         data = {
             "layers": svg_layers
         }
