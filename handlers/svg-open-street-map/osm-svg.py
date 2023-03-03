@@ -172,7 +172,7 @@ def handle():
                         "svg": svg.asDataUri()})
             else:
                 svg_layers.append(
-                    {"label": streets[street]["street_type"],
+                    {"label": str(streets[street]["street_id"]),
                         "svg": svg.asDataUri()})
         data = {
             "layers": svg_layers
