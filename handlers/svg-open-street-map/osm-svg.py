@@ -178,25 +178,20 @@ def handle():
                             path=p,
                             text_anchor='start',
                             line_height=1))
-                    all_svg.append(
-                        draw.Text(
-                            streets[street]["street_name"],
-                            14,
-                            path=p,
-                            text_anchor='start',
-                            line_height=1))
-
                     svg_layers.append(
                         {"label": streets[street]["street_name"],
                             "svg": svg.asDataUri()})
+                    svg_layers.append(
+                        {"label": "AllLayers", "svg": all_svg.asDataUri()})
                     svg = draw.Drawing(dimensions[0], dimensions[1])
                 else:
                     svg_layers.append(
                         {"label": str(streets[street]["street_id"]),
                             "svg": svg.asDataUri()})
+                    svg_layers.append(
+                        {"label": "AllLayers", "svg": all_svg.asDataUri()})
                     svg = draw.Drawing(dimensions[0], dimensions[1])
-            svg_layers.append(
-                {"label": "AllLayers", "svg": all_svg.asDataUri()})
+
             data = {
                 "layers": svg_layers
 
