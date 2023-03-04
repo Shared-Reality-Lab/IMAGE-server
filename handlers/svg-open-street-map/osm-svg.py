@@ -85,10 +85,10 @@ def handle():
             logging.info("OSM Preprocessor data not present. Skipping ...")
             return "", 204
         svg_layers = []
-        dimensions = 800, 800
-        svg = draw.Drawing(
-            dimensions[0],
-            dimensions[1])
+        dimensions = 500, 500
+        svg = draw.Drawing(dimensions[0], dimensions[1])
+        # This gives the entire street view.
+        all_svg = draw.Drawing(dimensions[0], dimensions[1])
 
         data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
         if "streets" in data:
@@ -115,6 +115,7 @@ def handle():
                 p.L(scaled_longitude * (bounds[index + 1][0] - lon_min),
                     scaled_latitude * (bounds[index + 1][1] - lat_min))
                 svg.append(p)
+                all_svg.append(p)
 
             colors = [
                 "red",
@@ -168,6 +169,7 @@ def handle():
                                           1][1] -
                          lat_min))
                 svg.append(p)
+                all_svg.append(p)
                 if "street_name" in streets[street]:
                     svg.append(
                         draw.Text(
@@ -176,6 +178,14 @@ def handle():
                             path=p,
                             text_anchor='start',
                             line_height=1))
+                    all_svg.append(
+                        draw.Text(
+                            streets[street]["street_name"],
+                            14,
+                            path=p,
+                            text_anchor='start',
+                            line_height=1))
+                          
                     svg_layers.append(
                         {"label": streets[street]["street_name"],
                             "svg": svg.asDataUri()})
@@ -185,6 +195,7 @@ def handle():
                         {"label": str(streets[street]["street_id"]),
                             "svg": svg.asDataUri()})
                     svg = draw.Drawing(dimensions[0], dimensions[1])
+            svg_layers.append({"label" : "AllLayers", "svg": all_svg.asDataUri()})
             data = {
                 "layers": svg_layers
 
