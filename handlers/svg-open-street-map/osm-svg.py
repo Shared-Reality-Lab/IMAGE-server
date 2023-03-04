@@ -178,14 +178,6 @@ def handle():
                             path=p,
                             text_anchor='start',
                             line_height=1))
-                    all_svg.append(
-                        draw.Text(
-                            streets[street]["street_name"],
-                            14,
-                            path=p,
-                            text_anchor='start',
-                            line_height=1))
-
                     svg_layers.append(
                         {"label": streets[street]["street_name"],
                             "svg": svg.asDataUri()})
