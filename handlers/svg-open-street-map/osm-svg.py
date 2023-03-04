@@ -84,12 +84,12 @@ def handle():
                 not in preprocessor:
             logging.info("OSM Preprocessor data not present. Skipping ...")
             return "", 204
-        dimensions = 500, 500
+        svg_layers = []
+        dimensions = 800, 800
         svg = draw.Drawing(
             dimensions[0],
             dimensions[1])
 
-        svg_layers = []
         data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
         if "streets" in data:
             streets = data["streets"]
@@ -179,10 +179,12 @@ def handle():
                     svg_layers.append(
                         {"label": streets[street]["street_name"],
                             "svg": svg.asDataUri()})
+                    svg = draw.Drawing(dimensions[0], dimensions[1])
                 else:
                     svg_layers.append(
                         {"label": str(streets[street]["street_id"]),
                             "svg": svg.asDataUri()})
+                    svg = draw.Drawing(dimensions[0], dimensions[1])
             data = {
                 "layers": svg_layers
 
