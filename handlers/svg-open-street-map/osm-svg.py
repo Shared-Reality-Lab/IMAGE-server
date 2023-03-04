@@ -188,10 +188,6 @@ def handle():
                             "svg": svg.asDataUri()})
                     svg = draw.Drawing(dimensions[0], dimensions[1])
 
-                svg_layers.append(
-                    {"label": streets[street]["street_name"],
-                     "svg": svg.asDataUri()})
-
             svg_layers.append(
                 {"label": "AllLayers",
                  "svg": all_svg.asDataUri()})
