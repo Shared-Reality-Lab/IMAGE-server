@@ -168,8 +168,8 @@ def handle():
                         (node_coordinates[index +
                                           1][1] -
                          lat_min))
-                svg.append(p)
                 all_svg.append(p)
+                svg.append(p)
                 if "street_name" in streets[street]:
                     svg.append(
                         draw.Text(
@@ -181,16 +181,20 @@ def handle():
                     svg_layers.append(
                         {"label": streets[street]["street_name"],
                             "svg": svg.asDataUri()})
-                    svg_layers.append(
-                        {"label": "AllLayers", "svg": all_svg.asDataUri()})
                     svg = draw.Drawing(dimensions[0], dimensions[1])
                 else:
                     svg_layers.append(
                         {"label": str(streets[street]["street_id"]),
                             "svg": svg.asDataUri()})
-                    svg_layers.append(
-                        {"label": "AllLayers", "svg": all_svg.asDataUri()})
                     svg = draw.Drawing(dimensions[0], dimensions[1])
+
+                svg_layers.append(
+                    {"label": streets[street]["street_name"],
+                     "svg": svg.asDataUri()})
+
+            svg_layers.append(
+                {"label": "AllLayers",
+                 "svg": all_svg.asDataUri()})
 
             data = {
                 "layers": svg_layers
