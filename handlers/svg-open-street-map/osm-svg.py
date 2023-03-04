@@ -57,160 +57,183 @@ def handle():
         return jsonify("None"), 204
 
     # Check preprocessor data
-    preprocessor = contents['preprocessors']
+    if "preprocessors" in contents:
+        preprocessor = contents['preprocessors']
 
-    if ("ca.mcgill.a11y.image.capability.DebugMode"
-        not in contents['capabilities']
-            or "ca.mcgill.a11y.image.renderer.SVGLayers"
-            not in contents["renderers"]):
-        logging.debug("Debug mode inactive")
-        print("debug inactive")
+        if ("ca.mcgill.a11y.image.capability.DebugMode"
+            not in contents['capabilities']
+                or "ca.mcgill.a11y.image.renderer.SVGLayers"
+                not in contents["renderers"]):
+            logging.debug("Debug mode inactive")
+            response = {
+                "request_uuid": contents["request_uuid"],
+                "timestamp": int(time.time()),
+                "renderings": []
+            }
+            try:
+                validator = jsonschema.Draft7Validator(
+                    response_schema, resolver=resolver)
+                validator.validate(response)
+            except jsonschema.exceptions.ValidationError as error:
+                logging.error(error)
+                return jsonify("Invalid Preprocessor JSON format"), 500
+            logging.debug("Sending response")
+            return response
+
+        if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
+                not in preprocessor:
+            logging.info("OSM Preprocessor data not present. Skipping ...")
+            return "", 204
+        dimensions = 500, 500
+        svg = draw.Drawing(
+            dimensions[0],
+            dimensions[1])
+
+        svg_layers = []
+        data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
+        if "streets" in data:
+            streets = data["streets"]
+            lat = data["bounds"]["latitude"]
+            lon = data["bounds"]["longitude"]
+            lon_min = lon["min"]
+            lat_min = lat["min"]
+            lon_max = lon["max"]
+            lat_max = lat["max"]
+            # Scale the lon/lat units to svg pixels equivalent.
+            scaled_longitude = dimensions[0] / (lon_max - lon_min)
+            scaled_latitude = dimensions[1] / (lat_max - lat_min)
+            bounds = [[lon_min, lat_min],
+                      [lon_min, lat_max],
+                      [lon_max, lat_max],
+                      [lon_max, lat_min],
+                      [lon_min, lat_min]]
+            # Draw bounding box for the streets
+            for index in range(len(bounds) - 1):
+                p = draw.Path(stroke="orange", stroke_width=6, fill='none')
+                p.M(scaled_longitude * (bounds[index][0] - lon_min),
+                    scaled_latitude * (bounds[index][1] - lat_min))
+                p.L(scaled_longitude * (bounds[index + 1][0] - lon_min),
+                    scaled_latitude * (bounds[index + 1][1] - lat_min))
+                svg.append(p)
+
+            colors = [
+                "red",
+                "blue",
+                "springgreen",
+                "deeppink",
+                "orange",
+                "purple",
+                "cyan",
+                "coral",
+                "teal",
+                "indigo",
+                "lime",
+                "chocolate",
+                "magenta",
+                "crimson",
+                "deepskyblue",
+                "greenyellow",
+                "gold",
+                "green",
+                "aqua",
+                "navy",
+                "royalblue",
+                "forestgreen",
+                "dodgerblue"
+            ]
+            # Draw the streets with svg.
+            for street in range(len(streets)):
+                color = street
+                if street >= len(colors):
+                    color = street % len(colors)
+                stroke_width = return_stroke_width(
+                    streets[street]["street_type"])
+                p = draw.Path(
+                    stroke=colors[color],
+                    stroke_width=stroke_width,
+                    fill='none')
+                node_coordinates = [[node["lon"], node["lat"]]
+                                    for node in streets[street]["nodes"]]
+                for index in range(len(node_coordinates) - 1):
+                    p.M(scaled_longitude *
+                        (node_coordinates[index][0] -
+                         lon_min), scaled_latitude *
+                        (node_coordinates[index][1] -
+                         lat_min))
+                    p.L(scaled_longitude *
+                        (node_coordinates[index +
+                                          1][0] -
+                         lon_min), scaled_latitude *
+                        (node_coordinates[index +
+                                          1][1] -
+                         lat_min))
+                svg.append(p)
+                if "street_name" in streets[street]:
+                    svg.append(
+                        draw.Text(
+                            streets[street]["street_name"],
+                            14,
+                            path=p,
+                            text_anchor='start',
+                            line_height=1))
+                    svg_layers.append(
+                        {"label": streets[street]["street_name"],
+                            "svg": svg.asDataUri()})
+                else:
+                    svg_layers.append(
+                        {"label": str(streets[street]["street_id"]),
+                            "svg": svg.asDataUri()})
+            data = {
+                "layers": svg_layers
+
+            }
+            rendering = {
+                "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
+                "description": "This is SVG data to visualize streets \
+                                from the OpenStreetMap preprocessor.",
+                "data": data}
+            try:
+                validator = jsonschema.Draft7Validator(
+                    renderer_schema, resolver=resolver
+                )
+                validator.validate(data)
+            except ValidationError as e:
+                logging.error("Failed to validate the response renderer!")
+                logging.error(e)
+                return jsonify("Failed to validate the response renderer"), 500
+        else:
+            logging.info("No data for streets. Skipping ...")
+            return "", 204
         response = {
             "request_uuid": contents["request_uuid"],
             "timestamp": int(time.time()),
-            "renderings": []
+            "renderings": [rendering]
         }
         try:
             validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver)
+                response_schema, resolver=resolver
+            )
             validator.validate(response)
-        except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
-            return jsonify("Invalid Preprocessor JSON format"), 500
+        except ValidationError as e:
+            logging.error("Failed to generate a valid response")
+            logging.error(e)
+            return jsonify("Failed to generate a valid response"), 500
         logging.debug("Sending response")
         return response
 
-    if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
-            not in preprocessor:
-        logging.info("Not for OSM preprocessor. Skipping ...")
-        return "", 204
-    dimensions = 500, 500
-    svg = draw.Drawing(
-        dimensions[0],
-        dimensions[1])
 
-    svg_layers = []
-    data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
-    if "streets" in data:
-        streets = data["streets"]
-        lat = data["bounds"]["latitude"]
-        lon = data["bounds"]["longitude"]
-        lon_min = lon["min"]
-        lat_min = lat["min"]
-        lon_max = lon["max"]
-        lat_max = lat["max"]
-        # Scale the lon/lat units to svg pixels equivalent.
-        scaled_longitude = dimensions[0] / (lon_max - lon_min)
-        scaled_latitude = dimensions[1] / (lat_max - lat_min)
-        bounds = [[lon_min, lat_min],
-                  [lon_min, lat_max],
-                  [lon_max, lat_max],
-                  [lon_max, lat_min],
-                  [lon_min, lat_min]]
-        # Draw bounding box for the streets
-        for index in range(len(bounds) - 1):
-            p = draw.Path(stroke="orange", stroke_width=6, fill='none')
-            p.M(scaled_longitude * (bounds[index][0] - lon_min),
-                scaled_latitude * (bounds[index][1] - lat_min))
-            p.L(scaled_longitude * (bounds[index + 1][0] - lon_min),
-                scaled_latitude * (bounds[index + 1][1] - lat_min))
-            svg.append(p)
-
-        colors = [
-            "red",
-            "blue",
-            "springgreen",
-            "deeppink",
-            "orange",
-            "purple",
-            "cyan",
-            "coral",
-            "teal",
-            "indigo",
-            "lime",
-            "chocolate",
-            "magenta",
-            "crimson",
-            "deepskyblue",
-            "greenyellow",
-            "gold",
-            "green",
-            "aqua",
-            "navy",
-            "royalblue",
-            "forestgreen",
-            "dodgerblue"
-        ]
-        # Draw the streets with svg.
-        for street in range(len(streets)):
-            color = street
-            if street >= len(colors):
-                color = street % len(colors)
-            p = draw.Path(
-                stroke=colors[color],
-                stroke_width=1.5,
-                fill='none')
-            node_coordinates = [[node["lon"], node["lat"]]
-                                for node in streets[street]["nodes"]]
-            for index in range(len(node_coordinates) - 1):
-                p.M(scaled_longitude *
-                    (node_coordinates[index][0] -
-                     lon_min), scaled_latitude *
-                    (node_coordinates[index][1] -
-                     lat_min))
-                p.L(scaled_longitude *
-                    (node_coordinates[index +
-                                      1][0] -
-                     lon_min), scaled_latitude *
-                    (node_coordinates[index +
-                                      1][1] -
-                     lat_min))
-                svg.append(p)
-            if "street_name" in streets[street]:
-                svg_layers.append(
-                    {"label": streets[street]["street_name"],
-                        "svg": svg.asDataUri()})
-            else:
-                svg_layers.append(
-                    {"label": str(streets[street]["street_id"]),
-                        "svg": svg.asDataUri()})
-        data = {
-            "layers": 
-            
-        }
-        rendering = {
-            "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
-            "description": "This is SVG data to visualize response \
-                             from the OpenStreetMap preprocessor.",
-            "data": data}
-        try:
-            validator = jsonschema.Draft7Validator(
-                renderer_schema, resolver=resolver
-            )
-            validator.validate(data)
-        except ValidationError as e:
-            logging.error(e)
-            logging.error("Failed to validate the response renderer!")
-            return jsonify("Failed to validate the response renderer"), 500
+def return_stroke_width(street_type):
+    if (street_type == "primary" or street_type == "secondary"):
+        stroke_width = 6.5
+    elif street_type == "tertiary":
+        stroke_width = 5.0
+    elif street_type == "residential":
+        stroke_width = 3.5
+    elif (street_type == "footway" or street_type == "crossing"):
+        stroke_width = 2.5
     else:
-        logging.info("No data for streets. Skipping ...")
-        return "", 204
-    response = {
-        "request_uuid": contents["request_uuid"],
-        "timestamp": int(time.time()),
-        "renderings": [rendering]
-    }
-    try:
-        validator = jsonschema.Draft7Validator(
-            response_schema, resolver=resolver
-        )
-        validator.validate(response)
-    except ValidationError as e:
-        logging.error("Failed to generate a valid response")
-        logging.error(e)
-        return jsonify("Failed to generate a valid response"), 500
-    logging.debug("Sending response")
-    return response
+        stroke_width = 1.0
+    return stroke_width
 
 
 if __name__ == "__main__":
