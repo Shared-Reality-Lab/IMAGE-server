@@ -941,3 +941,6 @@ def get_coordinates(content):
     """
     if 'coordinates' in content.keys():
         return content['coordinates']
+
+##################################################
+# Extend features for OSM use case
