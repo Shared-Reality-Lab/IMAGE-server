@@ -1,6 +1,5 @@
 opencv-python~=4.7.0.68
 numpy~=1.23.3
-matplotlib~=3.6.2
 tqdm~=4.64.1
 Flask~=2.2.2
 flask_api==2.0.0
