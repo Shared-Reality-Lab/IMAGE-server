@@ -1,0 +1,1 @@
+This preprocessor is used for semantic segmentation. It's supposed to be a replacement to SemSeg. It relies on the MMsegmentation open source framework.
