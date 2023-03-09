@@ -135,9 +135,9 @@ def depthgenerator():
     _, pred_depth_jpg = cv2.imencode('.JPG',pred_depth_ori)
      
     #convert output image to base64
-    depthgraphic = base64.b64encode(pred_depth_jpg)
-    
-    depth = {"depth-map": depthgraphic, "scaling": 0}
+    depthgraphic = base64.b64encode(pred_depth_jpg).decode("utf-8")
+    jsondepth = "data:image/jpeg;base64," + depthgraphic
+    depth = {"depth-map": jsondepth, "scaling": 0}
     
     try:
         validator = jsonschema.Draft7Validator(data_schema)
