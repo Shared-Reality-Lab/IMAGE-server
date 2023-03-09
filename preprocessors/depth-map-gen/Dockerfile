@@ -8,14 +8,13 @@ RUN adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
+RUN git clone https://github.com/aim-uofa/AdelaiDepth
+RUN wget -O ./res101.pth https://cloudstor.aarnet.edu.au/plus/s/lTIJF4vrvHCAI31/download
 RUN pip3 install --upgrade pip
 RUN pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
 COPY /preprocessors/depth-map-gen/ /app
-
-RUN git clone https://github.com/aim-uofa/AdelaiDepth
-RUN wget -O ./AdelaiDepth/res101.pth https://cloudstor.aarnet.edu.au/plus/s/lTIJF4vrvHCAI31/download
 
 EXPOSE 5000
 ENV FLASK_APP=depth-map-generator.py
