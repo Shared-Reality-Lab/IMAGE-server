@@ -22,12 +22,28 @@ import numpy as np
 class SbRIF:
 
     def __init__(self, t=0.75, c=5, s=10, rescale_size=224):
+        """
+        Initialization of a model instance, t determines the confidence level,
+        c ans s are pixel-level constants, rescale_size determines the size of
+        the rescaled images (without the preservation of aspect ratio). In
+        most of the cases, do not modify c, s and rescale_size.
+        Args:
+            t: float
+            c: int
+            s: int
+            rescale_size: int
+        """
         self.t_cnt = int(math.tan(t * math.pi / 2))
         self.c = c
         self.s = s
         self.rescale_size = rescale_size
 
     def edge_filter(self, img):
+        """
+        Canny edge detection.
+        Args:
+            img: the image
+        """
         img = cv2.resize(img,
                          (self.rescale_size, self.rescale_size),
                          interpolation=cv2.INTER_AREA)
@@ -37,6 +53,11 @@ class SbRIF:
         return gray_edges
 
     def morphological_operator(self, gray_edges):
+        """
+        Morphological operations, filters horizontal and vertical edges.
+        Args:
+            gray_edges: gray-scale image after edge detection
+        """
         bw = cv2.adaptiveThreshold(
             gray_edges,
             255,
@@ -61,8 +82,20 @@ class SbRIF:
 
     # hyper-params are in pixel-level
     def regional_identity_filter(self, vh, crosshair, suppression):
-
+        """
+        Filtering intersections.
+        Args:
+            vh: vertical and horizontal edges
+            crosshair: the size of the intersection
+            suppression: the threshold for calculating L2 norm
+        """
         def padding(arr2d, size):
+            """
+            Padding zeros to the image.
+            Args:
+                arr2d: the image
+                size: the padding size
+            """
             padded_img = np.zeros(
                 (arr2d.shape[0] + (2 * size), arr2d.shape[1] + (2 * size))
                 )
@@ -77,6 +110,12 @@ class SbRIF:
 
         # window_size should be (2n+1, 2n+1)
         def sliding_window(arr2d, window_size):
+            """
+            Using a sliding window to filter intersections.
+            Args:
+                arr2d: the image
+                window_size: (2n+1, 2n+1)
+            """
             intersection_list = []
             for r in range(0, arr2d.shape[0] - window_size[0] + 1):
                 for c in range(0, arr2d.shape[1] - window_size[1] + 1):
@@ -121,7 +160,12 @@ class SbRIF:
                                                 2 * crosshair + 1))
 
         def suppression_l2(list_mask, s):
-
+            """
+            Suppressing similar points by applying L2.
+            Args:
+                list_mask: Masking out suppressed points
+                s: threshold for L2 norm
+            """
             def dist(x1, x2):
 
                 return math.sqrt((x1[0] - x2[0]) ** 2 + (x1[1] - x2[1]) ** 2)
@@ -145,6 +189,11 @@ class SbRIF:
     # cross_hair: pixel-level, positive integer number
     # suppression: pixel-level, positive real number
     def inference(self, img):
+        """
+        Inference on one image and returning the boolean result.
+        Args:
+            img: the image
+        """
         gray_edges = self.edge_filter(img)
         vh = self.morphological_operator(gray_edges)
         list = self.regional_identity_filter(vh, crosshair=self.c,
