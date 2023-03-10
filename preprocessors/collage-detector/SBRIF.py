@@ -24,9 +24,11 @@ class SbRIF:
     def __init__(self, t=0.75, c=5, s=10, rescale_size=224):
         """
         Initialization of a model instance, t determines the confidence level,
-        c ans s are pixel-level constants, rescale_size determines the size of
-        the rescaled images (without the preservation of aspect ratio). In
-        most of the cases, do not modify c, s and rescale_size.
+        c and s are pixel-level constants (# of pixels) - c determines size of
+        the intersection and s determines suppression (used to remove
+        overlapping intersections), rescale_size determines the size of the
+        rescaled images (without the preservation of aspect ratio). In most of
+        the cases, do not modify c, s and rescale_size.
         Args:
             t: float
             c: int
