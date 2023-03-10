@@ -78,6 +78,11 @@ services:
             ca.mcgill.a11y.image.port: 5000
         env_file:
             - ./config/azure-api.env
+    collage-detector-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-collage-detector:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 5000
     object-grouping:
         image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:unstable
         labels:
