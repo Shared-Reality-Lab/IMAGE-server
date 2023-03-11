@@ -50,8 +50,8 @@ def scale_torch(img):
         img = img[np.newaxis, :, :]
     if img.shape[2] == 3:
         transform = transforms.Compose([transforms.ToTensor(),
-					transforms.Normalize(
-					(0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+                                        transforms.Normalize(
+                                        (0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
         img = transform(img)
     else:
         img = img.astype(np.float32)
@@ -113,8 +113,8 @@ def depthgenerator():
 
     # load checkpoint
     checkpoint = torch.load("/app/res101.pth")
-    depth_model.load_state_dict(strip_prefix_if_present(checkpoint['depth_model'],
-				"module."),strict=True)
+    depth_model.load_state_dict(strip_prefix_if_present(
+	                        checkpoint['depth_model'], "module."), strict=True)
     del checkpoint
     torch.cuda.empty_cache()
 
@@ -130,7 +130,7 @@ def depthgenerator():
 
     _, pred_depth_jpg = cv2.imencode('.JPG', pred_depth_ori)
 
-    #convert output image to base64
+    # convert output image to base64
     depthgraphic = base64.b64encode(pred_depth_jpg).decode("utf-8")
     jsondepth = "data:image/jpeg;base64," + depthgraphic
     depth = {"depth-map": jsondepth, "scaling": 0}
