@@ -4,11 +4,6 @@ import numpy as np
 import torch
 import torchvision.transforms as transforms
 import sys
-
-sys.path.append('./AdelaiDepth/LeReS/Minist_Test/')
-
-from lib.multi_depth_model_woauxi import RelDepthModel
-
 from flask import Flask, request, jsonify
 from collections import OrderedDict
 import json
@@ -17,6 +12,10 @@ import jsonschema
 import logging
 import base64
 
+sys.path.append('./AdelaiDepth/LeReS/Minist_Test/')
+
+from lib.multi_depth_model_woauxi import RelDepthModel
+
 app = Flask(__name__)
 
 
@@ -24,11 +23,14 @@ app = Flask(__name__)
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Configs for LeReS')
-    parser.add_argument('--load_ckpt', default='./res50.pth', help='Checkpoint path to load')
-    parser.add_argument('--backbone', default='resnext101', help='Checkpoint path to load')
+    parser.add_argument('--load_ckpt', default='./res50.pth',
+                        help='Checkpoint path to load')
+    parser.add_argument('--backbone', default='resnext101',
+                        help='Checkpoint path to load')
 
     args = parser.parse_args()
     return args
+
 
 def strip_prefix_if_present(state_dict, prefix):
     keys = sorted(state_dict.keys())
@@ -39,10 +41,12 @@ def strip_prefix_if_present(state_dict, prefix):
         stripped_state_dict[key.replace(prefix, "")] = value
     return stripped_state_dict
 
+
 def scale_torch(img):
     """
     Scale the image and output it in torch.tensor.
-    :param img: input rgb is in shape [H, W, C], input depth/disp is in shape [H, W]
+    :param img: input rgb is in shape [H, W, C], 
+    input depth/disp is in shape [H, W]
     :param scale: the scale factor. float
     :return: img. [C, H, W]
     """
@@ -51,7 +55,8 @@ def scale_torch(img):
     if img.shape[2] == 3:
         transform = transforms.Compose([transforms.ToTensor(),
                                         transforms.Normalize(
-                                        (0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+                                        (0.485, 0.456, 0.406), 
+                                        (0.229, 0.224, 0.225))])
         img = transform(img)
     else:
         img = img.astype(np.float32)
@@ -114,7 +119,7 @@ def depthgenerator():
     # load checkpoint
     checkpoint = torch.load("/app/res101.pth")
     depth_model.load_state_dict(strip_prefix_if_present(
-	                        checkpoint['depth_model'], "module."), strict=True)
+                                checkpoint['depth_model'], "module."), strict=True)
     del checkpoint
     torch.cuda.empty_cache()
 
