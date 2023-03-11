@@ -50,7 +50,8 @@ def scale_torch(img):
         img = img[np.newaxis, :, :]
     if img.shape[2] == 3:
         transform = transforms.Compose([transforms.ToTensor(),
-		                                transforms.Normalize((0.485, 0.456, 0.406) , (0.229, 0.224, 0.225) )])
+					transforms.Normalize(
+					(0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
         img = transform(img)
     else:
         img = img.astype(np.float32)
@@ -106,24 +107,19 @@ def depthgenerator():
     image = np.asarray(bytearray(binary), dtype="uint8")
     img = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
-    # download the weights and test the input image. The input image passed to
-    # the "forward" function to get the predictions.
-
     # create depth model
     depth_model = RelDepthModel(backbone='resnext101')
     depth_model.eval()
 
     # load checkpoint
-    #load_ckpt('res101.pth', depth_model, None, None)
     checkpoint = torch.load("/app/res101.pth")
-    depth_model.load_state_dict(strip_prefix_if_present(checkpoint['depth_model'], "module."),
-                                    strict=True)
+    depth_model.load_state_dict(strip_prefix_if_present(checkpoint['depth_model'],
+				"module."),strict=True)
     del checkpoint
     torch.cuda.empty_cache()
 
     depth_model.cuda()
 
-    #print('processing (%04d)-th image... %s' % (i, v))
     rgb_c = img[:, :, ::-1].copy()
     A_resize = cv2.resize(rgb_c, (448, 448))
 
@@ -132,7 +128,7 @@ def depthgenerator():
     pred_depth_ori = cv2.resize(pred_depth, (img.shape[1], img.shape[0]))
     pred_depth_ori = pred_depth_ori/np.max(pred_depth_ori)
 
-    _, pred_depth_jpg = cv2.imencode('.JPG',pred_depth_ori)
+    _, pred_depth_jpg = cv2.imencode('.JPG', pred_depth_ori)
 
     #convert output image to base64
     depthgraphic = base64.b64encode(pred_depth_jpg).decode("utf-8")
