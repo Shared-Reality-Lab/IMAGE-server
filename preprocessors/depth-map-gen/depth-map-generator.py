@@ -19,7 +19,6 @@ from lib.multi_depth_model_woauxi import RelDepthModel
 app = Flask(__name__)
 
 
-
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Configs for LeReS')
@@ -45,7 +44,7 @@ def strip_prefix_if_present(state_dict, prefix):
 def scale_torch(img):
     """
     Scale the image and output it in torch.tensor.
-    :param img: input rgb is in shape [H, W, C], 
+    :param img: input rgb is in shape [H, W, C],
     input depth/disp is in shape [H, W]
     :param scale: the scale factor. float
     :return: img. [C, H, W]
@@ -55,7 +54,7 @@ def scale_torch(img):
     if img.shape[2] == 3:
         transform = transforms.Compose([transforms.ToTensor(),
                                         transforms.Normalize(
-                                        (0.485, 0.456, 0.406), 
+                                        (0.485, 0.456, 0.406),
                                         (0.229, 0.224, 0.225))])
         img = transform(img)
     else:
@@ -119,7 +118,8 @@ def depthgenerator():
     # load checkpoint
     checkpoint = torch.load("/app/res101.pth")
     depth_model.load_state_dict(strip_prefix_if_present(
-                                checkpoint['depth_model'], "module."), strict=True)
+                                checkpoint['depth_model'], "module."),
+                                strict=True)
     del checkpoint
     torch.cuda.empty_cache()
 
