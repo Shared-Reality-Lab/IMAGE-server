@@ -14,7 +14,7 @@ import base64
 
 sys.path.append('./AdelaiDepth/LeReS/Minist_Test/')
 
-from lib.multi_depth_model_woauxi import RelDepthModel # noqa: E402
+from lib.multi_depth_model_woauxi import RelDepthModel  # noqa: E402
 
 app = Flask(__name__)
 
