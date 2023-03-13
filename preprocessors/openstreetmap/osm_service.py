@@ -7,6 +7,8 @@ from flask import jsonify
 import jsonschema
 import logging
 import math
+import os
+import requests
 from config import defaultServer, secondaryServer1, secondaryServer2
 from geographiclib.geodesic import Geodesic
 
@@ -933,9 +935,11 @@ def validate(schema, data, resolver, json_message, error_code):
         return jsonify(json_message), error_code
     return None
 
-# We don't currently support embedded OSM Map, so a request from 
+# We don't currently support embedded OSM Map, so a request from
 # the google embedded map is used to find latitude & longitude
 # to query the OSM Map.
+
+
 def get_coordinates(content):
     """
     Retrieve the coordinates of a map from the
@@ -944,7 +948,6 @@ def get_coordinates(content):
     if 'coordinates' in content.keys():
         return content['coordinates']
 
-       
     google_api_key = os.environ["GOOGLE_PLACES_KEY"]
 
     # Query google places API to find latlong
@@ -966,6 +969,7 @@ def get_coordinates(content):
     }
 
     return coordinates
+
 
 def check_google_response(place_response):
     """
