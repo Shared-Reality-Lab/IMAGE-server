@@ -9,8 +9,8 @@ import logging
 import os
 
 
-BEIT_CONFIG = "mmsegmentation/configs/beit/upernet_beit-base_8x2_640x640_160k_ade20k.py"
-BEIT_CHECKPOINT = "mmsegmentation/models/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth"
+BEIT_CONFIG = "upernet_beit-base_8x2_640x640_160k_ade20k.py"
+BEIT_CHECKPOINT = "upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth"
 
 VIT_CONFIG = "mmsegmentation/configs/vit/upernet_vit-b16_mln_512x512_80k_ade20k.py"
 VIT_CHECKPOINT = "mmsegmentation/models/upernet_vit-b16_mln_512x512_80k_ade20k_20210624_130547-0403cee1.pth"

@@ -1,0 +1,3 @@
+root - INFO - Starting segmentation with config file upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - Starting segmentation with config file upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - Segmented boris in 1.12 seconds. Classes found: ['wall', 'person', 'curtain', 'base', 'signboard', 'flag']

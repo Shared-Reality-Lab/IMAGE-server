@@ -3,6 +3,7 @@ ARG CUDA="11.3"
 ARG CUDNN="8"
 FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-devel
 
+ARG MIM="0.3.6"
 ARG MMCV="1.5.0"
 ARG MMSEG="0.30.0"
 
@@ -29,5 +30,19 @@ RUN export FORCE_CUDA=1
 ARG PYTORCH
 ARG CUDA
 RUN ["/bin/bash", "-c", "pip install mmcv-full==${MMCV} -f https://download.openmmlab.com/mmcv/dist/cu${CUDA//./}/torch${PYTORCH}/index.html"]
+RUN pip install openmim==${MIM}
 RUN pip install mmsegmentation==${MMSEG}
 
+WORKDIR /app
+RUN adduser --disabled-password python
+ENV PATH="/home/python/.local/bin:${PATH}"
+
+#COPY /preprocessors/mmsemseg/requirements.txt /app/requirements.txt
+#RUN pip install --upgrade pip
+#RUN pip install -r /app/requirements.txt
+
+# COPY /schemas /app/schemas
+# COPY ./ /app
+
+# Download the model checkpoint and the config file
+RUN mim download mmsegmentation --config upernet_beit-base_8x2_640x640_160k_ade20k --dest .
