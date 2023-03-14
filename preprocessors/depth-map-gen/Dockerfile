@@ -7,6 +7,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-
 RUN adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
+ENV PYTHONPATH "${PYTHONPATH}:./AdelaiDepth/LeReS/Minist_Test/"
 
 RUN git clone https://github.com/aim-uofa/AdelaiDepth
 RUN wget -O ./res101.pth https://cloudstor.aarnet.edu.au/plus/s/lTIJF4vrvHCAI31/download
