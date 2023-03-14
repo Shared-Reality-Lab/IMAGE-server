@@ -91,6 +91,11 @@ services:
             context: .
             dockerfile: ./preprocessors/semanticSeg/./Dockerfile
         image: "semantic-segmentation:latest"
+    depth-map-generation:
+        build:
+            context: .
+            dockerfile: ./preprocessors/depth-map-gen/Dockerfile
+        image: "depth-map-generation:latest"
     chart-pipeline:
         build:
             context: .
