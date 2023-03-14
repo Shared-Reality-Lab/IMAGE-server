@@ -3,7 +3,6 @@ import argparse
 import numpy as np
 import torch
 import torchvision.transforms as transforms
-import sys
 from flask import Flask, request, jsonify
 from collections import OrderedDict
 import json
