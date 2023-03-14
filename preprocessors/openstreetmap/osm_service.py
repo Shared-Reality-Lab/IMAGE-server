@@ -128,11 +128,12 @@ def process_streets_data(OSM_data, bbox_coordinates):
                 # of a street that are within the bounding box.
                 if node.lat >= lat_min and node.lat <= lat_max:
                     if node.lon >= lon_min and node.lon <= lon_max:
-                        node_object = {
-                            "id": int(node.id),
-                            "lat": float(node.lat),
-                            "lon": float(node.lon),
-                        }
+                        # Fetch as many node tags as possible
+                        for key, value in node.tags.items():
+                            if key not in node_object:
+                                node_object[key] = value
+                        # Delete key if value is empty
+                        node_object = dict(x for x in node_object.items() if all(x))
                         if node_object not in bounded_nodes:
                             bounded_nodes.append(node_object)
             # After the boundary restrictions are applied, it is
@@ -167,10 +168,17 @@ def process_streets_data(OSM_data, bbox_coordinates):
                     "lanes": lanes,
 
                 }
-                # Fetch as many tags as possible
-                way_object["nodes"] = node_list
+                # Fetch as many way tags as possible
+                for key, value in way.tags.items():
+                    if (value != way.tags.get(
+                            "name") and
+                            value != way.tags.get("highway")):
+                        if key not in way_object:
+                            way_object[key] = value
                 # Delete key if value is empty
                 way_object = dict(x for x in way_object.items() if all(x))
+                # Include nodes
+                way_object["nodes"] = node_list
                 processed_OSM_data.append(way_object)
     except AttributeError:
         error = 'Overpass Attibute error. Retry again'
@@ -948,8 +956,13 @@ def get_coordinates(content):
     if 'coordinates' in content.keys():
         return content['coordinates']
 
+    if content["placeID"] is None or len(content["placeID"]) == 0:
+        error = "No value found for placeID"
+        logging.error(error)
+        return None
+    
     google_api_key = os.environ["GOOGLE_PLACES_KEY"]
-
+    
     # Query google places API to find latlong
     request = f"https://maps.googleapis.com/maps/api/place/textsearch/json?\
             query={content['placeID']}&\
