@@ -187,6 +187,20 @@ def handle():
                         {"label": str(streets[street]["street_id"]),
                             "svg": svg.asDataUri()})
                     svg = draw.Drawing(dimensions[0], dimensions[1])
+            # Draw all points of interest (POIs)
+            if "points_of_interest" in data:
+                points_of_interest = data["points_of_interest"]
+                for point in points_of_interest:
+                    latitude = (point["lat"] - lat_min) * scaled_latitude
+                    longitude = (point["lon"] - lon_min) * scaled_longitude
+                    all_svg.append(
+                        draw.Circle(
+                            longitude,
+                            latitude,
+                            1.5,
+                            fill='red',
+                            stroke_width=1,
+                            stroke='red'))
 
             svg_layers.append(
                 {"label": "AllLayers",
