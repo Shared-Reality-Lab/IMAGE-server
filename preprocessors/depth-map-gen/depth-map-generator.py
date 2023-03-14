@@ -11,10 +11,7 @@ import time
 import jsonschema
 import logging
 import base64
-
-sys.path.append('./AdelaiDepth/LeReS/Minist_Test/')
-
-from lib.multi_depth_model_woauxi import RelDepthModel  # noqa: E402
+from lib.multi_depth_model_woauxi import RelDepthModel
 
 app = Flask(__name__)
 
