@@ -133,7 +133,8 @@ def process_streets_data(OSM_data, bbox_coordinates):
                             if key not in node_object:
                                 node_object[key] = value
                         # Delete key if value is empty
-                        node_object = dict(x for x in node_object.items() if all(x))
+                        node_object = dict(
+                            x for x in node_object.items() if all(x))
                         if node_object not in bounded_nodes:
                             bounded_nodes.append(node_object)
             # After the boundary restrictions are applied, it is
@@ -960,9 +961,9 @@ def get_coordinates(content):
         error = "No value found for placeID"
         logging.error(error)
         return None
-    
+
     google_api_key = os.environ["GOOGLE_PLACES_KEY"]
-    
+
     # Query google places API to find latlong
     request = f"https://maps.googleapis.com/maps/api/place/textsearch/json?\
             query={content['placeID']}&\
