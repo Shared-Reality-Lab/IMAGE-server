@@ -46,3 +46,4 @@ ENV PATH="/home/python/.local/bin:${PATH}"
 
 # Download the model checkpoint and the config file
 RUN mim download mmsegmentation --config upernet_beit-base_8x2_640x640_160k_ade20k --dest .
+EXPOSE 8889

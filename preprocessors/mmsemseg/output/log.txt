@@ -1,3 +1,33 @@
 root - INFO - Starting segmentation with config file upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
 root - INFO - Starting segmentation with config file upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
 root - INFO - Segmented boris in 1.12 seconds. Classes found: ['wall', 'person', 'curtain', 'base', 'signboard', 'flag']
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - Segmented boris in 1.20 seconds. Classes found: ['wall', 'person', 'curtain', 'base', 'signboard', 'flag']
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - Segmented boris in 0.72 seconds. Classes found: ['wall', 'person', 'curtain', 'base', 'signboard', 'flag']
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - Segmented boris in 0.73 seconds. Classes found: ['wall', 'person', 'curtain', 'base', 'signboard', 'flag']
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - Segmented boris in 0.73 seconds. Classes found: ['wall', 'person', 'curtain', 'base', 'signboard', 'flag']
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - Segmented boris in 0.72 seconds. Classes found: ['wall', 'person', 'curtain', 'base', 'signboard', 'flag']
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - Segmented boris in 0.72 seconds. Classes found: ['wall', 'person', 'curtain', 'base', 'signboard', 'flag']
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - Segmented boris in 0.72 seconds. Classes found: ['wall', 'person', 'curtain', 'base', 'signboard', 'flag']
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - encoding detected segmets with unique colors
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - encoding detected segmets with unique colors
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - encoding detected segmets with unique colors
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - encoding detected segmets with unique colors
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - encoding detected segmets with unique colors
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - encoding detected segmets with unique colors
+root - INFO - Starting segmentation with config file /app/upernet_beit-base_8x2_640x640_160k_ade20k.py and checkpoint file /app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth.
+root - INFO - encoding detected segmets with unique colors
