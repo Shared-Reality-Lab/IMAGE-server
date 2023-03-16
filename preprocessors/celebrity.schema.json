@@ -16,7 +16,7 @@
                         "type": "integer"
                     },
                     "celebrity_name":{
-                        "description": "Name of the detected celebrity",
+                        "description": "Name of the detected celebrity.",
                         "type": "string"
                     }
                 },
