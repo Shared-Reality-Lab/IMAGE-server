@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://image.a11y.mcgill.ca/preprocessors/celebrity-detector.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/clothes-detector.schema.json",
     "type": "object",
     "title": "Clothes Detector",
     "description": "Preprocessor to detect the clothes worn by the individuals. The associated information can be found in preprocessor named 'ca.mcgill.a11y.image.preprocessor.clothesDetector'. ",
