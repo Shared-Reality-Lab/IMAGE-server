@@ -18,6 +18,10 @@
                     "celebrity_name":{
                         "description": "Name of the detected celebrity.",
                         "type": "string"
+                    },
+                    "confidence":{
+                        "description": "The confidence value of the output",
+                        "type":"number"
                     }
                 },
                 "required": [
