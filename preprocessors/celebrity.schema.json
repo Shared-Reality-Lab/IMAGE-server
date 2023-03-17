@@ -7,7 +7,7 @@
     "properties":{
         "celebrity":{
             "type":"array",
-            "description": "Conatains a list of all celebrities",
+            "description": "Contains a list of all celebrities",
             "items": {
                 "type": "object",
                 "properties": {
