@@ -37,9 +37,9 @@ WORKDIR /app
 RUN adduser --disabled-password python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
-#COPY /preprocessors/mmsemseg/requirements.txt /app/requirements.txt
-#RUN pip install --upgrade pip
-#RUN pip install -r /app/requirements.txt
+COPY ./requirements.txt /app/requirements.txt
+RUN pip install --upgrade pip
+RUN pip install -r /app/requirements.txt
 
 # COPY /schemas /app/schemas
 # COPY ./ /app
