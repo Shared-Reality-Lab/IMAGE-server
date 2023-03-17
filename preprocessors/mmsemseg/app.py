@@ -1,15 +1,21 @@
 """ This is the main file for the segmentation preprocessor, it should be remained 'segment.py' once it's working properly."""
 
+from flask import Flask, request, jsonify
+import gc
+import json
+import jsonschema
+import base64
+
+
 import torch
 from mmseg.apis import inference_segmentor, init_segmentor
 import mmseg
 import mmcv
 import numpy as np
 
-from utils import colorEncode, visualize_result
+from utils import visualize_result
 
 from time import time
-import argparse
 import logging
 import os
 
@@ -21,37 +27,8 @@ BEIT_CHECKPOINT = "/app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth"
 COLORS = mmseg.core.evaluation.get_palette("ade20k")
 CLASS_NAMES = mmseg.core.evaluation.get_classes("ade20k")
 
-def get_args():
-    parser = argparse.ArgumentParser(
-        description="Run the demo on all images in the dataset. And with all possible configurations. Logs are saved in a logfile."
-    )
-    parser.add_argument(
-        "-i",
-        "--image_folder",
-        type=str,
-        required=True,
-        help="Path to the folder containing the images.",
-    )
-    parser.add_argument(
-        "-o",
-        "--output_folder",
-        type=str,
-        required=True,
-        help="Path to the folder where the output will be saved.",
-    )
-    parser.add_argument(
-        "--config_file",
-        type=str,
-        default=BEIT_CONFIG,
-        help="Path to the folder containing the config files.",
-    )
-    parser.add_argument(
-        "--checkpoint_file",
-        type=str,
-        default=BEIT_CHECKPOINT,
-    )
-    args = parser.parse_args()
-    return args
+app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 def main(config_file, checkpoint_file, image_folder, output_folder):
     # empty gpu cache
@@ -107,8 +84,134 @@ def main(config_file, checkpoint_file, image_folder, output_folder):
     torch.cuda.empty_cache()
 
 
+def run_segmentation(url, model, dictionnary):
+    # convert an image from base64 format
+    # Following 4 lines refered from
+    # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
+    logging.info("converting base64 to numpy array")
+    image_b64 = url.split(",")[1]
+    binary = base64.b64decode(image_b64)
+    image = np.asarray(bytearray(binary), dtype="uint8")
+
+    # TODO : continue implementing segmentation code here
+
+
+@app.route("/preprocessor", methods=["POST", "GET"])
+def segment():
+    logging.debug("Received request")
+    gc.collect()
+    torch.cuda.empty_cache()
+    dictionnary = []
+
+    # load the schemas
+    with open('./schemas/preprocessors/segmentation.schema.json') as jsonfile:
+        data_schema = json.load(jsonfile)
+    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+        schema = json.load(jsonfile)
+    with open('./schemas/definitions.json') as jsonfile:
+        definitionSchema = json.load(jsonfile)
+    with open('./schemas/request.schema.json') as jsonfile:
+        first_schema = json.load(jsonfile)
+    # Following 6 lines refered from
+    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
+    schema_store = {
+        schema['$id']: schema,
+        definitionSchema['$id']: definitionSchema
+    }
+    resolver = jsonschema.RefResolver.from_schema(
+        schema, store=schema_store)
+    logging.info("Schemas loaded")
+
+    # load the model
+    try:
+        model = init_segmentor(BEIT_CONFIG, BEIT_CHECKPOINT, device='cuda:0')
+    except RuntimeError as e:
+        if 'out of memory' in str(e):
+            logging.error('CUDA out of memory.')
+            return jsonify({"error": "CUDA out of memory."}), 500
+    logging.info("Model loaded")
+
+    # get the request
+    request_json = request.get_json()
+
+    # validate the request
+    try:
+        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
+        validator.validate(request_json)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(f"Request validation error: {e.message}")
+        return jsonify("Invalid Preprocessor JSON format"), 400
+    
+    if "graphic" not in request:
+        logging.info("Not image content. Skipping ...")
+        return '', 204
+    
+    request_uuid = request_json["request_uuid"]
+    timestamp = time()
+
+    preprocessor_name = "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
+    classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
+    classifier_2 = "ca.mcgill.a11y.image.preprocessor.graphicTagger"
+    preprocess_output = request_json["preprocessors"]
+
+    # check if the first classifier and second classifier are present.
+    # these steps could be skipped
+    # if the architecture is modified appropriately
+    if classifier_1 in preprocess_output:
+        classifier_1_output = preprocess_output[classifier_1]
+        classifier_1_label = classifier_1_output["category"]
+        if classifier_1_label != "photograph":
+            logging.info(
+                "Not photograph content. Skipping...")
+
+            return "", 204
+        if classifier_2 in preprocess_output:
+            # classifier_2_output = preprocess_output[classifier_2]
+            # classifier_2_label = classifier_2_output["category"]
+            # if classifier_2_label != "outdoor":
+            #     logging.info("Cannot process image")
+            #     return "", 204
+            segment = run_segmentation(request_json["graphic"], model, dictionnary)
+        else:
+            """We are providing the user the ability to process an image
+            even when the second classifier is absent, however it is
+            recommended to the run the semantic segmentation
+            model in conjunction with the second classifier."""
+            segment = run_segmentation(request_json["graphic"], model, dictionnary)
+    else:
+        """We are providing the user the ability to process an image
+        even when the first classifier is absent, however it is
+        recommended to the run the semantic segmentation
+        model in conjunction with the first classifier."""
+        segment = run_segmentation(request_json["graphic"], model, dictionnary)
+
+    torch.cuda.empty_cache()
+
+    # validate the data format for the output
+    try:
+        validator = jsonschema.Draft7Validator(data_schema)
+        validator.validate(segment)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
+    response = {
+        "request_uuid": request_uuid,
+        "timestamp": int(timestamp),
+        "name": preprocessor_name,
+        "data": segment
+    }
+    # validate the output format
+    try:
+        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
+        validator.validate(response)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
+    
+    logging.info("Valid response generated")
+
+    return response
+
+
 if __name__ == "__main__":
-    args = get_args()
-    print(f"Number of classes in the dataset: {len(CLASS_NAMES)}")
-    print(f"Number of colors in the palette: {len(COLORS)}")
-    main(args.config_file, args.checkpoint_file, args.image_folder, args.output_folder)
+    app.run(host='0.0.0.0', port=5000, debug=True)

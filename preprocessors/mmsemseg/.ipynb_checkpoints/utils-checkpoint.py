@@ -88,6 +88,8 @@ def visualize_result(img, pred, index=None):
 
 # takes the colored segment(determined in visualise_reslt function and
 # compressed the segment to 100 pixels
+
+
 def findContour(pred_color, width, height):
     image = pred_color
     dummy = pred_color.copy()

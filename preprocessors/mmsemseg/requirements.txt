@@ -1,3 +1,4 @@
 opencv-python==4.7.0.72
 jupyterlab==3.6.1
 flask==2.2.3
+jsonschema==3.2.0
