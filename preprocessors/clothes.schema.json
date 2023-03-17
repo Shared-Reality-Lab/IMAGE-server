@@ -5,7 +5,7 @@
     "title": "Clothes Detector",
     "description": "Preprocessor to detect the clothes worn by the individuals. The associated information can be found in preprocessor named 'ca.mcgill.a11y.image.preprocessor.clothesDetector'. ",
     "properties":{
-        "celebrity":{
+        "clothes":{
             "type":"array",
             "description": "Contains a list of clothes worn by people",
             "items": {
@@ -17,10 +17,9 @@
                     },
                     "clothes":{
                         "type":"array",
-                        "description": "Name of the detected celebrity.",
+                        "description": "List of outfits worn by the individual",
                         "items": {
                             "type": "object",
-                            "description": "List of outfits worn by the individual",
                             "properties": {
                                 "outfit":{
                                     "type":"string",
@@ -37,7 +36,7 @@
                 },
                 "required": [
                     "ID",
-                    "celebrity_name"
+                    "clothes"
                   ]
             }
         }
