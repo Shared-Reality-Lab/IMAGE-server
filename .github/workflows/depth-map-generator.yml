@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: shared-reality-lab/image-preprocessor-depth-map-generation
+  IMAGE_NAME: shared-reality-lab/image-preprocessor-depth-map-generator
 jobs:
   lint:
     name: PEP 8 style check.
