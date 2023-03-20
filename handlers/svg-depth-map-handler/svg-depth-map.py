@@ -128,7 +128,7 @@ def handle():
     svg = svgwrite.Drawing(dimensions[0], dimensions[1])
     
     if (len(depth) > 0):
-      svg.add(svg.image( 'data:image/jpg;base64,' + depth.decode( "ascii" ))
+      svg.add(svgwrite.image.Image(depth))
     data = {
         "layers": svg
     }
