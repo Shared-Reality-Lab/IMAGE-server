@@ -7,11 +7,11 @@ WORKDIR /usr/src/app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip install --upgrade pip
-COPY /handlers/svg-depth-map-handler/requirements.txt /usr/src/app/requirements.txt
+COPY /handlers/svg-depth-map/requirements.txt /usr/src/app/requirements.txt
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
-COPY /handlers/svg-depth-map-handler/ /usr/src/app
+COPY /handlers/svg-depth-map/ /usr/src/app
 
 EXPOSE 80
 USER python
