@@ -7,8 +7,6 @@ from flask import jsonify
 import jsonschema
 import logging
 import math
-import os
-import requests
 from config import defaultServer, secondaryServer1, secondaryServer2
 from geographiclib.geodesic import Geodesic
 
@@ -956,70 +954,3 @@ def get_coordinates(content):
     """
     if 'coordinates' in content.keys():
         return content['coordinates']
-
-    if content["placeID"] is None or len(content["placeID"]) == 0:
-        error = "No value found for placeID"
-        logging.error(error)
-        return None
-
-    google_api_key = os.environ["GOOGLE_PLACES_KEY"]
-
-    # Query google places API to find latlong
-    request = f"https://maps.googleapis.com/maps/api/place/textsearch/json?\
-            query={content['placeID']}&\
-            key={google_api_key}"
-
-    request = request.replace(" ", "")
-
-    place_response = requests.get(request).json()
-
-    if not check_google_response(place_response):
-        return None
-
-    location = place_response['results'][0]['geometry']['location']
-    coordinates = {
-        'latitude': location['lat'],
-        'longitude': location['lng']
-    }
-
-    return coordinates
-
-
-def check_google_response(place_response):
-    """
-    Helper method to check whether the response from
-    the Google Places API is valid
-
-    Args:
-        place_response: the response from the Google Places API
-
-    Returns:
-        bool: True if valid, False otherwise
-    """
-    if 'results' not in place_response or len(place_response['results']) == 0:
-        logging.error("No results found for placeID")
-        logging.error(place_response)
-        return False
-
-    results = place_response['results'][0]
-
-    if 'geometry' not in results:
-        logging.error("No geometry found for placeID")
-        return False
-
-    if 'location' not in results['geometry']:
-        logging.error("No location found for placeID")
-        return False
-
-    if 'lat' not in results['geometry']['location']:
-        logging.error("No lat found for placeID")
-        return False
-
-    if 'lng' not in results['geometry']['location']:
-        logging.error("No lng found for placeID")
-        return False
-
-    return True
-
-##################################################
-# Extend features for OSM use case

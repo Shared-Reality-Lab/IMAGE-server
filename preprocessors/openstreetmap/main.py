@@ -56,7 +56,7 @@ def get_map_data():
         return validated
 
     # Check if request is for an openstreetmap
-    if 'coordinates' not in content and 'placeID' not in content:
+    if 'coordinates' not in content:
         logging.info("Not map content. Skipping...")
         return "", 204
 
