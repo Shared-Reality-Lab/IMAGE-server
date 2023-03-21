@@ -48,19 +48,14 @@ def unique(ar, return_index=False, return_inverse=False, return_counts=False):
             idx = np.concatenate(np.nonzero(flag) + ([ar.size],))
             ret += (np.diff(idx),)
     return ret
-
-def colorEncode(labelmap, colors, mode='RGB'):
-    labelmap = labelmap.astype('int32') # TODO : -1 which was present in the default labelmap is encoded as 255 because of the uint8 type, find better type
-    labelmap_rgb = np.zeros((labelmap.shape[0], labelmap.shape[1], 3),
-                            dtype=np.uint8)
     
-    # BUG : 255 is not a valid index for colors, comes from the uint8 type
-    print(f"unique labelmap : {np.unique(labelmap)}")
+def colorEncode(labelmap, colors, mode='RGB'):
+    
+    labelmap = labelmap.astype(np.int32)
+    labelmap_rgb = np.zeros((labelmap.shape[0], labelmap.shape[1], 3), dtype=np.uint8)
+    
     labels = unique(labelmap)
-    print(f"labels : {labels}")
     for label in labels:
-        print(f"label : {label}")
-        print(f"colors[label] : {colors[label]}")
         if label < 0:
             continue
         labelmap_rgb += ((labelmap == label)[:, :, np.newaxis] * \
@@ -73,14 +68,14 @@ def colorEncode(labelmap, colors, mode='RGB'):
 
 # Removes the remaining segments and only highlights the segment of
 # interest with a particular color.
-def visualize_result(img, pred, index=None):
+def visualize_result(pred, index=None):
     if index is not None:
         pred = pred.copy()
         pred[pred != index] = -1
 
     logging.info("encoding detected segmets with unique colors")
 
-    # INFO : replaces the index of the class with its RGB color
+    # replaces the index of the class with its RGB color
     pred_color = colorEncode(pred, COLORS).astype(np.uint8) 
     object_name = CLASS_NAMES[index]
 
@@ -104,7 +99,7 @@ def findContour(pred_color, width, height):
     # removes the remaining part of image and keeps the contours of segments
     logging.info("deleting remainder of the image except the contours")
 
-    image = image - dummy # TODO : Free dummy memory after this line for optimization
+    image = image - dummy
     centres = []
     area = []
     totArea = 0

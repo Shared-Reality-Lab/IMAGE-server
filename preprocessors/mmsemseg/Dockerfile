@@ -46,4 +46,12 @@ RUN pip install -r /app/requirements.txt
 
 # Download the model checkpoint and the config file
 RUN mim download mmsegmentation --config upernet_beit-base_8x2_640x640_160k_ade20k --dest .
+
+# Jupyter port, to be removed after prototyping is done
 EXPOSE 8889
+
+WORKDIR /code
+EXPOSE 5000
+ENV FLASK_APP=segment.py
+USER python
+CMD [ "gunicorn", "segment:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
