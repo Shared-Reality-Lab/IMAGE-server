@@ -85,28 +85,6 @@
                         "type": "string",
                         "title": "Name of point of interest",
                         "description": "The specific name of the point of interest (POI), e.g., the name of the amenity or the names of the two streets that intersect each other, in case the POI is an intersection"
-                    },
-                    "tags": {
-                        "type": "object",
-                        "title": "tags",
-                        "description": "Describes the specific features of a street element.",
-                        "properties": { 
-                            "addr": {
-                                "type": "string",
-                                "title": "Address",
-                                "description": "The address of the place"
-                            },
-                            "addr:street": {
-                                "type": "string",
-                                "title": "Address ",
-                                "description": "The address of the place"
-                            },
-                            "website": {
-                                "type": "string",
-                                "title": "Website",
-                                "description": "The website of the place"
-                            }   
-                        }
                     }
                 }
             }
@@ -148,44 +126,7 @@
                                     "items": {
                                         "$ref": "#/definitions/node/id"
                                     }
-                                },
-                                "tags": {
-                                    "type": "object",
-                                    "title": "tags",
-                                    "description": "Describes the specific features of a node element.",
-                                    "properties": {
-                                        "crossing": {"type": "string"},
-                                        "highway": {"type": "string"},
-                                        "tactile_paving": {"type": "boolean"},
-                                        "traffic_signals": {"type": "string"},
-                                        "traffic_signals:direction": {"type": "string"},
-                                        "entrance": {"type": "string"},
-                                        "amenity": {"type": "string"},
-                                        "parking_entrance": {"type": "string"},
-                                        "barrier": {"type": "string"},
-                                        "kerb": {"type": "string"},
-                                        "wheelchair": {"type": "boolean"},
-                                        "crossing:island": {"type": "boolean"},
-                                        "traffic_signals:sound":{"type": "boolean"},
-                                        "traffic_signals:vibration": {"type": "boolean"},
-                                        "name": {"type": "string"}
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "tags": {
-                        "type": "object",
-                        "title": "tags",
-                        "description": "Describes the specific features of a street element.",
-                        "properties": {
-                            "addr:street": {"type": "string"},
-                            "surface": {"type": "string"},
-                            "oneway": {"type": "boolean"},
-                            "sidewalk": {"type": "string"},
-                            "maxspeed": {"type": "string"},
-                            "lanes": {"type": "number"}    
-                        }
+
                     }
                 },
                 "required": ["street_id", "street_name"]
