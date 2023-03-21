@@ -167,7 +167,6 @@ def process_streets_data(OSM_data, bbox_coordinates):
                     "lanes": lanes,
 
                 }
-                # Fetch as many tags as possible
                 way_object["nodes"] = node_list
                 # Delete key if value is empty
                 way_object = dict(x for x in way_object.items() if all(x))
@@ -1006,4 +1005,3 @@ def check_google_response(place_response):
         return False
 
     return True
-
