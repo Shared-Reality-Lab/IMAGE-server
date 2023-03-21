@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/collage-detector.schema.json",
+    "type": "object",
+    "title": "Collage Detector",
+    "description": "Binary Classifier for collages. Accessed as 'ca.mcgill.a11y.image.preprocessor.collageDetector'.",
+    "properties": {
+        "collage": {
+            "type": "boolean",
+            "description": "If the input graphic was classified as a collage or not."
+        }
+    },
+    "required": [
+        "collage"
+    ]
+}
