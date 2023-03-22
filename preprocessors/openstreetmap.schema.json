@@ -28,6 +28,34 @@
         }
     },
     "properties": {
+        "unmodified_osm_data": {
+            "type": "object",
+            "title": "unmodified_osm_data",
+            "description": "Raw street data as in the returned format from OVERPASS API.",
+            "items": {
+                "type": "array",
+                "title": "elements",
+                "description": "Contains arrays of ways (with their respective nodes) and the nodes.",
+                "properties": {
+                    "type": {"type": "string"},
+                    "id": {"type": "number"},
+                    "nodes":{
+                        "$ref": "#/definitions/node"
+                    },
+                    "lat": {
+                        "$ref": "#/definitions/node/lat"
+                    },
+                    "lon": {
+                        "$ref": "#/definitions/node/lon"
+                    },
+                    "tags": {
+                        "type": "object",
+                        "title": "tags",
+                        "description": "Tags contains various possiblities of key/value pair items."
+                    } 
+                }
+            }
+        },
         "bounds": {
             "type": "object",
             "description": "Header information with the minimum and maximum values for both latitude and longitude.",
