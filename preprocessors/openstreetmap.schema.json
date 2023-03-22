@@ -55,26 +55,14 @@
                             "tags": {
                                 "type": "object",
                                 "title": "tags",
-                                "description": "Tags contains various possiblities of key/value pair items."
+                                "description": "Tags contains various possiblities of key/value pair items.",
+                                "properties": {
+                                    "highway": {"type": "string"},
+                                    "crossing": {"type": "string"},
+                                    "name": {"type": "string"}
+                                }
                             } 
-                        },
-                        "oneOf": [
-                            {
-                                "required": [
-                                    "type",
-                                    "id",
-                                    "nodes"
-                                ]
-                            },
-                            {
-                                "required": [
-                                    "type",
-                                    "id",
-                                    "lat",
-                                    "lon"
-                                ]
-                            }]
-
+                        }
                     }
                 }
             }    
