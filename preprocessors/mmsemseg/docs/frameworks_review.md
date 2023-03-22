@@ -321,7 +321,9 @@ It can boast having frequent and high quality support. The documentation is exte
 
 The framework was made modular by essence, meaning you can replace any part of the model by another one, so you can easily make trade-offs between performance and resources used, without changing more than one line of code. Also, the available models are often updated with SOTA, which could allow us to improve our preprocessor performance without much effort in the future.
 
-There are more than 50 different models that can be used for semantic segmentation, some are SOTA. To benchmark MMsegmentation, I used the following model configuration :
+There are more than 50 different models that can be used for semantic segmentation, some are SOTA. To benchmark MMsegmentation, I used the following model configuration : [UBEIT (base)](https://github.com/open-mmlab/mmsegmentation/tree/master/configs/beit).
+
+The following table summarizes the segmentation time for the selected images from IMAGE-test-graphics.
 
 <table>
   <tr>
@@ -363,6 +365,8 @@ There are more than 50 different models that can be used for semantic segmentati
 </table>
 
 The maximum amount of GPU RAM used was 11 GB.
+
+You can visualize the segmentation on the following images :
 
 ![bbq_segmented](./images/mmseg/bbq_segmented.jpg)
 
