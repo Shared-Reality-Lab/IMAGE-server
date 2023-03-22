@@ -43,8 +43,26 @@
                         "properties": {
                             "type": {"type": "string"},
                             "id": {"type": "number"},
-                            "nodes":{
-                                "$ref": "#/definitions/node"
+                            "nodes": {
+                                "type": "array",
+                                "title": "nodes",
+                                "description": " An ordered list of nodes along the respective street (way)",
+                                "items": {
+                                    "type": "object",
+                                    "title": "node",
+                                    "description": "A single point in space defined by its latitude, longitude and node ID in the OpenStreetMap (https://wiki.openstreetmap.org/wiki/Node)",
+                                    "properties": {
+                                        "id": {
+                                            "$ref": "#/definitions/node/id"
+                                        },
+                                        "lat": {
+                                            "$ref": "#/definitions/node/lat"
+                                        },
+                                        "lon": {
+                                            "$ref": "#/definitions/node/lon"
+                                        }
+                                    }
+                                }
                             },
                             "lat": {
                                 "$ref": "#/definitions/node/lat"
