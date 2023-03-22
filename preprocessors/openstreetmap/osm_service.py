@@ -126,13 +126,11 @@ def process_streets_data(OSM_data, bbox_coordinates):
                 # of a street that are within the bounding box.
                 if node.lat >= lat_min and node.lat <= lat_max:
                     if node.lon >= lon_min and node.lon <= lon_max:
-                        # Fetch as many node tags as possible
-                        for key, value in node.tags.items():
-                            if key not in node_object:
-                                node_object[key] = value
-                        # Delete key if value is empty
-                        node_object = dict(
-                            x for x in node_object.items() if all(x))
+                        node_object = {
+                            "id": int(node.id),
+                            "lat": float(node.lat),
+                            "lon": float(node.lon),
+                        }
                         if node_object not in bounded_nodes:
                             bounded_nodes.append(node_object)
             # After the boundary restrictions are applied, it is
@@ -167,17 +165,9 @@ def process_streets_data(OSM_data, bbox_coordinates):
                     "lanes": lanes,
 
                 }
-                # Fetch as many way tags as possible
-                for key, value in way.tags.items():
-                    if (value != way.tags.get(
-                            "name") and
-                            value != way.tags.get("highway")):
-                        if key not in way_object:
-                            way_object[key] = value
+                way_object["nodes"] = node_list
                 # Delete key if value is empty
                 way_object = dict(x for x in way_object.items() if all(x))
-                # Include nodes
-                way_object["nodes"] = node_list
                 processed_OSM_data.append(way_object)
     except AttributeError:
         error = 'Overpass Attibute error. Retry again'
@@ -941,10 +931,6 @@ def validate(schema, data, resolver, json_message, error_code):
         logging.error(error)
         return jsonify(json_message), error_code
     return None
-
-# We don't currently support embedded OSM Map, so a request from
-# the google embedded map is used to find latitude & longitude
-# to query the OSM Map.
 
 
 def get_coordinates(content):
