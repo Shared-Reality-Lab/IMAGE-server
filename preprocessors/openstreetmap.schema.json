@@ -57,7 +57,24 @@
                                 "title": "tags",
                                 "description": "Tags contains various possiblities of key/value pair items."
                             } 
-                        }
+                        },
+                        "oneOf": [
+                            {
+                                "required": [
+                                    "type",
+                                    "id",
+                                    "nodes"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "type",
+                                    "id",
+                                    "lat",
+                                    "lon"
+                                ]
+                            }]
+
                     }
                 }
             }    
