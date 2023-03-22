@@ -1,0 +1,212 @@
+version: "3"
+
+services:
+    orchestrator:
+        image: orchestrator:latest
+        build:
+            context: .
+            dockerfile: ./orchestrator/Dockerfile
+    supercollider:
+        build:
+            context: ./services/supercollider-images/supercollider-service
+            dockerfile: Dockerfile
+        image: "supercollider-service:latest"
+    espnet-tts:
+        build:
+            context: .
+            dockerfile: services/espnet-tts/Dockerfile
+        image: "espnet-tts:latest"
+    espnet-tts-fr:
+        build:
+            context: .
+            dockerfile: services/espnet-tts-fr/Dockerfile
+        image: "espnet-tts-fr:latest"
+    line-charts-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/line-charts/Dockerfile
+        image: "line-charts-preprocessor:latest"
+    hello-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/hello-preprocessor/Dockerfile
+        image: "hello-preprocessor:latest"
+    collage-detector-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/collage-detector/Dockerfile
+        image: "collage-detector-preprocessor:latest"
+    autour-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/autour/Dockerfile
+        image: "autour:latest"
+    ner:
+        build:
+            context: .
+            dockerfile: ./preprocessors/ner/Dockerfile
+        image: "ner:latest"
+    ocr-clouds-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/ocr/Dockerfile
+        image: "ocr-clouds:latest"
+    hello-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/hello-handler/Dockerfile
+        image: "hello-handler:latest"
+    object-detection:
+        build:
+            context: .
+            dockerfile: ./preprocessors/yolo/Dockerfile
+        image: "object-detection:latest"
+    object-detection-azure:
+        build:
+            context: .
+            dockerfile: ./preprocessors/object-detection-azure/Dockerfile
+        image: "object-detection-azure:latest"
+    content-categoriser:
+        build:
+            context: .
+            dockerfile: ./preprocessors/content-categoriser/Dockerfile
+        image: "content-categoriser:latest"
+    graphic-tagger:
+        build:
+            context: .
+            dockerfile: ./preprocessors/graphic-tagger/Dockerfile
+        image: "graphic-tagger:latest"
+    openstreetmap:
+        build:
+            context: .
+            dockerfile: ./preprocessors/openstreetmap/Dockerfile
+        image: "osm-preprocessors:latest"
+    object-grouping:
+        build:
+            context: .
+            dockerfile: ./preprocessors/grouping/Dockerfile
+        image: "object-grouping:latest"
+    object-sorting:
+        build:
+            context: .
+            dockerfile: ./preprocessors/sorting/Dockerfile
+        image: "object-sorting:latest"
+    semantic-segmentation:
+        build:
+            context: .
+            dockerfile: ./preprocessors/semanticSeg/./Dockerfile
+        image: "semantic-segmentation:latest"
+    depth-map-generator:
+        build:
+            context: .
+            dockerfile: ./preprocessors/depth-map-gen/Dockerfile
+        image: "depth-map-generator:latest"
+    chart-pipeline:
+        build:
+            context: .
+            dockerfile: ./preprocessors/chart-pipeline/Dockerfile
+        image: "chart-pipeline:latest"
+        command: --mode=1 --empty_cache=True
+    hello-tts-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/hello-tts-handler/Dockerfile
+        image: "hello-tts-handler:latest"
+    generic-tts-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/generic-tts-handler/Dockerfile
+        image: "generic-tts-handler:latest"
+    semantic-segmentation-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/segment-handler/Dockerfile
+        image: "segmentation-handler:latest"
+    pie-chart-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/pie-chart-handler/Dockerfile
+        image: "pie-chart-handler:latest"
+    object-text-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/object-text-handler/Dockerfile
+        image: "object-text-handler:latest"
+    autour-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/autour-handler/Dockerfile
+        image: "autour-handler:latest"
+    photo-audio-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/photo-audio-handler/Dockerfile
+        image: "photo-audio-handler:latest"
+    hello-haptics-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/hello-haptics-handler/Dockerfile
+        image: "hello-haptics-handler:latest"
+    hello-svg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/hello-svg-handler/Dockerfile
+        image: "hello-svg-handler:latest"
+    photo-audio-haptics-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/photo-audio-haptics-handler/Dockerfile
+        image: "photo-audio-haptics-handler:latest"
+    ocr-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/ocr-handler/Dockerfile
+        image: "ocr-handler:latest"
+    motd-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/motd/Dockerfile
+        image: "motd-handler:latest"
+    od-svg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-object-detection/Dockerfile
+        image: "od-svg-handler:latest"
+    semseg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-semantic-seg/Dockerfile
+        image: "semseg-svg:latest"
+
+    high-charts-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/high-charts/Dockerfile
+        image: "high-charts-handler:latest"
+    osm-streets-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/osm-streets-handler/Dockerfile
+        image: "osm-streets-handler:latest"
+    osm-svg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-open-street-map/Dockerfile
+        image: "osm-svg-handler:latest"
+    # Supercollider on Fedora 34
+    supercollider-base:
+        build:
+            context: ./services/supercollider-images/supercollider
+            dockerfile: Dockerfile
+        image: "supercollider:3.12.2"
+    supercollider-extra:
+        build:
+            context: ./services/supercollider-images/supercollider-extra
+            dockerfile: Dockerfile
+        image: "supercollider-extra:3.11.1"
+    schemas:
+        build:
+            context: ./schemas
+            dockerfile: Dockerfile
+        image: "schemas:latest"
+

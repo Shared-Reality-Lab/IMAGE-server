@@ -1,0 +1,222 @@
+version: "3"
+
+services:
+    orchestrator:
+        image: ghcr.io/shared-reality-lab/image-orchestrator:unstable
+        env_file:
+            - ./config/express-common.env
+        environment:
+            - STORE_IMAGE_DATA=ON
+            - PARALLEL_PREPROCESSORS=ON
+        group_add:
+            # This should be set in an environment variable or .env
+            - ${DOCKER_GID}
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - user-logs:/var/log/IMAGE
+    # Services
+    supercollider:
+        image: ghcr.io/shared-reality-lab/image-service-supercollider:unstable
+        command: sclang -D ./loader.scd
+        volumes:
+            - sc-store:/tmp/sc-store
+    espnet-tts:
+        image: ghcr.io/shared-reality-lab/image-service-espnet-tts:unstable
+        environment:
+            - TORCH_DEVICE=cuda
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                    - driver: nvidia
+                      capabilities: ["gpu", "utility", "compute"]
+    # Preprocessors
+    autour-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-autour:unstable
+        env_file:
+            - ./config/maps.env
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 2
+            ca.mcgill.a11y.image.port: 5000
+    ner:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-ner:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 2
+            ca.mcgill.a11y.image.port: 5000
+    ocr-clouds-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:unstable
+        env_file:
+            - ./config/apis-and-selection.env
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 4
+            ca.mcgill.a11y.image.port: 5000
+    object-detection:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 3
+            ca.mcgill.a11y.image.port: 5000
+        # deploy:
+        #     resources:
+        #         reservations:
+        #             devices:
+        #             - driver: nvidia
+        #               capabilities: ["gpu", "utility", "compute"]
+    content-categoriser:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 5000
+    line-charts-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-line-charts:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 5000
+    graphic-tagger:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 2
+            ca.mcgill.a11y.image.port: 5000
+        env_file:
+            - ./config/azure-api.env
+    collage-detector-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-collage-detector:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 1
+            ca.mcgill.a11y.image.port: 5000
+    object-grouping:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 4
+            ca.mcgill.a11y.image.port: 5000
+    openstreetmap:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 3
+            ca.mcgill.a11y.image.port: 5000
+    object-sorting:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-sorting:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 5
+            ca.mcgill.a11y.image.port: 5000
+    semantic-segmentation:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-semantic-segmentation:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 3
+            ca.mcgill.a11y.image.port: 5000
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                    - driver: nvidia
+                      capabilities: ["gpu", "utility", "compute"]
+    object-detection-azure:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-azure:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 3
+            ca.mcgill.a11y.image.port: 5000
+        env_file:
+            - ./config/azure-api.env
+    depth-map-generator:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-depth-map-generator:unstable
+        deploy:
+            resources:
+              reservations:
+                 devices:
+                 - driver: nvidia
+                   capabilities: ["gpu", "utility", "compute"]
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 3
+            ca.mcgill.a11y.image.port: 5000
+    # Handlers
+    autour-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-autour:unstable
+        env_file:
+            - ./config/express-common.env
+        depends_on:
+            - supercollider
+            - espnet-tts
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+    photo-audio-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-photo-audio:unstable
+        env_file:
+            - ./config/express-common.env
+        depends_on:
+            - supercollider
+            - espnet-tts
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+    hello-haptics-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-hello-haptics:unstable
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+    photo-audio-haptics-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-photo-audio-haptics:unstable
+        env_file:
+            - ./config/express-common.env
+        depends_on:
+            - supercollider
+            - espnet-tts
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+    ocr-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-ocr:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+    motd-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-motd:unstable
+        environment:
+            - MOTD=Hello, world!
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+    high-charts-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-high-charts:unstable
+        env_file:
+            - ./config/express-common.env
+        depends_on:
+            - supercollider
+            - espnet-tts
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+
+    svg-od-handler:
+         image: ghcr.io/shared-reality-lab/image-handler-svg-od:unstable
+         labels:
+             ca.mcgill.a11y.image.handler: enable
+
+
+    osm-streets-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-osm-streets:unstable
+        env_file:
+            - ./config/express-common.env
+        depends_on:
+            - supercollider
+            - espnet-tts
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+        volumes:
+            - sc-store:/tmp/sc-store
+    svg-semantic-seg-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-svg-semantic-seg:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+    svg-open-street-map-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-svg-open-street-map:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+            ca.mcgill.a11y.image.port: 5000
+volumes:
+    sc-store:
+    user-logs:
