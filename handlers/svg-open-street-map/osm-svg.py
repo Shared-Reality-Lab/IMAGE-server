@@ -85,7 +85,7 @@ def handle():
             logging.info("OSM Preprocessor data not present. Skipping ...")
             return "", 204
         svg_layers = []
-        dimensions = 500, 500
+        dimensions = 700, 700
         svg = draw.Drawing(dimensions[0], dimensions[1])
         # This gives the entire street view.
         all_svg = draw.Drawing(dimensions[0], dimensions[1])
