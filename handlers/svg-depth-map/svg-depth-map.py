@@ -123,7 +123,7 @@ def handle():
         logging.debug("Sending response")
         return response
 
-    d = preprocessors["ca.mcgill.a11y.image.preprocessor.depth-map-generator"]
+    d = preprocessors["ca.mcgill.a11y.image.preprocessor.depth-map-gen"]
     depth = d["depth-map"]
     svg = svgwrite.Drawing(dimensions[0], dimensions[1])
     
