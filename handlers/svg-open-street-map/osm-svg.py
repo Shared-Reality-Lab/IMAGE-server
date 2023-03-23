@@ -191,16 +191,24 @@ def handle():
             if "points_of_interest" in data:
                 points_of_interest = data["points_of_interest"]
                 for point in points_of_interest:
-                    latitude = (point["lat"] - lat_min) * scaled_latitude
-                    longitude = (point["lon"] - lon_min) * scaled_longitude
-                    all_svg.append(
-                        draw.Circle(
-                            longitude,
-                            latitude,
-                            1.5,
-                            fill='red',
-                            stroke_width=1,
-                            stroke='red'))
+                    if point["cat"] != "intersection":
+                        latitude = (point["lat"] - lat_min) * scaled_latitude
+                        longitude = (point["lon"] - lon_min) * scaled_longitude
+                        all_svg.append(
+                            draw.Circle(
+                                longitude,
+                                latitude,
+                                1.0,
+                                fill='red',
+                                stroke_width=1,
+                                stroke='red'))
+                        all_svg.append(
+                            draw.Text(
+                                point["cat"],
+                                10,
+                                longitude,
+                                latitude,
+                                fill='black'))
 
             svg_layers.append(
                 {"label": "AllLayers",
