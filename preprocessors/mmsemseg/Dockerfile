@@ -3,7 +3,6 @@ ARG CUDA="11.3"
 ARG CUDNN="8"
 FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-devel
 
-ARG MIM="0.3.6"
 ARG MMCV="1.5.0"
 ARG MMSEG="0.30.0"
 
@@ -30,28 +29,26 @@ RUN export FORCE_CUDA=1
 ARG PYTORCH
 ARG CUDA
 RUN ["/bin/bash", "-c", "pip install mmcv-full==${MMCV} -f https://download.openmmlab.com/mmcv/dist/cu${CUDA//./}/torch${PYTORCH}/index.html"]
-RUN pip install openmim==${MIM}
 RUN pip install mmsegmentation==${MMSEG}
 
 WORKDIR /app
 RUN adduser --disabled-password python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
-COPY ./requirements.txt /app/requirements.txt
+COPY /preprocessors/mmsemseg/requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip
 RUN pip install -r /app/requirements.txt
 
-# COPY /schemas /app/schemas
-# COPY ./ /app
+COPY /schemas /app/schemas
+COPY /preprocessors/mmsemseg/ /app
 
-# Download the model checkpoint and the config file
-RUN mim download mmsegmentation --config upernet_beit-base_8x2_640x640_160k_ade20k --dest .
+# Download the model checkpoint
+RUN wget https://image.a11y.mcgill.ca/resources/models/mmsemseg/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth
 
 # Jupyter port, to be removed after prototyping is done
 EXPOSE 8889
 
-WORKDIR /code
 EXPOSE 5000
 ENV FLASK_APP=segment.py
-USER python
+# USER python
 CMD [ "gunicorn", "segment:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]

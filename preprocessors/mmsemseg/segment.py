@@ -1,4 +1,4 @@
-""" This is the main file for the segmentation preprocessor, it should be remained 'segment.py' once it's working properly."""
+""" Semantic segmentation preprocessor """
 
 from flask import Flask, request, jsonify
 import gc
@@ -18,10 +18,9 @@ from utils import visualize_result, findContour
 
 from time import time
 import logging
-import os
 
 # configuration and checkpoint files
-BEIT_CONFIG = "/app/upernet_beit-base_8x2_640x640_160k_ade20k.py"
+BEIT_CONFIG = "/app/config/upernet_beit-base_8x2_640x640_160k_ade20k.py"
 BEIT_CHECKPOINT = "/app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth"
 
 # get the color palette used and class names
