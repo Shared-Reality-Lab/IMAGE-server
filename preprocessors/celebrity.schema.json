@@ -22,7 +22,9 @@
                     },
                     "confidence":{
                         "description": "The confidence value of the output",
-                        "type":"number"
+                        "type":"number",
+                        "minimum": 0,
+                        "maximum": 1
                     }
                 },
                 "required": [
