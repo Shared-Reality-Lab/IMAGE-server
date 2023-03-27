@@ -16,7 +16,7 @@
                         "type": "integer",
                         "minimum": 0
                     },
-                    "celebrity_name":{
+                    "name":{
                         "description": "Name of the detected celebrity.",
                         "type": "string"
                     },
@@ -29,7 +29,7 @@
                 },
                 "required": [
                     "ID",
-                    "celebrity_name"
+                    "name"
                   ]
             }
         }
