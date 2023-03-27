@@ -28,7 +28,7 @@
                     }
                 },
                 "required": [
-                    "ID",
+                    "personID",
                     "name"
                   ]
             }
