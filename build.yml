@@ -90,7 +90,7 @@ services:
         build:
             context: .
             dockerfile: ./preprocessors/mmsemseg/Dockerfile
-        image: "mm-semantic-segmentation:latest"
+        image: "mmsemantic-segmentation:latest"
     chart-pipeline:
         build:
             context: .
