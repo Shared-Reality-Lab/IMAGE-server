@@ -6,7 +6,6 @@ import json
 import jsonschema
 import base64
 
-
 import torch
 from mmseg.apis import inference_segmentor, init_segmentor
 import mmseg
@@ -30,6 +29,7 @@ CLASS_NAMES = mmseg.core.evaluation.get_classes("ade20k")
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
+
 def run_segmentation(url, model, dictionnary):
     # convert an image from base64 format
     # Following 4 lines refered from
@@ -40,13 +40,13 @@ def run_segmentation(url, model, dictionnary):
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
     image_np = cv2.imdecode(image, cv2.IMREAD_COLOR)
-    
+
     # rescale the image
     height, width, channels = image_np.shape
     scale_factor = float(1500.0 / float(max(height, width)))
 
     logging.info("graphic oiginal dimension {}".format(image_np.shape))
-    
+
     if scale_factor <= 1.0:
         logging.info("scaling down an image")
 
@@ -58,25 +58,24 @@ def run_segmentation(url, model, dictionnary):
 
     # infer the segmentation
     logging.info("running segmentation model")
-    try :
+    try:
         result = inference_segmentor(model, image_np)
     except Exception as e:
         logging.error("error while running segmentation model : {}".format(e))
 
-    
     logging.info("run finished")
 
     # extracting contours
     pred = result[0].astype(np.int32)
     predicted_classes = np.bincount(pred.flatten()).argsort()[::-1]
     logging.info("main classes detected : {}".format(predicted_classes[:5]))
-    
+
     for class_id in predicted_classes[:5]:
         logging.info("extracting contours for class: {}".format(str(class_id)))
-        
-        pred_color, class_name = visualize_result(pred, index = class_id)
+
+        pred_color, class_name = visualize_result(pred, index=class_id)
         contour, center, area = findContour(pred_color, width, height)
-        
+
         logging.info("contour extraction finished")
 
         if area == 0:
@@ -87,7 +86,7 @@ def run_segmentation(url, model, dictionnary):
             "centroid": center,
             "contours": contour
         })
-    
+
     logging.info("segmentation finished")
     return {'segments': dictionnary}
 
@@ -137,11 +136,11 @@ def segment():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(f"Request validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 400
-    
+
     if "graphic" not in request_json:
         logging.info("Not image content. Skipping ...")
         return '', 204
-    
+
     request_uuid = request_json["request_uuid"]
     timestamp = time()
 
@@ -167,13 +166,15 @@ def segment():
             # if classifier_2_label != "outdoor":
             #     logging.info("Cannot process image")
             #     return "", 204
-            segment = run_segmentation(request_json["graphic"], model, dictionnary)
+            segment = run_segmentation(
+                request_json["graphic"], model, dictionnary)
         else:
             """We are providing the user the ability to process an image
             even when the second classifier is absent, however it is
             recommended to the run the semantic segmentation
             model in conjunction with the second classifier."""
-            segment = run_segmentation(request_json["graphic"], model, dictionnary)
+            segment = run_segmentation(
+                request_json["graphic"], model, dictionnary)
     else:
         """We are providing the user the ability to process an image
         even when the first classifier is absent, however it is
@@ -190,14 +191,14 @@ def segment():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
-    
+
     response = {
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": preprocessor_name,
         "data": segment
     }
-    
+
     # validate the output format
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
@@ -205,11 +206,11 @@ def segment():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
-    
+
     logging.info("Valid response generated")
 
     return response
 
 
 if __name__ == "__main__":
-    app.run(host = '0.0.0.0', port = 5000, debug = True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
