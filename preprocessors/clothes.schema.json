@@ -3,7 +3,7 @@
     "$id": "https://image.a11y.mcgill.ca/preprocessors/clothes-detector.schema.json",
     "type": "object",
     "title": "Clothes Detector",
-    "description": "Preprocessor to detect the clothes worn by the individuals. Since clothes detection should work only on people, we would add a condition in the associated preprocessor where the code would be run only on people detected by the object detector.",
+    "description": "Preprocessor to detect the clothes worn by the people detected by the Object Detection preprocessor. The clothes detection preprocessor would only detect clothes worn by people.",
     "properties": {
         "clothes": {
             "type": "array",
