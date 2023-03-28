@@ -18,7 +18,7 @@
                     },
                     "attire": {
                         "type": "array",
-                        "description": "Lists the different clothes worn by an individual. Since one individual can wear multiple clothes such as a short sleeve top and an outerwear, we have used an array to describe the entire attire of the individual. Each element of an array would describe one piece of cloth worn by the individual.",
+                        "description": "The articles of clothing detected as being worn by the specified person, each listed separately.",
                         "items": {
                             "type": "object",
                             "properties": {
@@ -28,7 +28,7 @@
                                 },
                                 "confidence": {
                                     "type": "number",
-                                    "description": "confidence value for the detected outfit",
+                                    "description": "Confidence value for the detected article of clothing.",
                                     "minimum": 0,
                                     "maximum": 1
                                 }
