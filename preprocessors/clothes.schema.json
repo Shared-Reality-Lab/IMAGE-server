@@ -22,7 +22,7 @@
                         "items": {
                             "type": "object",
                             "properties": {
-                                "clothes": {
+                                "article": {
                                     "type": "string",
                                     "description": "One of the clothing outfit worn by the individual"
                                 },
@@ -33,7 +33,7 @@
                                     "maximum": 1
                                 }
                             },
-                            "required": ["clothes", "confidence"]
+                            "required": ["article", "confidence"]
                         }
                     }
                 },
