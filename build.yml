@@ -89,8 +89,8 @@ services:
     semantic-segmentation:
         build:
             context: .
-            dockerfile: ./preprocessors/semanticSeg/./Dockerfile
-        image: "semantic-segmentation:latest"
+            dockerfile: ./preprocessors/mmsemseg/Dockerfile
+        image: "mm-semantic-segmentation:latest"
     chart-pipeline:
         build:
             context: .
