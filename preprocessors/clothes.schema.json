@@ -18,13 +18,13 @@
                     },
                     "attire": {
                         "type": "array",
-                        "description": "The articles of clothing detected as being worn by the specified person, each listed separately.",
+                        "description": "The articles of clothing detected as being worn by the specified person, each listed separately. For example, articles such as skirts, dress, t-shirts etc. will be the values for this key.",
                         "items": {
                             "type": "object",
                             "properties": {
                                 "article": {
                                     "type": "string",
-                                    "description": "One of the clothing outfit worn by the individual"
+                                    "description": "One of the clothing article worn by the individual"
                                 },
                                 "confidence": {
                                     "type": "number",
