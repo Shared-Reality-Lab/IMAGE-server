@@ -1,3 +1,4 @@
+# Dockerfile partially and adapted from the official MMsegmentation Dockerfile at https://github.com/open-mmlab/mmsegmentation/blob/master/docker/serve/Dockerfile
 ARG PYTORCH="1.11.0"
 ARG CUDA="11.3"
 ARG CUDNN="8"
@@ -45,10 +46,7 @@ COPY /preprocessors/mmsemseg/ /app
 # Download the model checkpoint
 RUN wget https://image.a11y.mcgill.ca/resources/models/mmsemseg/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth
 
-# Jupyter port, to be removed after prototyping is done
-EXPOSE 8889
-
 EXPOSE 5000
 ENV FLASK_APP=segment.py
-# USER python
+USER python
 CMD [ "gunicorn", "segment:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
