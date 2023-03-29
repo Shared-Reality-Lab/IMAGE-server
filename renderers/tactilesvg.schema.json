@@ -1,0 +1,18 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/renderers/tactilesvg.schema.json",
+    "title": "Tactile SVG Renderer",
+    "type": "object",
+    "description": "An SVG that is displayed using a tactile display, such as a pin array. ca.mcgill.a11y.image.renderers.TactileSVG.",
+    "definitions": {
+        "svg": {
+            "description": "An SVG encoded as a data URL.",
+            "type": "string",
+            "pattern": "^data:image\/svg\\+xml(;base64)?,([^ :/?#[\\]@!$&'()*+,;=]+)|([a-zA-Z0-9+\/=]+)$"
+        }
+    },
+    "properties": {
+        "graphic": { "$ref": "#/definitions/svg" }
+    },
+    "required": [ "graphic" ]
+}
