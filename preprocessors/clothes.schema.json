@@ -7,7 +7,7 @@
     "properties": {
         "clothes": {
             "type": "array",
-            "description": "Contains a list of clothes worn by people",
+            "description": "Lists clothing identified for each person in the input.",
             "items": {
                 "type": "object",
                 "properties": {
