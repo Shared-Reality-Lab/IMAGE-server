@@ -46,7 +46,7 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 
-def run_segmentation(url, model, dictionnary):
+def run_segmentation(url, model, dictionary):
     # convert an image from base64 format
     # Following 4 lines refered from
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
@@ -96,7 +96,7 @@ def run_segmentation(url, model, dictionnary):
 
         if area == 0:
             continue
-        dictionnary.append({
+        dictionary.append({
             "name": class_name,
             "area": area,
             "centroid": center,
@@ -104,7 +104,7 @@ def run_segmentation(url, model, dictionnary):
         })
 
     logging.info("segmentation finished")
-    return {'segments': dictionnary}
+    return {'segments': dictionary}
 
 
 @app.route("/preprocessor", methods=["POST", "GET"])
@@ -112,7 +112,7 @@ def segment():
     logging.debug("Received request")
     gc.collect()
     torch.cuda.empty_cache()
-    dictionnary = []
+    dictionary = []
 
     # load the schemas
     with open('./schemas/preprocessors/segmentation.schema.json') as jsonfile:
@@ -183,20 +183,20 @@ def segment():
             #     logging.info("Cannot process image")
             #     return "", 204
             segment = run_segmentation(
-                request_json["graphic"], model, dictionnary)
+                request_json["graphic"], model, dictionary)
         else:
             """We are providing the user the ability to process an image
             even when the second classifier is absent, however it is
             recommended to the run the semantic segmentation
             model in conjunction with the second classifier."""
             segment = run_segmentation(
-                request_json["graphic"], model, dictionnary)
+                request_json["graphic"], model, dictionary)
     else:
         """We are providing the user the ability to process an image
         even when the first classifier is absent, however it is
         recommended to the run the semantic segmentation
         model in conjunction with the first classifier."""
-        segment = run_segmentation(request_json["graphic"], model, dictionnary)
+        segment = run_segmentation(request_json["graphic"], model, dictionary)
 
     torch.cuda.empty_cache()
 
