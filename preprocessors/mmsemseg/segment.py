@@ -161,7 +161,8 @@ def segment():
     request_uuid = request_json["request_uuid"]
     timestamp = time()
 
-    preprocessor_name = "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
+    preprocessor_name = \
+        "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
     classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
     classifier_2 = "ca.mcgill.a11y.image.preprocessor.graphicTagger"
     preprocess_output = request_json["preprocessors"]
