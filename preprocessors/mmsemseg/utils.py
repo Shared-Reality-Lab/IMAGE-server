@@ -8,6 +8,10 @@ COLORS = mmseg.core.evaluation.get_palette("ade20k")
 CLASS_NAMES = mmseg.core.evaluation.get_classes("ade20k")
 
 
+# Returns all the unique labels from the 2D array, sorted my descending order
+# of number of occurences by default.
+
+
 def unique(ar, return_index=False, return_inverse=False, return_counts=False):
     ar = np.asanyarray(ar).flatten()
 
@@ -49,6 +53,10 @@ def unique(ar, return_index=False, return_inverse=False, return_counts=False):
             idx = np.concatenate(np.nonzero(flag) + ([ar.size],))
             ret += (np.diff(idx),)
     return ret
+
+
+# Replaces all the unique labels from the labelmap by a unique color
+# corresponding to the class. Takes in a 2D array, returns a 3D array.
 
 
 def colorEncode(labelmap, colors, mode='RGB'):
