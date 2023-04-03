@@ -31,6 +31,11 @@ services:
             context: .
             dockerfile: ./preprocessors/hello-preprocessor/Dockerfile
         image: "hello-preprocessor:latest"
+    collage-detector-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/collage-detector/Dockerfile
+        image: "collage-detector-preprocessor:latest"
     autour-preprocessor:
         build:
             context: .
@@ -91,6 +96,11 @@ services:
             context: .
             dockerfile: ./preprocessors/mmsemseg/Dockerfile
         image: "mmsemantic-segmentation:latest"
+    depth-map-generator:
+        build:
+            context: .
+            dockerfile: ./preprocessors/depth-map-gen/Dockerfile
+        image: "depth-map-generator:latest"
     chart-pipeline:
         build:
             context: .
