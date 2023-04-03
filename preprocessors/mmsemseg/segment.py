@@ -14,7 +14,8 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 #
-# This was built using the MMsegmentation library that can be found at https://github.com/open-mmlab/mmsegmentation
+# This was built using the MMsegmentation library that can be found at
+# https://github.com/open-mmlab/mmsegmentation
 
 from flask import Flask, request, jsonify
 import gc
