@@ -956,6 +956,8 @@ def get_coordinates(content):
 
     request = request.replace(" ", "")
     print(request)
+    logging.info(request)
+        
     place_response = requests.get(request).json()
 
     if not check_google_response(place_response):
