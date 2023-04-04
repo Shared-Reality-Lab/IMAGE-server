@@ -955,7 +955,7 @@ def get_coordinates(content):
             key={google_api_key}"
 
     request = request.replace(" ", "")
-
+    print(request)
     place_response = requests.get(request).json()
 
     if not check_google_response(place_response):
