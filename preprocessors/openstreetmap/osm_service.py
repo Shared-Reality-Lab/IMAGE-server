@@ -950,9 +950,10 @@ def get_coordinates(content):
     google_api_key = os.environ["GOOGLE_PLACES_KEY"]
 
     # Query google places API to find latlong
-    request = f"https://maps.googleapis.com/maps/api/place/textsearch/json?\
-            query={content['placeID']}&\
+    request = f"https://maps.googleapis.com/maps/api/place/details/json?\
+            place_id={content['placeID']}&\
             key={google_api_key}"
+    
 
     request = request.replace(" ", "")
         
@@ -961,7 +962,7 @@ def get_coordinates(content):
     if not check_google_response(place_response, request):
         return None
 
-    location = place_response['results'][0]['geometry']['location']
+    location = place_response['result'][0]['geometry']['location']
     coordinates = {
         'latitude': location['lat'],
         'longitude': location['lng']
