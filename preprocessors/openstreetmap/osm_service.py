@@ -955,17 +955,10 @@ def get_coordinates(content):
             key={google_api_key}"
 
     request = request.replace(" ", "")
-    print(request)
-    y = 1
-     if y ==1:
-        error = "Check:"
-        logging.error(error)
-        logging.error(request)
-        return False
         
     place_response = requests.get(request).json()
 
-    if not check_google_response(place_response):
+    if not check_google_response(place_response, request):
         return None
 
     location = place_response['results'][0]['geometry']['location']
@@ -977,7 +970,7 @@ def get_coordinates(content):
     return coordinates
 
 
-def check_google_response(place_response):
+def check_google_response(place_response, request):
     """
     Helper method to check whether the response from
     the Google Places API is valid
@@ -991,6 +984,7 @@ def check_google_response(place_response):
     if 'results' not in place_response or len(place_response['results']) == 0:
         logging.error("No results found for placeID")
         logging.error(place_response)
+        logging.error(request)
         return False
 
     results = place_response['results'][0]
