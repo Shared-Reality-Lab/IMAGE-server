@@ -956,7 +956,11 @@ def get_coordinates(content):
 
     request = request.replace(" ", "")
     print(request)
-    logging.info(request)
+    if request:
+        error = "Check:"
+        logging.error(error)
+        logging.error(request)
+        return False
         
     place_response = requests.get(request).json()
 
