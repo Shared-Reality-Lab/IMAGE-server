@@ -962,7 +962,7 @@ def get_coordinates(content):
     if not check_google_response(place_response, request):
         return None
 
-    location = place_response['result'][0]['geometry']['location']
+    location = place_response['result']['geometry']['location']
     coordinates = {
         'latitude': location['lat'],
         'longitude': location['lng']
