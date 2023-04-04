@@ -956,7 +956,8 @@ def get_coordinates(content):
 
     request = request.replace(" ", "")
     print(request)
-    if request:
+    y = 1
+     if y ==1:
         error = "Check:"
         logging.error(error)
         logging.error(request)
