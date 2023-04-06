@@ -953,13 +953,12 @@ def get_coordinates(content):
     request = f"https://maps.googleapis.com/maps/api/place/details/json?\
             place_id={content['placeID']}&\
             key={google_api_key}"
-    
 
     request = request.replace(" ", "")
-        
+
     place_response = requests.get(request).json()
 
-    if not check_google_response(place_response, request):
+    if not check_google_response(place_response):
         return None
 
     location = place_response['result']['geometry']['location']
@@ -971,7 +970,7 @@ def get_coordinates(content):
     return coordinates
 
 
-def check_google_response(place_response, request):
+def check_google_response(place_response):
     """
     Helper method to check whether the response from
     the Google Places API is valid
@@ -982,27 +981,26 @@ def check_google_response(place_response, request):
     Returns:
         bool: True if valid, False otherwise
     """
-    if 'results' not in place_response or len(place_response['results']) == 0:
+    if 'result' not in place_response or len(place_response['result']) == 0:
         logging.error("No results found for placeID")
         logging.error(place_response)
-        logging.error(request)
         return False
 
-    results = place_response['results'][0]
+    result = place_response['result']
 
-    if 'geometry' not in results:
+    if 'geometry' not in result:
         logging.error("No geometry found for placeID")
         return False
 
-    if 'location' not in results['geometry']:
+    if 'location' not in result['geometry']:
         logging.error("No location found for placeID")
         return False
 
-    if 'lat' not in results['geometry']['location']:
+    if 'lat' not in result['geometry']['location']:
         logging.error("No lat found for placeID")
         return False
 
-    if 'lng' not in results['geometry']['location']:
+    if 'lng' not in result['geometry']['location']:
         logging.error("No lng found for placeID")
         return False
 
