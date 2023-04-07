@@ -79,6 +79,7 @@ def run_segmentation(url, model, dictionary):
         result = inference_segmentor(model, image_np)
     except Exception as e:
         logging.error("error while running segmentation model : {}".format(e))
+        raise e
 
     logging.info("run finished")
 
@@ -184,21 +185,31 @@ def segment():
             # if classifier_2_label != "outdoor":
             #     logging.info("Cannot process image")
             #     return "", 204
-            segment = run_segmentation(
-                request_json["graphic"], model, dictionary)
+            try:
+                segment = run_segmentation(
+                    request_json["graphic"], model, dictionary)
+            except Exception as e:
+                return jsonify("Error while running segmentation"), 500
         else:
             """We are providing the user the ability to process an image
             even when the second classifier is absent, however it is
             recommended to the run the semantic segmentation
             model in conjunction with the second classifier."""
-            segment = run_segmentation(
-                request_json["graphic"], model, dictionary)
+            try:
+                segment = run_segmentation(
+                    request_json["graphic"], model, dictionary)
+            except Exception as e:
+                return jsonify("Error while running the segmentation"), 500
     else:
         """We are providing the user the ability to process an image
         even when the first classifier is absent, however it is
         recommended to the run the semantic segmentation
         model in conjunction with the first classifier."""
-        segment = run_segmentation(request_json["graphic"], model, dictionary)
+        try:
+            segment = run_segmentation(
+                request_json["graphic"], model, dictionary)
+        except Exception as e:
+            return jsonify("Error while running the segmentation"), 500
 
     torch.cuda.empty_cache()
 
