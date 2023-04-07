@@ -188,7 +188,7 @@ def segment():
             try:
                 segment = run_segmentation(
                     request_json["graphic"], model, dictionary)
-            except Exception as e:
+            except Exception:
                 return jsonify("Error while running segmentation"), 500
         else:
             """We are providing the user the ability to process an image
@@ -198,7 +198,7 @@ def segment():
             try:
                 segment = run_segmentation(
                     request_json["graphic"], model, dictionary)
-            except Exception as e:
+            except Exception:
                 return jsonify("Error while running the segmentation"), 500
     else:
         """We are providing the user the ability to process an image
@@ -208,7 +208,7 @@ def segment():
         try:
             segment = run_segmentation(
                 request_json["graphic"], model, dictionary)
-        except Exception as e:
+        except Exception:
             return jsonify("Error while running the segmentation"), 500
 
     torch.cuda.empty_cache()
