@@ -1,10 +1,6 @@
 import cv2
-import argparse
 import numpy as np
-import torch
-import torchvision.transforms as transforms
 from flask import Flask, request, jsonify
-from collections import OrderedDict
 import json
 import time
 import jsonschema
@@ -162,7 +158,6 @@ def objectdepth():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
-    torch.cuda.empty_cache()
     logging.debug("Sending response")
     return response
 
