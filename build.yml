@@ -101,6 +101,11 @@ services:
             context: .
             dockerfile: ./preprocessors/depth-map-gen/Dockerfile
         image: "depth-map-generator:latest"
+    object-depth-calculator:
+        build:
+            context: .
+            dockerfile: ./preprocessors/object-depth-calculator/Dockerfile
+        image: "object-depth-calculator:latest"
     chart-pipeline:
         build:
             context: .
