@@ -127,7 +127,7 @@ def depthgenerator():
     img_torch = scale_torch(A_resize)[None, :, :, :]
     pred_depth = depth_model.inference(img_torch).cpu().numpy().squeeze()
     pred_depth_ori = cv2.resize(pred_depth, (img.shape[1], img.shape[0]))
-    pred_depth_ori = pred_depth_ori/np.max(pred_depth_ori)
+    pred_depth_ori = pred_depth_ori/np.max(pred_depth_ori) * 255
 
     _, pred_depth_jpg = cv2.imencode('.JPG', pred_depth_ori)
 
