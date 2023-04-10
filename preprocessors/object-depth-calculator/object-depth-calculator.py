@@ -39,67 +39,13 @@ def objectdepth():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
-    
-    # check for object detection
-    #if "ca.mcgill.a11y.image.preprocessor.objectDetection"\
-    #        not in preprocessors:
-    #    logging.debug("No Object Detector found")
-    #    response = {
-    #        "request_uuid": contents["request_uuid"],
-    #        "timestamp": int(time.time()),
-    #        "renderings": []
-    #    }
-    #    try:
-    #        validator = jsonschema.Draft7Validator(
-    #            response_schema, resolver=resolver)
-    #        validator.validate(response)
-    #    except jsonschema.exceptions.ValidationError as error:
-    #        logging.error(error)
-    #        return jsonify("Invalid Preprocessor JSON format"), 500
-    #    logging.debug("Sending response")
-    #    return response
-    
-    # check for depth image
+    # check for depth-map
     if "depth-map" not in content:
-        logging.debug("No Depth Map found")
-        response = {
-            "request_uuid": content["request_uuid"],
-            "timestamp": int(time.time()),
-            "renderings": []
-        }
-        try:
-            validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
-            return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Sending response")
-        return response
-    
-    if "dimensions" in content:
-        # If an existing graphic exists, often it is
-        # best to use that for convenience.
-        # see the following for SVG coordinate info:
-        # developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions
-        dimensions = content["dimensions"]
-    else:
-        logging.debug("Dimensions are not defined")
-        response = {
-            "request_uuid": content["request_uuid"],
-            "timestamp": int(time.time()),
-            "renderings": []
-        }
-        try:
-            validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
-            return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Sending response")
-        return response
-
+        logging.info("Request does not contain a depth-map. Skipping...")
+        return "", 204  # No content
+    if "objects" not in content:
+        logging.info("Request does not contain objects. Skipping...")
+        return "", 204  # No content
     
     request_uuid = content["request_uuid"]
     timestamp = time.time()
