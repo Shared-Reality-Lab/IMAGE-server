@@ -70,6 +70,7 @@ def objectdepth():
     print(dimensions[0], dimensions[1])
     obj_depth = []
     
+    logging.debug("number of objects")
     if (len(objects) > 0):
         for i in range(len(objects)):
             ids = objects[i]["IDs"]
@@ -85,6 +86,7 @@ def objectdepth():
                       "depth": depth
                       }
                 obj_depth.append(dictionary)
+                logging.debug(j)
     
     try:
         validator = jsonschema.Draft7Validator(data_schema)
