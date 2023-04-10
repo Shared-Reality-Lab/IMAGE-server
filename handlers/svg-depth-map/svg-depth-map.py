@@ -126,13 +126,13 @@ def handle():
     depth = d["depth-map"]
     svg = svgwrite.Drawing("depth.svg", (dimensions[0], dimensions[1]))
     svg_layers = []
-    
+
     if (len(depth) > 0):
         svg.add(svg.image(href=(depth), size=(dimensions[0], dimensions[1])))
         base64_bytes = base64.b64encode(svg.tostring().encode("utf-8"))
         sendData = "data:image/svg+xml;base64," + base64_bytes.decode("utf-8")
         svg_layers.append({"label": "Graphic Depth map", "svg": sendData})
-    
+
     if (len(depth) > 0):
         svg.add(svgwrite.image.Image(depth))
     data = {
