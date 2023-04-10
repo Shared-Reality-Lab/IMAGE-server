@@ -41,23 +41,23 @@ def objectdepth():
         return jsonify("Invalid Preprocessor JSON format"), 400
     
     # check for object detection
-    if "ca.mcgill.a11y.image.preprocessor.objectDetection"\
-            not in preprocessors:
-        logging.debug("No Object Detector found")
-        response = {
-            "request_uuid": contents["request_uuid"],
-            "timestamp": int(time.time()),
-            "renderings": []
-        }
-        try:
-            validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
-            return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Sending response")
-        return response
+    #if "ca.mcgill.a11y.image.preprocessor.objectDetection"\
+    #        not in preprocessors:
+    #    logging.debug("No Object Detector found")
+    #    response = {
+    #        "request_uuid": contents["request_uuid"],
+    #        "timestamp": int(time.time()),
+    #        "renderings": []
+    #    }
+    #    try:
+    #        validator = jsonschema.Draft7Validator(
+    #            response_schema, resolver=resolver)
+    #        validator.validate(response)
+    #    except jsonschema.exceptions.ValidationError as error:
+    #        logging.error(error)
+    #        return jsonify("Invalid Preprocessor JSON format"), 500
+    #    logging.debug("Sending response")
+    #    return response
     
     # check for depth image
     if "depth-map" not in content:
