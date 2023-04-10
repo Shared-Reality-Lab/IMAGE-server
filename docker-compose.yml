@@ -99,7 +99,7 @@ services:
             ca.mcgill.a11y.image.preprocessor: 5
             ca.mcgill.a11y.image.port: 5000
     semantic-segmentation:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-semantic-segmentation:unstable
+        image: ghcr.io/shared-reality-lab/image-preprocessor-mmsemantic-segmentation:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
@@ -116,6 +116,17 @@ services:
             ca.mcgill.a11y.image.port: 5000
         env_file:
             - ./config/azure-api.env
+    depth-map-generator:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-depth-map-generator:unstable
+        deploy:
+            resources:
+              reservations:
+                 devices:
+                 - driver: nvidia
+                   capabilities: ["gpu", "utility", "compute"]
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 3
+            ca.mcgill.a11y.image.port: 5000
     # Handlers
     autour-handler:
         image: ghcr.io/shared-reality-lab/image-handler-autour:unstable

@@ -94,8 +94,13 @@ services:
     semantic-segmentation:
         build:
             context: .
-            dockerfile: ./preprocessors/semanticSeg/./Dockerfile
-        image: "semantic-segmentation:latest"
+            dockerfile: ./preprocessors/mmsemseg/Dockerfile
+        image: "mmsemantic-segmentation:latest"
+    depth-map-generator:
+        build:
+            context: .
+            dockerfile: ./preprocessors/depth-map-gen/Dockerfile
+        image: "depth-map-generator:latest"
     chart-pipeline:
         build:
             context: .
