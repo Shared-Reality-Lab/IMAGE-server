@@ -36,25 +36,25 @@ app = Flask(__name__)
 def process_results(response, labels):
     logging.debug(response)
     if not response["categories"]:
-        return labels[0],[]
+        return labels[0], []
     else:
         category_dict = {i["name"]: i["score"] for i in response["categories"]}
         celeb = response["categories"]
         celeb_list = []
         for i in range(len(celeb)):
-            if("detail" in celeb[i]):
-                if("celebrities" in celeb[i]["detail"]):
-                    if(len(celeb[i]["detail"]["celebrities"])!=0):
+            if ("detail" in celeb[i]):
+                if ("celebrities" in celeb[i]["detail"]):
+                    if (len(celeb[i]["detail"]["celebrities"]) != 0):
                         celeb_list.append(*celeb[i]["detail"]["celebrities"])
-        celeb_sorted = sorted(celeb_list, key=lambda d: d['confidence']) 
+        celeb_sorted = sorted(celeb_list, key=lambda d: d['confidence'])
         logging.debug(celeb_sorted)
         label = max(category_dict.items(), key=operator.itemgetter(1))[0]
         if any(search(i, label) for i in labels):
             for i in labels:
                 if i in label:
-                    return i,celeb_sorted
+                    return i, celeb_sorted
         else:
-            return labels[0],celeb_sorted
+            return labels[0], celeb_sorted
 
 
 def process_image(image, labels):
@@ -77,7 +77,7 @@ def process_image(image, labels):
     """Only query categories"""
     params = {'visualFeatures': 'Categories',
               'details': 'Celebrities'
-    }
+              }
 
     # Make request and process response
     response = requests.request(
@@ -94,22 +94,23 @@ def process_image(image, labels):
 
         if 'content-length' in response.headers and \
                 int(response.headers['content-length']) == 0:
-            return [],[]
+            return [], []
         elif 'content-type' in response.headers and \
                 isinstance(response.headers['content-type'], str):
             if 'application/json' in response.headers['content-type'].lower():
                 if response.content:
                     result = response.json()
-                    label,celeb = process_results(response=result, labels=labels)
+                    label, celeb = process_results(
+                        response=result, labels=labels)
                 else:
-                    return [],[]
+                    return [], []
             elif 'image' in response.headers['content-type'].lower():
-                return [],[]
+                return [], []
 
     else:
-        return [],[]
+        return [], []
 
-    return label,celeb
+    return label, celeb
 
 
 @app.route("/preprocessor", methods=['POST', ])
@@ -146,8 +147,6 @@ def categorise():
     timestamp = time.time()
     preprocessor_name = "ca.mcgill.a11y.image.preprocessor.celebrityDetector"
     preprocessor = content["preprocessors"]
-    content_classifier\
-        = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
     # convert the uri to processable image
     if "graphic" not in content.keys():
         return "", 204
@@ -158,7 +157,7 @@ def categorise():
         return "", 204
     else:
         oDpreprocessor = \
-        preprocessor["ca.mcgill.a11y.image.preprocessor.objectDetection"]
+            preprocessor["ca.mcgill.a11y.image.preprocessor.objectDetection"]
         objects = oDpreprocessor["objects"]
         image_b64 = content["graphic"].split(",")[1]
         binary = base64.b64decode(image_b64)
@@ -167,8 +166,8 @@ def categorise():
         img_original = np.array(pil_image)
         height, width, channels = img_original.shape
         for i in range(len(objects)):
-            #print(objects[i]["type"])
-            if("person" in objects[i]["type"]):
+            # print(objects[i]["type"])
+            if ("person" in objects[i]["type"]):
                 # object_type.append(objects[i]["type"])
                 # dimensions.append(objects[i]["dimensions"])
                 # area.append(objects[i]["area"])
@@ -176,11 +175,11 @@ def categorise():
                 dimx1 = int(objects[i]["dimensions"][2] * width)
                 dimy = int(objects[i]["dimensions"][1] * height)
                 dimy1 = int(objects[i]["dimensions"][3] * height)
-                img = img_original[dimy:dimy1,dimx:dimx1]
+                img = img_original[dimy:dimy1, dimx:dimx1]
                 buffer = cv2.imencode('.jpg', img)[1].tostring()
-                pred,celeb = process_image(image=buffer, labels=labels)
+                pred, celeb = process_image(image=buffer, labels=labels)
                 print(celeb)
-                if(len(celeb)==0):
+                if (len(celeb) == 0):
                     name = None
                     conf = None
                 else:
@@ -189,12 +188,12 @@ def categorise():
                     name = celeb["name"]
 
                 celebrities = {
-                    "personID" : objects[i]["ID"],
-                    "name": name, 
-                    "confidence":conf
+                    "personID": objects[i]["ID"],
+                    "name": name,
+                    "confidence": conf
                 }
                 final_data.append(celebrities)
-        data = {"celebrities":final_data}
+        data = {"celebrities": final_data}
         try:
             validator = jsonschema.Draft7Validator(data_schema)
             validator.validate(data)
