@@ -3,10 +3,10 @@
     "$id": "https://image.a11y.mcgill.ca/preprocessors/emotion-recognition.schema.json",
     "type": "object",
     "title": "Emotion Recognition Data",
-    "description": "The emotion, gender and age of the person",
+    "description": "The emotion, gender and age of the person. The associated information can be found in preprocessor named 'ca.mcgill.a11y.image.preprocessor.emotionDetector'.",
     "properties": {
         "emotion_age_gender": {
-            "description": "The information regarding the age, gender and emotion of the person",
+            "description": "Contains a list of emotions detected by the preprocessor 'ca.mcgill.a11y.image.preprocessor.emotionDetector'",
             "type": "array",
             "items": {
                 "type": "object",
@@ -16,26 +16,30 @@
                         "type": "number"
                     },
                     "emotion": {
-                        "description": "Possible emotion for a person",
+                        "description": "Possible emotion for a person. The current preprocessor generates only three values: happy, neutral or sad",
                         "type": "object",
                         "properties": {
                             "emotion": {
                                 "type": "string"
                             },
                             "confidence": {
-                                "type": "number"
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
                             }
                         }
                     },
                     "gender": {
-                        "description": "Possible gender of the person",
+                        "description": "Possible gender of the person. The gender can be either male or female",
                         "type": "object",
                         "properties": {
                             "gender": {
-                                "type": "string"
+                                "enum": ["male", "female"]
                             },
                             "confidence": {
-                                "type": "number"
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
                             }
                         }
                     },
@@ -44,10 +48,13 @@
                         "type": "object",
                         "properties": {
                             "age": {
-                                "type": "number"
+                                "type": "number",
+                                "minimum": 0
                             },
                             "confidence": {
-                                "type": "number"
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
                             }
                         }
                     }
