@@ -180,7 +180,7 @@ def categorise():
                 pred, celeb = process_image(image=buffer, labels=labels)
                 print(celeb)
                 if (len(celeb) == 0):
-                    name = None
+                    name = "None"
                     conf = None
                 else:
                     celeb = celeb[0]
