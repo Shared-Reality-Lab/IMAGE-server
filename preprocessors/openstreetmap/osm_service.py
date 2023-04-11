@@ -955,7 +955,7 @@ def get_coordinates(content):
     request = f"https://maps.googleapis.com/maps/api/place/details/json?\
             place_id={content['placeID']}&\
             key={google_api_key}"
-
+    request = request.replace(" ","")
     place_response = requests.get(request).json()
 
     if not check_google_response(place_response):
