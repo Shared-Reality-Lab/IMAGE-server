@@ -934,9 +934,7 @@ def validate(schema, data, resolver, json_message, error_code):
         return jsonify(json_message), error_code
     return None
 
-# We don't currently support embedded OSM Map, so a request from
-# the google embedded map is used to find latitude & longitude
-# to query the OSM Map.
+# This supports input request from google embedded map.
 
 
 def get_coordinates(content):
@@ -947,14 +945,16 @@ def get_coordinates(content):
     if 'coordinates' in content.keys():
         return content['coordinates']
 
+    if "placeID" not in content:
+        return None
+    if "GOOGLE_PLACES_KEY" not in os.environ:
+        return None
     google_api_key = os.environ["GOOGLE_PLACES_KEY"]
 
-    # Query google places API to find latlong
+    # Query google places API to find latitude longitude
     request = f"https://maps.googleapis.com/maps/api/place/details/json?\
             place_id={content['placeID']}&\
             key={google_api_key}"
-
-    request = request.replace(" ", "")
 
     place_response = requests.get(request).json()
 
@@ -997,11 +997,11 @@ def check_google_response(place_response):
         return False
 
     if 'lat' not in result['geometry']['location']:
-        logging.error("No lat found for placeID")
+        logging.error("No latitude found for placeID")
         return False
 
     if 'lng' not in result['geometry']['location']:
-        logging.error("No lng found for placeID")
+        logging.error("No longitude found for placeID")
         return False
 
     return True

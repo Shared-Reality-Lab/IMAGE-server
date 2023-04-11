@@ -63,7 +63,7 @@ def get_map_data():
     # Build OpenStreetMap request
     coords = get_coordinates(content)
     if coords is None:
-        error = 'Unable to find Lat/Lng'
+        error = 'Unable to find Latitude/Longitude'
         logging.error(error)
         return jsonify(error), 400
 
