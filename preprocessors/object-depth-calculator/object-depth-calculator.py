@@ -43,9 +43,11 @@ def objectdepth():
     if "depth-map" not in content:
         logging.info("Request does not contain a depth-map. Skipping...")
         return "", 204  # No content
+    logging.debug("passed depth-map check")
     if "objects" not in content:
         logging.info("Request does not contain objects. Skipping...")
         return "", 204  # No content
+    logging.debug("passed objects check")
     
     request_uuid = content["request_uuid"]
     timestamp = time.time()
