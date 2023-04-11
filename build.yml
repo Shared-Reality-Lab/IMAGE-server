@@ -76,11 +76,11 @@ services:
             context: .
             dockerfile: ./preprocessors/graphic-tagger/Dockerfile
         image: "graphic-tagger:latest"
-    celebrity-detector:
+    celeb-detector:
         build:
             context: .
             dockerfile: ./preprocessors/celeb-detector/Dockerfile
-        image: "celebrity-detector:latest"
+        image: "celeb-detector:latest"
     openstreetmap:
         build:
             context: .

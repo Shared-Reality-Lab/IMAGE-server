@@ -181,7 +181,7 @@ def categorise():
                 print(celeb)
                 if (len(celeb) == 0):
                     name = "None"
-                    conf = None
+                    conf = 0
                 else:
                     celeb = celeb[0]
                     conf = celeb["confidence"]
