@@ -40,11 +40,11 @@ def objectdepth():
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
     # check for depth-map
-    if "depth-map" not in content:
+    if "ca.mcgill.a11y.image.preprocessor.depth-map-gen" not in content["preprocessors"]:
         logging.info("Request does not contain a depth-map. Skipping...")
         return "", 204  # No content
     logging.debug("passed depth-map check")
-    if "objects" not in content:
+    if "ca.mcgill.a11y.image.preprocessor.objectDetection" not in content["preprocessors"]:
         logging.info("Request does not contain objects. Skipping...")
         return "", 204  # No content
     logging.debug("passed objects check")
@@ -52,12 +52,13 @@ def objectdepth():
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.object-depth-calculator"
+    preprocessors = content["preorocessors"]
     
     # convert the uri to processable image
     # Following 4 lines of code
     # refered form
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
-    source = content["depth-map"]
+    source = preprocessors["ca.mcgill.a11y.image.preprocessor.depth-map-gen"]["depth-map"]
     image_b64 = source.split(",")[1]
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
