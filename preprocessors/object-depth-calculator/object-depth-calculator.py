@@ -49,6 +49,29 @@ def objectdepth():
         return "", 204  # No content
     logging.debug("passed objects check")
     
+    if "dimensions" in contents:
+        # If an existing graphic exists, often it is
+        # best to use that for convenience.
+        # see the following for SVG coordinate info:
+        # developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions
+        dimensions = contents["dimensions"]
+    else:
+        logging.debug("Dimensions are not defined")
+        response = {
+            "request_uuid": contents["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": []
+        }
+        try:
+            validator = jsonschema.Draft7Validator(
+                response_schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+            logging.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
+        return response
+    
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.object-depth-calculator"
