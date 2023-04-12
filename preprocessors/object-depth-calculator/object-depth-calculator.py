@@ -65,11 +65,7 @@ def objectdepth():
     img = cv2.imdecode(image, cv2.IMREAD_GRAYSCALE)/255
     
     o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
-    g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
-    u = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
     objects = o["objects"]
-    grouped = g["grouped"]
-    ungrouped = u["ungrouped"]
     print(dimensions[0], dimensions[1])
     obj_depth = []
     
