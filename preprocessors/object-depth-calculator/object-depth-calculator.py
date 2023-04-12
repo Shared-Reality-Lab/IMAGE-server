@@ -49,7 +49,7 @@ def objectdepth():
         return "", 204  # No content
     logging.debug("passed objects check")
     
-    if "dimensions" in contents:
+    if "dimensions" in content:
         # If an existing graphic exists, often it is
         # best to use that for convenience.
         # see the following for SVG coordinate info:
