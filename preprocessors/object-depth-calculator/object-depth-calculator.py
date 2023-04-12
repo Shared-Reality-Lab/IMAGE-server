@@ -95,7 +95,7 @@ def objectdepth():
     logging.debug("number of objects")
     if (len(objects) > 0):
         for i in range(len(objects)):
-            ids = objects[i]["IDs"]
+            ids = objects[i]["ID"]
             for j in range(len(ids)):
                 print(ids[j])
                 x1 = int(objects[ids[j]]['dimensions'][0] * dimensions[0])
