@@ -946,8 +946,12 @@ def get_coordinates(content):
         return content['coordinates']
 
     if "placeID" not in content:
+        error = 'Unable to find placeID'
+        logging.error(error)
         return None
     if "GOOGLE_PLACES_KEY" not in os.environ:
+        error = 'Unable to find API Key'
+        logging.error(error)
         return None
     google_api_key = os.environ["GOOGLE_PLACES_KEY"]
 
