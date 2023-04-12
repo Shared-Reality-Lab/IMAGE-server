@@ -54,11 +54,11 @@ def objectdepth():
         # best to use that for convenience.
         # see the following for SVG coordinate info:
         # developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions
-        dimensions = contents["dimensions"]
+        dimensions = content["dimensions"]
     else:
         logging.debug("Dimensions are not defined")
         response = {
-            "request_uuid": contents["request_uuid"],
+            "request_uuid": content["request_uuid"],
             "timestamp": int(time.time()),
             "renderings": []
         }
