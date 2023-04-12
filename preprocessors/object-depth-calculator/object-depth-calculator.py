@@ -52,7 +52,7 @@ def objectdepth():
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.object-depth-calculator"
-    preprocessors = content["preorocessors"]
+    preprocessors = content["preprocessors"]
     
     # convert the uri to processable image
     # Following 4 lines of code
