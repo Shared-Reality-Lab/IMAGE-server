@@ -95,20 +95,18 @@ def objectdepth():
     logging.debug("number of objects")
     if (len(objects) > 0):
         for i in range(len(objects)):
-            ids = objects[i]["ID"]
+            #ids = objects[i]["ID"]
             #for j in range(len(ids)):
                 #print(ids[j])
-            x1 = int(objects[ids[j]]['dimensions'][0] * dimensions[0])
-            x2 = int(objects[ids[j]]['dimensions'][2] * dimensions[0])
-            y1 = int(objects[ids[j]]['dimensions'][1] * dimensions[1])
-            y2 = int(objects[ids[j]]['dimensions'][3] * dimensions[1])
+            x1 = int(objects[i]['dimensions'][0] * dimensions[0])
+            x2 = int(objects[i]['dimensions'][2] * dimensions[0])
+            y1 = int(objects[i]['dimensions'][1] * dimensions[1])
+            y2 = int(objects[i]['dimensions'][3] * dimensions[1])
             depth = np.median(img[x1:x2,y1:y2])
-            dictionary = {"ID": ids[j],
-                      "type": result['objects'][item]['object'],
+            dictionary = {"ID": objects[i]["ID"],
                       "depth": depth
                       }
             obj_depth.append(dictionary)
-            logging.debug(j)
     
     try:
         validator = jsonschema.Draft7Validator(data_schema)
