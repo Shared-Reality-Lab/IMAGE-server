@@ -24,7 +24,7 @@
     },
     "properties":{
         "objects": {
-            "description": "The set of objects detected in the photograph.",
+            "description": "The set of object depths detected in the photograph.",
             "type": "array",
             "items": {
                 "$ref": "#/definitions/object"
