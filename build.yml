@@ -76,11 +76,11 @@ services:
             context: .
             dockerfile: ./preprocessors/graphic-tagger/Dockerfile
         image: "graphic-tagger:latest"
-    clothes-detector:
+    emotion-detector:
         build:
             context: .
-            dockerfile: ./preprocessors/clothes-detector/Dockerfile
-        image: "clothes-detector:latest"
+            dockerfile: ./preprocessors/emotion-detector/Dockerfile
+        image: "emotion-detector:latest"
     openstreetmap:
         build:
             context: .
