@@ -1,0 +1,24 @@
+# transformers
+# h5py
+# pandas
+# tqdm
+# scikit-image
+# ipywidgets
+# wandb
+# bert-score
+# ftfy
+# timm
+# lmdbdict
+# yacs
+# pyemd
+# gensim
+# pytorch-lightning==1.0.0
+Flask==2.0.3
+jsonschema==3.2.0
+Werkzeug==2.0.3
+gunicorn==20.1.0
+requests==2.25.1
+opencv-python== 4.5.5.64
+# scikit-learn== 1.0.1
+Deprecated
+Replicate
