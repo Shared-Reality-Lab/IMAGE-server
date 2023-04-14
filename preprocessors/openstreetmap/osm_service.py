@@ -7,6 +7,8 @@ from flask import jsonify
 import jsonschema
 import logging
 import math
+import os
+import requests
 from config import defaultServer, secondaryServer1, secondaryServer2
 from geographiclib.geodesic import Geodesic
 
@@ -165,7 +167,6 @@ def process_streets_data(OSM_data, bbox_coordinates):
                     "lanes": lanes,
 
                 }
-                # Fetch as many tags as possible
                 way_object["nodes"] = node_list
                 # Delete key if value is empty
                 way_object = dict(x for x in way_object.items() if all(x))
@@ -933,6 +934,8 @@ def validate(schema, data, resolver, json_message, error_code):
         return jsonify(json_message), error_code
     return None
 
+# This supports input request from google embedded map.
+
 
 def get_coordinates(content):
     """
@@ -941,3 +944,68 @@ def get_coordinates(content):
     """
     if 'coordinates' in content.keys():
         return content['coordinates']
+
+    if "placeID" not in content:
+        error = 'Unable to find placeID'
+        logging.error(error)
+        return None
+    if "GOOGLE_PLACES_KEY" not in os.environ:
+        error = 'Unable to find API Key'
+        logging.error(error)
+        return None
+    google_api_key = os.environ["GOOGLE_PLACES_KEY"]
+
+    # Query google places API to find latitude longitude
+    request = f"https://maps.googleapis.com/maps/api/place/details/json?\
+            place_id={content['placeID']}&\
+            key={google_api_key}"
+    request = request.replace(" ", "")
+    place_response = requests.get(request).json()
+
+    if not check_google_response(place_response):
+        return None
+
+    location = place_response['result']['geometry']['location']
+    coordinates = {
+        'latitude': location['lat'],
+        'longitude': location['lng']
+    }
+
+    return coordinates
+
+
+def check_google_response(place_response):
+    """
+    Helper method to check whether the response from
+    the Google Places API is valid
+
+    Args:
+        place_response: the response from the Google Places API
+
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    if 'result' not in place_response or len(place_response['result']) == 0:
+        logging.error("No results found for placeID")
+        logging.error(place_response)
+        return False
+
+    result = place_response['result']
+
+    if 'geometry' not in result:
+        logging.error("No geometry found for placeID")
+        return False
+
+    if 'location' not in result['geometry']:
+        logging.error("No location found for placeID")
+        return False
+
+    if 'lat' not in result['geometry']['location']:
+        logging.error("No latitude found for placeID")
+        return False
+
+    if 'lng' not in result['geometry']['location']:
+        logging.error("No longitude found for placeID")
+        return False
+
+    return True
