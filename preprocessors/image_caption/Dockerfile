@@ -7,7 +7,7 @@ WORKDIR /app
 RUN adduser --disabled-password python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
-ENV REPLICATE_API_TOKEN=6596996c63ba9126529525413bd872db6e23085a
+ENV REPLICATE_API_TOKEN=
 
 
 # COPY /preprocessors/image_caption/requirements.txt /app/requirements.txt
