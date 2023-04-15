@@ -3,10 +3,10 @@
     "$id": "https://image.a11y.mcgill.ca/preprocessors/emotion-recognition.schema.json",
     "type": "object",
     "title": "Emotion Recognition Data",
-    "description": "Contains a list of persons with emotions as detected by ca.mcgill.a11y.image.preprocessor.emotionDetector",
+    "description": "The emotion, gender and age of the person. The associated information can be found in preprocessor named 'ca.mcgill.a11y.image.preprocessor.emotionDetector'.",
     "properties": {
         "person_emotion": {
-            "description": "Contains a list of emotions detected by the preprocessor 'ca.mcgill.a11y.image.preprocessor.emotionDetector'",
+            "description": "Contains a list of persons with emotions as detected by ca.mcgill.a11y.image.preprocessor.emotionDetector",
             "type": "array",
             "items": {
                 "type": "object",
