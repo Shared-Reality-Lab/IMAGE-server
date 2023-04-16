@@ -68,7 +68,7 @@ jobs:
             type=raw,priority=100,value=${{ env.timestamp }}
           labels: |
             org.opencontainers.image.title=IMAGE Handler Depth Map SVG
-            org.opencontainers.image.description=Handler to create renderings from depth map generated from the scene.
+            org.opencontainers.image.description=Handler to create SVG renderings from depth map generated from the scene for debug purposes.
             org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
