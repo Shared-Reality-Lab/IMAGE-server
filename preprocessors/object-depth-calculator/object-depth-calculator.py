@@ -107,10 +107,11 @@ def objectdepth():
                       "depth": depth
                       }
             obj_depth.append(dictionary)
+        obj_depth_output = {"objects": obj_depth}d
     
     try:
         validator = jsonschema.Draft7Validator(data_schema)
-        validator.validate(depth)
+        validator.validate(obj_depth_output)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
