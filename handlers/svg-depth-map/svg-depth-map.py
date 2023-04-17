@@ -60,10 +60,10 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
-    
+
     # Check debug mode
     if ("ca.mcgill.a11y.image.capability.DebugMode"
-        not in contents['capabilities']):
+            not in contents['capabilities']):
         logging.debug("Debug mode inactive")
         print("debug inactive")
         response = {
@@ -80,10 +80,10 @@ def handle():
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
-        
+
     # Check SVG renderer
     if ("ca.mcgill.a11y.image.renderer.SVGLayers"
-        not in contents["renderers"]):
+            not in contents["renderers"]):
         logging.debug("No SVGLayers Present")
         response = {
             "request_uuid": contents["request_uuid"],
