@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 @app.route("/preprocessor", methods=['POST', ])
 def objectdepth():
-    logging.debug("Received request")
+    app.logger.debug("Received request")
     # load the schema
     with open('./schemas/preprocessors/object-depth-calculator.schema.json') \
             as jsonfile:
@@ -37,17 +37,17 @@ def objectdepth():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        app.logger.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
     # check for depth-map
     if "ca.mcgill.a11y.image.preprocessor.depth-map-gen" not in content["preprocessors"]:
-        logging.info("Request does not contain a depth-map. Skipping...")
+        app.logger.info("Request does not contain a depth-map. Skipping...")
         return "", 204  # No content
-    logging.debug("passed depth-map check")
+    app.logger.debug("passed depth-map check")
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" not in content["preprocessors"]:
-        logging.info("Request does not contain objects. Skipping...")
+        app.logger.info("Request does not contain objects. Skipping...")
         return "", 204  # No content
-    logging.debug("passed objects check")
+    app.logger.debug("passed objects check")
     
     if "dimensions" in content:
         # If an existing graphic exists, often it is
@@ -56,7 +56,7 @@ def objectdepth():
         # developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions
         dimensions = content["dimensions"]
     else:
-        logging.debug("Dimensions are not defined")
+        app.logger.debug("Dimensions are not defined")
         response = {
             "request_uuid": content["request_uuid"],
             "timestamp": int(time.time()),
@@ -67,9 +67,9 @@ def objectdepth():
                 response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
+            app.logger.error(error)
             return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Sending response")
+        app.logger.debug("Sending response")
         return response
     
     request_uuid = content["request_uuid"]
@@ -92,7 +92,7 @@ def objectdepth():
     print(dimensions[0], dimensions[1])
     obj_depth = []
     
-    logging.debug("number of objects")
+    app.logger.debug("number of objects")
     if (len(objects) > 0):
         for i in range(len(objects)):
             #ids = objects[i]["ID"]
@@ -113,7 +113,7 @@ def objectdepth():
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(obj_depth_output)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        app.logger.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
     response = {
         "request_uuid": request_uuid,
@@ -125,9 +125,9 @@ def objectdepth():
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        app.logger.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
-    logging.debug("Sending response")
+    app.logger.debug("Sending response")
     return response
 
 
