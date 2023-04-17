@@ -107,7 +107,7 @@ def objectdepth():
                       "depth": depth
                       }
             obj_depth.append(dictionary)
-        obj_depth_output = {"objects": obj_depth}d
+        obj_depth_output = {"objects": obj_depth}
     
     try:
         validator = jsonschema.Draft7Validator(data_schema)
