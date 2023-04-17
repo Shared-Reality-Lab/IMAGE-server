@@ -90,6 +90,8 @@ services:
             ca.mcgill.a11y.image.port: 5000
     openstreetmap:
         image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:unstable
+        env_file:
+            - ./config/maps.env
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
@@ -99,7 +101,7 @@ services:
             ca.mcgill.a11y.image.preprocessor: 5
             ca.mcgill.a11y.image.port: 5000
     semantic-segmentation:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-semantic-segmentation:unstable
+        image: ghcr.io/shared-reality-lab/image-preprocessor-mmsemantic-segmentation:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000

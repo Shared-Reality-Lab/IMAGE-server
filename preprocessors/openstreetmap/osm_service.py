@@ -919,6 +919,8 @@ def validate(schema, data, resolver, json_message, error_code):
         return jsonify(json_message), error_code
     return None
 
+# This supports input request from google embedded map.
+
 
 # This supports input request from google embedded map.
 

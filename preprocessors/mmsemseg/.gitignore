@@ -1,0 +1,5 @@
+output
+image
+.ipynb_checkpoints
+*.sh
+__pycache__
