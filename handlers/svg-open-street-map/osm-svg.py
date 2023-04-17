@@ -188,12 +188,16 @@ def handle():
                             "svg": svg.asDataUri()})
                     svg = draw.Drawing(dimensions[0], dimensions[1])
             # Draw all points of interest (POIs)
-            if "points_of_interest" in data:
-                points_of_interest = data["points_of_interest"]
-                for point in points_of_interest:
-                    if point["cat"] != "intersection":
-                        latitude = (point["lat"] - lat_min) * scaled_latitude
-                        longitude = (point["lon"] - lon_min) * scaled_longitude
+            if ("points_of_interest" in data or
+                    len(data["points_of_interest"]) != 0):
+                for points_of_interest in data["points_of_interest"]:
+                    if points_of_interest["cat"] != "intersection":
+                        latitude = (
+                            (points_of_interest["lat"] - lat_min)
+                            * scaled_latitude)
+                        longitude = (
+                            (points_of_interest["lon"] - lon_min)
+                            * scaled_longitude)
                         all_svg.append(
                             draw.Circle(
                                 longitude,
@@ -204,7 +208,7 @@ def handle():
                                 stroke='red'))
                         all_svg.append(
                             draw.Text(
-                                point["cat"],
+                                points_of_interest["cat"],
                                 16,
                                 longitude,
                                 latitude,
