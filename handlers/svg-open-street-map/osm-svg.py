@@ -198,14 +198,14 @@ def handle():
                             draw.Circle(
                                 longitude,
                                 latitude,
-                                1.0,
+                                3.5,
                                 fill='red',
-                                stroke_width=1,
+                                stroke_width=1.5,
                                 stroke='red'))
                         all_svg.append(
                             draw.Text(
                                 point["cat"],
-                                10,
+                                16,
                                 longitude,
                                 latitude,
                                 fill='black'))
