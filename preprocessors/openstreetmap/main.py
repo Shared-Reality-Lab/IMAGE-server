@@ -55,15 +55,15 @@ def get_map_data():
     if validated is not None:
         return validated
 
-    # Check if request is for an openstreetmap
-    if 'coordinates' not in content:
+    # Check if this request is for an openstreetmap
+    if 'coordinates' not in content and 'placeID' not in content:
         logging.info("Not map content. Skipping...")
         return "", 204
 
     # Build OpenStreetMap request
     coords = get_coordinates(content)
     if coords is None:
-        error = 'Unable to find Lat/Lng'
+        error = 'Unable to find Latitude/Longitude'
         logging.error(error)
         return jsonify(error), 400
 
@@ -88,7 +88,6 @@ def get_map_data():
     request_uuid = content["request_uuid"]
     amenity = get_amenities(bbox_coordinates)
     if OSM_data is not None:
-        unmodified_osm_data = unmodified_street_data(OSM_data)
         processed_OSM_data = process_streets_data(OSM_data, bbox_coordinates)
         if processed_OSM_data is None:
             POD1 = None
@@ -105,7 +104,10 @@ def get_map_data():
                 "timestamp": time_stamp,
                 "name": name,
                 "data": {
-                    "unmodified_osm_data": unmodified_osm_data,
+                    "unmodified_osm_data": {
+                        "raw_osm_street_data": OSM_data,
+                        "raw_osm_points_of_interest_data": amenity
+                    },
                     "bounds": header_info,
                     "points_of_interest": POIs,
                     "streets": response
@@ -117,7 +119,10 @@ def get_map_data():
                 "timestamp": time_stamp,
                 "name": name,
                 "data": {
-                    "unmodified_osm_data": unmodified_osm_data,
+                    "unmodified_osm_data": {
+                        "raw_osm_street_data": OSM_data,
+                        "raw_osm_points_of_interest_data": amenity
+                    },
                     "bounds": header_info,
                     "points_of_interest": amenity
                 }
@@ -128,7 +133,10 @@ def get_map_data():
                 "timestamp": time_stamp,
                 "name": name,
                 "data": {
-                    "unmodified_osm_data": unmodified_osm_data,
+                    "unmodified_osm_data": {
+                        "raw_osm_street_data": OSM_data,
+                        "raw_osm_points_of_interest_data": amenity
+                    },
                     "bounds": header_info
                 }
             }
@@ -138,7 +146,10 @@ def get_map_data():
             "timestamp": time_stamp,
             "name": name,
             "data": {
-                "unmodified_osm_data": unmodified_osm_data,
+                "unmodified_osm_data": {
+                    "raw_osm_street_data": OSM_data,
+                    "raw_osm_points_of_interest_data": amenity
+                },
                 "bounds": header_info,
                 "points_of_interest": amenity
             }
@@ -149,10 +160,14 @@ def get_map_data():
             "timestamp": time_stamp,
             "name": name,
             "data": {
-                "unmodified_osm_data": unmodified_osm_data,
+                "unmodified_osm_data": {
+                    "raw_osm_street_data": OSM_data,
+                    "raw_osm_points_of_interest_data": amenity
+                },
                 "bounds": header_info
             }
         }
+
     validated = validate(
         schema=schema,
         data=response,
@@ -164,53 +179,6 @@ def get_map_data():
         return validated
     logging.debug("Sending response")
     return response
-
-
-def unmodified_street_data(OSM_data):
-    """
-     The arguement of this function is the raw street data from
-     python overpy API, but the data cannot be accessed directly as
-     it only represents the memory address of the actual result,
-     which is also a list object. What this function does however is
-     to slightly modify it in a similar manner as would be
-     obtained directly from OVERPASS API.
-     For more information see-
-     https://python-overpy.readthedocs.io/en/latest/api.html.
-
-    """
-    elements = []
-    nodes_list = []
-    # List all ways with their respective nodes as
-    # in OVERPASS API
-    for way in OSM_data.ways:
-        for node in way.nodes:
-            node_dict = {
-                "id": int(node.id),
-                "lat": float(node.lat),
-                "lon": float(node.lon)
-            }
-            nodes_list.append(node_dict)
-        way_json = {
-            "type": "way",
-            "id": int(way.id),
-            "nodes": nodes_list,
-        }
-        if way.tags:
-            way_json["tags"] = way.tags
-        elements.append(way_json)
-    # List all nodes separately as in OVERPASS API
-    for node in OSM_data.nodes:
-        node_json = {
-            "type": "node",
-            "id": int(node.id),
-            "lat": float(node.lat),
-            "lon": float(node.lon),
-        }
-        if node.tags:
-            node_json["tags"] = node.tags
-        elements.append(node_json)
-    unmodified_osm_data = {"elements": elements}
-    return unmodified_osm_data
 
 
 if __name__ == "__main__":

@@ -1,4 +1,3 @@
-import overpy
 from copy import deepcopy
 import haversine as hs
 from math import radians, degrees, cos
@@ -7,8 +6,10 @@ from flask import jsonify
 import jsonschema
 import logging
 import math
+import requests
 from config import defaultServer, secondaryServer1, secondaryServer2
 from geographiclib.geodesic import Geodesic
+import os
 
 
 def create_bbox_coordinates(distance, lat, lon):
@@ -34,41 +35,43 @@ def create_bbox_coordinates(distance, lat, lon):
     return bbox_coordinates
 
 
-def server_config1(url, bbox_coord):
+def server_config1(overpass_url, bbox_coord):
     # Get street data from the
-    # specified url.
+    # specified overpass url.
 
     lat_min, lon_min = bbox_coord[0], bbox_coord[1]
     lat_max, lon_max = bbox_coord[2], bbox_coord[3]
-    """ fetch all ways and nodes """
+    """ Fetch all ways and their nodes"""
 
-    api = overpy.Overpass(url=url)
-    street_data = api.query(
-        f"""
-    way({lat_min},{lon_min},{lat_max},{lon_max})[highway];
+    overpass_query = (f"""
+    [out:json];way({lat_min},{lon_min},{lat_max},{lon_max})[highway];
     (._;>;);
-    out body;
+    out geom;
     """
-    )
+                      )
+
+    response = requests.get(overpass_url, params={'data': overpass_query})
+    street_data = response.json()
     return street_data
 
 
-def server_config2(url, bbox_coord):
+def server_config2(overpass_url, bbox_coord):
     # Get amenities from
     # the specified url.
 
     lat_min, lon_min = bbox_coord[0], bbox_coord[1]
     lat_max, lon_max = bbox_coord[2], bbox_coord[3]
-    api = overpy.Overpass(url=url)
-    street_amenities = api.query(
-        f"""
-    (node({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
+    overpass_query = (f"""
+   [out:json];(node({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
     way({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
     rel({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
     );
     out center;
     """
-    )
+                      )
+    response = requests.get(overpass_url, params={'data': overpass_query})
+    street_amenities = response.json()
+
     return street_amenities
 
 
@@ -99,7 +102,7 @@ def get_timestamp():
     return timestamp
 
 
-def process_streets_data(OSM_data, bbox_coordinates):
+def process_streets_data(street_data, bbox_coordinates):
     """Retrieve inteterested street information from the requested OSM data"""
     try:
         processed_OSM_data = []
@@ -107,69 +110,62 @@ def process_streets_data(OSM_data, bbox_coordinates):
         lat_max = bbox_coordinates[2]
         lon_min = bbox_coordinates[1]
         lon_max = bbox_coordinates[3]
-        for way in OSM_data.ways:
-            # List contains only nodes of a street within the bounding box.
-            bounded_nodes = []
-            # List contains all the nodes of a street (i.e., no boundary
-            # restriction).
-            unbounded_nodes = []
-            for node in way.nodes:
-                # Extract all nodes of a street.
-                node_object = {
-                    "id": int(node.id),
-                    "lat": float(node.lat),
-                    "lon": float(node.lon),
-                }
-                if node_object not in unbounded_nodes:
-                    unbounded_nodes.append(node_object)
-                # Apply the boundary conditions to extract only nodes
-                # of a street that are within the bounding box.
-                if node.lat >= lat_min and node.lat <= lat_max:
-                    if node.lon >= lon_min and node.lon <= lon_max:
-                        node_object = {
-                            "id": int(node.id),
-                            "lat": float(node.lat),
-                            "lon": float(node.lon),
-                        }
-                        if node_object not in bounded_nodes:
-                            bounded_nodes.append(node_object)
-            # After the boundary restrictions are applied, it is
-            # possible that the list containing the bounded_nodes of
-            # a street may no longer have enough points
-            # (nodes) to represent the street shape.
-            # This is addressed by the function "get_new_nodes",
-            # which creates more possible points for the path
-            # within the boundary conditions.
-            node_list = get_new_nodes(
-                bounded_nodes, unbounded_nodes, bbox_coordinates)
-            # Check if the "bounded_nodes" for a street/way is not empty.
-            # Otherwise all its nodes might have fallen outside the boundary.
-            if node_list:
-                # Convert lanes to integer if its value is not None
-                lanes = way.tags.get("lanes")
-                if lanes is not None:
-                    lanes = int(lanes)
-                # Convert oneway tag to boolean if its value is not None
-                oneway = way.tags.get("oneway")
-                if oneway is not None:
-                    oneway = bool(oneway)
-                way_object = {
-                    "street_id": int(way.id),
-                    "street_name": way.tags.get("name"),
-                    "street_type": way.tags.get("highway"),
-                    "addr:street": way.tags.get("addr:street"),
-                    "surface": way.tags.get("surface"),
-                    "oneway": oneway,
-                    "sidewalk": way.tags.get("sidewalk"),
-                    "maxspeed": way.tags.get("maxspeed"),
-                    "lanes": lanes,
+        for element in street_data["elements"]:
+            bounded_nodes = []  # List contains only nodes
+            # of a street within the set bounding box.
+            unbounded_nodes = []  # List contains all nodes
+            # of a street including those outside the bounding box.
+            if element["type"] == "way":
+                for item in range(len(element["nodes"])):
+                    node_element = {
+                        "id": element["nodes"][item],
+                        "lat": element["geometry"][item]["lat"],
+                        "lon": element["geometry"][item]["lon"]
+                    }
+                    # Some nodes hold additional information,
+                    # so fetch the tags if such a node is found
+                    for obj in street_data["elements"]:
+                        if obj["id"] == node_element["id"]:
+                            if "tags" in obj:
+                                node_element["tags"] = obj["tags"]
+                            if node_element not in unbounded_nodes:
+                                unbounded_nodes.append(node_element)
 
-                }
-                # Fetch as many tags as possible
-                way_object["nodes"] = node_list
-                # Delete key if value is empty
-                way_object = dict(x for x in way_object.items() if all(x))
-                processed_OSM_data.append(way_object)
+                            # Include node only if found within the bounding
+                            # box
+                            if ((node_element["lat"] >= lat_min
+                                and node_element["lat"] <= lat_max)
+                                and node_element["lon"] >= lon_min
+                                    and node_element["lon"] <= lon_max):
+                                if node_element not in bounded_nodes:
+                                    bounded_nodes.append(node_element)
+                # After the boundary restrictions are applied, it is
+                # possible that the list containing the bounded_nodes of
+                # a street may no longer have enough points
+                # (nodes) to represent the street shape.
+                # This is addressed by the function "get_new_nodes",
+                # which looks for more possible points within the boundary box
+                # to form the actual path.
+                node_elements = get_new_nodes(
+                    bounded_nodes, unbounded_nodes, bbox_coordinates)
+                # Check if the "bounded_nodes" for a street/way is not empty.
+                # Otherwise all its nodes might have fallen outside the
+                # boundary.
+                if node_elements:
+                    way_element = {
+                        "street_id": element["id"],
+                        "street_name": element["tags"].get("name"),
+                        "street_type": element["tags"].get("highway"),
+                        "nodes": node_elements
+                    }
+                # Remove name and highway tags from the tag list
+                element["tags"].pop("name", None)
+                element["tags"].pop("highway", None)
+                # Add tags
+                way_element["tags"] = element["tags"]
+                # Delete key if no value
+                way_element = dict(x for x in way_element.items() if all(x))
+                processed_OSM_data.append(way_element)
     except AttributeError:
         error = 'Overpass Attibute error. Retry again'
         logging.error(error)
@@ -663,83 +659,73 @@ def get_amenities(bbox_coord):
                 logging.error(error)
                 amenities = None
 
-    # Fetch the basic amenity tags
+    # Fetch Points of Interest (amenity)
     amenity = []
     if amenities is not None:
-        if amenities.nodes:
-            for node in amenities.nodes:
-                # Extract only amenities(under nodes) within the boundary
-                if ((node.lat >= lat_min and node.lat <= lat_max) and (
-                        node.lon >= lon_min and node.lon <= lon_max)):
-                    if node.tags.get("amenity") is not None:
-                        amenity_record = {
-                            "id": int(node.id),
-                            "lat": float(node.lat),
-                            "lon": float(node.lon),
-                            "name": node.tags.get("name"),
-                            "cat": node.tags.get("amenity"),
-                        }
-                        # Fetch as many tags possible beyond the basic
-
-                        for key, value in node.tags.items():
-                            if (value != node.tags.get(
-                                    "name") and
-                                    value != node.tags.get("amenity")):
-                                if key not in amenity_record:
-                                    amenity_record[key] = value
-
+        for element in amenities["elements"]:
+            if element["type"] == "node":
+                # Extract only amenities(under nodes) within bounding box
+                if ((element["lat"] >= lat_min and element["lat"] <= lat_max)
+                    and (element["lon"] >= lon_min
+                         and element["lon"] <= lon_max)):
+                    amenity_record = {
+                        "id": int(element["id"]),
+                        "lat": float(element["lat"]),
+                        "lon": float(element["lon"]),
+                        "name": element["tags"].get("name"),
+                        "cat": element["tags"].get("amenity")
+                    }
+                    # Remove name and amenity tags
+                    element["tags"].pop("name", None)
+                    element["tags"].pop("amenity", None)
+                    # Add tags
+                    amenity_record["tags"] = element["tags"]
                     # Delete keys with no value
                     amenity_record = dict(
                         x for x in amenity_record.items() if all(x))
                     amenity.append(amenity_record)
 
-        if amenities.ways:
-            for way in amenities.ways:
-                # Extract only amenities(under ways) within the boundary
-                if (way.center_lat >= lat_min and way.center_lat <= lat_max
-                    and way.center_lon >= lon_min
-                        and way.center_lon <= lon_max):
-                    if way.tags.get("amenity") is not None:
-                        amenity_record = {
-                            "id": int(way.id),
-                            "lat": float(way.center_lat),
-                            "lon": float(way.center_lon),
-                            "name": way.tags.get("name"),
-                            "cat": way.tags.get("amenity"),
-                        }
-                        # Fetch as many tags possible
-                        for key, value in way.tags.items():
-                            if (value != way.tags.get(
-                                    "name") and
-                                    value != way.tags.get("amenity")):
-                                if key not in amenity_record:
-                                    amenity_record[key] = value
+            if element["type"] == "way":
+                # Extract only amenities(under ways) within bounding box
+                if (element["center"]["lat"] >= lat_min
+                    and element["center"]["lat"] <= lat_max
+                    and element["center"]["lon"] >= lon_min
+                        and element["center"]["lon"] <= lon_max):
+                    amenity_record = {
+                        "id": int(element["id"]),
+                        "lat": float(element["center"]["lat"]),
+                        "lon": float(element["center"]["lon"]),
+                        "name": element["tags"].get("name"),
+                        "cat": element["tags"].get("amenity")
+                    }
+                    # Remove name and amenity tags
+                    element["tags"].pop("name", None)
+                    element["tags"].pop("amenity", None)
+                    # Add tags
+                    amenity_record["tags"] = element["tags"]
                     # Delete keys with no value
                     amenity_record = dict(
                         x for x in amenity_record.items() if all(x))
                     amenity.append(amenity_record)
 
-        if amenities.relations:
-            for rel in amenities.relations:
-                # Extract only amenities(under relations) within the boundary
-                if (rel.center_lat >= lat_min and rel.center_lat <= lat_max
-                    and rel.center_lon >= lon_min
-                        and rel.center_lon <= lon_max):
-                    if rel.tags.get("amenity") is not None:
-                        amenity_record = {
-                            "id": int(rel.id),
-                            "lat": float(rel.center_lat),
-                            "lon": float(rel.center_lon),
-                            "name": rel.tags.get("name"),
-                            "cat": rel.tags.get("amenity"),
-                        }
-                        # Fetch as many tags possible
-                        for key, value in rel.tags.items():
-                            if (value != rel.tags.get(
-                                    "name") and
-                                    value != rel.tags.get("amenity")):
-                                if key not in amenity_record:
-                                    amenity_record[key] = value
+            if element["type"] == "relation":
+                # Extract only amenities(under relations) within bounding box
+                if (element["center"]["lat"] >= lat_min
+                    and element["center"]["lat"] <= lat_max
+                    and element["center"]["lon"] >= lon_min
+                        and element["center"]["lon"] <= lon_max):
+                    amenity_record = {
+                        "id": int(element["id"]),
+                        "lat": float(element["center"]["lat"]),
+                        "lon": float(element["center"])["lon"],
+                        "name": element["tags"].get("name"),
+                        "cat": element["tags"].get("amenity")
+                    }
+                    # Remove name and amenity tags
+                    element["tags"].pop("name", None)
+                    element["tags"].pop("amenity", None)
+                    # Add tags
+                    amenity_record["tags"] = element["tags"]
                     # Delete keys with no value
                     amenity_record = dict(
                         x for x in amenity_record.items() if all(x))
@@ -934,6 +920,9 @@ def validate(schema, data, resolver, json_message, error_code):
     return None
 
 
+# This supports input request from google embedded map.
+
+
 def get_coordinates(content):
     """
     Retrieve the coordinates of a map from the
@@ -941,3 +930,68 @@ def get_coordinates(content):
     """
     if 'coordinates' in content.keys():
         return content['coordinates']
+
+    if "placeID" not in content:
+        error = 'Unable to find placeID'
+        logging.error(error)
+        return None
+    if "GOOGLE_PLACES_KEY" not in os.environ:
+        error = 'Unable to find API Key'
+        logging.error(error)
+        return None
+    google_api_key = os.environ["GOOGLE_PLACES_KEY"]
+
+    # Query google places API to find latitude longitude
+    request = f"https://maps.googleapis.com/maps/api/place/details/json?\
+            place_id={content['placeID']}&\
+            key={google_api_key}"
+    request = request.replace(" ", "")
+    place_response = requests.get(request).json()
+
+    if not check_google_response(place_response):
+        return None
+
+    location = place_response['result']['geometry']['location']
+    coordinates = {
+        'latitude': location['lat'],
+        'longitude': location['lng']
+    }
+
+    return coordinates
+
+
+def check_google_response(place_response):
+    """
+    Helper method to check whether the response from
+    the Google Places API is valid
+
+    Args:
+        place_response: the response from the Google Places API
+
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    if 'result' not in place_response or len(place_response['result']) == 0:
+        logging.error("No results found for placeID")
+        logging.error(place_response)
+        return False
+
+    result = place_response['result']
+
+    if 'geometry' not in result:
+        logging.error("No geometry found for placeID")
+        return False
+
+    if 'location' not in result['geometry']:
+        logging.error("No location found for placeID")
+        return False
+
+    if 'lat' not in result['geometry']['location']:
+        logging.error("No latitude found for placeID")
+        return False
+
+    if 'lng' not in result['geometry']['location']:
+        logging.error("No longitude found for placeID")
+        return False
+
+    return True
