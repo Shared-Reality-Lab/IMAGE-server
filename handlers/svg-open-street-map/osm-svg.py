@@ -259,15 +259,15 @@ def handle():
 
 def return_stroke_width(street_type):
     if (street_type == "primary" or street_type == "secondary"):
-        stroke_width = 6.5
+        stroke_width = 7.5
     elif street_type == "tertiary":
-        stroke_width = 5.0
+        stroke_width = 6.5
     elif street_type == "residential":
-        stroke_width = 3.5
+        stroke_width = 4.5
     elif (street_type == "footway" or street_type == "crossing"):
-        stroke_width = 2.5
+        stroke_width = 3.0
     else:
-        stroke_width = 1.0
+        stroke_width = 1.5
     return stroke_width
 
 
