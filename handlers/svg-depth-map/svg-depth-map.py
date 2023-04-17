@@ -60,10 +60,10 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
+    
+    # Check debug mode
     if ("ca.mcgill.a11y.image.capability.DebugMode"
         not in contents['capabilities']
-            or "ca.mcgill.a11y.image.renderer.SVGLayers"
-            not in contents["renderers"]):
         logging.debug("Debug mode inactive")
         print("debug inactive")
         response = {
@@ -80,8 +80,27 @@ def handle():
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
+        
+    # Check SVG renderer
+    if ("ca.mcgill.a11y.image.renderer.SVGLayers"
+        not in contents["renderers"]):
+        logging.debug("No SVGLayers Present")
+        response = {
+            "request_uuid": contents["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": []
+        }
+        try:
+            validator = jsonschema.Draft7Validator(
+                response_schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+            logging.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
+        return response
 
-    # No Object Detector found
+    # Check for depth map
     if "ca.mcgill.a11y.image.preprocessor.depth-map-gen"\
             not in preprocessors:
         logging.debug("No Depth Map found")
