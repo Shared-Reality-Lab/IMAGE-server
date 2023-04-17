@@ -118,7 +118,7 @@ def objectdepth():
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": name,
-        "data": { objects: obj_depth }
+        "data": { "objects": obj_depth }
     }
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
