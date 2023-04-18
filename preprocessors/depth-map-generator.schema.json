@@ -6,14 +6,14 @@
     "description": "Generates depth graphic from a 2D scene. This contains a bitmap for a grayscale graphic which represents depth with the same dimensions as the original image and a scaling factor to convert depth to real-world distance",
     "properties": {
         "depth-map": {
-            "description": "Normalized 2D representation of Depth from 0 to 1. Single channel float32 JPG with the same dimensions as the original image. Low values are closer to the camera while larger values are further away.",
+            "description": "Normalized 2D representation of Depth from 0 to 255. Single channel float32 JPG with the same dimensions as the original image. Low values are closer to the camera while larger values are further away.",
             "type": "string",
             "pattern": "^data:image/[^;]+;base64,[a-zA-Z0-9+/=]+$"
         },
         "scaling": {
             "type": "number",
             "minimum": 0,
-            "description": "Max distance to meter conversion, 0 for no scaling. Without scaling, the depth map is unchanged and will contain values from 0 to 1. With scaling, the depth can be converted to distance. Ex: Scaling value is set to 10, meaning the maximum distance in the depth map represents 10 meters, this can then be used to convert the depth to distance from 0 to 10 meters rather than a depth map with values from 0 to 1."
+            "description": "Max distance to meter conversion, 0 for no scaling. Without scaling, the depth map is unchanged and will contain values from 0 to 255. With scaling, the depth can be converted to distance. Ex: Scaling value is set to 10, meaning the maximum distance in the depth map represents 10 meters, this can then be used to convert the depth to distance from 0 to 10 meters rather than a depth map with values from 0 to 255."
         }
     },
     "required": [ "depth-map", "scaling" ]
