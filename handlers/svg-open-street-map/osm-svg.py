@@ -85,7 +85,7 @@ def handle():
             logging.info("OSM Preprocessor data not present. Skipping ...")
             return "", 204
         svg_layers = []
-        dimensions = 500, 500
+        dimensions = 700, 700
         svg = draw.Drawing(dimensions[0], dimensions[1])
         # This gives the entire street view.
         all_svg = draw.Drawing(dimensions[0], dimensions[1])
@@ -187,6 +187,32 @@ def handle():
                         {"label": str(streets[street]["street_id"]),
                             "svg": svg.asDataUri()})
                     svg = draw.Drawing(dimensions[0], dimensions[1])
+            # Draw all points of interest (POIs)
+            if ("points_of_interest" in data or
+                    len(data["points_of_interest"]) != 0):
+                for points_of_interest in data["points_of_interest"]:
+                    if points_of_interest["cat"] != "intersection":
+                        latitude = (
+                            (points_of_interest["lat"] - lat_min)
+                            * scaled_latitude)
+                        longitude = (
+                            (points_of_interest["lon"] - lon_min)
+                            * scaled_longitude)
+                        all_svg.append(
+                            draw.Circle(
+                                longitude,
+                                latitude,
+                                3.5,
+                                fill='red',
+                                stroke_width=1.5,
+                                stroke='red'))
+                        all_svg.append(
+                            draw.Text(
+                                points_of_interest["cat"],
+                                16,
+                                longitude,
+                                latitude,
+                                fill='black'))
 
             svg_layers.append(
                 {"label": "AllLayers",
@@ -233,15 +259,15 @@ def handle():
 
 def return_stroke_width(street_type):
     if (street_type == "primary" or street_type == "secondary"):
-        stroke_width = 6.5
+        stroke_width = 7.5
     elif street_type == "tertiary":
-        stroke_width = 5.0
+        stroke_width = 6.5
     elif street_type == "residential":
-        stroke_width = 3.5
+        stroke_width = 4.5
     elif (street_type == "footway" or street_type == "crossing"):
-        stroke_width = 2.5
+        stroke_width = 3.0
     else:
-        stroke_width = 1.0
+        stroke_width = 1.5
     return stroke_width
 
 
