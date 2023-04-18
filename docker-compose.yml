@@ -219,6 +219,10 @@ services:
         labels:
             ca.mcgill.a11y.image.handler: enable
             ca.mcgill.a11y.image.port: 5000
+    svg-depth-map:
+        image: ghcr.io/shared-reality-lab/image-handler-svg-depth-map:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
 volumes:
     sc-store:
     user-logs:

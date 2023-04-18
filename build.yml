@@ -193,6 +193,11 @@ services:
             context: .
             dockerfile: ./handlers/svg-open-street-map/Dockerfile
         image: "osm-svg-handler:latest"
+    svg-depth-map:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-depth-map/Dockerfile
+        image: "svg-depth-map:latest"
     # Supercollider on Fedora 34
     supercollider-base:
         build:
