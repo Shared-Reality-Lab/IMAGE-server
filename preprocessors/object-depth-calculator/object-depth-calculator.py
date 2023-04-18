@@ -102,7 +102,7 @@ def objectdepth():
             x2 = int(objects[i]['dimensions'][2] * dimensions[0])
             y1 = int(objects[i]['dimensions'][1] * dimensions[1])
             y2 = int(objects[i]['dimensions'][3] * dimensions[1])
-            depth = np.median(img[x1:x2,y1:y2])
+            depth = np.nanmedian(img[x1:x2,y1:y2])
             dictionary = {"ID": objects[i]["ID"],
                       "depth": depth
                       }
