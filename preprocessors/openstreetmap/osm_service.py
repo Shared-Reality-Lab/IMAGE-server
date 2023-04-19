@@ -165,7 +165,8 @@ def process_streets_data(street_data, bbox_coordinates):
                 way_element["tags"] = element["tags"]
                 # Delete key if no value
                 way_element = dict(x for x in way_element.items() if all(x))
-                processed_OSM_data.append(way_element)
+                if way_element not in processed_OSM_data:
+                    processed_OSM_data.append(way_element)
     except AttributeError:
         error = 'Overpass Attibute error. Retry again'
         logging.error(error)
@@ -683,7 +684,8 @@ def get_amenities(bbox_coord):
                     # Delete keys with no value
                     amenity_record = dict(
                         x for x in amenity_record.items() if all(x))
-                    amenity.append(amenity_record)
+                    if amenity_record not in amenity:
+                        amenity.append(amenity_record)
 
             if element["type"] == "way":
                 # Extract only amenities(under ways) within bounding box
@@ -706,7 +708,8 @@ def get_amenities(bbox_coord):
                     # Delete keys with no value
                     amenity_record = dict(
                         x for x in amenity_record.items() if all(x))
-                    amenity.append(amenity_record)
+                    if amenity_record not in amenity:
+                        amenity.append(amenity_record)
 
             if element["type"] == "relation":
                 # Extract only amenities(under relations) within bounding box
@@ -729,7 +732,8 @@ def get_amenities(bbox_coord):
                     # Delete keys with no value
                     amenity_record = dict(
                         x for x in amenity_record.items() if all(x))
-                    amenity.append(amenity_record)
+                    if amenity_record not in amenity:
+                        amenity.append(amenity_record)
     return amenity
 
 

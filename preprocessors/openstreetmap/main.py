@@ -104,10 +104,6 @@ def get_map_data():
                 "timestamp": time_stamp,
                 "name": name,
                 "data": {
-                    "unmodified_osm_data": {
-                        "raw_osm_street_data": OSM_data,
-                        "raw_osm_points_of_interest_data": amenity
-                    },
                     "bounds": header_info,
                     "points_of_interest": POIs,
                     "streets": response
@@ -119,10 +115,6 @@ def get_map_data():
                 "timestamp": time_stamp,
                 "name": name,
                 "data": {
-                    "unmodified_osm_data": {
-                        "raw_osm_street_data": OSM_data,
-                        "raw_osm_points_of_interest_data": amenity
-                    },
                     "bounds": header_info,
                     "points_of_interest": amenity
                 }
@@ -133,10 +125,6 @@ def get_map_data():
                 "timestamp": time_stamp,
                 "name": name,
                 "data": {
-                    "unmodified_osm_data": {
-                        "raw_osm_street_data": OSM_data,
-                        "raw_osm_points_of_interest_data": amenity
-                    },
                     "bounds": header_info
                 }
             }
@@ -146,10 +134,6 @@ def get_map_data():
             "timestamp": time_stamp,
             "name": name,
             "data": {
-                "unmodified_osm_data": {
-                    "raw_osm_street_data": OSM_data,
-                    "raw_osm_points_of_interest_data": amenity
-                },
                 "bounds": header_info,
                 "points_of_interest": amenity
             }
@@ -160,10 +144,6 @@ def get_map_data():
             "timestamp": time_stamp,
             "name": name,
             "data": {
-                "unmodified_osm_data": {
-                    "raw_osm_street_data": OSM_data,
-                    "raw_osm_points_of_interest_data": amenity
-                },
                 "bounds": header_info
             }
         }
