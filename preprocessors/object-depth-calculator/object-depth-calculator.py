@@ -4,12 +4,13 @@ from flask import Flask, request, jsonify
 import json
 import time
 import jsonschema
-import logging
 import base64
 
 app = Flask(__name__)
 
 @app.route("/preprocessor", methods=['POST', ])
+
+
 def objectdepth():
     app.logger.debug("Received request")
     # load the schema
@@ -40,15 +41,17 @@ def objectdepth():
         app.logger.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
     # check for depth-map
-    if "ca.mcgill.a11y.image.preprocessor.depth-map-gen" not in content["preprocessors"]:
+    if "ca.mcgill.a11y.image.preprocessor.depth-map-gen" 
+        not in content["preprocessors"]:
         app.logger.info("Request does not contain a depth-map. Skipping...")
         return "", 204  # No content
     app.logger.debug("passed depth-map check")
-    if "ca.mcgill.a11y.image.preprocessor.objectDetection" not in content["preprocessors"]:
+    if "ca.mcgill.a11y.image.preprocessor.objectDetection" 
+        not in content["preprocessors"]:
         app.logger.info("Request does not contain objects. Skipping...")
         return "", 204  # No content
     app.logger.debug("passed objects check")
-    
+
     if "dimensions" in content:
         # If an existing graphic exists, often it is
         # best to use that for convenience.
@@ -71,12 +74,12 @@ def objectdepth():
             return jsonify("Invalid Preprocessor JSON format"), 500
         app.logger.debug("Sending response")
         return response
-    
+
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.object-depth-calculator"
     preprocessors = content["preprocessors"]
-    
+
     # convert the uri to processable image
     # Following 4 lines of code
     # refered form
@@ -86,23 +89,20 @@ def objectdepth():
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
     img = cv2.imdecode(image, cv2.IMREAD_GRAYSCALE)/255
-    
+
     o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
     objects = o["objects"]
     print(dimensions[0], dimensions[1])
     obj_depth = []
-    
+
     app.logger.debug("number of objects")
     if (len(objects) > 0):
         for i in range(len(objects)):
-            #ids = objects[i]["ID"]
-            #for j in range(len(ids)):
-                #print(ids[j])
             x1 = int(objects[i]['dimensions'][0] * dimensions[1])
             x2 = int(objects[i]['dimensions'][2] * dimensions[1])
             y1 = int(objects[i]['dimensions'][1] * dimensions[0])
             y2 = int(objects[i]['dimensions'][3] * dimensions[0])
-            depth = np.nanmedian(img[x1:x2,y1:y2])
+            depth = np.nanmedian(img[x1:x2, y1:y2])
             if np.isnan(depth):
                 app.logger.error("NAN depth value")
                 app.logger.debug("Ojbect #")
@@ -110,13 +110,13 @@ def objectdepth():
                 app.logger.debug(x1.tostring())
                 app.logger.debug(x2.tostring())
                 depth = 1
-                
+
             dictionary = {"ID": objects[i]["ID"],
-                      "depth": depth
-                      }
+                        "depth": depth
+                        }
             obj_depth.append(dictionary)
-        obj_depth_output = {"objects": obj_depth}
-    
+        obj_depth_output = { "objects": obj_depth }
+
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(obj_depth_output)
