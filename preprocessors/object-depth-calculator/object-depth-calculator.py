@@ -67,7 +67,7 @@ def objectdepth():
         }
         try:
             validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver)
+                schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
             app.logger.error(error)
@@ -112,7 +112,7 @@ def objectdepth():
                 depth = 1
 
             dictionary = {"ID": objects[i]["ID"],
-                            "depth": depth
+                          "depth": depth
                          }
             obj_depth.append(dictionary)
         obj_depth_output = {"objects": obj_depth}
@@ -127,7 +127,7 @@ def objectdepth():
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": name,
-        "data": { "objects": obj_depth }
+        "data": {"objects": obj_depth}
     }
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
