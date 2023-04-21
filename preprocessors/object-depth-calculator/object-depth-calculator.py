@@ -8,8 +8,8 @@ import base64
 
 app = Flask(__name__)
 
-@app.route("/preprocessor", methods=['POST', ])
 
+@app.route("/preprocessor", methods=['POST', ])
 
 def objectdepth():
     app.logger.debug("Received request")
@@ -41,12 +41,12 @@ def objectdepth():
         app.logger.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
     # check for depth-map
-    if ("ca.mcgill.a11y.image.preprocessor.depth-map-gen" 
+    if ("ca.mcgill.a11y.image.preprocessor.depth-map-gen"
             not in content["preprocessors"]):
         app.logger.info("Request does not contain a depth-map. Skipping...")
         return "", 204  # No content
     app.logger.debug("passed depth-map check")
-    if ("ca.mcgill.a11y.image.preprocessor.objectDetection" 
+    if ("ca.mcgill.a11y.image.preprocessor.objectDetection"
             not in content["preprocessors"]):
         app.logger.info("Request does not contain objects. Skipping...")
         return "", 204  # No content
@@ -112,10 +112,10 @@ def objectdepth():
                 depth = 1
 
             dictionary = {"ID": objects[i]["ID"],
-                        "depth": depth
-                        }
+                            "depth": depth
+                         }
             obj_depth.append(dictionary)
-        obj_depth_output = { "objects": obj_depth }
+        obj_depth_output = {"objects": obj_depth}
 
     try:
         validator = jsonschema.Draft7Validator(data_schema)
