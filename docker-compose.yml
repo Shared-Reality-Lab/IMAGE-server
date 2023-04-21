@@ -90,6 +90,8 @@ services:
             ca.mcgill.a11y.image.port: 5000
     openstreetmap:
         image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:unstable
+        env_file:
+            - ./config/maps.env
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
@@ -99,7 +101,7 @@ services:
             ca.mcgill.a11y.image.preprocessor: 5
             ca.mcgill.a11y.image.port: 5000
     semantic-segmentation:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-semantic-segmentation:unstable
+        image: ghcr.io/shared-reality-lab/image-preprocessor-mmsemantic-segmentation:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
@@ -222,6 +224,10 @@ services:
         labels:
             ca.mcgill.a11y.image.handler: enable
             ca.mcgill.a11y.image.port: 5000
+    svg-depth-map:
+        image: ghcr.io/shared-reality-lab/image-handler-svg-depth-map:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
 volumes:
     sc-store:
     user-logs:
