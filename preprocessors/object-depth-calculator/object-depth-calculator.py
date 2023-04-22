@@ -10,7 +10,6 @@ app = Flask(__name__)
 
 
 @app.route("/preprocessor", methods=['POST', ])
-
 def objectdepth():
     app.logger.debug("Received request")
     # load the schema
@@ -84,7 +83,8 @@ def objectdepth():
     # Following 4 lines of code
     # refered form
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
-    source = preprocessors["ca.mcgill.a11y.image.preprocessor.depth-map-gen"]["depth-map"]
+    source = preprocessors["ca.mcgill.a11y.image.preprocessor.depth-map-gen"]\
+                ["depth-map"]
     image_b64 = source.split(",")[1]
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
@@ -113,7 +113,7 @@ def objectdepth():
 
             dictionary = {"ID": objects[i]["ID"],
                           "depth": depth
-                         }
+                          }
             obj_depth.append(dictionary)
         obj_depth_output = {"objects": obj_depth}
 
