@@ -84,7 +84,7 @@ def objectdepth():
     # refered form
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
     source = (preprocessors["ca.mcgill.a11y.image.preprocessor.depth-map-gen"]
-        ["depth-map"])
+              ["depth-map"])
     image_b64 = source.split(",")[1]
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
