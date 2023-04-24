@@ -139,7 +139,7 @@ def handle():
                             stroke="#ff4477",
                             stroke_width=2.5,
                             fill="none",
-                            aria_label=category+" "+str(i+1)))
+                            aria_label=category+" "+str(j+1)))
 
                 svg.append(g)
 
