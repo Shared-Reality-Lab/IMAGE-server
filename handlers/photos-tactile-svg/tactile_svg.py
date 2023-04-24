@@ -113,8 +113,7 @@ def handle():
         grouped = g["grouped"]
         ungrouped = u["ungrouped"]
         svg = draw.Drawing(dimensions[0], dimensions[1])
-        # svg_layers = []
-        layerCount = 0
+        layer = 0
         if (len(grouped) > 0):
             for i in range(len(grouped)):
                 ids = grouped[i]["IDs"]
