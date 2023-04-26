@@ -178,10 +178,10 @@ def handle():
                 category = segments[j]["name"]
                 contour = segments[j]["contours"]
                 try:
-                    p = draw.Path(stroke="#ff4477", stroke_width=4,
+                    p = draw.Path(stroke="#ff4477", stroke_width=10,
                                   fill='none', aria_label=category,)
                 except BaseException:
-                    p = draw.Path(stroke="red", stroke_width=4,
+                    p = draw.Path(stroke="red", stroke_width=10,
                                   fill='none', aria_label=category,)
                 for k in range(len(contour)):
                     coord = contour[k]["coordinates"]
@@ -199,7 +199,7 @@ def handle():
 
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
-        "description": "Tactile SVG of photo with possibly object dettection and/or semantic segmentation outputs",
+        "description": "Tactile SVG of photo with possibly object detection and/or semantic segmentation outputs",
         "data": data
     }
 
