@@ -61,6 +61,24 @@ def handle():
     # Check preprocessor data
     preprocessors = contents['preprocessors']
 
+
+    if "ca.mcgill.a11y.image.renderer.TactileSVG" not in contents["renderers"]:
+        logging.debug("TactileSVG Renderer not supported")
+        response = {
+            "request_uuid": contents["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": []
+        }
+        try:
+            validator = jsonschema.Draft7Validator(
+                response_schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+            logging.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
+        return response
+    
     # No Object Detector AND semantic segmentation found
     if not any(x in preprocessors for x in ["ca.mcgill.a11y.image.preprocessor.semanticSegmentation", "ca.mcgill.a11y.image.preprocessor.objectDetection"]):
         logging.debug("No Object Detector and Semantic Segmentation found")
@@ -102,8 +120,6 @@ def handle():
         logging.debug("Sending response")
         return response
 
-    # Things change a little more from this point forward since both preprocessors might not exist.
-    # Haphazardly pulling in stuff from both semantic sementation and object detection svg handlers
 
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors:
         o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
