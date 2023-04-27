@@ -81,7 +81,9 @@ def handle():
     """
 
     # No Object Detector AND semantic segmentation found
-    if not any(x in preprocessors for x in ["ca.mcgill.a11y.image.preprocessor.semanticSegmentation", "ca.mcgill.a11y.image.preprocessor.objectDetection"]):
+    if not any(x in preprocessors for x in
+               ["ca.mcgill.a11y.image.preprocessor.semanticSegmentation",
+                "ca.mcgill.a11y.image.preprocessor.objectDetection"]):
         logging.debug("No Object Detector and Semantic Segmentation found")
         response = {
             "request_uuid": contents["request_uuid"],
@@ -120,7 +122,6 @@ def handle():
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
-
 
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors:
         o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
@@ -187,8 +188,10 @@ def handle():
                         aria_label=category,
                         data_image_layer="Layer "+str(layer)))
 
-    if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation" in preprocessors:
-        s = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]
+    if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
+            in preprocessors:
+        s = preprocessors["ca.mcgill.a11y.image.\
+             preprocessor.semanticSegmentation"]
         segments = s["segments"]
         if (len(segments) > 0):
             for j in range(len(segments)):
@@ -216,7 +219,8 @@ def handle():
 
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
-        "description": "Tactile SVG of photo with possibly object detection and/or semantic segmentation outputs",
+        "description": "Tactile SVG of photo with possibly object detection \
+            and/or semantic segmentation outputs",
         "data": data
     }
 
