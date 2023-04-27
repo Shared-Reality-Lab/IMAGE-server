@@ -61,7 +61,7 @@ def handle():
     # Check preprocessor data
     preprocessors = contents['preprocessors']
 
-
+    """
     if "ca.mcgill.a11y.image.renderer.TactileSVG" not in contents["renderers"]:
         logging.debug("TactileSVG Renderer not supported")
         response = {
@@ -78,7 +78,8 @@ def handle():
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
-    
+    """
+
     # No Object Detector AND semantic segmentation found
     if not any(x in preprocessors for x in ["ca.mcgill.a11y.image.preprocessor.semanticSegmentation", "ca.mcgill.a11y.image.preprocessor.objectDetection"]):
         logging.debug("No Object Detector and Semantic Segmentation found")
