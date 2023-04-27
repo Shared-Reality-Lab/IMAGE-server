@@ -190,7 +190,7 @@ def handle():
 
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
             in preprocessors:
-        s = preprocessors["ca.mcgill.a11y.image."
+        s = preprocessors["ca.mcgill.a11y.image."\
              "preprocessor.semanticSegmentation"]
         segments = s["segments"]
         if (len(segments) > 0):
@@ -219,7 +219,7 @@ def handle():
 
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
-        "description": "Tactile SVG of photo with possibly object detection "
+        "description": "Tactile SVG of photo with possibly object detection "\
             "and/or semantic segmentation outputs",
         "data": data
     }
