@@ -223,6 +223,10 @@ services:
         image: ghcr.io/shared-reality-lab/image-handler-svg-depth-map:unstable
         labels:
             ca.mcgill.a11y.image.handler: enable
+    photos-tactile-svg-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-photos-tactile-svg:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
 volumes:
     sc-store:
     user-logs:
