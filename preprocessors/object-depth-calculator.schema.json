@@ -24,7 +24,7 @@
     },
     "properties":{
         "objects": {
-            "description": "The set of object depths detected in the photograph.",
+            "description": "The set of object IDs with corresponding depth values between 0 and 1 within in the graphic.",
             "type": "array",
             "items": {
                 "$ref": "#/definitions/object"
