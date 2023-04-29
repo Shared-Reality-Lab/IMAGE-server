@@ -7,11 +7,11 @@ WORKDIR /usr/src/app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip install --upgrade pip
-COPY /handlers/photos-tactile-svg/requirements.txt /usr/src/app/requirements.txt
+COPY /handlers/photo-tactile-svg/requirements.txt /usr/src/app/requirements.txt
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
-COPY /handlers/photos-tactile-svg/ /usr/src/app
+COPY /handlers/photo-tactile-svg/ /usr/src/app
 
 EXPOSE 80
 USER python
