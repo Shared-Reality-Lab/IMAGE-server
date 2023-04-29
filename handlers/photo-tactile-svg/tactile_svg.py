@@ -134,7 +134,7 @@ def handle():
             category = objects[ids[0]]["type"]
             layer += 1
             g = draw.Group(data_image_layer="Layer " +
-                            str(layer), aria_label=category)
+                           str(layer), aria_label=category)
             for j in range(len(ids)):
                 # print(ids[j])
                 x1 = int(objects[ids[j]]['dimensions'][0] * dimensions[0])
@@ -161,13 +161,13 @@ def handle():
             category = objects[ungrouped[i]]["type"]
             layer += 1
             x1 = int(objects[ungrouped[i]]
-                        ['dimensions'][0] * dimensions[0])
+                     ['dimensions'][0] * dimensions[0])
             x2 = int(objects[ungrouped[i]]
-                        ['dimensions'][2] * dimensions[0])
+                     ['dimensions'][2] * dimensions[0])
             y1 = int(objects[ungrouped[i]]
-                        ['dimensions'][1] * dimensions[1])
+                     ['dimensions'][1] * dimensions[1])
             y2 = int(objects[ungrouped[i]]
-                        ['dimensions'][3] * dimensions[1])
+                     ['dimensions'][3] * dimensions[1])
             width = abs(x2 - x1)
             height = abs(y2 - y1)
             start_y1 = abs(dimensions[1] - y1 - height)
