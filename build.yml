@@ -198,11 +198,11 @@ services:
             context: .
             dockerfile: ./handlers/svg-depth-map/Dockerfile
         image: "svg-depth-map:latest"
-    photos-tactile-svg-handler:
+    photo-tactile-svg-handler:
         build:
             context: .
-            dockerfile: ./handlers/photos-tactile-svg/Dockerfile
-        image: "photos-tactile-svg:latest"
+            dockerfile: ./handlers/photo-tactile-svg/Dockerfile
+        image: "photo-tactile-svg:latest"
     # Supercollider on Fedora 34
     supercollider-base:
         build:

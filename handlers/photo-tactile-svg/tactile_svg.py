@@ -1,4 +1,4 @@
-# Copyright (c) 2022 IMAGE Project, Shared Reality Lab, McGill University
+# Copyright (c) 2023 IMAGE Project, Shared Reality Lab, McGill University
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -61,7 +61,6 @@ def handle():
     # Check preprocessor data
     preprocessors = contents['preprocessors']
 
-    """
     if "ca.mcgill.a11y.image.renderer.TactileSVG" not in contents["renderers"]:
         logging.debug("TactileSVG Renderer not supported")
         response = {
@@ -78,9 +77,8 @@ def handle():
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
-    """
 
-    # No Object Detector AND semantic segmentation found
+    # Both Object Detector AND semantic segmentation are NOT found
     if not any(x in preprocessors for x in
                ["ca.mcgill.a11y.image.preprocessor.semanticSegmentation",
                 "ca.mcgill.a11y.image.preprocessor.objectDetection"]):
@@ -126,57 +124,27 @@ def handle():
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors:
         o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
         g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
-        u = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
         objects = o["objects"]
         grouped = g["grouped"]
-        ungrouped = u["ungrouped"]
+        ungrouped = g["ungrouped"]
         svg = draw.Drawing(dimensions[0], dimensions[1])
         layer = 0
-        if (len(grouped) > 0):
-            for i in range(len(grouped)):
-                ids = grouped[i]["IDs"]
-                category = objects[ids[0]]["type"]
-                layer += 1
-                g = draw.Group(data_image_layer="Layer " +
-                               str(layer), aria_label=category)
-                for j in range(len(ids)):
-                    # print(ids[j])
-                    x1 = int(objects[ids[j]]['dimensions'][0] * dimensions[0])
-                    x2 = int(objects[ids[j]]['dimensions'][2] * dimensions[0])
-                    y1 = int(objects[ids[j]]['dimensions'][1] * dimensions[1])
-                    y2 = int(objects[ids[j]]['dimensions'][3] * dimensions[1])
-                    width = abs(x2 - x1)
-                    height = abs(y2 - y1)
-                    start_y1 = abs(dimensions[1] - y1 - height)
-                    g.append(
-                        draw.Rectangle(
-                            x1,
-                            start_y1,
-                            width,
-                            height,
-                            stroke="#ff4477",
-                            stroke_width=2.5,
-                            fill="none",
-                            aria_label=category+" "+str(j+1)))
-
-                svg.append(g)
-
-        if (len(ungrouped) > 0):
-            for i in range(len(ungrouped)):
-                category = objects[ungrouped[i]]["type"]
-                layer += 1
-                x1 = int(objects[ungrouped[i]]
-                         ['dimensions'][0] * dimensions[0])
-                x2 = int(objects[ungrouped[i]]
-                         ['dimensions'][2] * dimensions[0])
-                y1 = int(objects[ungrouped[i]]
-                         ['dimensions'][1] * dimensions[1])
-                y2 = int(objects[ungrouped[i]]
-                         ['dimensions'][3] * dimensions[1])
+        for i in range(len(grouped)):
+            ids = grouped[i]["IDs"]
+            category = objects[ids[0]]["type"]
+            layer += 1
+            g = draw.Group(data_image_layer="Layer " +
+                            str(layer), aria_label=category)
+            for j in range(len(ids)):
+                # print(ids[j])
+                x1 = int(objects[ids[j]]['dimensions'][0] * dimensions[0])
+                x2 = int(objects[ids[j]]['dimensions'][2] * dimensions[0])
+                y1 = int(objects[ids[j]]['dimensions'][1] * dimensions[1])
+                y2 = int(objects[ids[j]]['dimensions'][3] * dimensions[1])
                 width = abs(x2 - x1)
                 height = abs(y2 - y1)
                 start_y1 = abs(dimensions[1] - y1 - height)
-                svg.append(
+                g.append(
                     draw.Rectangle(
                         x1,
                         start_y1,
@@ -185,8 +153,35 @@ def handle():
                         stroke="#ff4477",
                         stroke_width=2.5,
                         fill="none",
-                        aria_label=category,
-                        data_image_layer="Layer "+str(layer)))
+                        aria_label=category+" "+str(j+1)))
+
+            svg.append(g)
+
+        for i in range(len(ungrouped)):
+            category = objects[ungrouped[i]]["type"]
+            layer += 1
+            x1 = int(objects[ungrouped[i]]
+                        ['dimensions'][0] * dimensions[0])
+            x2 = int(objects[ungrouped[i]]
+                        ['dimensions'][2] * dimensions[0])
+            y1 = int(objects[ungrouped[i]]
+                        ['dimensions'][1] * dimensions[1])
+            y2 = int(objects[ungrouped[i]]
+                        ['dimensions'][3] * dimensions[1])
+            width = abs(x2 - x1)
+            height = abs(y2 - y1)
+            start_y1 = abs(dimensions[1] - y1 - height)
+            svg.append(
+                draw.Rectangle(
+                    x1,
+                    start_y1,
+                    width,
+                    height,
+                    stroke="#ff4477",
+                    stroke_width=2.5,
+                    fill="none",
+                    aria_label=category,
+                    data_image_layer="Layer "+str(layer)))
 
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
             in preprocessors:
