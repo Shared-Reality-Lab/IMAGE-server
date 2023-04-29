@@ -56,27 +56,7 @@ def handle():
         logging.error(e)
         return jsonify("None"), 204
 
-    preprocessor = contents['preprocessors']
-
-    #Should this be the check here??
-    if ("ca.mcgill.a11y.image.capability.DebugMode" not in contents['capabilities']):
-        #    or "ca.mcgill.a11y.image.renderer.SVGLayers"
-        #    not in contents["renderers"]):
-        logging.debug("Debug mode inactive")
-        response = {
-            "request_uuid": contents["request_uuid"],
-            "timestamp": int(time.time()),
-            "renderings": []
-        }
-        try:
-            validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
-            return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Sending response")
-        return response
+    preprocessor = contents["preprocessors"]
 
     if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
             not in preprocessor:
