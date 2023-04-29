@@ -58,6 +58,25 @@ def handle():
 
     preprocessor = contents["preprocessors"]
 
+    """
+    if "ca.mcgill.a11y.image.renderer.TactileSVG" not in contents["renderers"]:
+        logging.debug("TactileSVG Renderer not supported")
+        response = {
+            "request_uuid": contents["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": []
+        }
+        try:
+            validator = jsonschema.Draft7Validator(
+                response_schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+            logging.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Sending response")
+        return response
+    """
+
     if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
             not in preprocessor:
         logging.debug("OSM Preprocessor data not present. Skipping ...")
@@ -168,11 +187,11 @@ def handle():
                 label="Intersection of "
                 if len(checkPOIs[POI["id"]])==1:
                     label+=checkPOIs[POI["id"]][0][0]+" and minor street"
-                    description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None else checkPOIs[POI["id"]][0][0]+" No details available"
+                    #description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None else checkPOIs[POI["id"]][0][0]+" No details available"
                 else:
                     label+=", ".join(x[0] for x in checkPOIs[POI["id"]][:-1])
                     label+=" and "+checkPOIs[POI["id"]][-1][0]
-                    description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else x[0]+" No details available") for x in checkPOIs[POI["id"]])
+                    #description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else x[0]+" No details available") for x in checkPOIs[POI["id"]])
                 latitude = (
                     (POI["lat"] - lat_min)
                     * scaled_latitude)
@@ -187,12 +206,7 @@ def handle():
                                 fill='red',
                                 stroke_width=1.5,
                                 stroke='red',
-                                aria_label=label,
-                                aria_description=description))
-        
-
-
-
+                                aria_label=label))
 
     data = {"graphic": svg.asDataUri()}
     rendering = {
