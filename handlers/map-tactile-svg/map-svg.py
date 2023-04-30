@@ -271,11 +271,11 @@ def getDescriptions(street):
                 else:
                     description += "not oneway, "
             elif attr == "lanes":
-                description += str(street[attr])+" "+ \
-                    attr.replace("_", " ")+", "
+                description += str(street[attr]) + " " + \
+                    attr.replace("_", " ") + ", "
             else:
-                description += attr.replace("_", " ")+ \
-                    " "+str(street[attr])+", "
+                description += attr.replace("_", " ") + \
+                    " " + str(street[attr]) + ", "
             """
         match attr:
           case "oneway":
