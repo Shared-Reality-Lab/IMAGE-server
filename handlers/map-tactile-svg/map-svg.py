@@ -188,13 +188,14 @@ def handle():
                 if len(checkPOIs[POI["id"]]) == 1:
                     label += checkPOIs[POI["id"]][0][0]+" and minor street"
                     # description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[
-                    # POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None 
+                    # POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None
                     # else checkPOIs[POI["id"]][0][0]+" No details available"
                 else:
                     label += ", ".join(x[0] for x in checkPOIs[POI["id"]][:-1])
                     label += " and "+checkPOIs[POI["id"]][-1][0]
-                    # description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else 
-                    # x[0]+" No details available") for x in checkPOIs[POI["id"]])
+                    # description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else
+                    # x[0]+" No details available") for x in
+                    # checkPOIs[POI["id"]])
                 latitude = (
                             (POI["lat"] - lat_min)
                             * scaled_latitude)
@@ -256,6 +257,7 @@ def return_stroke_width(street_type):
         stroke_width = 1.5
     return stroke_width
 
+
 def getDescriptions(street):
     description = ""
     default_attributes = ["street_id", "street_name", "nodes"]
@@ -269,9 +271,11 @@ def getDescriptions(street):
                 else:
                     description += "not oneway, "
             elif attr == "lanes":
-                description += str(street[attr])+" "+attr.replace("_", " ")+", "
+                description += str(street[attr])+" "+attr.replace(
+                                                                  "_", " ")+", "
             else:
-                description += attr.replace("_", " ")+" "+str(street[attr])+", "
+                description += attr.replace("_", " ")+\
+                    " "+str(street[attr])+", "
             """
         match attr:
           case "oneway":
@@ -284,8 +288,6 @@ def getDescriptions(street):
           case _:
               description+=attr.replace("_", " ")+" "+str(street[attr])+", "
             """
-
-
     # Remove the last ", "
     if description == "":
         return None
@@ -294,3 +296,4 @@ def getDescriptions(street):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
