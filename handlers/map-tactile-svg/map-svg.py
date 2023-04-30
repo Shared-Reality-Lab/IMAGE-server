@@ -271,10 +271,10 @@ def getDescriptions(street):
                 else:
                     description += "not oneway, "
             elif attr == "lanes":
-                description += str(street[attr])+" "+attr.replace(
-                                                                  "_", " ")+", "
+                description += str(street[attr])+" "+ \
+                    attr.replace("_", " ")+", "
             else:
-                description += attr.replace("_", " ")+\
+                description += attr.replace("_", " ")+ \
                     " "+str(street[attr])+", "
             """
         match attr:
@@ -294,6 +294,6 @@ def getDescriptions(street):
     else:
         return description[:-2]
 
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
-
