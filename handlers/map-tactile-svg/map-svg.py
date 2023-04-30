@@ -23,6 +23,7 @@ import time
 import drawSvg as draw
 app = Flask(__name__)
 
+
 @app.route("/handler", methods=["POST"])
 def handle():
     logging.debug("Received request")
@@ -148,13 +149,13 @@ def handle():
                 description = getDescriptions(streets[street])
                 stroke_width = return_stroke_width(
                     streets[street]["street_type"])
-                args = dict(stroke = colors[color], stroke_width = stroke_width, 
-                            fill = 'none', aria_label = name)
-                ## Add this arg only if the  not empty
-                if description != None:
-                    args["aria_description"]=description
+                args = dict(stroke=colors[color], stroke_width=stroke_width,
+                            fill='none', aria_label=name)
+                # Add this arg only if the  not empty
+                if description is not None:
+                    args["aria_description"] = description
                 p = draw.Path(**args)
-                node_coordinates=[]
+                node_coordinates = []
                 for node in streets[street]["nodes"]:
                     node_coordinates.append([node["lon"], node["lat"]])
                     if "POIs_ID" in node:
@@ -162,20 +163,20 @@ def handle():
                             if x in checkPOIs:
                                 checkPOIs[x].append([name, description])
                             else:
-                                checkPOIs[x]=[[name, description]]
+                                checkPOIs[x] = [[name, description]]
                 for index in range(len(node_coordinates) - 1):
                     p.M(scaled_longitude *
                         (node_coordinates[index][0] -
-                        lon_min), scaled_latitude *
+                         lon_min), scaled_latitude *
                         (node_coordinates[index][1] -
-                        lat_min))
+                         lat_min))
                     p.L(scaled_longitude *
                         (node_coordinates[index +
-                                        1][0] -
-                        lon_min), scaled_latitude *
+                                          1][0] -
+                         lon_min), scaled_latitude *
                         (node_coordinates[index +
-                                        1][1] -
-                        lat_min))
+                                          1][1] -
+                         lat_min))
 
                 g.append(p)
         svg.append(g)
@@ -184,13 +185,16 @@ def handle():
         for POI in data["points_of_interest"]:
             if POI["id"] in checkPOIs and POI["cat"] == "intersection":
                 label = "Intersection of "
-                if len(checkPOIs[POI["id"]])==1:
+                if len(checkPOIs[POI["id"]]) == 1:
                     label += checkPOIs[POI["id"]][0][0]+" and minor street"
-                    #description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None else checkPOIs[POI["id"]][0][0]+" No details available"
+                    # description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[
+                    # POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None 
+                    # else checkPOIs[POI["id"]][0][0]+" No details available"
                 else:
                     label += ", ".join(x[0] for x in checkPOIs[POI["id"]][:-1])
                     label += " and "+checkPOIs[POI["id"]][-1][0]
-                    #description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else x[0]+" No details available") for x in checkPOIs[POI["id"]])
+                    # description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else 
+                    # x[0]+" No details available") for x in checkPOIs[POI["id"]])
                 latitude = (
                             (POI["lat"] - lat_min)
                             * scaled_latitude)
@@ -253,21 +257,21 @@ def return_stroke_width(street_type):
     return stroke_width
 
 def getDescriptions(street):
-    description=""
-    default_attributes=["street_id", "street_name", "nodes"]
+    description = ""
+    default_attributes = ["street_id", "street_name", "nodes"]
     if "street_name" not in street:
         default_attributes.append("street_type")
     for attr in street:
         if attr not in default_attributes:
-            if attr=="oneway":
+            if attr == "oneway":
                 if street[attr]:
-                    description+="oneway, "
+                    description += "oneway, "
                 else:
-                    description+="not oneway, "
-            elif attr=="lanes":
-                description+=str(street[attr])+" "+attr.replace("_", " ")+", "
+                    description += "not oneway, "
+            elif attr == "lanes":
+                description += str(street[attr])+" "+attr.replace("_", " ")+", "
             else:
-                description+=attr.replace("_", " ")+" "+str(street[attr])+", "
+                description += attr.replace("_", " ")+" "+str(street[attr])+", "
             """
         match attr:
           case "oneway":
@@ -283,7 +287,7 @@ def getDescriptions(street):
 
 
     # Remove the last ", "
-    if description=="":
+    if description == "":
         return None
     else:
         return description[:-2]
