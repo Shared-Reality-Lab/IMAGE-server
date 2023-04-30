@@ -23,7 +23,6 @@ import time
 import drawSvg as draw
 app = Flask(__name__)
 
-
 @app.route("/handler", methods=["POST"])
 def handle():
     logging.debug("Received request")
@@ -58,7 +57,6 @@ def handle():
 
     preprocessor = contents["preprocessors"]
 
-    
     if "ca.mcgill.a11y.image.renderer.TactileSVG" not in contents["renderers"]:
         logging.debug("TactileSVG Renderer not supported")
         response = {
@@ -75,7 +73,6 @@ def handle():
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
-    
 
     if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
             not in preprocessor:
@@ -94,9 +91,9 @@ def handle():
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
-    
+
     dimensions = 700, 700
-    remove_streets=["footway", "crossing", "steps"]
+    remove_streets = ["footway", "crossing", "steps"]
     svg = draw.Drawing(dimensions[0], dimensions[1])
 
     data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
@@ -113,100 +110,102 @@ def handle():
         scaled_latitude = dimensions[1] / (lat_max - lat_min)
 
         colors = [
-        "red",
-        "blue",
-        "springgreen",
-        "deeppink",
-        "orange",
-        "purple",
-        "cyan",
-        "coral",
-        "teal",
-        "indigo",
-        "lime",
-        "chocolate",
-        "magenta",
-        "crimson",
-        "deepskyblue",
-        "greenyellow",
-        "gold",
-        "green",
-        "aqua",
-        "navy",
-        "royalblue",
-        "forestgreen",
-        "dodgerblue"
-        ]
+                  "red",
+                  "blue",
+                  "springgreen",
+                  "deeppink",
+                  "orange",
+                  "purple",
+                  "cyan",
+                  "coral",
+                  "teal",
+                  "indigo",
+                  "lime",
+                  "chocolate",
+                  "magenta",
+                  "crimson",
+                  "deepskyblue",
+                  "greenyellow",
+                  "gold",
+                  "green",
+                  "aqua",
+                  "navy",
+                  "royalblue",
+                  "forestgreen",
+                  "dodgerblue"
+                  ]
         # Draw the streets with svg.
-        checkPOIs={}
-        g=draw.Group(data_image_layer="firstLayer", aria_label="Streets")
+        checkPOIs = {}
+        g = draw.Group(data_image_layer="firstLayer", aria_label="Streets")
         for street in range(len(streets)):
-          color = street
-          if street >= len(colors):
-              color = street % len(colors)
-          # Filter only necessary street types 
-          if (streets[street])["street_type"] not in remove_streets:
-            name=streets[street]["street_name"] if "street_name" in streets[street] else streets[street]["street_type"]
-            description=getDescriptions(streets[street])
-            stroke_width = return_stroke_width(
-                streets[street]["street_type"])
-            args=dict(stroke=colors[color], stroke_width=stroke_width, fill='none', aria_label=name)
-            ## Add this arg only if the  not empty
-            if description!=None:
-              args["aria_description"]=description
-            p = draw.Path(**args)
-            node_coordinates=[]
-            for node in streets[street]["nodes"]:
-              node_coordinates.append([node["lon"], node["lat"]])
-              if "POIs_ID" in node:
-                for x in node["POIs_ID"]:
-                  if x in checkPOIs:
-                    checkPOIs[x].append([name, description])
-                  else:
-                    checkPOIs[x]=[[name, description]]
-            for index in range(len(node_coordinates) - 1):
-                p.M(scaled_longitude *
-                    (node_coordinates[index][0] -
-                      lon_min), scaled_latitude *
-                    (node_coordinates[index][1] -
-                      lat_min))
-                p.L(scaled_longitude *
-                    (node_coordinates[index +
-                                      1][0] -
-                      lon_min), scaled_latitude *
-                    (node_coordinates[index +
-                                      1][1] -
-                      lat_min))
+            color = street
+            if street >= len(colors):
+                color = street % len(colors)
+            # Filter only necessary street types
+            if (streets[street])["street_type"] not in remove_streets:
+                name = streets[street]["street_name"] if "street_name"\
+                    in streets[street] else streets[street]["street_type"]
+                description = getDescriptions(streets[street])
+                stroke_width = return_stroke_width(
+                    streets[street]["street_type"])
+                args = dict(stroke = colors[color], stroke_width = stroke_width, 
+                            fill = 'none', aria_label = name)
+                ## Add this arg only if the  not empty
+                if description != None:
+                    args["aria_description"]=description
+                p = draw.Path(**args)
+                node_coordinates=[]
+                for node in streets[street]["nodes"]:
+                    node_coordinates.append([node["lon"], node["lat"]])
+                    if "POIs_ID" in node:
+                        for x in node["POIs_ID"]:
+                            if x in checkPOIs:
+                                checkPOIs[x].append([name, description])
+                            else:
+                                checkPOIs[x]=[[name, description]]
+                for index in range(len(node_coordinates) - 1):
+                    p.M(scaled_longitude *
+                        (node_coordinates[index][0] -
+                        lon_min), scaled_latitude *
+                        (node_coordinates[index][1] -
+                        lat_min))
+                    p.L(scaled_longitude *
+                        (node_coordinates[index +
+                                        1][0] -
+                        lon_min), scaled_latitude *
+                        (node_coordinates[index +
+                                        1][1] -
+                        lat_min))
 
-            g.append(p)
+                g.append(p)
         svg.append(g)
 
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
-            if POI["id"] in checkPOIs and POI["cat"]=="intersection":
-                label="Intersection of "
+            if POI["id"] in checkPOIs and POI["cat"] == "intersection":
+                label = "Intersection of "
                 if len(checkPOIs[POI["id"]])==1:
-                    label+=checkPOIs[POI["id"]][0][0]+" and minor street"
+                    label += checkPOIs[POI["id"]][0][0]+" and minor street"
                     #description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None else checkPOIs[POI["id"]][0][0]+" No details available"
                 else:
-                    label+=", ".join(x[0] for x in checkPOIs[POI["id"]][:-1])
-                    label+=" and "+checkPOIs[POI["id"]][-1][0]
+                    label += ", ".join(x[0] for x in checkPOIs[POI["id"]][:-1])
+                    label += " and "+checkPOIs[POI["id"]][-1][0]
                     #description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else x[0]+" No details available") for x in checkPOIs[POI["id"]])
                 latitude = (
-                    (POI["lat"] - lat_min)
-                    * scaled_latitude)
+                            (POI["lat"] - lat_min)
+                            * scaled_latitude)
                 longitude = (
-                    (POI["lon"] - lon_min)
-                    * scaled_longitude)
+                             (POI["lon"] - lon_min)
+                             * scaled_longitude)
                 svg.append(
                             draw.Circle(
-                                longitude,
-                                latitude,
-                                3.5,
-                                fill='red',
-                                stroke_width=1.5,
-                                stroke='red',
-                                aria_label=label))
+                                        longitude,
+                                        latitude,
+                                        3.5,
+                                        fill='red',
+                                        stroke_width=1.5,
+                                        stroke='red',
+                                        aria_label=label))
 
     data = {"graphic": svg.asDataUri()}
     rendering = {
