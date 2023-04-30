@@ -7,11 +7,11 @@ WORKDIR /usr/src/app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip install --upgrade pip
-COPY /handlers/maps-tactile-svg/requirements.txt /usr/src/app/requirements.txt
+COPY /handlers/map-tactile-svg/requirements.txt /usr/src/app/requirements.txt
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
-COPY /handlers/maps-tactile-svg/ /usr/src/app
+COPY /handlers/map-tactile-svg/ /usr/src/app
 
 EXPOSE 80
 USER python

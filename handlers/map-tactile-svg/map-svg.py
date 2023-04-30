@@ -58,7 +58,7 @@ def handle():
 
     preprocessor = contents["preprocessors"]
 
-    """
+    
     if "ca.mcgill.a11y.image.renderer.TactileSVG" not in contents["renderers"]:
         logging.debug("TactileSVG Renderer not supported")
         response = {
@@ -75,7 +75,7 @@ def handle():
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
-    """
+    
 
     if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
             not in preprocessor:
