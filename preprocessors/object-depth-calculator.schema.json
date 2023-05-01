@@ -1,0 +1,35 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/object-depth-calculator.schema.json",
+    "type": "object",
+    "title": "Object relative Depth",
+    "description": "Contains a list of object IDs with their relative depth within the picture. The object ID will match the object detection ID (ca.mcgill.a11y.image.preprocessor.objectDetection) and depth is calculated by taking the median of the depth image (ca.mcgill.a11y.image.preprocessor.depth-map-gen) within the bounding box",
+    "definitions": {
+        "object": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "description": "A number identifying this object in the set.",
+                    "type": "integer"
+                },
+                "depth": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Relative depth of an object within the image from 0 to 1. 0 being the very front of the image and 1 being the furthest point. Float32 output"
+                }
+            },
+            "required": [ "ID", "depth" ]
+        }
+    },
+    "properties":{
+        "objects": {
+            "description": "The set of object IDs with corresponding depth values between 0 and 1 within in the graphic.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/object"
+            }
+        }
+    },
+    "required": [ "objects" ]
+}
