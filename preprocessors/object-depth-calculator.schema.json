@@ -3,7 +3,7 @@
     "$id": "https://image.a11y.mcgill.ca/preprocessors/object-depth-calculator.schema.json",
     "type": "object",
     "title": "Object relative Depth",
-    "description": "Contains a list of object IDs with their relative depth within the picture. The object ID will match the object detection ID and depth is calculated by taking the median of the depth image within the bounding box",
+    "description": "Contains a list of object IDs with their relative depth within the picture. The object ID will match the object detection ID (ca.mcgill.a11y.image.preprocessor.objectDetection) and depth is calculated by taking the median of the depth image (ca.mcgill.a11y.image.preprocessor.depth-map-gen) within the bounding box",
     "definitions": {
         "object": {
             "type": "object",
