@@ -83,10 +83,10 @@ def handle():
     # NOT found
     # Also checks for grouping preprocessor along with object detector
     if not (("ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
-             in preprocessors) or\
-        all(x in preprocessors for x in
-            ["ca.mcgill.a11y.image.preprocessor.objectDetection",
-            "ca.mcgill.a11y.image.preprocessor.grouping"])):
+             in preprocessors) or
+            all(x in preprocessors for x in
+                ["ca.mcgill.a11y.image.preprocessor.objectDetection",
+                 "ca.mcgill.a11y.image.preprocessor.grouping"])):
         logging.debug("No Object Detector and Semantic Segmentation found")
         response = {
             "request_uuid": contents["request_uuid"],
