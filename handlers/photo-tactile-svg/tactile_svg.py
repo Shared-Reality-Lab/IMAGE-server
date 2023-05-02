@@ -60,7 +60,7 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
-    preprocessor_names=[]
+    preprocessor_names = []
 
     if "ca.mcgill.a11y.image.renderer.TactileSVG" not in contents["renderers"]:
         logging.debug("TactileSVG Renderer not supported")
@@ -79,14 +79,14 @@ def handle():
         logging.debug("Sending response")
         return response
 
-    # Throws error when both Object Detector AND semantic segmentation are 
+    # Throws error when both Object Detector AND semantic segmentation are
     # NOT found
     # Also checks for grouping preprocessor along with object detector
     if not (("ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
              in preprocessors) or\
-        all(x in preprocessors for x in\
-        ["ca.mcgill.a11y.image.preprocessor.objectDetection", 
-         "ca.mcgill.a11y.image.preprocessor.grouping"])):
+        all(x in preprocessors for x in
+            ["ca.mcgill.a11y.image.preprocessor.objectDetection",
+            "ca.mcgill.a11y.image.preprocessor.grouping"])):
         logging.debug("No Object Detector and Semantic Segmentation found")
         response = {
             "request_uuid": contents["request_uuid"],
@@ -126,7 +126,8 @@ def handle():
         logging.debug("Sending response")
         return response
 
-    #Initialize svg if either object detection or semantic segmentation is present
+    # Initialize svg if either object detection
+    # or semantic segmentation is present
     svg = draw.Drawing(dimensions[0], dimensions[1])
 
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors:
@@ -227,7 +228,7 @@ def handle():
 
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
-        "description": ("Tactile rendering of photo with "+
+        "description": ("Tactile rendering of photo with " +
                         " and ".join(preprocessor_names)),
         "data": data
     }
