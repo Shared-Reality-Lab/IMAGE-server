@@ -60,6 +60,7 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
+    preprocessor_names=[]
 
     if "ca.mcgill.a11y.image.renderer.TactileSVG" not in contents["renderers"]:
         logging.debug("TactileSVG Renderer not supported")
@@ -78,10 +79,14 @@ def handle():
         logging.debug("Sending response")
         return response
 
-    # Both Object Detector AND semantic segmentation are NOT found
-    if not any(x in preprocessors for x in
-               ["ca.mcgill.a11y.image.preprocessor.semanticSegmentation",
-                "ca.mcgill.a11y.image.preprocessor.objectDetection"]):
+    # Throws error when both Object Detector AND semantic segmentation are 
+    # NOT found
+    # Also checks for grouping preprocessor along with object detector
+    if not (("ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
+             in preprocessors) or\
+        all(x in preprocessors for x in\
+        ["ca.mcgill.a11y.image.preprocessor.objectDetection", 
+         "ca.mcgill.a11y.image.preprocessor.grouping"])):
         logging.debug("No Object Detector and Semantic Segmentation found")
         response = {
             "request_uuid": contents["request_uuid"],
@@ -98,14 +103,14 @@ def handle():
         logging.debug("Sending response")
         return response
 
-    if "dimensions" in contents:
+    if "graphic" in contents and "dimensions" in contents:
         # If an existing graphic exists, often it is
         # best to use that for convenience.
         # see the following for SVG coordinate info:
         # developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions
         dimensions = contents["dimensions"]
     else:
-        logging.debug("Dimensions are not defined")
+        logging.debug("Graphic and/or dimensions are not defined")
         response = {
             "request_uuid": contents["request_uuid"],
             "timestamp": int(time.time()),
@@ -121,13 +126,16 @@ def handle():
         logging.debug("Sending response")
         return response
 
+    #Initialize svg if either object detection or semantic segmentation is present
+    svg = draw.Drawing(dimensions[0], dimensions[1])
+
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors:
+        preprocessor_names.append('Object detection')
         o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
         g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
         objects = o["objects"]
         grouped = g["grouped"]
         ungrouped = g["ungrouped"]
-        svg = draw.Drawing(dimensions[0], dimensions[1])
         layer = 0
         for i in range(len(grouped)):
             ids = grouped[i]["IDs"]
@@ -137,10 +145,14 @@ def handle():
                            str(layer), aria_label=category)
             for j in range(len(ids)):
                 # print(ids[j])
-                x1 = int(objects[ids[j]]['dimensions'][0] * dimensions[0])
-                x2 = int(objects[ids[j]]['dimensions'][2] * dimensions[0])
-                y1 = int(objects[ids[j]]['dimensions'][1] * dimensions[1])
-                y2 = int(objects[ids[j]]['dimensions'][3] * dimensions[1])
+                # x1 = int(objects[ids[j]]['dimensions'][0] * dimensions[0])
+                # x2 = int(objects[ids[j]]['dimensions'][2] * dimensions[0])
+                # y1 = int(objects[ids[j]]['dimensions'][1] * dimensions[1])
+                # y2 = int(objects[ids[j]]['dimensions'][3] * dimensions[1])
+                x1 = objects[ids[j]]['dimensions'][0] * dimensions[0]
+                x2 = objects[ids[j]]['dimensions'][2] * dimensions[0]
+                y1 = objects[ids[j]]['dimensions'][1] * dimensions[1]
+                y2 = objects[ids[j]]['dimensions'][3] * dimensions[1]
                 width = abs(x2 - x1)
                 height = abs(y2 - y1)
                 start_y1 = abs(dimensions[1] - y1 - height)
@@ -185,6 +197,7 @@ def handle():
 
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
             in preprocessors:
+        preprocessor_names.append("Semantic segmentation")
         s = preprocessors["ca.mcgill.a11y.image."
                           "preprocessor.semanticSegmentation"]
         segments = s["segments"]
@@ -214,8 +227,8 @@ def handle():
 
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
-        "description": ("Tactile SVG of photo with possibly object detection "
-                        "and/or semantic segmentation outputs"),
+        "description": ("Tactile rendering of photo with "+
+                        " and ".join(preprocessor_names)),
         "data": data
     }
 
@@ -226,7 +239,7 @@ def handle():
         validator.validate(data)
     except ValidationError as e:
         logging.error(e)
-        logging.error("Failed to validate the response renderer!")
+        logging.debug("Failed to validate the response renderer!")
         return jsonify("Failed to validate the response renderer"), 500
     response = {
         "request_uuid": contents["request_uuid"],
@@ -239,7 +252,7 @@ def handle():
         )
         validator.validate(response)
     except ValidationError as e:
-        logging.error("Failed to generate a valid response")
+        logging.debug("Failed to generate a valid response")
         logging.error(e)
         return jsonify("Failed to generate a valid response"), 500
     logging.debug("Sending response")
