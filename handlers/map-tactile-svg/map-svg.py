@@ -138,17 +138,17 @@ def handle():
         # Draw the streets with svg.
         checkPOIs = {}
         g = draw.Group(data_image_layer="firstLayer", aria_label="Streets")
-        for street in range(len(streets)):
-            color = street
-            if street >= len(colors):
-                color = street % len(colors)
+        for i, street in enumerate(streets):
+            color = i
+            if i >= len(colors):
+                color = i % len(colors)
             # Filter only necessary street types
-            if (streets[street])["street_type"] not in remove_streets:
-                name = streets[street]["street_name"] if "street_name"\
-                    in streets[street] else streets[street]["street_type"]
-                description = getDescriptions(streets[street])
+            if street["street_type"] not in remove_streets:
+                name = street["street_name"] if "street_name"\
+                    in street else street["street_type"]
+                description = getDescriptions(street)
                 stroke_width = return_stroke_width(
-                    streets[street]["street_type"])
+                    street["street_type"])
                 args = dict(stroke=colors[color], stroke_width=stroke_width,
                             fill='none', aria_label=name)
                 # Add this arg only if the  not empty
@@ -156,7 +156,7 @@ def handle():
                     args["aria_description"] = description
                 p = draw.Path(**args)
                 node_coordinates = []
-                for node in streets[street]["nodes"]:
+                for node in street["nodes"]:
                     node_coordinates.append([node["lon"], node["lat"]])
                     if "POIs_ID" in node:
                         for x in node["POIs_ID"]:
