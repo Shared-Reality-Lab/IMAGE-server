@@ -268,19 +268,6 @@ def getDescriptions(street):
         default_attributes.append("street_type")
     for attr in street:
         if attr not in default_attributes:
-            """
-            if attr == "oneway":
-                if street[attr]:
-                    description += "oneway, "
-                else:
-                    description += "not oneway, "
-            elif attr == "lanes":
-                description += str(street[attr]) + " " + \
-                    attr.replace("_", " ") + ", "
-            else:
-                description += attr.replace("_", " ") + \
-                    " " + str(street[attr]) + ", "
-            """
             match attr:
                 case "oneway":
                     if street[attr]:
