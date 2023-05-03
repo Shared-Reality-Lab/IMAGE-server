@@ -168,14 +168,14 @@ def handle():
         for i in range(len(ungrouped)):
             category = objects[ungrouped[i]]["type"]
             layer += 1
-            x1 = objects[ungrouped[i]]\
-                ['dimensions'][0] * dimensions[0]
-            x2 = objects[ungrouped[i]]\
-                ['dimensions'][2] * dimensions[0]
-            y1 = objects[ungrouped[i]]\
-                ['dimensions'][1] * dimensions[1]
-            y2 = objects[ungrouped[i]]\
-                ['dimensions'][3] * dimensions[1]
+            x1 = (objects[ungrouped[i]]
+                  ['dimensions'][0] * dimensions[0])
+            x2 = (objects[ungrouped[i]]
+                  ['dimensions'][2] * dimensions[0])
+            y1 = (objects[ungrouped[i]]
+                  ['dimensions'][1] * dimensions[1])
+            y2 = (objects[ungrouped[i]]
+                  ['dimensions'][3] * dimensions[1])
             width = abs(x2 - x1)
             height = abs(y2 - y1)
             start_y1 = abs(dimensions[1] - y1 - height)
