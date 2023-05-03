@@ -206,7 +206,7 @@ def handle():
                             draw.Circle(
                                         longitude,
                                         latitude,
-                                        3.5,
+                                        10,
                                         fill='red',
                                         stroke_width=1.5,
                                         stroke='red',
@@ -215,7 +215,10 @@ def handle():
     data = {"graphic": svg.asDataUri()}
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
-        "description": "Tactile SVG of map",
+        "description": ("Tactile rendering of map centered at latitude " +
+                        str(contents["coordinates"]["latitude"]) +
+                        " and longitude " +
+                        str(contents["coordinates"]["longitude"])),
         "data": data}
     try:
         validator = jsonschema.Draft7Validator(
