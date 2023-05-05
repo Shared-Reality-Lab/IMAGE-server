@@ -129,6 +129,11 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
+    object-depth-calculator:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-object-depth-calculator:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 4
+            ca.mcgill.a11y.image.port: 5000
     # Handlers
     autour-handler:
         image: ghcr.io/shared-reality-lab/image-handler-autour:unstable
