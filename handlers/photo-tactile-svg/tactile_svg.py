@@ -138,17 +138,17 @@ def handle():
         grouped = g["grouped"]
         ungrouped = g["ungrouped"]
         layer = 0
-        for i in range(len(grouped)):
-            ids = grouped[i]["IDs"]
+        for group in grouped:
+            ids = group["IDs"]
             category = objects[ids[0]]["type"]
             layer += 1
             g = draw.Group(data_image_layer="Layer " +
                            str(layer), aria_label=category)
-            for j in range(len(ids)):
-                x1 = objects[ids[j]]['dimensions'][0] * dimensions[0]
-                x2 = objects[ids[j]]['dimensions'][2] * dimensions[0]
-                y1 = objects[ids[j]]['dimensions'][1] * dimensions[1]
-                y2 = objects[ids[j]]['dimensions'][3] * dimensions[1]
+            for i, id in enumerate(ids):
+                x1 = objects[id]['dimensions'][0] * dimensions[0]
+                x2 = objects[id]['dimensions'][2] * dimensions[0]
+                y1 = objects[id]['dimensions'][1] * dimensions[1]
+                y2 = objects[id]['dimensions'][3] * dimensions[1]
                 width = abs(x2 - x1)
                 height = abs(y2 - y1)
                 start_y1 = abs(dimensions[1] - y1 - height)
@@ -161,20 +161,20 @@ def handle():
                         stroke="#ff4477",
                         stroke_width=2.5,
                         fill="none",
-                        aria_label=category+" "+str(j+1)))
+                        aria_label=category+" "+str(i+1)))
 
             svg.append(g)
 
-        for i in range(len(ungrouped)):
-            category = objects[ungrouped[i]]["type"]
+        for val in ungrouped:
+            category = objects[val]["type"]
             layer += 1
-            x1 = (objects[ungrouped[i]]
+            x1 = (objects[val]
                   ['dimensions'][0] * dimensions[0])
-            x2 = (objects[ungrouped[i]]
+            x2 = (objects[val]
                   ['dimensions'][2] * dimensions[0])
-            y1 = (objects[ungrouped[i]]
+            y1 = (objects[val]
                   ['dimensions'][1] * dimensions[1])
-            y2 = (objects[ungrouped[i]]
+            y2 = (objects[val]
                   ['dimensions'][3] * dimensions[1])
             width = abs(x2 - x1)
             height = abs(y2 - y1)
@@ -198,25 +198,25 @@ def handle():
                           "preprocessor.semanticSegmentation"]
         segments = s["segments"]
         if (len(segments) > 0):
-            for j in range(len(segments)):
-                category = segments[j]["name"]
-                contour = segments[j]["contours"]
+            for segment in segments:
+                category = segment["name"]
+                contour = segment["contours"]
                 try:
                     p = draw.Path(stroke="#ff4477", stroke_width=10,
                                   fill='none', aria_label=category,)
                 except BaseException:
                     p = draw.Path(stroke="red", stroke_width=10,
                                   fill='none', aria_label=category,)
-                for k in range(len(contour)):
-                    coord = contour[k]["coordinates"]
-                    for i in range(len(coord)):
+                for c in contour:
+                    coords = c["coordinates"]
+                    for i, coord in enumerate(coords):
                         if (i == 0):
                             continue
                         if (i == 1):
-                            p.M(coord[i][0] * dimensions[0],
-                                (dimensions[1] - coord[i][1] * dimensions[1]))
-                        p.L(coord[i][0] * dimensions[0],
-                            dimensions[1] - coord[i][1] * dimensions[1])
+                            p.M(coord[0] * dimensions[0],
+                                (dimensions[1] - coord[1] * dimensions[1]))
+                        p.L(coord[0] * dimensions[0],
+                            dimensions[1] - coord[1] * dimensions[1])
                 svg.append(p)
 
     data = {"graphic": svg.asDataUri()}
