@@ -131,7 +131,7 @@ def handle():
     svg = draw.Drawing(dimensions[0], dimensions[1])
 
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors:
-        preprocessor_names.append('Object detection')
+        preprocessor_names.append('Things and people')
         o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
         g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
         objects = o["objects"]
@@ -193,7 +193,7 @@ def handle():
 
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
             in preprocessors:
-        preprocessor_names.append("Semantic segmentation")
+        preprocessor_names.append("Outlines of regions")
         s = preprocessors["ca.mcgill.a11y.image."
                           "preprocessor.semanticSegmentation"]
         segments = s["segments"]
