@@ -72,7 +72,8 @@ def handle():
         except jsonschema.exceptions.ValidationError as error:
             logging.error(error)
             return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Sending response")
+        logging.debug("Missing " +
+                      "'ca.mcgill.a11y.image.renderer.TactileSVG'. Sending empty response.")
         return response
 
     if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
@@ -90,10 +91,13 @@ def handle():
         except jsonschema.exceptions.ValidationError as error:
             logging.error(error)
             return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Sending response")
+        logging.debug("Missing " +
+                      "'ca.mcgill.a11y.image.preprocessor.openstreetmap'. Sending empty response.")
         return response
 
     dimensions = 700, 700
+    # List of minor street types ('footway', 'crossing' and 'steps')
+    # to be filtered out to simplify the resulting rendering
     remove_streets = ["footway", "crossing", "steps"]
     svg = draw.Drawing(dimensions[0], dimensions[1])
 
@@ -139,9 +143,7 @@ def handle():
         checkPOIs = {}
         g = draw.Group(data_image_layer="firstLayer", aria_label="Streets")
         for i, street in enumerate(streets):
-            color = i
-            if i >= len(colors):
-                color = i % len(colors)
+            color = i % len(colors)
             # Filter only necessary street types
             if street["street_type"] not in remove_streets:
                 name = street["street_name"] if "street_name"\
