@@ -73,7 +73,8 @@ def handle():
             logging.error(error)
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Missing " +
-                      "'ca.mcgill.a11y.image.renderer.TactileSVG'. Sending empty response.")
+                      "'ca.mcgill.a11y.image.renderer.TactileSVG'." +
+                      " Sending empty response.")
         return response
 
     if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
@@ -92,7 +93,8 @@ def handle():
             logging.error(error)
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Missing " +
-                      "'ca.mcgill.a11y.image.preprocessor.openstreetmap'. Sending empty response.")
+                      "'ca.mcgill.a11y.image.preprocessor.openstreetmap'." +
+                      " Sending empty response.")
         return response
 
     dimensions = 700, 700
@@ -161,11 +163,11 @@ def handle():
                 for node in street["nodes"]:
                     node_coordinates.append([node["lon"], node["lat"]])
                     if "POIs_ID" in node:
-                        for x in node["POIs_ID"]:
-                            if x in checkPOIs:
-                                checkPOIs[x].append([name, description])
+                        for POI_ID in node["POIs_ID"]:
+                            if POI_ID in checkPOIs:
+                                checkPOIs[POI_ID].append([name, description])
                             else:
-                                checkPOIs[x] = [[name, description]]
+                                checkPOIs[POI_ID] = [[name, description]]
                 for index in range(len(node_coordinates) - 1):
                     p.M(scaled_longitude *
                         (node_coordinates[index][0] -
@@ -291,4 +293,4 @@ def getDescriptions(street):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=80, debug=True)
