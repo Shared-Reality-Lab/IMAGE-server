@@ -158,7 +158,7 @@ def depthgenerator():
         logging.error("Depth Model cannot complete")
         return jsonify("Depth Model cannot complete"), 500
 
-        try:
+    try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(depth)
     except jsonschema.exceptions.ValidationError as e:
