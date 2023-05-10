@@ -142,20 +142,23 @@ def depthgenerator():
 
     rgb_c = img[:, :, ::-1].copy()
     A_resize = cv2.resize(rgb_c, (448, 448))
-
-    img_torch = scale_torch(A_resize)[None, :, :, :]
-    pred_depth = depth_model.inference(img_torch).cpu().numpy().squeeze()
-    pred_depth_ori = cv2.resize(pred_depth, (img.shape[1], img.shape[0]))
-    pred_depth_ori = pred_depth_ori/np.max(pred_depth_ori) * 255
-
-    _, pred_depth_jpg = cv2.imencode('.JPG', pred_depth_ori)
-
-    # convert output image to base64
-    depthgraphic = base64.b64encode(pred_depth_jpg).decode("utf-8")
-    jsondepth = "data:image/jpeg;base64," + depthgraphic
-    depth = {"depth-map": jsondepth, "scaling": 0}
-
     try:
+        img_torch = scale_torch(A_resize)[None, :, :, :]
+        pred_depth = depth_model.inference(img_torch).cpu().numpy().squeeze()
+        pred_depth_ori = cv2.resize(pred_depth, (img.shape[1], img.shape[0]))
+        pred_depth_ori = pred_depth_ori/np.max(pred_depth_ori) * 255
+
+        _, pred_depth_jpg = cv2.imencode('.JPG', pred_depth_ori)
+
+        # convert output image to base64
+        depthgraphic = base64.b64encode(pred_depth_jpg).decode("utf-8")
+        jsondepth = "data:image/jpeg;base64," + depthgraphic
+        depth = {"depth-map": jsondepth, "scaling": 0}
+    except: 
+        logging.error("Depth Model cannot complete")
+        return jsonify("Depth Model cannot complete"), 500
+
+        try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(depth)
     except jsonschema.exceptions.ValidationError as e:
