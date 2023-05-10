@@ -154,7 +154,7 @@ def depthgenerator():
         depthgraphic = base64.b64encode(pred_depth_jpg).decode("utf-8")
         jsondepth = "data:image/jpeg;base64," + depthgraphic
         depth = {"depth-map": jsondepth, "scaling": 0}
-    except exception as e: 
+    except Exception as e:
         logging.error(e)
         return jsonify("Depth Model cannot complete"), 500
 
