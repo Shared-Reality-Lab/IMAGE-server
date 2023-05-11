@@ -59,7 +59,7 @@ def server_config1(overpass_url, bbox_coord):
 def server_config2(overpass_url, bbox_coord):
     # Get amenities from
     # the specified url.
-    #["barrier"]["office"]["place"]["shop"]["railway"]["building"];
+    # ["barrier"]["office"]["place"]["shop"]["railway"]["building"];
     lat_min, lon_min = bbox_coord[0], bbox_coord[1]
     lat_max, lon_max = bbox_coord[2], bbox_coord[3]
     overpass_query = (f"""
@@ -165,7 +165,8 @@ def process_streets_data(street_data, bbox_coordinates):
                     # Add tags
                     way_element["tags"] = element["tags"]
                     # Delete key if no value
-                    way_element = dict(x for x in way_element.items() if all(x))
+                    way_element = dict(
+                        x for x in way_element.items() if all(x))
                     if way_element not in processed_OSM_data:
                         processed_OSM_data.append(way_element)
     except AttributeError:
@@ -488,16 +489,18 @@ def validate_new_node_coordinates(lat2, lon2, bbox_coordinates):
             (lon2 >= lon_min and lon2 <= lon_max)):
         return True
 
+
 def compute_segment_slope(x1, y1, x2, y2):
     if(x2 - x1 != 0):
-        segment_slope = (y2 - y1)/(x2 - x1)
+        segment_slope = (y2 - y1) / (x2 - x1)
         return segment_slope
     return sys.maxsize
+
 
 def compute_street_segments_angle(segment1, segment2, intersecting_point):
     intersecting_point_index1 = segment1.index(intersecting_point[0])
     intersecting_point_index2 = segment2.index(intersecting_point[0])
-    
+
     x0 = intersecting_point[0]["lon"]
     y0 = intersecting_point[0]["lat"]
 
@@ -505,15 +508,17 @@ def compute_street_segments_angle(segment1, segment2, intersecting_point):
         x1 = segment1[intersecting_point_index1 + 1]["lon"]
         y1 = segment1[intersecting_point_index1 + 1]["lat"]
 
-    if intersecting_point_index2 == 0: 
+    if intersecting_point_index2 == 0:
         x2 = segment2[intersecting_point_index2 + 1]["lon"]
         y2 = segment2[intersecting_point_index2 + 1]["lat"]
 
-    if intersecting_point_index1 > 0 and intersecting_point_index1 < len(segment1)-1:
+    if intersecting_point_index1 > 0 and intersecting_point_index1 < len(
+            segment1) - 1:
         x1 = segment1[intersecting_point_index1 - 1]["lon"]
         y1 = segment1[intersecting_point_index1 - 1]["lat"]
 
-    if intersecting_point_index2 > 0 and intersecting_point_index2 < len(segment2)-1:
+    if intersecting_point_index2 > 0 and intersecting_point_index2 < len(
+            segment2) - 1:
         x2 = segment2[intersecting_point_index2 - 1]["lon"]
         y2 = segment2[intersecting_point_index2 - 1]["lat"]
 
@@ -521,22 +526,25 @@ def compute_street_segments_angle(segment1, segment2, intersecting_point):
         x1 = segment1[intersecting_point_index1 - 1]["lon"]
         y1 = segment1[intersecting_point_index1 - 1]["lat"]
 
-    if intersecting_point_index2 == len(segment2) - 1: 
+    if intersecting_point_index2 == len(segment2) - 1:
         x2 = segment2[intersecting_point_index2 - 1]["lon"]
         y2 = segment2[intersecting_point_index2 - 1]["lat"]
 
-    segment1_slope = compute_segment_slope (x1, y1, x0, y0)
-    segment2_slope = compute_segment_slope (x0, y0, x2, y2)
-    angle = abs(( segment2_slope - segment1_slope))/(1 + (segment1_slope * segment2_slope))
-    theta = math.atan(angle) * 180 / math.pi # theta in degrees
+    segment1_slope = compute_segment_slope(x1, y1, x0, y0)
+    segment2_slope = compute_segment_slope(x0, y0, x2, y2)
+    angle = abs((segment2_slope - segment1_slope)) / \
+        (1 + (segment1_slope * segment2_slope))
+    theta = math.atan(angle) * 180 / math.pi  # theta in degrees
     return theta
+
 
 def compare_street(street1, street2):  # Compare two streets
     intersecting_point = [x for x in street1 if x in street2]
     if len(intersecting_point):
-        theta = compute_street_segments_angle(street1, street2, intersecting_point)
+        theta = compute_street_segments_angle(
+            street1, street2, intersecting_point)
         # Filter segments that are not necessarily intersections
-        if theta <=5 or theta >=175: 
+        if theta <= 5 or theta >= 175:
             intersecting_point = []
     return intersecting_point
 
@@ -646,11 +654,9 @@ def allot_intersection(processed_OSM_data, inters_rec_up
                 intersection_nodes = inters[objs]["intersection_nodes"]
                 for items in range(len(intersection_nodes)):
                     if id1 != id2:  # compare unique street only
-                    
+
                         # check if a node represents an intersection
                         if nodes[i] == intersection_nodes[items]:
-
-
 
                             nodes[i]["cat"] = "intersection"
                             f = nodes[i]
@@ -714,6 +720,7 @@ def get_amenities(bbox_coord):
 
     # Fetch Points of Interest (amenity)
     amenity = []
+    new_amenity = []
     if amenities is not None:
         for element in amenities["elements"]:
             if element["type"] == "node":
@@ -738,6 +745,10 @@ def get_amenities(bbox_coord):
                         x for x in amenity_record.items() if all(x))
                     if amenity_record not in amenity:
                         amenity.append(amenity_record)
+                        # Use each amenity id for its object
+                        amenity_id = amenity_record["id"]
+                        new_amenity_record = {f"{amenity_id}": amenity_record}
+                        new_amenity.append(new_amenity_record)
 
             if element["type"] == "way":
                 # Extract only amenities(under ways) within bounding box
@@ -762,6 +773,10 @@ def get_amenities(bbox_coord):
                         x for x in amenity_record.items() if all(x))
                     if amenity_record not in amenity:
                         amenity.append(amenity_record)
+                        # Use each amenity id for its object
+                        amenity_id = amenity_record["id"]
+                        new_amenity_record = {f"{amenity_id}": amenity_record}
+                        new_amenity.append(new_amenity_record)
 
             if element["type"] == "relation":
                 # Extract only amenities(under relations) within bounding box
@@ -786,30 +801,45 @@ def get_amenities(bbox_coord):
                         x for x in amenity_record.items() if all(x))
                     if amenity_record not in amenity:
                         amenity.append(amenity_record)
-    return amenity
+                        # Use each amenity id for its object
+                        amenity_id = amenity_record["id"]
+                        new_amenity_record = {f"{amenity_id}": amenity_record}
+                        new_amenity.append(new_amenity_record)
+    return amenity, new_amenity
 
 
 def enlist_POIs(processed_OSM_data1, amenity):
     # Keep all identified points of interest in a single list
     POIs = []
+    new_POIs = []
     nodes_ids = []
     if len(processed_OSM_data1):
-        for obj in range(len(processed_OSM_data1)):
-            nodes = processed_OSM_data1[obj]["nodes"]
-            for node in range(len(nodes)):
+        for obj in processed_OSM_data1:
+            nodes = obj["nodes"]
+            for node in nodes:
                 key_to_check = "cat"
                 # check if "cat" key is in the node
-                if key_to_check in nodes[node]:
-                    if nodes[node]["cat"]:  # ensure the "cat" key has a value
+                if key_to_check in node:
+                    if node["cat"]:  # ensure the "cat" key has a value
                         # Check to remove duplicate intersections
-                        if nodes[node] not in POIs:
-                            if nodes[node]["id"] not in nodes_ids:
-                                nodes_ids.append(nodes[node]["id"])
-                                POIs.append(nodes[node])
+                        if node not in POIs:
+                            if node["id"] not in nodes_ids:
+                                nodes_ids.append(node["id"])
+                                POIs.append(node)
+                                # Use each node id as a key to its object
+                                node_id = node["id"]
+                                POI = {f"{node_id}": node}
+                                new_POIs.append(POI)
+
     if amenity is not None and len(amenity) != 0:
-        for objs in range(len(amenity)):
-            POIs.append(amenity[objs])
-    return POIs  # POIs is a list of all points of interest
+        for objs in amenity:
+            POIs.append(objs)
+            # Use each node id as a key to its object
+            node_id = objs["id"]
+            POI = {f"{node_id}": objs}
+            new_POIs.append(POI)
+
+    return POIs, new_POIs  # POIs is a list of all points of interest
 
 
 def OSM_preprocessor(processed_OSM_data, POIs, amenity):
