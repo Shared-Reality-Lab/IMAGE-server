@@ -10,6 +10,7 @@ import requests
 from config import defaultServer, secondaryServer1, secondaryServer2
 from geographiclib.geodesic import Geodesic
 import os
+import sys
 
 
 def create_bbox_coordinates(distance, lat, lon):
@@ -58,7 +59,7 @@ def server_config1(overpass_url, bbox_coord):
 def server_config2(overpass_url, bbox_coord):
     # Get amenities from
     # the specified url.
-
+    #["barrier"]["office"]["place"]["shop"]["railway"]["building"];
     lat_min, lon_min = bbox_coord[0], bbox_coord[1]
     lat_max, lon_max = bbox_coord[2], bbox_coord[3]
     overpass_query = (f"""
@@ -158,15 +159,15 @@ def process_streets_data(street_data, bbox_coordinates):
                         "street_type": element["tags"].get("highway"),
                         "nodes": node_elements
                     }
-                # Remove name and highway tags from the tag list
-                element["tags"].pop("name", None)
-                element["tags"].pop("highway", None)
-                # Add tags
-                way_element["tags"] = element["tags"]
-                # Delete key if no value
-                way_element = dict(x for x in way_element.items() if all(x))
-                if way_element not in processed_OSM_data:
-                    processed_OSM_data.append(way_element)
+                    # Remove name and highway tags from the tag list
+                    element["tags"].pop("name", None)
+                    element["tags"].pop("highway", None)
+                    # Add tags
+                    way_element["tags"] = element["tags"]
+                    # Delete key if no value
+                    way_element = dict(x for x in way_element.items() if all(x))
+                    if way_element not in processed_OSM_data:
+                        processed_OSM_data.append(way_element)
     except AttributeError:
         error = 'Overpass Attibute error. Retry again'
         logging.error(error)
@@ -487,10 +488,57 @@ def validate_new_node_coordinates(lat2, lon2, bbox_coordinates):
             (lon2 >= lon_min and lon2 <= lon_max)):
         return True
 
+def compute_segment_slope(x1, y1, x2, y2):
+    if(x2 - x1 != 0):
+        segment_slope = (y2 - y1)/(x2 - x1)
+        return segment_slope
+    return sys.maxsize
+
+def compute_street_segments_angle(segment1, segment2, intersecting_point):
+    intersecting_point_index1 = segment1.index(intersecting_point[0])
+    intersecting_point_index2 = segment2.index(intersecting_point[0])
+    
+    x0 = intersecting_point[0]["lon"]
+    y0 = intersecting_point[0]["lat"]
+
+    if intersecting_point_index1 == 0:
+        x1 = segment1[intersecting_point_index1 + 1]["lon"]
+        y1 = segment1[intersecting_point_index1 + 1]["lat"]
+
+    if intersecting_point_index2 == 0: 
+        x2 = segment2[intersecting_point_index2 + 1]["lon"]
+        y2 = segment2[intersecting_point_index2 + 1]["lat"]
+
+    if intersecting_point_index1 > 0 and intersecting_point_index1 < len(segment1)-1:
+        x1 = segment1[intersecting_point_index1 - 1]["lon"]
+        y1 = segment1[intersecting_point_index1 - 1]["lat"]
+
+    if intersecting_point_index2 > 0 and intersecting_point_index2 < len(segment2)-1:
+        x2 = segment2[intersecting_point_index2 - 1]["lon"]
+        y2 = segment2[intersecting_point_index2 - 1]["lat"]
+
+    if intersecting_point_index1 == len(segment1) - 1:
+        x1 = segment1[intersecting_point_index1 - 1]["lon"]
+        y1 = segment1[intersecting_point_index1 - 1]["lat"]
+
+    if intersecting_point_index2 == len(segment2) - 1: 
+        x2 = segment2[intersecting_point_index2 - 1]["lon"]
+        y2 = segment2[intersecting_point_index2 - 1]["lat"]
+
+    segment1_slope = compute_segment_slope (x1, y1, x0, y0)
+    segment2_slope = compute_segment_slope (x0, y0, x2, y2)
+    angle = abs(( segment2_slope - segment1_slope))/(1 + (segment1_slope * segment2_slope))
+    theta = math.atan(angle) * 180 / math.pi # theta in degrees
+    return theta
 
 def compare_street(street1, street2):  # Compare two streets
-    intersecting_points = [x for x in street1 if x in street2]
-    return intersecting_points
+    intersecting_point = [x for x in street1 if x in street2]
+    if len(intersecting_point):
+        theta = compute_street_segments_angle(street1, street2, intersecting_point)
+        # Filter segments that are not necessarily intersections
+        if theta <=5 or theta >=175: 
+            intersecting_point = []
+    return intersecting_point
 
 
 def extract_street(processed_OSM_data):  # extract two streets
@@ -499,43 +547,43 @@ def extract_street(processed_OSM_data):  # extract two streets
         for j in range(i + 1, len(processed_OSM_data)):
             street1 = processed_OSM_data[i]["nodes"]
             street2 = processed_OSM_data[j]["nodes"]
-            intersecting_points = compare_street(
+            intersecting_point = compare_street(
                 street1, street2)  # function call
-            if len(intersecting_points):  # check if not empty
+            if len(intersecting_point):  # check if not empty
                 if "street_name" in processed_OSM_data[i]:
                     street_object = {
                         "street_id": processed_OSM_data[i]["street_id"],
                         "street_name": processed_OSM_data[i]["street_name"],
-                        "intersection_nodes": intersecting_points,
+                        "intersection_nodes": intersecting_point,
                     }
                 elif "street_type" in processed_OSM_data[i]:
                     street_object = {
                         "street_id": processed_OSM_data[i]["street_id"],
                         "street_type": processed_OSM_data[i]["street_type"],
-                        "intersection_nodes": intersecting_points,
+                        "intersection_nodes": intersecting_point,
                     }
                 else:
                     street_object = {
                         "street_id": processed_OSM_data[i]["street_id"],
-                        "intersection_nodes": intersecting_points,
+                        "intersection_nodes": intersecting_point,
                     }
                 intersection_record.append(street_object)
                 if "street_name" in processed_OSM_data[j]:
                     street_object = {
                         "street_id": processed_OSM_data[j]["street_id"],
                         "street_name": processed_OSM_data[j]["street_name"],
-                        "intersection_nodes": intersecting_points,
+                        "intersection_nodes": intersecting_point,
                     }
                 elif "street_type" in processed_OSM_data[i]:
                     street_object = {
                         "street_id": processed_OSM_data[i]["street_id"],
                         "street_type": processed_OSM_data[i]["street_type"],
-                        "intersection_nodes": intersecting_points,
+                        "intersection_nodes": intersecting_point,
                     }
                 else:
                     street_object = {
                         "street_id": processed_OSM_data[j]["street_id"],
-                        "intersection_nodes": intersecting_points,
+                        "intersection_nodes": intersecting_point,
                     }
                 intersection_record.append(street_object)
     # Group the streets by their ids
@@ -598,8 +646,12 @@ def allot_intersection(processed_OSM_data, inters_rec_up
                 intersection_nodes = inters[objs]["intersection_nodes"]
                 for items in range(len(intersection_nodes)):
                     if id1 != id2:  # compare unique street only
+                    
                         # check if a node represents an intersection
                         if nodes[i] == intersection_nodes[items]:
+
+
+
                             nodes[i]["cat"] = "intersection"
                             f = nodes[i]
                             key1 = "street_name"
@@ -875,6 +927,11 @@ def OSM_preprocessor(processed_OSM_data, POIs, amenity):
     # Delete the distance key
     for obj in range(len(processed_OSM_data2)):
         processed_OSM_data2[obj].pop('distance', None)
+        # Delete node tags
+        nodes = processed_OSM_data2[obj]["nodes"]
+        for node in nodes:
+            if "tags" in node:
+                del node["tags"]
     return processed_OSM_data2
 
 
