@@ -491,7 +491,7 @@ def validate_new_node_coordinates(lat2, lon2, bbox_coordinates):
 
 
 def compute_segment_slope(x1, y1, x2, y2):
-    if(x2 - x1) != 0:
+    if (x2 - x1) != 0:
         segment_slope = (y2 - y1) / (x2 - x1)
         return segment_slope
     return sys.maxsize
