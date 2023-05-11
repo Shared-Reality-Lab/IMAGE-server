@@ -208,6 +208,11 @@ services:
             context: .
             dockerfile: ./handlers/map-tactile-svg/Dockerfile
         image: "map-tactile-svg:latest"
+    nominatim-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/nominatim/Dockerfile
+        image: "nominatim-preprocessor:latest"
     # Supercollider on Fedora 34
     supercollider-base:
         build:
