@@ -45,7 +45,9 @@ def server_config1(overpass_url, bbox_coord):
     """ Fetch all ways and their nodes"""
 
     overpass_query = (f"""
-    [out:json];way({lat_min},{lon_min},{lat_max},{lon_max})[highway];
+    [out:json];(way({lat_min},{lon_min},{lat_max},{lon_max})[highway];
+    node({lat_min},{lon_min},{lat_max},{lon_max})[highway];
+    );
     (._;>;);
     out geom;
     """
@@ -808,7 +810,7 @@ def get_amenities(bbox_coord):
     return amenity, new_amenity
 
 
-def enlist_POIs(processed_OSM_data1, amenity):
+def enlist_POIs(processed_OSM_data1, amenity, raw_osm_data):
     # Keep all identified points of interest in a single list
     POIs = []
     new_POIs = []
@@ -826,10 +828,25 @@ def enlist_POIs(processed_OSM_data1, amenity):
                             if node["id"] not in nodes_ids:
                                 nodes_ids.append(node["id"])
                                 POIs.append(node)
+
                                 # Use each node id as a key to its object
                                 node_id = node["id"]
                                 POI = {f"{node_id}": node}
                                 new_POIs.append(POI)
+
+    # Include additional key tag information
+    # such as traffic signals, etc.
+    for item in raw_osm_data["elements"]:
+        if item["type"] == "node" and "tags" in item:
+            if item not in POIs:
+                item["cat"] = item["tags"].get("highway")
+                # Remove highway tag
+                item["tags"].pop("highway", None)
+                POIs.append(item)
+                # Use each node id as a key to its object
+                item_id = item["id"]
+                POI = {f"{item_id}": item}
+                new_POIs.append(POI)
 
     if amenity is not None and len(amenity) != 0:
         for objs in amenity:

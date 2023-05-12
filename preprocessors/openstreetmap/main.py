@@ -96,7 +96,7 @@ def get_map_data():
             POD1 = allot_intersection(
                 processed_OSM_data,
                 intersection_record_updated)
-        POIs, new_POIs = enlist_POIs(POD1, amenity)
+        POIs, new_POIs = enlist_POIs(POD1, amenity, OSM_data)
         if processed_OSM_data is not None and len(processed_OSM_data) != 0:
             response = OSM_preprocessor(processed_OSM_data, POIs, amenity)
             response = {
