@@ -1,6 +1,6 @@
 Flask==2.2.5
 flask_api==2.0.0
-numpy==1.24.2
+numpy==1.21.0
 pillow==9.4.0
 requests==2.26.0
 torch==1.13.1
