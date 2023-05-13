@@ -12,5 +12,4 @@ packaging==21.3
 jsonschema==3.2.0
 Flask==2.2.5
 pycocoevalcap==1.2
-sklearn
 git+https://github.com/openai/CLIP
