@@ -21,9 +21,10 @@ import express from "express";
 import querySchemaJSON from "./schemas/request.schema.json";
 import preprocessorResponseJSON from "./schemas/preprocessor-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
+import nominatimJSON from "./schemas/preprocessors/nominatim.schema.json";
 
 const ajv = new Ajv({
-    "schemas": [ querySchemaJSON, preprocessorResponseJSON, definitionsJSON ]
+    "schemas": [ querySchemaJSON, preprocessorResponseJSON, definitionsJSON, nominatimJSON ]
 });
 
 const app = express();
@@ -50,7 +51,8 @@ app.post("/preprocessor", async (req, res) => {
 
     const nominatimServer = ("NOMINATIM_SERVER" in process.env) ? process.env.NOMINATIM_SERVER : "https://nominatim.openstreetmap.org";
 
-    const requestUrl = new URL(`/reverse?lat=${coordinates["latitude"]}&lon=${coordinates["longitude"]}&format=jsonv2`, nominatimServer);
+    const requestUrl = new URL(`./reverse?lat=${coordinates["latitude"]}&lon=${coordinates["longitude"]}&format=jsonv2`, nominatimServer);
+    console.debug("Sending request to " + requestUrl.href);
 
     try {
         const json = await fetch(requestUrl.href)
@@ -68,10 +70,15 @@ app.post("/preprocessor", async (req, res) => {
             "name": "ca.mcgill.a11y.image.preprocessor.nominatim",
             "data": json
         };
-        /* TODO validate */
         if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", response)) {
-            console.debug("Valid response generated.");
-            res.json(response);
+            if (ajv.validate("https://image.a11y.mcgill.ca/preprocessors/nominatim.schema.json", response["data"])) {
+                console.debug("Valid response generated.");
+                res.json(response);
+            } else {
+                console.error("Nominatim preprocessor data failed validation (possibly not an object?)");
+                console.error(ajv.errors);
+                res.status(500).json(ajv.errors);
+            }
         } else {
             console.error("Failed to generate a valid response");
             res.status(500).json(ajv.errors);
