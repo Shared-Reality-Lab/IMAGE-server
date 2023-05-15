@@ -228,6 +228,10 @@ services:
         image: ghcr.io/shared-reality-lab/image-handler-svg-depth-map:unstable
         labels:
             ca.mcgill.a11y.image.handler: enable
+    photo-tactile-svg-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-photo-tactile-svg:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
     map-tactile-svg-handler:
         image: ghcr.io/shared-reality-lab/image-handler-map-tactile-svg:unstable
         labels:
