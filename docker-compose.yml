@@ -134,6 +134,12 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 4
             ca.mcgill.a11y.image.port: 5000
+    nominatim-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-nominatim:unstable
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 2
     # Handlers
     autour-handler:
         image: ghcr.io/shared-reality-lab/image-handler-autour:unstable
