@@ -43,7 +43,7 @@ app.post("/preprocessor", async (req, res) => {
 
     if (!("coordinates" in req.body)) {
         console.debug("Coordinates not available, cannot make a request for reverse geocode.");
-        res.status(204);
+        res.sendStatus(204);
         return;
     }
 
