@@ -1,4 +1,4 @@
-espnet==0.10.0
+espnet==202304
 espnet_model_zoo==0.1.7
 Flask==2.2.5
 gunicorn==20.1.0
