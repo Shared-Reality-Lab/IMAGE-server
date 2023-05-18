@@ -246,7 +246,8 @@ def handle():
                                         stroke='red',
                                         aria_label=targetData["name"]))
             """
-            renderingDescription =  "Tactile rendering of map centered at "+ targetData["name"]
+            renderingDescription =  "Tactile rendering of map centered at "\
+                + targetData["name"]
         except:
             logging.debug("No reverse geocode data available")
     
