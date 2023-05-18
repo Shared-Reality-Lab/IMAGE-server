@@ -98,6 +98,12 @@ def handle():
         return response
 
     dimensions = 700, 700
+    """
+    renderingDescription = ("Tactile rendering of map centered at latitude " +
+                            str(contents["coordinates"]["latitude"]) +
+                            " and longitude " +
+                            str(contents["coordinates"]["longitude"]))
+    """
     # List of minor street types ('footway', 'crossing' and 'steps')
     # to be filtered out to simplify the resulting rendering
     remove_streets = ["footway", "crossing", "steps"]
@@ -184,6 +190,32 @@ def handle():
 
                 g.append(p)
         svg.append(g)
+    """
+    if "ca.mcgill.a11y.image.preprocessor.autour"\
+            in preprocessor:
+        targetData= preprocessor[
+                                 "ca.mcgill.a11y.image.preprocessor.autour"]["places"]
+
+        targetNode= next((d for d in targetData if (False)), None)
+        #math.isclose(float(d["ll"].split(",")[0]), contents["coordinates"]["latitude"], rel_tol=1e-5) and math.isclose(float(d["ll"].split(",")[1]), contents["coordinates"]["longitude"], rel_tol=1e-5)), None)
+        if targetNode is not None:
+            latitude = (
+                        (targetNode["ll"].split(",")[0] - lat_min)
+                        * scaled_latitude)
+            longitude = (
+                         (targetNode["ll"].split(",")[1] - lon_min)
+                         * scaled_longitude)
+            svg.append(
+                        draw.Circle(
+                                        longitude,
+                                        latitude,
+                                        15,
+                                        fill='red',
+                                        stroke_width=1.5,
+                                        stroke='red',
+                                        aria_label=targetNode["title"]))
+            renderingDescription =  "Tactile rendering of map centered at "+ targetNode["title"]
+    """
 
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
@@ -219,10 +251,7 @@ def handle():
     data = {"graphic": svg.asDataUri()}
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
-        "description": ("Tactile rendering of map centered at latitude " +
-                        str(contents["coordinates"]["latitude"]) +
-                        " and longitude " +
-                        str(contents["coordinates"]["longitude"])),
+        "description": renderingDescription,
         "data": data}
     try:
         validator = jsonschema.Draft7Validator(
