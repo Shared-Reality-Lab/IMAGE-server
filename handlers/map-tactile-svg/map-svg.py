@@ -246,7 +246,7 @@ def handle():
                                         aria_label=targetData["name"]))
             """
             renderingDescription = "Tactile rendering of map centered at "\
-            + targetData["name"]
+                + targetData["name"]
         except KeyError:
             logging.debug("Reverse geocode data unavailable")
 
