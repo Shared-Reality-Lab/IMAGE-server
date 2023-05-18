@@ -4,3 +4,4 @@ old
 tests
 demo*
 log*
+*.ipynb
