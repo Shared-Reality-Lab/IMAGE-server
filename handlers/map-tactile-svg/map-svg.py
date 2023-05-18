@@ -20,7 +20,6 @@ import jsonschema
 from jsonschema.exceptions import ValidationError
 import logging
 import time
-import math
 import drawSvg as draw
 
 app = Flask(__name__)
@@ -101,12 +100,12 @@ def handle():
         return response
 
     dimensions = 700, 700
-    
+
     renderingDescription = ("Tactile rendering of map centered at latitude " +
                             str(contents["coordinates"]["latitude"]) +
                             " and longitude " +
                             str(contents["coordinates"]["longitude"]))
-    
+
     # List of minor street types ('footway', 'crossing' and 'steps')
     # to be filtered out to simplify the resulting rendering
     remove_streets = ["footway", "crossing", "steps"]
@@ -193,10 +192,10 @@ def handle():
 
                 g.append(p)
         svg.append(g)
-    
+
     if "ca.mcgill.a11y.image.preprocessor.nominatim"\
             in preprocessor:
-        targetData= preprocessor[
+        targetData = preprocessor[
                                  "ca.mcgill.a11y.image.preprocessor.nominatim"]
         try:
             latitude = (
@@ -214,10 +213,10 @@ def handle():
                                     stroke_width=1.5,
                                     stroke='green',
                                     aria_label=targetData["name"]))
-            
+
             """
-            ## Using bounding box occasionally results in the whole map 
-            ## being occupied by the target POI 
+            ## Using bounding box occasionally results in the whole map
+            ## being occupied by the target POI
             ## e.g. when McGill University is the detected target POI
             bb=targetData["boundingbox"]
             logging.debug(", ".join(bb))
@@ -247,10 +246,10 @@ def handle():
                                         aria_label=targetData["name"]))
             """
             renderingDescription =  "Tactile rendering of map centered at "\
-                + targetData["name"]
+                +targetData["name"]
         except:
             logging.debug("No reverse geocode data available")
-    
+
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
             if POI["id"] in checkPOIs and POI["cat"] == "intersection":
@@ -280,8 +279,7 @@ def handle():
                                         fill='red',
                                         stroke_width=1.5,
                                         stroke='red',
-                                        aria_label=label))
-    
+                                        aria_label=label))    
     data = {"graphic": svg.asDataUri()}
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
