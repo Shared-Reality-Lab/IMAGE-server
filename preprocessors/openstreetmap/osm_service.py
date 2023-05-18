@@ -160,7 +160,6 @@ def process_streets_data(OSM_data, bbox_coordinates):
                     "oneway": oneway,
                     "lanes": lanes
                 }
-                way_object["nodes"] = node_list
                 # Delete key if value is empty
                 way_object = dict(x for x in way_object.items() if all(x))
                 processed_OSM_data.append(way_object)
@@ -173,7 +172,7 @@ def process_streets_data(OSM_data, bbox_coordinates):
 
                 # Add other tags
                 way_object.update(way.tags)
-                # Add nodes
+                # Add nodes to the street
                 way_object["nodes"] = node_list
                 # Delete key if value is empty
                 way_object = dict(x for x in way_object.items() if all(x))
@@ -612,7 +611,9 @@ def allot_intersection(processed_OSM_data, inters_rec_up
                     if id1 != id2:  # compare unique street only
                         # check if a node represents an intersection
                         if nodes[i] == intersection_nodes[items]:
-                            nodes[i]["cat"] = "intersection"
+                            if "highway" in nodes[i]:
+                                nodes[i]["cat"] = nodes[i]["highway"]
+                            nodes[i]["intersection"] = [id1, id2]
                             f = nodes[i]
                             key1 = "street_name"
                             key2 = "street_type"
@@ -787,13 +788,14 @@ def enlist_POIs(processed_OSM_data1, amenity):
             for node in range(len(nodes)):
                 key_to_check = "cat"
                 # check if "cat" key is in the node
-                if key_to_check in nodes[node]:
-                    if nodes[node]["cat"]:  # ensure the "cat" key has a value
-                        # Check to remove duplicate intersections
-                        if nodes[node] not in POIs:
-                            if nodes[node]["id"] not in nodes_ids:
-                                nodes_ids.append(nodes[node]["id"])
-                                POIs.append(nodes[node])
+                if (key_to_check in nodes[node]
+                        or "intersection" in nodes[node]):
+                    # Check to remove duplicate intersections
+                    if nodes[node] not in POIs:
+                        if nodes[node]["id"] not in nodes_ids:
+                            nodes_ids.append(nodes[node]["id"])
+                            nodes_ids.append(nodes[node]["id"])
+                            POIs.append(nodes[node])
     if amenity is not None and len(amenity) != 0:
         for objs in range(len(amenity)):
             POIs.append(amenity[objs])
@@ -807,10 +809,9 @@ def OSM_preprocessor(processed_OSM_data, POIs, amenity):
         # Iterate through the amenities
         for i in range(len(
                 POIs)):
-            key_to_check = POIs[i]["cat"]
             # check if true, then the points of interest are amenity,
             # e.g. restaurants, bars, rentals, etc
-            if key_to_check != "intersection" and amenity is not None:
+            if "intersection" not in POIs[i] and amenity is not None:
                 minimum_distance = []
                 for obj in range(len(processed_OSM_data)):
                     nodes = processed_OSM_data[obj]["nodes"]
@@ -912,9 +913,24 @@ def OSM_preprocessor(processed_OSM_data, POIs, amenity):
                 x['distance'],
             reverse=True))
 
-    # Delete the distance key
     for obj in range(len(processed_OSM_data2)):
+        # Delete the distance key
         processed_OSM_data2[obj].pop('distance', None)
+        # Remove node tags from the streets list
+        # since they are now included in the points of interest
+        # list.
+        nodes = processed_OSM_data2[obj]["nodes"]
+        for node in range(len(nodes)):
+            node_object = {
+                "id": nodes[node]["id"],
+                "lat": nodes[node]["lat"],
+                "lon": nodes[node]["lon"]
+            }
+            if "node_type" in nodes[node]:
+                node_object["node_type"] = nodes[node]["node_type"]
+            if "POIs_ID" in nodes[node]:
+                node_object["POIs_ID"] = nodes[node]["POIs_ID"]
+            nodes[node] = node_object
     return processed_OSM_data2
 
 
