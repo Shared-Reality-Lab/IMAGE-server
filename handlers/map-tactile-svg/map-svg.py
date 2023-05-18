@@ -20,8 +20,11 @@ import jsonschema
 from jsonschema.exceptions import ValidationError
 import logging
 import time
+import math
 import drawSvg as draw
+
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 @app.route("/handler", methods=["POST"])
@@ -98,12 +101,12 @@ def handle():
         return response
 
     dimensions = 700, 700
-    """
+    
     renderingDescription = ("Tactile rendering of map centered at latitude " +
                             str(contents["coordinates"]["latitude"]) +
                             " and longitude " +
                             str(contents["coordinates"]["longitude"]))
-    """
+    
     # List of minor street types ('footway', 'crossing' and 'steps')
     # to be filtered out to simplify the resulting rendering
     remove_streets = ["footway", "crossing", "steps"]
@@ -190,33 +193,63 @@ def handle():
 
                 g.append(p)
         svg.append(g)
-    """
-    if "ca.mcgill.a11y.image.preprocessor.autour"\
+    
+    if "ca.mcgill.a11y.image.preprocessor.nominatim"\
             in preprocessor:
         targetData= preprocessor[
-                                 "ca.mcgill.a11y.image.preprocessor.autour"]["places"]
-
-        targetNode= next((d for d in targetData if (False)), None)
-        #math.isclose(float(d["ll"].split(",")[0]), contents["coordinates"]["latitude"], rel_tol=1e-5) and math.isclose(float(d["ll"].split(",")[1]), contents["coordinates"]["longitude"], rel_tol=1e-5)), None)
-        if targetNode is not None:
+                                 "ca.mcgill.a11y.image.preprocessor.nominatim"]
+        try:
             latitude = (
-                        (targetNode["ll"].split(",")[0] - lat_min)
+                        (float(targetData["lat"]) - lat_min)
                         * scaled_latitude)
             longitude = (
-                         (targetNode["ll"].split(",")[1] - lon_min)
-                         * scaled_longitude)
+                        (float(targetData["lon"]) - lon_min)
+                        * scaled_longitude)
             svg.append(
                         draw.Circle(
-                                        longitude,
-                                        latitude,
-                                        15,
+                                    longitude,
+                                    latitude,
+                                    20,
+                                    fill='green',
+                                    stroke_width=1.5,
+                                    stroke='green',
+                                    aria_label=targetData["name"]))
+            
+            """
+            ## Using bounding box occasionally results in the whole map 
+            ## being occupied by the target POI 
+            ## e.g. when McGill University is the detected target POI
+            bb=targetData["boundingbox"]
+            logging.debug(", ".join(bb))
+            lat_start = (
+                        (float(bb[0]) - lat_min)
+                        * scaled_latitude)
+            height = (
+                        (float(bb[1]) - lat_min)
+                        * scaled_latitude
+                        - lat_start)
+            lon_start = (
+                        (float(bb[2]) - lon_min)
+                        * scaled_longitude)
+            width = (
+                        (float(bb[3]) - lon_min)
+                        * scaled_longitude
+                        -lon_start)
+            svg.append(
+                        draw.Rectangle(
+                                        lon_start,
+                                        lat_start,
+                                        width,
+                                        height,
                                         fill='red',
                                         stroke_width=1.5,
                                         stroke='red',
-                                        aria_label=targetNode["title"]))
-            renderingDescription =  "Tactile rendering of map centered at "+ targetNode["title"]
-    """
-
+                                        aria_label=targetData["name"]))
+            """
+            renderingDescription =  "Tactile rendering of map centered at "+ targetData["name"]
+        except:
+            logging.debug("No reverse geocode data available")
+    
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
             if POI["id"] in checkPOIs and POI["cat"] == "intersection":
@@ -247,7 +280,7 @@ def handle():
                                         stroke_width=1.5,
                                         stroke='red',
                                         aria_label=label))
-
+    
     data = {"graphic": svg.asDataUri()}
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
