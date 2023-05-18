@@ -16,7 +16,7 @@ T5_TASK_PREFIX = "Translate English to French: "
 
 # Set device to GPU if available
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-DEVICE_NAME = torch.cuda.get_device_name(device=DEVICE)
+DEVICE_NAME = torch.cuda.get_device_name(device=DEVICE) if DEVICE.type == 'cuda' else 'CPU'
 
 
 # Tokenizer and Model ready to be instantiated
@@ -29,7 +29,7 @@ if __name__ == "utils":
     MODEL = AutoModelForSeq2SeqLM.from_pretrained(MODEL_CHECKPOINT)
     print(f'Finished instantiating {MODEL_CHECKPOINT} model.')
     MODEL = MODEL.to(DEVICE)
-    print(f'Model is running on {torch.cuda.get_device_name(device=DEVICE)}.')
+    print(f'Model is running on {DEVICE_NAME}.')
     
 def log(func):
     '''
@@ -57,13 +57,13 @@ def tokenize_query_to_tensor(query:str):
     return TOKENIZER(query, return_tensors="pt").to(DEVICE).input_ids
     
 @log
-def generate_new_tensor(input_ids:torch.Tensor) -> torch.Tensor:
+def generate_new_tensor(input_ids:torch.Tensor, MAX_NEW_TOKENS:int=5) -> torch.Tensor:
     '''
     STEP 2: Translate the input_ids tensor to an output query.
     @param input_ids: The decoded tensor (type<torch.Tensor>) to be passed through the model.
     @return: Newly generated tensor using the model (type<torch.Tensor>).
     '''
-    return MODEL.generate(input_ids, max_length=40)
+    return MODEL.generate(input_ids, max_new_tokens=MAX_NEW_TOKENS)
     
 @log
 def decode_generated_tensor(translated_tensor:torch.Tensor) -> str:
@@ -97,7 +97,11 @@ def translate_helsinki(segment:list) -> list:
         
         # 2. Input tensor -> output tensor
         print(f'(2) Generating new tensor.')
-        output_tensor, _ = generate_new_tensor(input_tensor)
+        if len(input_query) < 3:
+            MAX_NEW_TOKENS = 3
+        else:
+            MAX_NEW_TOKENS = len(input_query)
+        output_tensor, _ = generate_new_tensor(input_tensor, MAX_NEW_TOKENS=MAX_NEW_TOKENS)
         
         # 3. Output tensor -> query
         print(f'(3) Decoding translated tensor.')
