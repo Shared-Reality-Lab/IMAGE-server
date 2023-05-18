@@ -1,6 +1,6 @@
 Flask
 transformers
 sentencepiece
-torch
+# torch
 sacremoses
 accelerate # ?

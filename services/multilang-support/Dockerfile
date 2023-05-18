@@ -1,4 +1,4 @@
-FROM python:3-slim
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
 
 COPY services/multilang-support/requirements.txt ./
 RUN apt-get update && apt-get install python3 python3-pip -y
