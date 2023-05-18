@@ -245,10 +245,9 @@ def handle():
                                         stroke='red',
                                         aria_label=targetData["name"]))
             """
-            renderingDescription =  "Tactile rendering of map centered at "\
-                +targetData["name"]
-        except:
-            logging.debug("No reverse geocode data available")
+            renderingDescription =  "Tactile rendering of map centered at " + targetData["name"]
+        except KeyError:
+            logging.debug("Reverse geocode data unavailable")
 
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
@@ -279,7 +278,7 @@ def handle():
                                         fill='red',
                                         stroke_width=1.5,
                                         stroke='red',
-                                        aria_label=label))    
+                                        aria_label=label))
     data = {"graphic": svg.asDataUri()}
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
