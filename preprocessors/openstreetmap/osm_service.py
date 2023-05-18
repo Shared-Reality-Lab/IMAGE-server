@@ -67,7 +67,6 @@ def server_config2(url, bbox_coord):
     (node({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
     way({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
     rel({lat_min},{lon_min},{lat_max},{lon_max}) ["amenity"];
-    node({lat_min},{lon_min},{lat_max},{lon_max}) ["highway"];
     way({lat_min},{lon_min},{lat_max},{lon_max}) ["building"];
     );
     out center;
@@ -124,17 +123,14 @@ def process_streets_data(OSM_data, bbox_coordinates):
                     "lat": float(node.lat),
                     "lon": float(node.lon),
                 }
+                # Include tags for a street node if available
+                node_object.update(node.tags)
                 if node_object not in unbounded_nodes:
                     unbounded_nodes.append(node_object)
                 # Apply the boundary conditions to extract only nodes
                 # of a street that are within the bounding box.
                 if node.lat >= lat_min and node.lat <= lat_max:
                     if node.lon >= lon_min and node.lon <= lon_max:
-                        node_object = {
-                            "id": int(node.id),
-                            "lat": float(node.lat),
-                            "lon": float(node.lon),
-                        }
                         if node_object not in bounded_nodes:
                             bounded_nodes.append(node_object)
             # After the boundary restrictions are applied, it is
