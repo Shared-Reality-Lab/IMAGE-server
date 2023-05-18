@@ -16,7 +16,6 @@
  */
 import Articles from "articles";
 import pluralize from "pluralize";
-import fetch from "node-fetch";
 import osc from "osc";
 
 const MIN_OBJ_AREA = 0.0005; // For ungrouped objects only, for grouped objects applies to whole group.
