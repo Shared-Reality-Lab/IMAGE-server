@@ -1,0 +1,33 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/services/translation.schema.json",
+    "title": "Segment Translation",
+    "description": "Translate one or more segments from one language into another.",
+    "type": "object",
+    "properties": {
+        "segments": {
+            "description": "An array of strings to translate from source to target language.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+        },
+        "src_lang": {
+            "description": "Source language that the inputs are presently in as ISO 639-1.",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2,
+            "default": "en"
+        },
+        "tgt_lang": {
+            "description": "Target language that inputs are presently in as ISO 639-1.",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2
+        }
+    },
+    "required": [
+      "segments",
+      "tgt_lang"
+    ]
+}
