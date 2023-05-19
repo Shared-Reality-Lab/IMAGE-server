@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://image.a11y.mcgill.ca/services/translate.request.json",
+    "$id": "https://image.a11y.mcgill.ca/services/translation.schema.json",
     "title": "Segment Translation",
     "type": "object",
     "description": "Translate one or more segments from one language into another.",
