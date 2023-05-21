@@ -247,8 +247,9 @@ def handle():
             """
             renderingDescription = "Tactile rendering of map centered at "\
                 + targetData["name"]
-        except KeyError:
-            logging.debug("Reverse geocode data unavailable")
+        except KeyError as e:
+            logging.debug("Missing key " + str(e) + " in neonatim preprocessor")
+            logging.debug("Reverse geocode data not added to response")
 
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
