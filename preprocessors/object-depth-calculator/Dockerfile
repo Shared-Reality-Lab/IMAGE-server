@@ -4,6 +4,8 @@ COPY /preprocessors/object-depth-calculator/requirements.txt /app/requirements.t
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv wget git && rm -rf /var/lib/apt/lists/*
 
+RUN adduser --disabled-password python
+WORKDIR /app
 RUN pip3 install --upgrade pip
 RUN pip install -r /app/requirements.txt
 
