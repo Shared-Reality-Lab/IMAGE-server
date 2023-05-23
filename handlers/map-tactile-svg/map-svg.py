@@ -254,34 +254,46 @@ def handle():
 
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
-            if POI["id"] in checkPOIs and POI["cat"] == "intersection":
-                label = "Intersection of "
-                if len(checkPOIs[POI["id"]]) == 1:
-                    label += checkPOIs[POI["id"]][0][0]+" and minor street"
-                    # description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[
-                    # POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None
-                    # else checkPOIs[POI["id"]][0][0]+" No details available"
-                else:
-                    label += ", ".join(x[0] for x in checkPOIs[POI["id"]][:-1])
-                    label += " and "+checkPOIs[POI["id"]][-1][0]
-                    # description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else
-                    # x[0]+" No details available") for x in
-                    # checkPOIs[POI["id"]])
-                latitude = (
-                            (POI["lat"] - lat_min)
-                            * scaled_latitude)
-                longitude = (
-                             (POI["lon"] - lon_min)
-                             * scaled_longitude)
-                svg.append(
-                            draw.Circle(
-                                        longitude,
-                                        latitude,
-                                        10,
-                                        fill='red',
-                                        stroke_width=1.5,
-                                        stroke='red',
-                                        aria_label=label))
+            if POI["id"] in checkPOIs:
+                drawPOI = False
+                label = ""
+                if "intersection" in POI:
+                    drawPOI=True
+                    label += "Intersection of "
+                    if len(checkPOIs[POI["id"]]) == 1:
+                        label += checkPOIs[POI["id"]][0][0]+" and minor street"
+                        # description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[
+                        # POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None
+                        # else checkPOIs[POI["id"]][0][0]+" No details available"
+                    else:
+                        label += ", ".join(x[0] for x in checkPOIs[POI["id"]][:-1])
+                        label += " and "+checkPOIs[POI["id"]][-1][0]
+                        # description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else
+                        # x[0]+" No details available") for x in
+                        # checkPOIs[POI["id"]])
+                if "cat" in POI:
+                    tag, drPOI = getPOIdata(POI)
+                    if len(label)!=0:
+                        label+=", "
+                    label += tag
+                    if drPOI:
+                        drawPOI = drPOI
+                if drawPOI:
+                    latitude = (
+                                (POI["lat"] - lat_min)
+                                * scaled_latitude)
+                    longitude = (
+                                (POI["lon"] - lon_min)
+                                * scaled_longitude)
+                    svg.append(
+                                draw.Circle(
+                                            longitude,
+                                            latitude,
+                                            10,
+                                            fill='red',
+                                            stroke_width=1.5,
+                                            stroke='red',
+                                            aria_label=label))
     data = {"graphic": svg.asDataUri()}
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
@@ -330,11 +342,13 @@ def return_stroke_width(street_type):
 
 def getDescriptions(street):
     description = ""
-    default_attributes = ["street_id", "street_name", "nodes"]
-    if "street_name" not in street:
-        default_attributes.append("street_type")
+    # default_attributes = ["street_id", "street_name", "nodes", "service"]
+    # filtering for only the required attributes since there are now some hard to understand attributs
+    attributes = ["oneway", "lanes", "surface", "maxspeed", "access"]
+    if "street_name" in street:
+        attributes.append("street_type")
     for attr in street:
-        if attr not in default_attributes:
+        if attr in attributes:
             match attr:
                 case "oneway":
                     if street[attr]:
@@ -346,13 +360,33 @@ def getDescriptions(street):
                         attr.replace("_", " ")+", "
                 case _:
                     description += attr.replace("_", " ") + \
-                        " " + str(street[attr])+", "
+                        " " + str(street[attr].replace("_", " "))+", "
 
     # Remove the last ", "
     if description == "":
         return None
     else:
         return description[:-2]
+
+def getPOIdata(POI):
+    tag=""
+    draw = True
+    category = POI["cat"]
+    match category:
+        case "crossing":
+            if POI["crossing"] == "marked":
+                tag += "Marked crossing, "
+            elif POI["crossing"] == "unmarked":
+                tag += "Unmarked crossing, "
+            elif POI["crossing"] == "traffic_signals":
+                tag += "Crossing with traffic signal, "
+            else:
+                tag += "Crossing, " 
+        case "traffic_signals":
+            tag+= "Traffic lights present, "
+        case _:
+            draw = False      
+    return (tag if len(tag)==0 else tag[:-2]), draw
 
 
 if __name__ == "__main__":
