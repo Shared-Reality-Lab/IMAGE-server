@@ -321,8 +321,11 @@ def getDescriptions(street):
     description = ""
     # default_attributes = ["street_id", "street_name", "nodes", "service"]
     # filtering for only the required attributes
-    # as there are now some hard to understand attributs
-    attributes = ["oneway", "lanes", "surface", "maxspeed", "access", "sidewalk"]
+    # as there are now some hard to understand attributes
+    attributes = [
+        "oneway", "lanes", "surface", "maxspeed", "access",
+        "sidewalk"
+        ]
     if "street_name" in street:
         attributes.append("street_type")
     for attr, val in street.items():
