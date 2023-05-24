@@ -255,29 +255,7 @@ def handle():
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
             if POI["id"] in checkPOIs:
-                drawPOI = False
-                label = ""
-                if "intersection" in POI:
-                    drawPOI=True
-                    label += "Intersection of "
-                    if len(checkPOIs[POI["id"]]) == 1:
-                        label += checkPOIs[POI["id"]][0][0]+" and minor street"
-                        # description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[
-                        # POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None
-                        # else checkPOIs[POI["id"]][0][0]+" No details available"
-                    else:
-                        label += ", ".join(x[0] for x in checkPOIs[POI["id"]][:-1])
-                        label += " and "+checkPOIs[POI["id"]][-1][0]
-                        # description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else
-                        # x[0]+" No details available") for x in
-                        # checkPOIs[POI["id"]])
-                if "cat" in POI:
-                    tag, drPOI = getPOIdata(POI)
-                    if len(label)!=0:
-                        label+=", "
-                    label += tag
-                    if drPOI:
-                        drawPOI = drPOI
+                label, drawPOI = getNodeDescription(POI, checkPOIs)
                 if drawPOI:
                     latitude = (
                                 (POI["lat"] - lat_min)
@@ -368,8 +346,39 @@ def getDescriptions(street):
     else:
         return description[:-2]
 
-def getPOIdata(POI):
-    tag=""
+def getNodeDescription(POI, checkPOIs):
+    label = ""
+    drawPOI = False
+    if "intersection" in POI:
+        drawPOI=True
+        label += "Intersection of "
+        if len(checkPOIs[POI["id"]]) == 1:
+            label += checkPOIs[POI["id"]][0][0]+" and minor street"
+            # description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[
+            # POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None
+            # else checkPOIs[POI["id"]][0][0]+" No details available"
+        else:
+            label += ", ".join(x[0] for x in checkPOIs[POI["id"]][:-1])
+            label += " and "+checkPOIs[POI["id"]][-1][0]
+            # description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else
+            # x[0]+" No details available") for x in
+            # checkPOIs[POI["id"]])
+    if "cat" in POI:
+        tag, drPOI = getNodeCategoryData(POI)
+        if len(label)!=0:
+            label += ", "
+        label += tag
+        if drPOI:
+            drawPOI = drPOI
+    if "tactile_paving" in POI:
+        tag = getNodePavingData(POI)
+        if len(label)!=0:
+            label += ", "
+        label += tag
+    return label, drawPOI
+
+def getNodeCategoryData(POI):
+    tag = ""
     draw = True
     category = POI["cat"]
     match category:
@@ -383,11 +392,26 @@ def getPOIdata(POI):
             else:
                 tag += "Crossing, " 
         case "traffic_signals":
-            tag+= "Traffic lights present, "
+            tag += "Traffic lights present, "
         case _:
             draw = False      
-    return (tag if len(tag)==0 else tag[:-2]), draw
+    return (tag if len(tag) == 0 else tag[:-2]), draw
 
+def getNodePavingData(POI):
+    tag = ""
+    paving = POI["tactile_paving"]
+    match paving:
+        case "yes":
+            tag += "Tactile paving present, "
+        case "no":
+            tag += "Tactile paving absent, "
+        case "contrasted":
+            tag+= "Tactile paving with high contrast, "
+        case "incorrect":
+            tag += "Incorrect tactile paving"
+        case _:
+           pass    
+    return (tag if len(tag)==0 else tag[:-2])
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80, debug=True)
