@@ -320,7 +320,8 @@ def return_stroke_width(street_type):
 def getDescriptions(street):
     description = ""
     # default_attributes = ["street_id", "street_name", "nodes", "service"]
-    # filtering for only the required attributes since there are now some hard to understand attributs
+    # filtering for only the required attributes 
+    # as there are now some hard to understand attributs
     attributes = ["oneway", "lanes", "surface", "maxspeed", "access"]
     if "street_name" in street:
         attributes.append("street_type")
@@ -345,11 +346,12 @@ def getDescriptions(street):
     else:
         return description[:-2]
 
+
 def getNodeDescription(POI, checkPOIs):
     label = ""
     drawPOI = False
     if "intersection" in POI:
-        drawPOI=True
+        drawPOI = True
         label += "Intersection of "
         if len(checkPOIs[POI["id"]]) == 1:
             label += checkPOIs[POI["id"]][0][0]+" and minor street"
@@ -364,17 +366,18 @@ def getNodeDescription(POI, checkPOIs):
             # checkPOIs[POI["id"]])
     if "cat" in POI:
         tag, drPOI = getNodeCategoryData(POI)
-        if len(label)!=0:
+        if len(label) != 0:
             label += ", "
         label += tag
         if drPOI:
             drawPOI = drPOI
     if "tactile_paving" in POI:
         tag = getNodePavingData(POI)
-        if len(label)!=0:
+        if len(label) != 0:
             label += ", "
         label += tag
     return label, drawPOI
+
 
 def getNodeCategoryData(POI):
     tag = ""
@@ -389,11 +392,11 @@ def getNodeCategoryData(POI):
             elif POI["crossing"] == "traffic_signals":
                 tag += "Crossing with traffic signal, "
             else:
-                tag += "Crossing, " 
+                tag += "Crossing, "
         case "traffic_signals":
             tag += "Traffic lights present, "
         case _:
-            draw = False      
+            draw = False
     return (tag if len(tag) == 0 else tag[:-2]), draw
 
 
