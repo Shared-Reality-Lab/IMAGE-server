@@ -163,7 +163,7 @@ def handle():
                     street["street_type"])
                 args = dict(stroke=colors[color], stroke_width=stroke_width,
                             fill='none', aria_label=name)
-                # Add this arg only if the  not empty
+                # Add this arg only if the detailed description is not empty
                 if description is not None:
                     args["aria_description"] = description
                 p = draw.Path(**args)
@@ -213,7 +213,6 @@ def handle():
                                     stroke_width=1.5,
                                     stroke='green',
                                     aria_label=targetData["name"]))
-
             """
             ## Using bounding box occasionally results in the whole map
             ## being occupied by the target POI
@@ -249,7 +248,7 @@ def handle():
                 + targetData["name"]
         except KeyError as e:
             logging.debug("Missing key " + str(e)
-                          + " in neonatim preprocessor")
+                          + " in nominatim preprocessor")
             logging.debug("Reverse geocode data not added to response")
 
     if "points_of_interest" in data:
@@ -397,6 +396,7 @@ def getNodeCategoryData(POI):
             draw = False      
     return (tag if len(tag) == 0 else tag[:-2]), draw
 
+
 def getNodePavingData(POI):
     tag = ""
     paving = POI["tactile_paving"]
@@ -406,12 +406,13 @@ def getNodePavingData(POI):
         case "no":
             tag += "Tactile paving absent, "
         case "contrasted":
-            tag+= "Tactile paving with high contrast, "
+            tag += "Tactile paving with high contrast, "
         case "incorrect":
             tag += "Incorrect tactile paving"
         case _:
-           pass    
-    return (tag if len(tag)==0 else tag[:-2])
+            pass
+    return (tag if len(tag) == 0 else tag[:-2])
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80, debug=True)
