@@ -320,7 +320,7 @@ def return_stroke_width(street_type):
 def getDescriptions(street):
     description = ""
     # default_attributes = ["street_id", "street_name", "nodes", "service"]
-    # filtering for only the required attributes 
+    # filtering for only the required attributes
     # as there are now some hard to understand attributs
     attributes = ["oneway", "lanes", "surface", "maxspeed", "access"]
     if "street_name" in street:
