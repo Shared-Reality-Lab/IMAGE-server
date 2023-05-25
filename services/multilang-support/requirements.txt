@@ -1,6 +1,6 @@
 Flask
 transformers
 sentencepiece
-#torch
 sacremoses
-accelerate # ?
+gunicorn
+jsonschema
