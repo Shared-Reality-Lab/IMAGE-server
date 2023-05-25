@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 from flask import Flask, request, jsonify
-from .utils import instantiate, translate_helsinki
-import time, logging, json, jsonschema
+from .utils import translate_helsinki
+import logging, json, jsonschema
 app = Flask(__name__)
 
 # Load schema
@@ -11,9 +11,16 @@ app = Flask(__name__)
 Here we send the app to / directory, along with the schema file.
 Hence, we can load the schema file as below. (relative path)
 '''
+# Configure the logging settings
+logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] [%(levelname)s]: %(message)s')
+
+# Create a logger instance
+LOGGER = logging.getLogger(__name__)
+
+# uncomment this line to test the server locally (without Docker)
 with open("../../schemas/services/translation.schema.json", "r") as f:
 # with open("translation.schema.json", "r") as f:
-    translation_schema = json.load(f)
+    TRANSLATION_SCHEMA = json.load(f)
 
 # Validate request 
 def validate_request(request):
@@ -24,8 +31,9 @@ def validate_request(request):
     - tgt_lang (defaulted to be 'fr'): the target language
     A request must have at least `segment`.
     '''
+    LOGGER.debug("-- Validating request --")
     try:
-        jsonschema.validate(instance=request, schema=translation_schema)
+        jsonschema.validate(instance=request, schema=TRANSLATION_SCHEMA)
         return True
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
@@ -37,37 +45,30 @@ def translate_request():
     Translate text from one language to another
     '''
     # Get request data
-    request = request.get_json()
-    print(request)
+    content = request.get_json()
+    print(content)
 
     # Validate incoming request
-    if not validate_request():
+    if not validate_request(request=content):
         return jsonify("Invalid Request JSON format"), 400
-    logging.debug("-- Request validated! --")
+    
+    LOGGER.debug("-- Request validated! --")
+    
     # Get text to translate
-    segment:list = request['segment']
-    source_lang = request['src_lang']
-    target_lang = request['tgt_lang']
+    segments:list = content['segments']
+    source_lang = content['src_lang']
+    target_lang = content['tgt_lang']
 
     # Translate, from list to list
-    translation, elapsed_time = translate_helsinki(segment)
+    translation, elapsed_time = translate_helsinki(segments)
 
     # Prepare response
     response = {
-        "timestamp": int(time.time()),
-        "translations": [
-            {
-                "src_lang": source_lang,
-                "tgt_lang": target_lang,
-                "translation": translation,
-                "elapsed_time_in_seconds": elapsed_time
-            }
-        ]
+        "src_lang": source_lang,
+        "tgt_lang": target_lang,
+        "elapsed_time_in_seconds": elapsed_time,
+        "translations": translation
     }
-
+    LOGGER.debug("-- Response prepared! --")
     # Return response
     return jsonify(response), 200
-
-if __name__ == '__main__':
-    instantiate()
-    app.run(host='0.0.0.0', port=5000, debug=True)    

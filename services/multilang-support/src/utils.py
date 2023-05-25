@@ -2,7 +2,7 @@
 
 # Importing Tokenizer and Model library, and torch
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import torch, time
+import torch, time, logging
 
 # Depending on the model chosen from HuggingFace,
 # the tokenizer and model will be different.
@@ -19,19 +19,10 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'DETECTED: {DEVICE}')
 DEVICE_NAME = torch.cuda.get_device_name(device=DEVICE) if DEVICE.type == 'cuda' else 'CPU'
 
-
-# Tokenizer and Model ready to be instantiated
-def instantiate():
-    global TOKENIZER, MODEL
-    print(f"~~ Instantiating {MODEL_CHECKPOINT} tokenizer and model ~~")
-    TOKENIZER = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
-    print(f'Finished instantiating {MODEL_CHECKPOINT} tokenizer.')
-
-    MODEL = AutoModelForSeq2SeqLM.from_pretrained(MODEL_CHECKPOINT)
-    print(f'Finished instantiating {MODEL_CHECKPOINT} model.')
-    MODEL = MODEL.to(DEVICE)
-    print(f'Model is running on {DEVICE_NAME}.')
-    
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.debug(f'LOGGING DETECTED: {DEVICE_NAME}')
+ 
 def log(func):
     '''
     Timing & logging decorator for functions.
@@ -48,6 +39,19 @@ def log(func):
         return function_output, elapsed_time
     return wrapper
    
+# Tokenizer and Model ready to be instantiated
+@log
+def instantiate():
+    global TOKENIZER, MODEL
+    print(f"~~ Instantiating {MODEL_CHECKPOINT} tokenizer and model ~~")
+    TOKENIZER = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
+    print(f'Finished instantiating {MODEL_CHECKPOINT} tokenizer.')
+
+    MODEL = AutoModelForSeq2SeqLM.from_pretrained(MODEL_CHECKPOINT)
+    print(f'Finished instantiating {MODEL_CHECKPOINT} model.')
+    MODEL = MODEL.to(DEVICE)
+    print(f'Model is running on {DEVICE_NAME}.')
+    
 @log
 def tokenize_query_to_tensor(query:str):
     '''
@@ -113,3 +117,7 @@ def translate_helsinki(segment:list) -> list:
         result.append(output_query)
     
     return result
+
+print(__name__)
+if 'utils' in __name__ or __name__ == '__main__':
+    instantiate()
