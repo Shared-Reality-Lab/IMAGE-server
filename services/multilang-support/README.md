@@ -15,9 +15,19 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 - Similarly, `t5`-based models will use `T5ForConditionalGeneration` models.
 
 - If the model is based on `Marian`, such as [`Helsinki-NLP/opus-mt-en-fr`](https://huggingface.co/Helsinki-NLP/opus-mt-en-fr) or [`Helsinki-NLP/opus-mt-en-de`](https://huggingface.co/Helsinki-NLP/opus-mt-en-de), the tokenizer and model are  `MarianTokenizer` and `MarianMTModel` respectively.
-### Flask App
+### Translation App (Flask/Gunicorn)
 
 ### Docker Image
+- Here is how the docker image is organized:
+```
+/app
+├── requirements.txt
+└── src
+    ├── translate.py
+    └── utils.py
+```
+- `gunicorn` will be called from the `app` repository.
+
 
 ### Docker Compose as an IMAGE service
 - [IMAGE-server/wiki on Services](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#services)
@@ -28,3 +38,8 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 - Using [`t5-small`](https://huggingface.co/t5-small) model from HuggingFace, there are available 4 languages: English, French, Romanian, German
 
 - Using Google's [`flan-t5-small`](https://huggingface.co/google/flan-t5-small) model, there are lots of languages to choose from: **English**, **Spanish**, **French**, **Chinese**, **Italian**, **Russian**, etc.
+
+## Attribution
+- License: https://creativecommons.org/licenses/by-nc-sa/4.0/
+- Model from https://github.com/Helsinki-NLP/Tatoeba-Challenge/tree/master/models
+- 
