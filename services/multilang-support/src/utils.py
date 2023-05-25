@@ -16,11 +16,12 @@ T5_TASK_PREFIX = "Translate English to French: "
 
 # Set device to GPU if available
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f'DETECTED: {DEVICE}')
 DEVICE_NAME = torch.cuda.get_device_name(device=DEVICE) if DEVICE.type == 'cuda' else 'CPU'
 
 
 # Tokenizer and Model ready to be instantiated
-if __name__ == "utils":
+def instantiate():
     global TOKENIZER, MODEL
     print(f"~~ Instantiating {MODEL_CHECKPOINT} tokenizer and model ~~")
     TOKENIZER = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
