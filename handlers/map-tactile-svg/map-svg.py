@@ -108,7 +108,7 @@ def handle():
 
     # List of minor street types ('footway', 'crossing' and 'steps')
     # to be filtered out to simplify the resulting rendering
-    remove_streets = ["footway", "crossing", "steps"]
+    remove_streets = ["footway", "crossing", "steps", "elevator"]
     svg = draw.Drawing(dimensions[0], dimensions[1])
 
     data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
