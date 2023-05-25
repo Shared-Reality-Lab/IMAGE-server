@@ -121,7 +121,7 @@ def objectdepth():
             h_extrema = np.percentile(img[x1:x2, y1:y2],90)
             l_extrema = np.percentile(img[x1:x2, y1:y2],10)
             depthcomp = img[x1:x2, y1:y2]
-            depthcomp = np.where(depthcomp > h_extrema, nan, np.where(depthcomp < l_extrema, nan, depthcomp))
+            depthcomp = np.where(depthcomp > h_extrema, np.nan, np.where(depthcomp < l_extrema, np.nan, depthcomp))
             depth = np.nanmedian(depthcomp)
             if np.isnan(depth):
                 app.logger.error("NAN depth value")
