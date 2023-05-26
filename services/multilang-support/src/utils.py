@@ -47,8 +47,8 @@ MODEL_CHECKPOINT = "Helsinki-NLP/opus-mt-en-fr"
 
 class Translator:
     """
-    A Translator class that handles the translation process, containing the following:
-    - MODEL_CHECKPOINT: the model checkpoint to be used, taken from Helsinki-NLP/opus-mt family
+    A Translator class that handles the translation process, containing:
+    - MODEL_CHECKPOINT: the model checkpoint to be used (from Helsinki-NLP)
     - TOKENIZER
     - MODEL
     - DEVICE: the device to be used (CPU or cuda GPU)
@@ -56,16 +56,14 @@ class Translator:
     """
 
     def __init__(self, src_lang: str, tgt_lang: str) -> None:
-        try:
-            # expecting something like 'en-fr'
-            self.MODEL_CHECKPOINT = f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}"
-        except BaseException:
-            return NotImplementedError, 501
-
+        self.MODEL_CHECKPOINT = f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}"
+        # expecting something like 'en-fr'
 
 # Set device to GPU if available, else CPU
 # Issue: torch can detect cuda GPU but will not be able to use it
 # if the GPU is out of memory. (Happened during unicorn testing)
+
+
 @log
 def set_device(device_id: int = 0):
     """
@@ -87,7 +85,7 @@ def set_device(device_id: int = 0):
             DEVICE = torch.device(f"cuda:{device_id}")
         DEVICE_NAME = torch.cuda.get_device_name(device=DEVICE)
     else:
-        LOGGER.warning(f"GPU not found, using CPU")
+        LOGGER.warning("GPU not found, using CPU")
         DEVICE = torch.device("cpu")
         DEVICE_NAME = "CPU"
 
@@ -103,10 +101,10 @@ def instantiate():
     LOGGER.info(f"Instantiating: {MODEL_CHECKPOINT} tokenizer and model")
 
     TOKENIZER = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
-    LOGGER.debug(f"Tokenizer instantiated")
+    LOGGER.debug("Tokenizer instantiated")
 
     MODEL = AutoModelForSeq2SeqLM.from_pretrained(MODEL_CHECKPOINT)
-    LOGGER.debug(f"Model instantiated")
+    LOGGER.debug("Model instantiated")
 
     device_id = 0
     while device_id < num_gpus:
@@ -114,7 +112,7 @@ def instantiate():
             set_device(device_id=device_id)
             device_id += 1
             MODEL = MODEL.to(DEVICE)
-            # if it is able to set model to device, it means that the GPU is usable
+            # if it is able to set model to device, it means that GPU is usable
             # otherwise we will try the next GPU
             break
         except BaseException:
@@ -141,7 +139,7 @@ def generate_new_tensor(
 ) -> torch.Tensor:
     """
     STEP 2: Translate the input_ids tensor to an output query.
-    @param input_ids: The decoded tensor (type<torch.Tensor>) to be passed through the model.
+    @param input_ids: The decoded tensor (type<torch.Tensor>) to be translated.
     @return: Newly generated tensor using the model (type<torch.Tensor>).
     """
     return MODEL.generate(input_ids, max_new_tokens=MAX_NEW_TOKENS)
@@ -180,7 +178,7 @@ def translate_helsinki(segment: list) -> list:
         input_tensor, _time_inTensor = tokenize_query_to_tensor(input_query)
 
         # 2. Input tensor -> output tensor
-        LOGGER.debug(f"(2) Generating new tensor.")
+        LOGGER.debug("(2) Generating new tensor.")
         if len(input_query) < 3:
             MAX_NEW_TOKENS = 3
         else:
@@ -190,7 +188,7 @@ def translate_helsinki(segment: list) -> list:
         )
 
         # 3. Output tensor -> query
-        LOGGER.debug(f"(3) Decoding translated tensor.")
+        LOGGER.debug("(3) Decoding translated tensor.")
         output_query, _time_outQuery = decode_generated_tensor(output_tensor)
 
         # 4. Translated query -> result
