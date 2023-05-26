@@ -30,8 +30,8 @@ services:
                     devices:
                     - driver: nvidia
                       capabilities: ["gpu", "utility", "compute"]
-    multilang:
-        image: ghcr.io/shared-reality-lab/image-service-multilang:unstable
+    multilang-support:
+        image: ghcr.io/shared-reality-lab/image-service-translation:unstable
         environment:
             - TORCH_DEVICE=cuda
         deploy:
