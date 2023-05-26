@@ -56,14 +56,24 @@ def translate_request():
 
     # Get text to translate
     segments: list = content["segments"]
-    source_lang = content["src_lang"]
+    # source lang is optional, hence the try/except
+    try:
+        source_lang = content["src_lang"]
+    except KeyError:
+        source_lang = "en"
+
     target_lang = content["tgt_lang"]
 
     # Handles source/target language
-
-    # Translate, from list to list
-    translation, elapsed_time = translate_helsinki(segments)
-
+    if target_lang == source_lang:
+        return jsonify("Source and target languages are the same"), 204
+    if target_lang not in ["fr", "en"]:
+        return jsonify("Target language not yet implemented"), 501
+    if source_lang == 'en' and target_lang == 'fr':
+        # Translate, from list to list
+        translation, elapsed_time = translate_helsinki(segments)
+    else:
+        return jsonify("Internal Server Error"), 500
     # Prepare response
     response = {
         "src_lang": source_lang,
