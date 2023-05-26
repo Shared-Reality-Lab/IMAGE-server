@@ -2,7 +2,9 @@
 
 from flask import Flask, request, jsonify
 from .utils import translate_helsinki, LOGGER
-import logging, json, jsonschema
+import logging
+import json
+import jsonschema
 app = Flask(__name__)
 
 # Load schema
@@ -13,11 +15,13 @@ Hence, we can load the schema file as below. (relative path)
 '''
 
 # uncomment this line to test the server locally (without Docker)
-#with open("../../schemas/services/translation.schema.json", "r") as f:
+# with open("../../schemas/services/translation.schema.json", "r") as f:
 with open("translation.schema.json", "r") as f:
     TRANSLATION_SCHEMA = json.load(f)
 
-# Validate request 
+# Validate request
+
+
 def validate_request(request):
     '''
     Validate incoming request:
@@ -33,6 +37,7 @@ def validate_request(request):
         logging.error(e)
         return False
 
+
 @app.route('/service/translate/french', methods=['POST'])
 def translate_request():
     '''
@@ -45,11 +50,11 @@ def translate_request():
     # Validate incoming request
     if not validate_request(request=content):
         return jsonify("Invalid Request JSON format"), 400
-    
+
     LOGGER.debug("- Request validated! -")
-    
+
     # Get text to translate
-    segments:list = content['segments']
+    segments: list = content['segments']
     source_lang = content['src_lang']
     target_lang = content['tgt_lang']
 
