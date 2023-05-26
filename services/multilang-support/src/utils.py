@@ -27,15 +27,30 @@ def log(func):
         return function_output, elapsed_time
     return wrapper
 
+# Only for t5-based models, we required a prefix to be added to the input text.
+# This prefix is the task we want to perform.
+# T5_TASK_PREFIX = "Translate English to <TARGET_LANGUAGE>: "
+T5_TASK_PREFIX = "Translate English to French: "
+
 # Depending on the model chosen from HuggingFace,
 # the tokenizer and model will be different.
 # See README.md#Implementation for more details.
 MODEL_CHECKPOINT = "Helsinki-NLP/opus-mt-en-fr"
 
-# Only for t5-based models, we required a prefix to be added to the input text.
-# This prefix is the task we want to perform.
-# T5_TASK_PREFIX = "Translate English to <TARGET_LANGUAGE>: "
-T5_TASK_PREFIX = "Translate English to French: "
+class Translator:
+    '''
+    A Translator class that handles the translation process, containing the following:
+    - MODEL_CHECKPOINT: the model checkpoint to be used, taken from Helsinki-NLP/opus-mt family
+    - TOKENIZER
+    - MODEL
+    - DEVICE: the device to be used (CPU or cuda GPU)
+    - DEVICE_NAME: the device name to be used (CPU or GPU)
+    '''
+    def __init__(self, src_lang:str, tgt_lang:str) -> None:
+        try:
+            self.MODEL_CHECKPOINT = f'Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}' # expecting something like 'en-fr'
+        except:
+            return NotImplementedError, 501
 
 # Set device to GPU if available, else CPU
 # Issue: torch can detect cuda GPU but will not be able to use it
@@ -74,12 +89,18 @@ def instantiate():
     LOGGER.debug(f'Model instantiated')
     
     device_id = 0
-    while(set_device(device_id=device_id) and device_id < num_gpus):
+    while device_id < num_gpus:
         try:
+            set_device(device_id=device_id)
+            device_id += 1
             MODEL = MODEL.to(DEVICE)
+            # if it is able to set model to device, it means that the GPU is usable
+            # otherwise we will try the next GPU
             break
         except: 
-            set_device(device_id=-1)
+            if device_id >= num_gpus:
+                set_device(device_id=-1)
+                break
     LOGGER.debug(f'Model is running on {DEVICE_NAME}.')
     
 @log

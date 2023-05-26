@@ -13,8 +13,8 @@ Hence, we can load the schema file as below. (relative path)
 '''
 
 # uncomment this line to test the server locally (without Docker)
-with open("../../schemas/services/translation.schema.json", "r") as f:
-# with open("translation.schema.json", "r") as f:
+#with open("../../schemas/services/translation.schema.json", "r") as f:
+with open("translation.schema.json", "r") as f:
     TRANSLATION_SCHEMA = json.load(f)
 
 # Validate request 
@@ -52,6 +52,8 @@ def translate_request():
     segments:list = content['segments']
     source_lang = content['src_lang']
     target_lang = content['tgt_lang']
+
+    # Handles source/target language
 
     # Translate, from list to list
     translation, elapsed_time = translate_helsinki(segments)
