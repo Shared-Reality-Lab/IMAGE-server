@@ -118,8 +118,8 @@ def objectdepth():
             x2 = int(objects[i]['dimensions'][2] * dimensions[1])
             y1 = int(objects[i]['dimensions'][1] * dimensions[0])
             y2 = int(objects[i]['dimensions'][3] * dimensions[0])
-            h_extrema = np.percentile(img[x1:x2, y1:y2],90)
-            l_extrema = np.percentile(img[x1:x2, y1:y2],10)
+            h_extrema = np.percentile(img[x1:x2, y1:y2],85)
+            l_extrema = np.percentile(img[x1:x2, y1:y2],15)
             depthcomp = img[x1:x2, y1:y2]
             depthcomp = np.where(depthcomp > h_extrema, np.nan, np.where(depthcomp < l_extrema, np.nan, depthcomp))
             depth = np.nanmedian(depthcomp)
