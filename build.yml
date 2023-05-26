@@ -234,4 +234,9 @@ services:
             context: ./schemas
             dockerfile: Dockerfile
         image: "schemas:latest"
+    multilang-service:
+        image: "multilang-service:latest"
+        build:
+            context: .
+            dockerfile: ./services/multilang-support/Dockerfile
 
