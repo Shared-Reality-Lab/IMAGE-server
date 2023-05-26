@@ -126,9 +126,9 @@ def objectdepth():
             if np.isnan(depth):
                 app.logger.error("NAN depth value")
                 app.logger.debug("Ojbect #")
-                app.logger.debug(i.tostring())
-                app.logger.debug(x1.tostring())
-                app.logger.debug(x2.tostring())
+                app.logger.debug(str(i))
+                app.logger.debug(str(x1))
+                app.logger.debug(str(x2))
                 depth = 1
 
             dictionary = {"ID": objects[i]["ID"],
