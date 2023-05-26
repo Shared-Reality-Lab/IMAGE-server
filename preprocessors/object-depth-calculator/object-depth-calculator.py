@@ -114,14 +114,14 @@ def objectdepth():
     app.logger.debug("number of objects")
     if (len(objects) > 0):
         for i in range(len(objects)):
-            x1 = int(objects[i]['dimensions'][0] * dimensions[1])
-            x2 = int(objects[i]['dimensions'][2] * dimensions[1])
-            y1 = int(objects[i]['dimensions'][1] * dimensions[0])
-            y2 = int(objects[i]['dimensions'][3] * dimensions[0])
-            h_extrema = np.percentile(img[x1:x2, y1:y2],90)
-            l_extrema = np.percentile(img[x1:x2, y1:y2],10)
-            depthcomp = img[x1:x2, y1:y2]
-            depthcomp = np.where(depthcomp > h_extrema, np.nan, np.where(depthcomp < l_extrema, np.nan, depthcomp))
+            x1 = int(objects[i]['dimensions'][0] * dimensions[0])
+            x2 = int(objects[i]['dimensions'][2] * dimensions[0])
+            y1 = int(objects[i]['dimensions'][1] * dimensions[1])
+            y2 = int(objects[i]['dimensions'][3] * dimensions[1])
+            #h_extrema = np.percentile(img[x1:x2, y1:y2],90)
+            #l_extrema = np.percentile(img[x1:x2, y1:y2],10)
+            depthcomp = img[y1:y2, x1:x2]
+            #depthcomp = np.where(depthcomp > h_extrema, np.nan, np.where(depthcomp < l_extrema, np.nan, depthcomp))
             depth = np.nanmedian(depthcomp)
             if np.isnan(depth):
                 app.logger.error("NAN depth value")
