@@ -4,25 +4,16 @@
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch, time, logging
 
-# Depending on the model chosen from HuggingFace,
-# the tokenizer and model will be different.
-# See README.md#Implementation for more details.
+# Configure the logging settings
+logging.basicConfig(level=logging.DEBUG, \
+    format='%(asctime)s [%(levelname)s]: %(message)s',
+    datefmt='%y-%m-%d %H:%M %Z'\
+)
 
-MODEL_CHECKPOINT = "Helsinki-NLP/opus-mt-en-fr"
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
 
-# For t5 based models, we required a prefix to be added to the input text.
-# This prefix is the task we want to perform.
-T5_TASK_PREFIX = "Translate English to French: "
-
-# Set device to GPU if available
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f'DETECTED: {DEVICE}')
-DEVICE_NAME = torch.cuda.get_device_name(device=DEVICE) if DEVICE.type == 'cuda' else 'CPU'
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-logger.debug(f'LOGGING DETECTED: {DEVICE_NAME}')
- 
+# A logging wrapper function/decorator
 def log(func):
     '''
     Timing & logging decorator for functions.
@@ -32,25 +23,64 @@ def log(func):
         function_output = func(*args, **kwargs)
         end_time = time.time()
         elapsed_time = end_time - start_time
-        print(f"--- {func.__name__} takes {elapsed_time:.3f} seconds ---\n")
-        with open('logs.txt', 'a') as f:
-            f.write(f'Called {func.__name__} with {[str(arg) for arg in args]}\n')
-            f.write(f'Elapsed time for {func.__name__}: {elapsed_time:.3f} seconds\n')
+        LOGGER.debug(f'{func.__name__} takes {elapsed_time:.3f} seconds')
         return function_output, elapsed_time
     return wrapper
+
+# Depending on the model chosen from HuggingFace,
+# the tokenizer and model will be different.
+# See README.md#Implementation for more details.
+MODEL_CHECKPOINT = "Helsinki-NLP/opus-mt-en-fr"
+
+# Only for t5-based models, we required a prefix to be added to the input text.
+# This prefix is the task we want to perform.
+# T5_TASK_PREFIX = "Translate English to <TARGET_LANGUAGE>: "
+T5_TASK_PREFIX = "Translate English to French: "
+
+# Set device to GPU if available, else CPU
+# Issue: torch can detect cuda GPU but will not be able to use it
+# if the GPU is out of memory. (Happened during unicorn testing)
+@log
+def set_device(device_id:int=0):
+    '''
+    Set the device to GPU if available, else CPU.
+    For GPUs: device_id starts from 0 and increments.
+    For CPUs: device_id is -1.
+    
+    To handle the issue of torch detecting cuda GPU but not able to use it,
+    we set the device to try out all GPUs before falling back to CPU.
+    '''
+    global DEVICE, DEVICE_NAME
+    if device_id >= 0:
+        DEVICE = torch.device(f'cuda:{device_id}')
+    else:
+        DEVICE = torch.device('cpu')
+    
+    DEVICE_NAME = torch.cuda.get_device_name(device=DEVICE) if DEVICE.type == 'cuda' else 'CPU'
+    LOGGER.debug(f'Using {DEVICE} on {DEVICE_NAME}')
+    return True
    
 # Tokenizer and Model ready to be instantiated
 @log
 def instantiate():
     global TOKENIZER, MODEL
-    print(f"~~ Instantiating {MODEL_CHECKPOINT} tokenizer and model ~~")
+    num_gpus = torch.cuda.device_count()
+    LOGGER.info(f"Instantiating: {MODEL_CHECKPOINT} tokenizer and model")
+    
     TOKENIZER = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
-    print(f'Finished instantiating {MODEL_CHECKPOINT} tokenizer.')
+    LOGGER.debug(f'Tokenizer instantiated')
 
     MODEL = AutoModelForSeq2SeqLM.from_pretrained(MODEL_CHECKPOINT)
-    print(f'Finished instantiating {MODEL_CHECKPOINT} model.')
-    MODEL = MODEL.to(DEVICE)
-    print(f'Model is running on {DEVICE_NAME}.')
+    LOGGER.debug(f'Model instantiated')
+    
+    device_id = 0
+    while(set_device(device_id=device_id) and device_id < num_gpus):
+        try:
+            MODEL = MODEL.to(DEVICE)
+            break
+        except: 
+            set_device(device_id=-1)
+    LOGGER.debug(f'Model is running on {DEVICE_NAME}.')
     
 @log
 def tokenize_query_to_tensor(query:str):
@@ -59,6 +89,7 @@ def tokenize_query_to_tensor(query:str):
     @param query: The query (type<str>) to be tokenized.
     @return: The tokenized query as a torch.Tensor.
     '''
+    # return TOKENIZER.encode(query).to(DEVICE)
     return TOKENIZER(query, return_tensors="pt").to(DEVICE).input_ids
     
 @log
@@ -97,27 +128,29 @@ def translate_helsinki(segment:list) -> list:
     result = []
     for input_query in segment:
         # 1. Input query -> tensor
-        print(f'(1) Translating: {input_query}')
-        input_tensor, _ = tokenize_query_to_tensor(input_query)
+        LOGGER.debug(f'(1) Translating: "{input_query}"')
+        input_tensor, _time_inTensor = tokenize_query_to_tensor(input_query)
         
         # 2. Input tensor -> output tensor
-        print(f'(2) Generating new tensor.')
+        LOGGER.debug(f'(2) Generating new tensor.')
         if len(input_query) < 3:
             MAX_NEW_TOKENS = 3
         else:
             MAX_NEW_TOKENS = len(input_query)
-        output_tensor, _ = generate_new_tensor(input_tensor, MAX_NEW_TOKENS=MAX_NEW_TOKENS)
+        output_tensor, _time_outTensor = generate_new_tensor(input_tensor, MAX_NEW_TOKENS=MAX_NEW_TOKENS)
         
         # 3. Output tensor -> query
-        print(f'(3) Decoding translated tensor.')
-        output_query, _ = decode_generated_tensor(output_tensor)
+        LOGGER.debug(f'(3) Decoding translated tensor.')
+        output_query, _time_outQuery = decode_generated_tensor(output_tensor)
         
         # 4. Translated query -> result
-        print(f'(4) Appending {output_query} to result.')
+        LOGGER.debug(f'(4) Appending "{output_query}" to result.')
+        LOGGER.info(f'Translated: "{output_query}"')
         result.append(output_query)
     
     return result
 
 print(__name__)
 if 'utils' in __name__ or __name__ == '__main__':
+    set_device()
     instantiate()

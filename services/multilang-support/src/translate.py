@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from flask import Flask, request, jsonify
-from .utils import translate_helsinki
+from .utils import translate_helsinki, LOGGER
 import logging, json, jsonschema
 app = Flask(__name__)
 
@@ -11,11 +11,6 @@ app = Flask(__name__)
 Here we send the app to / directory, along with the schema file.
 Hence, we can load the schema file as below. (relative path)
 '''
-# Configure the logging settings
-logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] [%(levelname)s]: %(message)s')
-
-# Create a logger instance
-LOGGER = logging.getLogger(__name__)
 
 # uncomment this line to test the server locally (without Docker)
 with open("../../schemas/services/translation.schema.json", "r") as f:
@@ -31,7 +26,6 @@ def validate_request(request):
     - tgt_lang (defaulted to be 'fr'): the target language
     A request must have at least `segment`.
     '''
-    LOGGER.debug("-- Validating request --")
     try:
         jsonschema.validate(instance=request, schema=TRANSLATION_SCHEMA)
         return True
@@ -46,13 +40,13 @@ def translate_request():
     '''
     # Get request data
     content = request.get_json()
-    print(content)
+    # print(content)
 
     # Validate incoming request
     if not validate_request(request=content):
         return jsonify("Invalid Request JSON format"), 400
     
-    LOGGER.debug("-- Request validated! --")
+    LOGGER.debug("- Request validated! -")
     
     # Get text to translate
     segments:list = content['segments']
@@ -69,6 +63,6 @@ def translate_request():
         "elapsed_time_in_seconds": elapsed_time,
         "translations": translation
     }
-    LOGGER.debug("-- Response prepared! --")
+    LOGGER.debug("- Response SENT! -")
     # Return response
     return jsonify(response), 200
