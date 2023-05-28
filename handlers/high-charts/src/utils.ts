@@ -14,7 +14,6 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
  */
-import fetch from "node-fetch";
 import osc from "osc";
 
 export type TTSResponse = {
@@ -91,7 +90,7 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
 
 /**
  * The function will return the string representing the graph title and axes information
- * @param highChartsData 
+ * @param highChartsData
  * @returns graphInfo string
  */
 export function getGraphInfo(highChartsData: any): string{
@@ -107,13 +106,13 @@ export function getGraphInfo(highChartsData: any): string{
         const xDataMax = new Date(xAxis.dataMax);
         xStart = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(xDataMin)
         xEnd = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(xDataMax)
-    } 
+    }
     if (yAxis.type.toLowerCase() === "datetime"){
         const yDataMin = new Date(yAxis.dataMin);
         const yDataMax = new Date(yAxis.dataMax);
         yStart = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(yDataMin)
         yEnd = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(yDataMax)
-    } 
+    }
     const xAxisInfo = `x Axis,${xAxis.title},from ${xStart} to ${xEnd}`;
     const yAxisInfo = `y Axis,${yAxis.title},from ${yStart} to ${yEnd}`;
     return `${title}. ${xAxisInfo}. ${yAxisInfo}`;
