@@ -16,7 +16,6 @@
  */
 import Articles from "articles";
 import pluralize from "pluralize";
-import fetch from "node-fetch";
 import osc from "osc";
 
 export type TTSSegment = {

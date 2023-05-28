@@ -14,7 +14,6 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
  */
-import fetch from "node-fetch";
 import osc from "osc";
 
 export type Rendering = {
