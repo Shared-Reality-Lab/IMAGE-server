@@ -53,11 +53,32 @@ class Translator:
     - MODEL
     - DEVICE: the device to be used (CPU or cuda GPU)
     - DEVICE_NAME: the device name to be used (CPU or GPU)
+    ! Public models: https://github.com/Helsinki-NLP/Opus-MT#public-mt-models
+    Make sure to attribute properly (CC-BY 4.0 License) when using the models.
     """
 
     def __init__(self, src_lang: str, tgt_lang: str) -> None:
         self.MODEL_CHECKPOINT = f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}"
         # expecting something like 'en-fr'
+
+    def set_model_checkpoint(self, model_checkpoint: str) -> None:
+        try:
+            self.MODEL_CHECKPOINT = model_checkpoint
+        except Exception as e:
+            LOGGER.error(e)
+            LOGGER.debug(
+                "Exception occured, maybe the model checkpoint\
+                    is invalid/unavailable")
+
+    def get_model_checkpoint(self):
+        return self.MODEL_CHECKPOINT
+
+    def get_tokenizer(self):
+        return self.TOKENIZER
+
+    def get_model(self):
+        return self.MODEL
+
 
 # Set device to GPU if available, else CPU
 # Issue: torch can detect cuda GPU but will not be able to use it
@@ -75,19 +96,17 @@ def set_device(device_id: int = 0):
     we set the device to try out all GPUs before falling back to CPU.
     """
     global DEVICE, DEVICE_NAME
+    num_gpus = torch.cuda.device_count()
     if torch.cuda.is_available():
-        num_gpus = torch.cuda.device_count()
         if device_id >= num_gpus:
-            LOGGER.warning(
-                f"GPU {device_id} not available, falling back to CPU")
-            DEVICE = torch.device("cpu")
+            LOGGER.warning("All GPUs are unavailabe, falling back to CPU")
         else:
             DEVICE = torch.device(f"cuda:{device_id}")
-        DEVICE_NAME = torch.cuda.get_device_name(device=DEVICE)
+            DEVICE_NAME = torch.cuda.get_device_name(device=DEVICE)
     else:
         LOGGER.warning("GPU not found, using CPU")
-        DEVICE = torch.device("cpu")
-        DEVICE_NAME = "CPU"
+    DEVICE = torch.device("cpu")
+    DEVICE_NAME = "CPU"
 
     LOGGER.debug(f"Using {DEVICE} on {DEVICE_NAME}")
     return True
@@ -134,7 +153,7 @@ def tokenize_query_to_tensor(query: str):
 
 
 @log
-def generate_new_tensor(
+def generate_output_tensor(
     input_ids: torch.Tensor, MAX_NEW_TOKENS: int = 5
 ) -> torch.Tensor:
     """
@@ -174,7 +193,7 @@ def translate_helsinki(segment: list) -> list:
     result = []
     for input_query in segment:
         # 1. Input query -> tensor
-        LOGGER.debug(f'(1) Translating: "{input_query}"')
+        LOGGER.debug(f'(1) Tokenizing input segment "{input_query}"')
         input_tensor, _time_inTensor = tokenize_query_to_tensor(input_query)
 
         # 2. Input tensor -> output tensor
@@ -183,7 +202,7 @@ def translate_helsinki(segment: list) -> list:
             MAX_NEW_TOKENS = 3
         else:
             MAX_NEW_TOKENS = len(input_query)
-        output_tensor, _time_outTensor = generate_new_tensor(
+        output_tensor, _time_outTensor = generate_output_tensor(
             input_tensor, MAX_NEW_TOKENS=MAX_NEW_TOKENS
         )
 
