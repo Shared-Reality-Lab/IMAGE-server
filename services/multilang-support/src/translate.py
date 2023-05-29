@@ -2,7 +2,6 @@
 
 from flask import Flask, request, jsonify
 from .utils import translate_helsinki, LOGGER
-import logging
 import json
 import jsonschema
 
@@ -35,7 +34,7 @@ def validate_request(request):
         jsonschema.validate(instance=request, schema=TRANSLATION_SCHEMA)
         return True
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        LOGGER.error(e.message)
         return False
 
 
