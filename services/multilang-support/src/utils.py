@@ -28,7 +28,7 @@ def log(func):
         function_output = func(*args, **kwargs)
         end_time = time.time()
         elapsed_time = end_time - start_time
-        LOGGER.debug(f"{func.__name__} takes {elapsed_time:.3f} seconds")
+        LOGGER.debug(f"\'{func.__name__}\' takes {elapsed_time:.3f} seconds")
         return function_output, elapsed_time
 
     return wrapper
@@ -43,41 +43,6 @@ T5_TASK_PREFIX = "Translate English to French: "
 # the tokenizer and model will be different.
 # See README.md#Implementation for more details.
 MODEL_CHECKPOINT = "Helsinki-NLP/opus-mt-en-fr"
-
-
-class Translator:
-    """
-    A Translator class that handles the translation process, containing:
-    - MODEL_CHECKPOINT: the model checkpoint to be used (from Helsinki-NLP)
-    - TOKENIZER
-    - MODEL
-    - DEVICE: the device to be used (CPU or cuda GPU)
-    - DEVICE_NAME: the device name to be used (CPU or GPU)
-    ! Public models: https://github.com/Helsinki-NLP/Opus-MT#public-mt-models
-    Make sure to attribute properly (CC-BY 4.0 License) when using the models.
-    """
-
-    def __init__(self, src_lang: str, tgt_lang: str) -> None:
-        self.MODEL_CHECKPOINT = f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}"
-        # expecting something like 'en-fr'
-
-    def set_model_checkpoint(self, model_checkpoint: str) -> None:
-        try:
-            self.MODEL_CHECKPOINT = model_checkpoint
-        except Exception as e:
-            LOGGER.error(e)
-            LOGGER.debug(
-                "Exception occured, maybe the model checkpoint\
-                    is invalid/unavailable")
-
-    def get_model_checkpoint(self):
-        return self.MODEL_CHECKPOINT
-
-    def get_tokenizer(self):
-        return self.TOKENIZER
-
-    def get_model(self):
-        return self.MODEL
 
 
 # Set device to GPU if available, else CPU
@@ -96,17 +61,12 @@ def set_device(device_id: int = 0):
     we set the device to try out all GPUs before falling back to CPU.
     """
     global DEVICE, DEVICE_NAME
-    num_gpus = torch.cuda.device_count()
-    if torch.cuda.is_available():
-        if device_id >= num_gpus:
-            LOGGER.warning("All GPUs are unavailabe, falling back to CPU")
-        else:
-            DEVICE = torch.device(f"cuda:{device_id}")
-            DEVICE_NAME = torch.cuda.get_device_name(device=DEVICE)
+    if device_id >= 0:
+        DEVICE = torch.device(f"cuda:{device_id}")
+        DEVICE_NAME = torch.cuda.get_device_name(device=DEVICE)
     else:
-        LOGGER.warning("GPU not found, using CPU")
-    DEVICE = torch.device("cpu")
-    DEVICE_NAME = "CPU"
+        DEVICE = torch.device("cpu")
+        DEVICE_NAME = "CPU"
 
     LOGGER.debug(f"Using {DEVICE} on {DEVICE_NAME}")
     return True
@@ -116,6 +76,7 @@ def set_device(device_id: int = 0):
 @log
 def instantiate():
     global TOKENIZER, MODEL
+    global DEVICE, DEVICE_NAME
     num_gpus = torch.cuda.device_count()
     LOGGER.info(f"Instantiating: {MODEL_CHECKPOINT} tokenizer and model")
 
@@ -134,8 +95,10 @@ def instantiate():
             # if it is able to set model to device, it means that GPU is usable
             # otherwise we will try the next GPU
             break
-        except BaseException:
+        except Exception as e:
+            LOGGER.warning(f'Error using {DEVICE_NAME}: {e}')
             if device_id >= num_gpus:
+                LOGGER.warning("No GPU available, using CPU.")
                 set_device(device_id=-1)
                 break
     LOGGER.debug(f"Model is running on {DEVICE_NAME}.")
@@ -220,5 +183,40 @@ def translate_helsinki(segment: list) -> list:
 
 print(__name__)
 if "utils" in __name__ or __name__ == "__main__":
-    set_device()
     instantiate()
+
+
+class Translator:
+    """
+    (Not yet implemented fully)
+    A Translator class that handles the translation process, containing:
+    - MODEL_CHECKPOINT: the model checkpoint to be used (from Helsinki-NLP)
+    - TOKENIZER
+    - MODEL
+    - DEVICE: the device to be used (CPU or cuda GPU)
+    - DEVICE_NAME: the device name to be used (CPU or GPU)
+    ! Public models: https://github.com/Helsinki-NLP/Opus-MT#public-mt-models
+    Make sure to attribute properly (CC-BY 4.0 License) when using the models.
+    """
+
+    def __init__(self, src_lang: str, tgt_lang: str) -> None:
+        self.MODEL_CHECKPOINT = f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}"
+        # expecting something like 'en-fr'
+
+    def set_model_checkpoint(self, model_checkpoint: str) -> None:
+        try:
+            self.MODEL_CHECKPOINT = model_checkpoint
+        except Exception as e:
+            LOGGER.error(e)
+            LOGGER.debug(
+                "Exception occured, maybe the model checkpoint\
+                    is invalid/unavailable")
+
+    def get_model_checkpoint(self):
+        return self.MODEL_CHECKPOINT
+
+    def get_tokenizer(self):
+        return self.TOKENIZER
+
+    def get_model(self):
+        return self.MODEL
