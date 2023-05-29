@@ -34,7 +34,7 @@ def validate_request(request):
         jsonschema.validate(instance=request, schema=TRANSLATION_SCHEMA)
         return True
     except jsonschema.exceptions.ValidationError as e:
-        LOGGER.error(e.message)
+        LOGGER.error(f'Schema ValidationError: {e.message}')
         return False
 
 
