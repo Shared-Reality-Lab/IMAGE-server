@@ -15,6 +15,6 @@ RUN pip install -r requirements.txt
 COPY schemas/services/translation.schema.json /app/
 COPY services/multilang-support/src/*.py /app/src/
 
-EXPOSE 5000
+EXPOSE 8000
 ENV FLASK_APP=src/app.py
 CMD [ "gunicorn", "src.translate:app", "-b", "0.0.0.0", "--log-level=debug"]
