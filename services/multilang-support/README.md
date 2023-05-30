@@ -46,8 +46,8 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 ## Behaviour/Response Codes
 - `200`: Success, translation is returned.
 - `204`: No content returned, source and target languages are the same.
+- `500`: Service Error: Unexpected edge cases.
 - `501`: Not implemented, source or target language is not supported yet.
-- `500`: Service Error: Edge cases where the service is unable to translate.
   
 ## Attribution
 - LICENSE: https://creativecommons.org/licenses/by-nc-sa/4.0/
