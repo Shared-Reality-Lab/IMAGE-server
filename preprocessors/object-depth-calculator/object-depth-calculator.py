@@ -120,7 +120,7 @@ def objectdepth():
             y2 = int(objects[i]['dimensions'][3] * dimensions[1])
 
             depthcomp = img[y1:y2, x1:x2]
-            
+
             depth = np.nanmedian(depthcomp)
             if np.isnan(depth):
                 app.logger.error("NAN depth value")
