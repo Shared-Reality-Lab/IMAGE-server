@@ -65,21 +65,23 @@ def translate_request():
 
     # Handles source/target language
     if target_lang == source_lang:
+        LOGGER.error("Source and target languages are the same")
         return jsonify("Source and target languages are the same"), 204
     if target_lang not in ["fr", "en"]:
-        return jsonify("Target language not yet implemented"), 501
+        LOGGER.error("Target language is not yet implemented")
+        return jsonify("Target language not implemented"), 501
     if source_lang == 'en' and target_lang == 'fr':
         # Translate, from list to list
         translation, elapsed_time = translate_helsinki(segments)
     else:
-        return jsonify("Internal Server Error"), 500
+        LOGGER.error("Service Error, unable to handle")
+        return jsonify("Service Error"), 500
     # Prepare response
     response = {
         "src_lang": source_lang,
         "tgt_lang": target_lang,
-        "elapsed_time_in_seconds": elapsed_time,
         "translations": translation,
     }
-    LOGGER.debug("- Response SENT! -")
+    LOGGER.debug(f"- Response SENT! Time taken: {elapsed_time}-")
     # Return response
     return jsonify(response), 200
