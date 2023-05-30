@@ -28,7 +28,8 @@ def log(func):
         function_output = func(*args, **kwargs)
         end_time = time.time()
         elapsed_time = end_time - start_time
-        LOGGER.debug(f"\'{func.__name__}\' takes {elapsed_time:.3f} seconds")
+        elapsed_time *= 1000  # convert [s] to [ms]
+        LOGGER.debug(f"\'{func.__name__}\' takes {int(elapsed_time)} ms")
         return function_output, elapsed_time
 
     return wrapper
@@ -68,7 +69,6 @@ def set_device(device_id: int = 0):
         DEVICE = torch.device("cpu")
         DEVICE_NAME = "CPU"
 
-    LOGGER.debug(f"Using {DEVICE} on {DEVICE_NAME}")
     return True
 
 
@@ -177,9 +177,10 @@ def translate_helsinki(segment: list) -> list:
     return result
 
 
-print(__name__)
 if "utils" in __name__ or __name__ == "__main__":
     instantiate()
+    LOGGER.debug(f"Using {DEVICE} on {DEVICE_NAME}")
+    LOGGER.info('Service is instantiated and ready.')
 
 
 class Translator:
