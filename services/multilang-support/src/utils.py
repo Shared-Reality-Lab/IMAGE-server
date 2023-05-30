@@ -153,6 +153,9 @@ def translate_helsinki(segment: list) -> list:
     3. Decode the translated tensor to a string.
     4. Append the translated string to a list.
     """
+    # Parameters
+    MAX_NEW_TOKENS = 20
+    # output list
     result = []
     for input_query in segment:
         # 1. Input query -> tensor
@@ -161,10 +164,6 @@ def translate_helsinki(segment: list) -> list:
 
         # 2. Input tensor -> output tensor
         LOGGER.debug("(2) Generating new tensor.")
-        if len(input_query) < 3:
-            MAX_NEW_TOKENS = 3
-        else:
-            MAX_NEW_TOKENS = len(input_query)
         output_tensor, _time_outTensor = generate_output_tensor(
             input_tensor, MAX_NEW_TOKENS=MAX_NEW_TOKENS
         )
