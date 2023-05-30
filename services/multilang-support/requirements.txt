@@ -1,6 +1,5 @@
-Flask
-transformers
-sentencepiece
-sacremoses
-gunicorn
-jsonschema
+Flask>=2.3.0
+transformers>=4.29.0
+sentencepiece>=0.1.99
+gunicorn>=20.1.0
+jsonschema>=4.17.3
