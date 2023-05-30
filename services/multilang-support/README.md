@@ -15,6 +15,8 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 - Similarly, `t5`-based models will use `T5ForConditionalGeneration` models.
 
 - If the model is based on `Marian`, such as [`Helsinki-NLP/opus-mt-en-fr`](https://huggingface.co/Helsinki-NLP/opus-mt-en-fr) or [`Helsinki-NLP/opus-mt-en-de`](https://huggingface.co/Helsinki-NLP/opus-mt-en-de), the tokenizer and model are  `MarianTokenizer` and `MarianMTModel` respectively.
+
+
 ### Translation Sequential Flow (from `src/utils.py`)
 1. For each segment/query (a string), we tokenize it using the `TOKENIZER`. (`tokenize_query_to_tensor`)
 2. We then use the `MODEL` to take in the tokenized segment/query, and generate an output tensor (`generate_output_tensor`)
@@ -41,6 +43,11 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 - In this implementation, we use [`Helsinki-NLP/opus-mt-en-fr`](https://huggingface.co/Helsinki-NLP/opus-mt-en-fr) as the model checkpoint to be used out of the box. It's licensed under CC-BY 4.0 License.
 - The model is a `MarianMTModel` from `transformers` library.
 - As of May 30th, generalization is not yet completed to support multiple languages. The service can currently only translate from English to French.
+## Behaviour/Response Codes
+- `200`: Success, translation is returned.
+- `204`: No content returned, source and target languages are the same.
+- `501`: Not implemented, source or target language is not supported yet.
+- `500`: Service Error: Edge cases where the service is unable to translate.
   
 ## Attribution
 - LICENSE: https://creativecommons.org/licenses/by-nc-sa/4.0/
