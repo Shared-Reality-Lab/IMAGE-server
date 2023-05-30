@@ -116,15 +116,16 @@ def tokenize_query_to_tensor(query: str):
 
 
 @log
-def generate_output_tensor(
-    input_ids: torch.Tensor, MAX_NEW_TOKENS: int = 5
-) -> torch.Tensor:
+def generate_output_tensor(input_ids: torch.Tensor) -> torch.Tensor:
     """
     STEP 2: Translate the input_ids tensor to an output query.
     @param input_ids: The decoded tensor (type<torch.Tensor>) to be translated.
     @return: Newly generated tensor using the model (type<torch.Tensor>).
+    TODO: Add parameters to control/optimize the translation.
     """
-    return MODEL.generate(input_ids, max_new_tokens=MAX_NEW_TOKENS)
+    # Parameters:
+    MAX_TIME = 0.5  # seconds
+    return MODEL.generate(input_ids, max_time=MAX_TIME)
 
 
 @log
@@ -153,8 +154,6 @@ def translate_helsinki(segment: list) -> list:
     3. Decode the translated tensor to a string.
     4. Append the translated string to a list.
     """
-    # Parameters
-    MAX_NEW_TOKENS = 20
     # output list
     result = []
     for input_query in segment:
@@ -164,9 +163,7 @@ def translate_helsinki(segment: list) -> list:
 
         # 2. Input tensor -> output tensor
         LOGGER.debug("(2) Generating new tensor.")
-        output_tensor, _time_outTensor = generate_output_tensor(
-            input_tensor, MAX_NEW_TOKENS=MAX_NEW_TOKENS
-        )
+        output_tensor, _time_outTensor = generate_output_tensor(input_tensor)
 
         # 3. Output tensor -> query
         LOGGER.debug("(3) Decoding translated tensor.")
