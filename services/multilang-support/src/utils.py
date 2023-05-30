@@ -28,7 +28,7 @@ def log(func):
         function_output = func(*args, **kwargs)
         end_time = time.time()
         elapsed_time = end_time - start_time
-        elapsed_time *= 1000  # convert [s] to [ms]
+        elapsed_time = int(elapsed_time*1000)  # convert [s] to [ms]
         LOGGER.debug(f"\'{func.__name__}\' takes {int(elapsed_time)} ms")
         return function_output, elapsed_time
 

@@ -82,6 +82,6 @@ def translate_request():
         "tgt_lang": target_lang,
         "translations": translation,
     }
-    LOGGER.debug(f"- Response SENT! Time taken: {elapsed_time}-")
+    LOGGER.debug(f"- Response SENT! Time taken: {elapsed_time} ms -")
     # Return response
     return jsonify(response), 200
