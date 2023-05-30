@@ -25,9 +25,9 @@ with open("translation.schema.json", "r") as f:
 def validate_request(request):
     """
     Validate incoming request:
-    - segment: the text to translate
-    - src_lang (defaulted to be 'en'): the source language
-    - tgt_lang (defaulted to be 'fr'): the target language
+    - segments (required): a list/array of strings to translate
+    - src_lang (optional, default: 'en'): the source language
+    - tgt_lang (required): the target language
     A request must have at least `segment`.
     """
     try:
@@ -38,7 +38,7 @@ def validate_request(request):
         return False
 
 
-@app.route("/service/translate/french", methods=["POST"])
+@app.route("/service/translate", methods=["POST"])
 def translate_request():
     """
     Translate text from one language to another
