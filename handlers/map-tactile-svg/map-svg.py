@@ -257,7 +257,7 @@ def handle():
                           + " in nominatim preprocessor")
             logging.debug("Reverse geocode data not added to response")
         except TypeError:
-            logging.debug("Expected to obtain string as " 
+            logging.debug("Expected to obtain string as "
                           "POI name in nominatim ")
             logging.debug("Obtained type " + str(type(targetTag)))
 
