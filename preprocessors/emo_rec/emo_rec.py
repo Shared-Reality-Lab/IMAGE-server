@@ -23,17 +23,12 @@ import cv2
 import base64
 import numpy as np
 from deepface import DeepFace
-import logging
-import cv2
 import jsonschema
-#from predictors.DetectronModels import Predictor
-
 
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.NOTSET)
 # this function determines the size of bounding box
-
 
 
 def calculate_diagonal(x1, y1, x2, y2):
@@ -91,9 +86,9 @@ def readImage():
 #    logging.debug("in here")
     final_data = []
     for i in range(len(objects)):
-        #print(objects[i]["type"])
-        
-        if("person" in objects[i]["type"]):
+        # print(objects[i]["type"])
+
+        if ("person" in objects[i]["type"]):
             object_type.append(objects[i]["type"])
             dimensions.append(objects[i]["dimensions"])
             area.append(objects[i]["area"])
@@ -101,35 +96,35 @@ def readImage():
             dimx1 = int(objects[i]["dimensions"][2] * width)
             dimy = int(objects[i]["dimensions"][1] * height)
             dimy1 = int(objects[i]["dimensions"][3] * height)
-            img = img_original[dimy:dimy1,dimx:dimx1]
+            img = img_original[dimy:dimy1, dimx:dimx1]
             try:
-                obj = DeepFace.analyze(img, actions = ['emotion'])
+                obj = DeepFace.analyze(img, actions=['emotion'])
 
-            except:
+            except BaseException:
                 obj = []
             print(obj)
-            if(len(obj)==0):
+            if (len(obj) == 0):
                 data = {
-                "personID" : objects[i]["ID"],
-                "emotion":"None",
-                "gender" : None,
-                "confidence":None,
-                 }
-            else:
-                data = {
-                "personID" : objects[i]["ID"],
-                "emotion":{
-                    "emotion": obj['dominant_emotion'],
-                    "confidence": obj["emotion"][obj["dominant_emotion"]]/100
+                    "personID": objects[i]["ID"],
+                    "emotion": "None",
+                    "gender": None,
+                    "confidence": None,
                 }
-                #"gender" : obj["gender"],
-                
+            else:
+                conf = obj["emotion"][obj["dominant_emotion"]]/100
+                data = {
+                    "personID": objects[i]["ID"],
+                    "emotion": {
+                        "emotion": obj['dominant_emotion'],
+                        "confidence": conf
+                    }
+
                 }
             final_data.append(data)
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.emotion"
-    data = {"person_emotion":final_data}
+    data = {"person_emotion": final_data}
     logging.info(data)
     try:
         validator = jsonschema.Draft7Validator(data_schema)
