@@ -209,7 +209,7 @@ def handle():
                 if targetData["display_name"]\
                 is not None else targetData["type"]
             if type(targetTag) is not str:
-                raise TypeError 
+                raise TypeError
             svg.append(
                         draw.Circle(
                                     longitude,
@@ -257,9 +257,10 @@ def handle():
             logging.debug("Missing key " + str(e)
                           + " in neonatim preprocessor")
             logging.debug("Reverse geocode data not added to response")
-        except TypeError as e:
-            logging.debug("Expected to obtain string as POI name in nominatim ")
-            logging.debug("Obtained type "+ str(type(targetTag)))
+        except TypeError:
+            logging.debug("Expected to obtain string as " 
+                          "POI name in nominatim ")
+            logging.debug("Obtained type " + str(type(targetTag)))
 
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
