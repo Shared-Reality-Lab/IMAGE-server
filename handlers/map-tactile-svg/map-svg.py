@@ -108,7 +108,7 @@ def handle():
 
     # List of minor street types ('footway', 'crossing' and 'steps')
     # to be filtered out to simplify the resulting rendering
-    remove_streets = ["footway", "crossing", "steps"]
+    remove_streets = ["footway", "crossing", "steps", "elevator"]
     svg = draw.Drawing(dimensions[0], dimensions[1])
 
     data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
@@ -163,7 +163,7 @@ def handle():
                     street["street_type"])
                 args = dict(stroke=colors[color], stroke_width=stroke_width,
                             fill='none', aria_label=name)
-                # Add this arg only if the  not empty
+                # Add this arg only if the detailed description is not empty
                 if description is not None:
                     args["aria_description"] = description
                 p = draw.Path(**args)
@@ -213,7 +213,6 @@ def handle():
                                     stroke_width=1.5,
                                     stroke='green',
                                     aria_label=targetData["name"]))
-
             """
             ## Using bounding box occasionally results in the whole map
             ## being occupied by the target POI
@@ -249,39 +248,29 @@ def handle():
                 + targetData["name"]
         except KeyError as e:
             logging.debug("Missing key " + str(e)
-                          + " in neonatim preprocessor")
+                          + " in nominatim preprocessor")
             logging.debug("Reverse geocode data not added to response")
 
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
-            if POI["id"] in checkPOIs and POI["cat"] == "intersection":
-                label = "Intersection of "
-                if len(checkPOIs[POI["id"]]) == 1:
-                    label += checkPOIs[POI["id"]][0][0]+" and minor street"
-                    # description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[
-                    # POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None
-                    # else checkPOIs[POI["id"]][0][0]+" No details available"
-                else:
-                    label += ", ".join(x[0] for x in checkPOIs[POI["id"]][:-1])
-                    label += " and "+checkPOIs[POI["id"]][-1][0]
-                    # description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else
-                    # x[0]+" No details available") for x in
-                    # checkPOIs[POI["id"]])
-                latitude = (
-                            (POI["lat"] - lat_min)
-                            * scaled_latitude)
-                longitude = (
-                             (POI["lon"] - lon_min)
-                             * scaled_longitude)
-                svg.append(
-                            draw.Circle(
-                                        longitude,
-                                        latitude,
-                                        10,
-                                        fill='red',
-                                        stroke_width=1.5,
-                                        stroke='red',
-                                        aria_label=label))
+            if POI["id"] in checkPOIs:
+                label, drawPOI = getNodeDescription(POI, checkPOIs)
+                if drawPOI:
+                    latitude = (
+                                (POI["lat"] - lat_min)
+                                * scaled_latitude)
+                    longitude = (
+                                (POI["lon"] - lon_min)
+                                * scaled_longitude)
+                    svg.append(
+                                draw.Circle(
+                                            longitude,
+                                            latitude,
+                                            10,
+                                            fill='red',
+                                            stroke_width=1.5,
+                                            stroke='red',
+                                            aria_label=label))
     data = {"graphic": svg.asDataUri()}
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
@@ -330,29 +319,116 @@ def return_stroke_width(street_type):
 
 def getDescriptions(street):
     description = ""
-    default_attributes = ["street_id", "street_name", "nodes"]
-    if "street_name" not in street:
-        default_attributes.append("street_type")
-    for attr in street:
-        if attr not in default_attributes:
+    # default_attributes = ["street_id", "street_name", "nodes", "service"]
+    # filtering for only the required attributes
+    # as there are now some hard to understand attributes
+    attributes = [
+        "oneway", "lanes", "surface", "maxspeed", "access",
+        "sidewalk"
+        ]
+    if "street_name" in street:
+        attributes.append("street_type")
+    for attr, val in street.items():
+        if attr in attributes:
             match attr:
                 case "oneway":
-                    if street[attr]:
+                    if val:
                         description += "oneway, "
                     else:
                         description += "not oneway, "
                 case "lanes":
-                    description += str(street[attr]) + " " + \
+                    description += str(val) + " " + \
                         attr.replace("_", " ")+", "
+                case "access":
+                    if val == "yes":
+                        description += "public access, "
+                    else:
+                        description += val + " " + \
+                            attr + ", "
+                case "sidewalk":
+                    if val == "no":
+                        description += "No usable sidewalk, "
+                    else:
+                        description += "Sidewalk present, "
                 case _:
                     description += attr.replace("_", " ") + \
-                        " " + str(street[attr])+", "
+                        " " + str(street[attr].replace("_", " "))+", "
 
     # Remove the last ", "
     if description == "":
         return None
     else:
         return description[:-2]
+
+
+def getNodeDescription(POI, checkPOIs):
+    label = ""
+    drawPOI = False
+    if "intersection" in POI:
+        drawPOI = True
+        label += "Intersection of "
+        if len(checkPOIs[POI["id"]]) == 1:
+            label += checkPOIs[POI["id"]][0][0]+" and minor street"
+            # description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[
+            # POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None
+            # else checkPOIs[POI["id"]][0][0]+" No details available"
+        else:
+            label += ", ".join(x[0] for x in checkPOIs[POI["id"]][:-1])
+            label += " and "+checkPOIs[POI["id"]][-1][0]
+            # description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else
+            # x[0]+" No details available") for x in
+            # checkPOIs[POI["id"]])
+    if "cat" in POI:
+        tag, drPOI = getNodeCategoryData(POI)
+        if len(label) != 0:
+            label += ", "
+        label += tag
+        if drPOI:
+            drawPOI = drPOI
+    if "tactile_paving" in POI:
+        tag = getNodePavingData(POI)
+        if len(label) != 0:
+            label += ", "
+        label += tag
+    return label, drawPOI
+
+
+def getNodeCategoryData(POI):
+    tag = ""
+    draw = True
+    category = POI["cat"]
+    match category:
+        case "crossing":
+            if POI["crossing"] == "marked":
+                tag += "Marked crossing, "
+            elif POI["crossing"] == "unmarked":
+                tag += "Unmarked crossing, "
+            elif POI["crossing"] == "traffic_signals":
+                tag += "Crossing with traffic signal, "
+            else:
+                tag += "Crossing, "
+        case "traffic_signals":
+            tag += "Traffic lights present, "
+        case _:
+            draw = False
+    return (tag if len(tag) == 0 else tag[:-2]), draw
+
+
+def getNodePavingData(POI):
+    tag = ""
+    paving = POI["tactile_paving"]
+    match paving:
+        case "yes":
+            tag += "Tactile paving present, "
+        case "no":
+            tag += "Tactile paving absent, "
+        case "contrasted":
+            tag += "Tactile paving with high contrast, "
+        case "incorrect":
+            tag += "Incorrect tactile paving"
+        case _:
+            pass
+    return (tag if len(tag) == 0 else tag[:-2])
 
 
 if __name__ == "__main__":
