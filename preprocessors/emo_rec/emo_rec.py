@@ -15,8 +15,6 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 from flask import Flask, request, jsonify
-import os
-import requests
 import json
 import time
 import logging
@@ -26,8 +24,8 @@ import base64
 import numpy as np
 from deepface import DeepFace
 import logging
-import os
 import cv2
+import jsonschema
 #from predictors.DetectronModels import Predictor
 
 
@@ -50,30 +48,29 @@ def readImage():
     dimensions = []
     area = []
     # loading schemas to check of the received and returned outputs are correct
-    # with open('./schemas/preprocessors/sorting.schema.json') as jsonfile:
-    #     data_schema = json.load(jsonfile)
-    # with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-    #     schema = json.load(jsonfile)
-    # with open('./schemas/definitions.json') as jsonfile:
-    #     definition_schema = json.load(jsonfile)
-    # with open('./schemas/request.schema.json') as jsonfile:
-    #     first_schema = json.load(jsonfile)
-    # # Following 6 lines of code are refered from
-    # # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
-    # schema_store = {
-    #     schema['$id']: schema,
-    #     definition_schema['$id']: definition_schema
-    # }
-    # resolver = jsonschema.RefResolver.from_schema(
-    #     schema, store=schema_store)
+    with open('./schemas/preprocessors/emotion.schema.json') as jsonfile:
+        data_schema = json.load(jsonfile)
+    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
+        schema = json.load(jsonfile)
+    with open('./schemas/definitions.json') as jsonfile:
+        definition_schema = json.load(jsonfile)
+    with open('./schemas/request.schema.json') as jsonfile:
+        first_schema = json.load(jsonfile)
+    # Following 6 lines of code are refered from
+    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
+    schema_store = {
+        schema['$id']: schema,
+        definition_schema['$id']: definition_schema
+    }
+    resolver = jsonschema.RefResolver.from_schema(
+        schema, store=schema_store)
     content = request.get_json()
-    # # check if received input is correct
-    # try:
-    #     validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-    #     validator.validate(content)
-    # except jsonschema.exceptions.ValidationError as e:
-    #     logging.error(e)
-    #     return jsonify("Invalid Preprocessor JSON format"), 400
+    try:
+        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
+        validator.validate(content)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 400
     preprocessor = content["preprocessors"]
 #    logging.info(preprocessor)
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" \
@@ -121,61 +118,38 @@ def readImage():
             else:
                 data = {
                 "personID" : objects[i]["ID"],
-                "emotion":obj[0]['dominant_emotion'],
+                "emotion":{
+                    "emotion": obj['dominant_emotion'],
+                    "confidence": obj["emotion"][obj["dominant_emotion"]]/100
+                }
                 #"gender" : obj["gender"],
-                "confidence":obj[0]["emotion"][obj[0]["dominant_emotion"]],
+                
                 }
             final_data.append(data)
-
-    # "data": [{
-    #     "id" : objects[i]["ID"],
-    #             "emotion":obj['dominant_emotion'],
-    #             "gender" : obj["gender"]
-    # }]
-    #cv2.imwrite('test1.png', img_original)
-#    return "ok"
-    # create 3 lists for 3 sortings(refer readme for finding the type of
-    # sorting)
-    # for i in range(len(objects)):
-    #     left2right.append([objects[i]["ID"], dimensions[i][2]])
-    #     top2bottom.append([objects[i]["ID"], dimensions[i][1]])
-    #     small2big.append([objects[i]["ID"], area[i]])
-    # # sort the lists
-    # top2bottom = sorted(top2bottom, key=lambda x: x[1])
-    # left2right = sorted(left2right, key=lambda x: x[1])
-    # small2big = sorted(small2big, key=lambda x: x[1])
-    # # just get the sorted IDs and dump everything else
-    # for i in range(len(top2bottom)):
-    #     top_id.append(top2bottom[i][0])
-    #     left_id.append(left2right[i][0])
-    #     small_id.append(small2big[i][0])
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.emotion"
-    data = {"data":final_data}
+    data = {"person_emotion":final_data}
     logging.info(data)
-    # data = {"leftToRight": left_id,
-    #         "topToBottom": top_id, "smallToBig": small_id}
-    # # verify the output format
-    # try:
-    #     validator = jsonschema.Draft7Validator(data_schema)
-    #     validator.validate(data)
-    # except jsonschema.exceptions.ValidationError as e:
-    #     logging.error(e)
-    #     return jsonify("Invalid Preprocessor JSON format"), 500
+    try:
+        validator = jsonschema.Draft7Validator(data_schema)
+        validator.validate(data)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
     response = {
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": name,
         "data": data
     }
-    # try:
-    #     validator = jsonschema.Draft7Validator(
-    #         schema, resolver=resolver)
-    #     validator.validate(response)
-    # except jsonschema.exceptions.ValidationError as e:
-    #     logging.error(e)
-    #     return jsonify("Invalid Preprocessor JSON format"), 500
+    try:
+        validator = jsonschema.Draft7Validator(
+            schema, resolver=resolver)
+        validator.validate(response)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
     # logging.debug("Sending response")
     return response
 
