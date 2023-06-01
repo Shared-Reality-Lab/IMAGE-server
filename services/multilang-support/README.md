@@ -32,7 +32,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
     ├── translate.py
     └── utils.py
 ├── translation.schema.json
-└── model/opus-mt-en-fr
+└── models/opus-mt-en-fr
     └── # predownload model
 ```
 - `gunicorn` will be called from the `app` repository.
