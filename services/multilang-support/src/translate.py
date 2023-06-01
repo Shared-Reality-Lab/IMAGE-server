@@ -75,6 +75,8 @@ def translate_request():
         translation, elapsed_time = translate_helsinki(segments)
     else:
         LOGGER.error("Service Error, unable to handle")
+        LOGGER.debug(f"Attempted request: '{source_lang}' -> '{target_lang}'")
+        LOGGER.debug(f"Attempted segments: {segments}")
         return jsonify("Service Error"), 500
     # Prepare response
     response = {
