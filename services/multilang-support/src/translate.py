@@ -59,6 +59,7 @@ def translate_request():
     try:
         source_lang = content["src_lang"]
     except KeyError:
+        LOGGER.debug("Source language not specified, defaulting to 'en'")
         source_lang = "en"
 
     target_lang = content["tgt_lang"]
