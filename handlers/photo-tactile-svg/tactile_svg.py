@@ -51,6 +51,7 @@ def handle():
     # Get and validate request contents
     contents = request.get_json()
     try:
+        logging.info("Validating request schema")
         validator = jsonschema.Draft7Validator(
             request_schema, resolver=resolver
         )
@@ -63,6 +64,7 @@ def handle():
     preprocessors = contents['preprocessors']
     preprocessor_names = []
 
+    logging.info("Checking whether renderer is supported")
     if "ca.mcgill.a11y.image.renderer.TactileSVG" not in contents["renderers"]:
         logging.debug("TactileSVG Renderer not supported")
         response = {
@@ -83,6 +85,8 @@ def handle():
     # Throws error when both Object Detector AND semantic segmentation are
     # NOT found
     # Also checks for grouping preprocessor along with object detector
+    logging.info("Checking for object detection "
+                 "and/ or semantic segmentation responses")
     if not (("ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
              in preprocessors) or
             all(x in preprocessors for x in
@@ -104,6 +108,8 @@ def handle():
         logging.debug("Sending response")
         return response
 
+    logging.info("Checking whether graphic and"
+                 "dimensions are available")
     if "graphic" in contents and "dimensions" in contents:
         # If an existing graphic exists, often it is
         # best to use that for convenience.
@@ -129,6 +135,8 @@ def handle():
 
     # Initialize svg if either object detection
     # or semantic segmentation is present
+    logging.info("Creating empty svg with the
+                 " graphic's dimensions")
     svg = draw.Drawing(dimensions[0], dimensions[1])
 
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors:
@@ -140,6 +148,7 @@ def handle():
         grouped = g["grouped"]
         ungrouped = g["ungrouped"]
         layer = 0
+        logging.info("Adding in the grouped objects")
         for group in grouped:
             ids = group["IDs"]
             category = objects[ids[0]]["type"]
@@ -167,6 +176,7 @@ def handle():
 
             svg.append(g)
 
+        logging.info("Adding in the ungrouped objects")
         for val in ungrouped:
             category = objects[val]["type"]
             layer += 1
@@ -222,8 +232,10 @@ def handle():
                             dimensions[1] - coord[1] * dimensions[1])
                 svg.append(p)
 
+    logging.info("Converting svg to data URI")
     data = {"graphic": svg.asDataUri()}
 
+    logging.info("Generating final rendering")
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
         "description": ("Tactile rendering of photo with " +
