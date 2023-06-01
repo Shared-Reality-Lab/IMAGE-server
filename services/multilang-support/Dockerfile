@@ -18,6 +18,6 @@ RUN git clone https://huggingface.co/Helsinki-NLP/opus-mt-en-fr ./models/opus-mt
 COPY schemas/services/translation.schema.json /app/
 COPY services/multilang-support/src/*.py /app/src/
 
-EXPOSE 8000
+EXPOSE 80
 ENV FLASK_APP=src/app.py
-CMD [ "gunicorn", "src.translate:app", "-b", "0.0.0.0", "--log-level=debug"]
+CMD [ "gunicorn", "src.translate:app", "-b", "0.0.0.0:80", "--log-level=debug"]
