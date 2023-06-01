@@ -86,7 +86,7 @@ def handle():
     # NOT found
     # Also checks for grouping preprocessor along with object detector
     logging.debug("Checking for object detection "
-                 "and/ or semantic segmentation responses")
+                  "and/ or semantic segmentation responses")
     if not (("ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
              in preprocessors) or
             all(x in preprocessors for x in
@@ -109,7 +109,7 @@ def handle():
         return response
 
     logging.debug("Checking whether graphic and"
-                 "dimensions are available")
+                  "dimensions are available")
     if "graphic" in contents and "dimensions" in contents:
         # If an existing graphic exists, often it is
         # best to use that for convenience.
@@ -138,7 +138,8 @@ def handle():
     svg = draw.Drawing(dimensions[0], dimensions[1])
 
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors:
-        logging.debug("Object detector and grouping preprocessor found. Adding data to response...")
+        logging.debug("Object detector and grouping preprocessor found. "
+                      "Adding data to response...")
         preprocessor_names.append('Things and people')
         o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
         g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
@@ -201,7 +202,8 @@ def handle():
 
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
             in preprocessors:
-        logging.debug("Semantic segmentation found. Adding data to response...")
+        logging.debug("Semantic segmentation found. "
+                      "Adding data to response...")
         preprocessor_names.append("Outlines of regions")
         s = preprocessors["ca.mcgill.a11y.image."
                           "preprocessor.semanticSegmentation"]
