@@ -23,6 +23,7 @@ import time
 import drawSvg as draw
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 @app.route("/handler", methods=["POST"])
@@ -131,6 +132,7 @@ def handle():
     svg = draw.Drawing(dimensions[0], dimensions[1])
 
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors:
+        logging.debug("Object detector and grouping preprocessor found. Adding data to response...")
         preprocessor_names.append('Things and people')
         o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
         g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
@@ -193,6 +195,7 @@ def handle():
 
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
             in preprocessors:
+        logging.debug("Semantic segmentation found. Adding data to response...")
         preprocessor_names.append("Outlines of regions")
         s = preprocessors["ca.mcgill.a11y.image."
                           "preprocessor.semanticSegmentation"]
