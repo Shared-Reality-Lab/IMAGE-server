@@ -204,6 +204,12 @@ def handle():
             longitude = (
                         (float(targetData["lon"]) - lon_min)
                         * scaled_longitude)
+            targetTag = targetData["name"] if targetData["name"]\
+                is not None else targetData["display_name"]\
+                if targetData["display_name"]\
+                is not None else targetData["type"]
+            if type(targetTag) is not str:
+                raise TypeError
             svg.append(
                         draw.Circle(
                                     longitude,
@@ -212,7 +218,7 @@ def handle():
                                     fill='green',
                                     stroke_width=1.5,
                                     stroke='green',
-                                    aria_label=targetData["name"]))
+                                    aria_label=targetTag))
             """
             ## Using bounding box occasionally results in the whole map
             ## being occupied by the target POI
@@ -245,11 +251,15 @@ def handle():
                                         aria_label=targetData["name"]))
             """
             renderingDescription = "Tactile rendering of map centered at "\
-                + targetData["name"]
+                + targetTag
         except KeyError as e:
             logging.debug("Missing key " + str(e)
                           + " in nominatim preprocessor")
             logging.debug("Reverse geocode data not added to response")
+        except TypeError:
+            logging.debug("Expected to obtain string as "
+                          "POI name in nominatim ")
+            logging.debug("Obtained type " + str(type(targetTag)))
 
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
