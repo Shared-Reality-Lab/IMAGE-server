@@ -6,6 +6,10 @@ import torch
 import time
 import logging
 
+# Constants
+MAX_TIME = 0.5  # [seconds], used for maximum time allowed
+# for translation generation in `generate_output_tensor()`
+
 # Configure the logging settings
 logging.basicConfig(
     level=logging.DEBUG,
@@ -123,8 +127,6 @@ def generate_output_tensor(input_ids: torch.Tensor) -> torch.Tensor:
     @return: Newly generated tensor using the model (type<torch.Tensor>).
     TODO: Add parameters to control/optimize the translation.
     """
-    # Parameters:
-    MAX_TIME = 0.5  # seconds
     return MODEL.generate(input_ids, max_time=MAX_TIME)
 
 
