@@ -48,7 +48,7 @@ T5_TASK_PREFIX = "Translate English to French: "
 # the tokenizer and model will be different.
 # See README.md#Implementation for more details.
 MODEL_CHECKPOINT = "Helsinki-NLP/opus-mt-en-fr"
-
+MODEL_DIR = "models/opus-mt-en-fr"
 
 # Set device to GPU if available, else CPU
 # Issue: torch can detect cuda GPU but will not be able to use it
@@ -82,12 +82,12 @@ def instantiate():
     global TOKENIZER, MODEL
     global DEVICE, DEVICE_NAME
     num_gpus = torch.cuda.device_count()
-    LOGGER.info(f"Instantiating: {MODEL_CHECKPOINT} tokenizer and model")
+    LOGGER.info(f"Instantiating: {MODEL_DIR} tokenizer and model")
 
-    TOKENIZER = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
+    TOKENIZER = AutoTokenizer.from_pretrained(MODEL_DIR)
     LOGGER.debug("Tokenizer instantiated")
 
-    MODEL = AutoModelForSeq2SeqLM.from_pretrained(MODEL_CHECKPOINT)
+    MODEL = AutoModelForSeq2SeqLM.from_pretrained(MODEL_DIR)
     LOGGER.debug("Model instantiated")
 
     device_id = 0

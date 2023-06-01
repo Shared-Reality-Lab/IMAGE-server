@@ -32,12 +32,15 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
     ├── translate.py
     └── utils.py
 ├── translation.schema.json
+└── model/opus-mt-en-fr
+    └── # predownload model
 ```
 - `gunicorn` will be called from the `app` repository.
 
 
 ### Docker Compose as an IMAGE service
 - [IMAGE-server/wiki on Services](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#services)
+- Model repo from HuggingFace: [Helsinki-NLP/opus-mt-en-fr](https://huggingface.co/Helsinki-NLP/opus-mt-en-fr/tree/main)
 
 ## Overview
 - In this implementation, we use [`Helsinki-NLP/opus-mt-en-fr`](https://huggingface.co/Helsinki-NLP/opus-mt-en-fr) as the model checkpoint to be used out of the box. It's licensed under CC-BY 4.0 License.
