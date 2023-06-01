@@ -3,3 +3,4 @@ transformers>=4.29.0
 sentencepiece>=0.1.99
 gunicorn>=20.1.0
 jsonschema>=4.17.3
+sacremoses>=0.0.53
