@@ -150,7 +150,7 @@ def handle():
                   "dodgerblue"
                   ]
         # Draw the streets with svg.
-        checkPOIs = {}
+        checkPOIs = []
         g = draw.Group(data_image_layer="firstLayer", aria_label="Streets")
         for i, street in enumerate(streets):
             color = i % len(colors)
@@ -172,10 +172,8 @@ def handle():
                     node_coordinates.append([node["lon"], node["lat"]])
                     if "POIs_ID" in node:
                         for POI_ID in node["POIs_ID"]:
-                            if POI_ID in checkPOIs:
-                                checkPOIs[POI_ID].append([name, description])
-                            else:
-                                checkPOIs[POI_ID] = [[name, description]]
+                            if POI_ID not in checkPOIs:
+                                checkPOIs.append(POI_ID)
                 for index in range(len(node_coordinates) - 1):
                     p.M(scaled_longitude *
                         (node_coordinates[index][0] -
@@ -254,7 +252,7 @@ def handle():
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
             if POI["id"] in checkPOIs:
-                label, drawPOI = getNodeDescription(POI, checkPOIs)
+                label, drawPOI = getNodeDescription(POI)
                 if drawPOI:
                     latitude = (
                                 (POI["lat"] - lat_min)
@@ -361,23 +359,12 @@ def getDescriptions(street):
         return description[:-2]
 
 
-def getNodeDescription(POI, checkPOIs):
+def getNodeDescription(POI):
     label = ""
     drawPOI = False
     if "intersection" in POI:
         drawPOI = True
-        label += "Intersection of "
-        if len(checkPOIs[POI["id"]]) == 1:
-            label += checkPOIs[POI["id"]][0][0]+" and minor street"
-            # description=checkPOIs[POI["id"]][0][0]+" "+checkPOIs[
-            # POI["id"]][0][1] if checkPOIs[POI["id"]][0][1]!=None
-            # else checkPOIs[POI["id"]][0][0]+" No details available"
-        else:
-            label += ", ".join(x[0] for x in checkPOIs[POI["id"]][:-1])
-            label += " and "+checkPOIs[POI["id"]][-1][0]
-            # description=", ".join(((x[0]+" "+x[1]) if x[1]!=None else
-            # x[0]+" No details available") for x in
-            # checkPOIs[POI["id"]])
+        label += "Intersection"
     if "cat" in POI:
         tag, drPOI = getNodeCategoryData(POI)
         if len(label) != 0:
