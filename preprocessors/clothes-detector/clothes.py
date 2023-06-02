@@ -68,7 +68,6 @@ def get_clothes(img):
         # print("coordinates are")
         # print(x1, y1, x2, y2)
         img_crop = img[y1:y2][x1:x2]
-        
         try:
             color_thief = c.ColorThief(Image.fromarray(img_crop))
             dominant_color = color_thief.get_color(quality=1)

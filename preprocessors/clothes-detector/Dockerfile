@@ -9,8 +9,20 @@ RUN apt-get update && apt-get install -y python3-opencv wget && rm -rf /var/lib/
 COPY /preprocessors/clothes-detector/requirements.txt /app/requirements.txt
 # COPY ./requirements.txt /app/requirements.txt
 
+RUN  apt-get update -y && \
+     apt-get upgrade -y && \
+     apt-get dist-upgrade -y && \
+     apt-get -y autoremove && \
+     apt-get clean
+RUN apt-get install -y p7zip \
+    p7zip-full \
+    unace \
+    zip \
+    unzip
 RUN pip3 install --upgrade pip
 RUN pip install -r /app/requirements.txt
+RUN wget https://image.a11y.mcgill.ca/models/clothesDetector/yolo.zip
+RUN unzip yolo.zip
 
 COPY /schemas /app/schemas
 # COPY ./schemas /app/schemas
