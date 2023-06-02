@@ -83,6 +83,13 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
+    graphic-tagger:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-celebrity-detector:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 5
+            ca.mcgill.a11y.image.port: 5000
+        env_file:
+            - ./config/azure-api.env
     object-grouping:
         image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:unstable
         labels:
