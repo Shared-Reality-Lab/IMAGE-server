@@ -109,7 +109,7 @@ def handle():
         return response
 
     logging.debug("Checking whether graphic and"
-                  "dimensions are available")
+                  " dimensions are available")
     if "graphic" in contents and "dimensions" in contents:
         # If an existing graphic exists, often it is
         # best to use that for convenience.
