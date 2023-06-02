@@ -83,7 +83,7 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
-    graphic-tagger:
+    celebrity-detector:
         image: ghcr.io/shared-reality-lab/image-preprocessor-celebrity-detector:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 5
