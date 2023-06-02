@@ -14,11 +14,6 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
-import requests  # pip3 install requests
-from re import search
-import operator
-
-import os
 import json
 import time
 import jsonschema
@@ -32,7 +27,7 @@ import torch
 import webcolors
 
 from colorthiefpy import colorthief as c
-from yolo.utils.utils import *
+from yolo.utils.utils import load_classes
 from predictors.YOLOv3 import YOLOv3Predictor
 
 app = Flask(__name__)
@@ -44,38 +39,33 @@ def get_clothes(img):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.cuda.empty_cache()
 
-
-    #YOLO PARAMS
-    yolo_params = {   "model_def" : "yolo/df2cfg/yolov3-df2.cfg",
-    "weights_path" : "yolo/weights/yolov3-df2_15000.weights",
-    "class_path":"yolo/df2cfg/df2.names",
-    "conf_thres" : 0.5,
-    "nms_thres" :0.4,
-    "img_size" : 416,
-    "device" : device}
+    # YOLO PARAMS
+    yolo_params = {"model_def": "yolo/df2cfg/yolov3-df2.cfg",
+                   "weights_path": "yolo/weights/yolov3-df2_15000.weights",
+                   "class_path": "yolo/df2cfg/df2.names",
+                   "conf_thres": 0.5,
+                   "nms_thres": 0.4,
+                   "img_size": 416,
+                   "device": device}
 
     classes = load_classes(yolo_params["class_path"])
-    model = 'yolo'
     detectron = YOLOv3Predictor(params=yolo_params)
     detections = detectron.get_detections(img)
     clothes = []
     for x1, y1, x2, y2, cls_conf, cls_pred in detections:
-        # print(x1,y1,x2,y2)
-        # print(img.shape)
         x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-        y1 = 0 if y1<0 else y1
-        x1 = 0 if x1<0 else x1
-        # print("coordinates are")
-        # print(x1, y1, x2, y2)
+        y1 = 0 if y1 < 0 else y1
+        x1 = 0 if x1 < 0 else x1
         img_crop = img[y1:y2][x1:x2]
         try:
             color_thief = c.ColorThief(Image.fromarray(img_crop))
             dominant_color = color_thief.get_color(quality=1)
-            closest_name =  webcolors.rgb_to_name(dominant_color)
+            closest_name = webcolors.rgb_to_name(dominant_color)
         except ValueError:
             closest_name = None
-        print("Item: %s, Conf: %.5f" % (classes[int(cls_pred)], cls_conf))   
-        clothes.append({"article":classes[int(cls_pred)],"confidence":cls_conf,"color":closest_name})
+        print("Item: %s, Conf: %.5f" % (classes[int(cls_pred)], cls_conf))
+        clothes.append({"article": classes[int(
+            cls_pred)], "confidence": cls_conf, "color": closest_name})
         break
     return clothes
 
@@ -84,8 +74,6 @@ def get_clothes(img):
 def categorise():
     final_data = []
     logging.debug("Received request")
-    # load the schema
-    labels = ["other", "indoor", "outdoor", "people"]
     with open('./schemas/preprocessors/clothes.schema.json') \
             as jsonfile:
         data_schema = json.load(jsonfile)
@@ -140,12 +128,11 @@ def categorise():
                 dimy = int(objects[i]["dimensions"][1] * height)
                 dimy1 = int(objects[i]["dimensions"][3] * height)
                 img = img_original[dimy:dimy1, dimx:dimx1]
-                buffer = cv2.imencode('.jpg', img)[1].tostring()
                 cloth_list = get_clothes(img)
-                if(len(cloth_list)==0):
-                    
-                    cloth_list = [{"article":"None","confidence":0,"color":None}]
-                
+                if (len(cloth_list) == 0):
+
+                    cloth_list = [
+                        {"article": "None", "confidence": 0, "color": None}]
 
                 clothes = {
                     "personID": objects[i]["ID"],
