@@ -156,11 +156,11 @@ app.post("/handler", async (req, res) => {
                     console.debug(translatedData.translations);
                     for (let i = 0; i < ttsData.length; i++) {
                         ttsData[i]["value"] = translatedData.translations[i];
-                        console.debug(`${ttsData[i]["value"]} <- ${translatedData.translations[i]}`);
+                        console.debug(ttsData[i]["value"]);
                     }
-                    console.debug(ttsData);
                 }
             }
+            console.debug(ttsData);
             // Do TTS
             const ttsResponse = await utils.getTTS(
             ttsData.map((x) => x["value"]), targetLanguague
