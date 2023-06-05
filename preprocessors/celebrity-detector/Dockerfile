@@ -6,7 +6,7 @@ ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN apt-get update && apt-get install -y python3-opencv wget && rm -rf /var/lib/apt/lists/*
 
-COPY /preprocessors/celeb-detector/requirements.txt /app/requirements.txt
+COPY /preprocessors/celebrity-detector/requirements.txt /app/requirements.txt
 
 RUN pip3 install --upgrade pip
 RUN pip install -r /app/requirements.txt
@@ -19,4 +19,4 @@ COPY /preprocessors/celeb-detector /app
 EXPOSE 5000
 ENV FLASK_APP=celeb.py
 USER python
-CMD [ "gunicorn", "celeb:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
+CMD [ "gunicorn", "celebrity-detector:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
