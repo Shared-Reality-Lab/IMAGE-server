@@ -171,7 +171,7 @@ export async function getTranslationSegments(text: string[], targetLang: string)
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ text: text, targetLang: targetLang }),
+    body: JSON.stringify({ segments: text, targetLang: targetLang }),
   }).then((resp) => resp.json() as Promise<TranslationResponse>);
 }
 
