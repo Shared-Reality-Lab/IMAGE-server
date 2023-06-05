@@ -159,7 +159,7 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[]
     return objects;
 }
 
-export async function getTranslationResponse(text: string[], targetLang: string): Promise<TranslationResponse> {
+export async function getTranslationSegments(text: string[], targetLang: string): Promise<TranslationResponse> {
   /**
    * Get translation from multilang-support service
    * @param text: text to be translated
@@ -175,12 +175,12 @@ export async function getTranslationResponse(text: string[], targetLang: string)
   }).then((resp) => resp.json() as Promise<TranslationResponse>);
 }
 
-export async function getTTS(text: string[], targetLang: string): Promise<TTSResponse> {
+export async function getTTS(text: string[], language: string): Promise<TTSResponse> {
     let serviceURL: string;
-    console.log(`[getTTS()] Target Language: ${targetLang}`);
-    if (targetLang == "fr")
+    console.debug(`[getTTS()] Target Language: ${language}`);
+    if (language == "fr")
         serviceURL = "http://espnet-tts-fr/service/tts/segments";
-    else if (targetLang == "en")
+    else if (language == "en")
         serviceURL = "http://espnet-tts/service/tts/segments";
     else
         throw new Error("Language not supported");

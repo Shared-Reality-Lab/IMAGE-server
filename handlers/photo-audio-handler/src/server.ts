@@ -146,14 +146,16 @@ app.post("/handler", async (req, res) => {
             {
                 if (targetLanguague == "fr")
                 {
+                    console.debug("Sending ttsData to translation");
                     // Translate the text
-                    const translationResponse =
-                      await utils.getTranslationResponse(
+                    const translatedData =
+                      await utils.getTranslationSegments(
                         ttsData.map((x) => x["value"]), "fr"
                       );
-                    // Add offset values to data
+
+                    console.debug(translatedData.translations);
                     for (let i = 0; i < ttsData.length; i++) {
-                        ttsData[i]["value"] = translationResponse.translations[i];
+                        ttsData[i]["value"] = translatedData.translations[i];
                     }
                 }
             }
