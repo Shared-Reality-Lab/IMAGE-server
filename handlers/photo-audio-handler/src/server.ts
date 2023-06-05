@@ -138,7 +138,7 @@ app.post("/handler", async (req, res) => {
     }
     
     if (hasSimple || hasSegment) {
-        console.log("Beginning TTS. Target language: `${targetLanguague}`");
+        console.log(`Beginning TTS. Target language: ${targetLanguague}`);
         try {
             if (targetLanguague != "en")
             // Translate ttsData if the target language is not English

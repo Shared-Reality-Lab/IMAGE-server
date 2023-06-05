@@ -177,7 +177,7 @@ export async function getTranslationResponse(text: string[], targetLang: string)
 
 export async function getTTS(text: string[], targetLang: string): Promise<TTSResponse> {
     let serviceURL: string;
-    console.log("[getTTS()] Target Language: `${targetLang}`");
+    console.log(`[getTTS()] Target Language: ${targetLang}`);
     if (targetLang == "fr")
         serviceURL = "http://espnet-tts-fr/service/tts/segments";
     else if (targetLang == "en")
