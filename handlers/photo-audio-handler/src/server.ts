@@ -136,18 +136,31 @@ app.post("/handler", async (req, res) => {
     } else {
         console.debug("Skipped text rendering.");
     }
-
-	// Translate ttsData if the target language is not English
-    if(targetLanguague != "en") // == "fr" in this case
-    {
-        const ttsDataFrench = await utils.getTranslationResponse(ttsData.map(x => x["value"]), targetLanguague);
-        // ...
-    }
-
+    
     if (hasSimple || hasSegment) {
+        console.log("Beginning TTS. Target language: ${targetLanguague}");
         try {
+            if (targetLanguague != "en")
+            // Translate ttsData if the target language is not English
+            // == "fr" in this case
+            {
+                if (targetLanguague == "fr")
+                {
+                    // Translate the text
+                    const translationResponse =
+                      await utils.getTranslationResponse(
+                        ttsData.map((x) => x["value"]), "fr"
+                      );
+                    // Add offset values to data
+                    for (let i = 0; i < ttsData.length; i++) {
+                        ttsData[i]["value"] = translationResponse.translations[i];
+                    }
+                }
+            }
             // Do TTS
-            const ttsResponse = await utils.getTTS(ttsData.map(x => x["value"]));
+            const ttsResponse = await utils.getTTS(
+            ttsData.map((x) => x["value"]), targetLanguague
+            );
             // Add offset values to data
             for (let i = 0, offset = 0; i < ttsData.length; i++) {
                 ttsData[i]["audio"] = {

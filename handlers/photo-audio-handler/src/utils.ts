@@ -175,28 +175,22 @@ export async function getTranslationResponse(text: string[], targetLang: string)
   }).then((resp) => resp.json() as Promise<TranslationResponse>);
 }
 
-
-export async function getTTS(text: string[]): Promise<TTSResponse> {
-    return fetch("http://espnet-tts/service/tts/segments", {
-        "method": "POST",
-        "headers": {
-            "Content-Type": "application/json",
-        },
-        "body": JSON.stringify({ "segments": text })
-    }).then(resp => resp.json() as Promise<TTSResponse>);
-}
-
-export async function getTTSFrench(text: string[]): Promise<TTSResponse> {
-    /**
-     * Get TTS from espnet-tts-fr service
-     */
-    return fetch("http://espnet-tts-fr/service/tts/segments", {
-        "method": "POST",
-        "headers": {
-            "Content-Type": "application/json",
-        },
-        "body": JSON.stringify({ "segments": text })
-    }).then(resp => resp.json() as Promise<TTSResponse>);
+export async function getTTS(text: string[], targetLang: string): Promise<TTSResponse> {
+    let serviceURL: string;
+    console.log("[getTTS()] Target Language: ${targetLang}");
+    if (targetLang == "fr")
+        serviceURL = "http://espnet-tts-fr/service/tts/segments";
+    else if (targetLang == "en")
+        serviceURL = "http://espnet-tts/service/tts/segments";
+    else
+        throw new Error("Language not supported");
+    return fetch(serviceURL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ segments: text }),
+    }).then((resp) => resp.json() as Promise<TTSResponse>);
 }
 
 export async function sendOSC(jsonFile: string, outFile: string, server: string, port: number) {
