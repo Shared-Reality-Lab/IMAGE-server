@@ -106,19 +106,19 @@ def readImage():
             if (len(obj) == 0):
                 data = {
                     "personID": objects[i]["ID"],
-                    "emotion": "None",
-                    "gender": None,
-                    "confidence": None,
+                    "emotion": {
+                        "emotion": "None",
+                        "confidence": 0.0
+                    }
                 }
             else:
                 conf = obj["emotion"][obj["dominant_emotion"]]/100
                 data = {
                     "personID": objects[i]["ID"],
                     "emotion": {
-                        "emotion": obj['dominant_emotion'],
+                        "emotion": str(obj['dominant_emotion']),
                         "confidence": conf
                     }
-
                 }
             final_data.append(data)
     request_uuid = content["request_uuid"]
