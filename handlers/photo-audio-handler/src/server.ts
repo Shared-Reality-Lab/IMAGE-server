@@ -156,7 +156,9 @@ app.post("/handler", async (req, res) => {
                     console.debug(translatedData.translations);
                     for (let i = 0; i < ttsData.length; i++) {
                         ttsData[i]["value"] = translatedData.translations[i];
+                        console.debug(`${ttsData[i]["value"]} <- ${translatedData.translations[i]}`);
                     }
+                    console.debug(ttsData);
                 }
             }
             // Do TTS
