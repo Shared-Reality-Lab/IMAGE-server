@@ -61,6 +61,7 @@ app.post("/handler", async (req, res) => {
     const semseg = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"];
     const objDet = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
     const objGroup = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
+    const targetLanguague = req.body["language"];
 
     // Ignore secondCat since it isn't useful on its own
     if (!(semseg && semseg?.segments) && !(objDet && objDet?.objects) && !objGroup) {
@@ -134,6 +135,13 @@ app.post("/handler", async (req, res) => {
         }
     } else {
         console.debug("Skipped text rendering.");
+    }
+
+	// Translate ttsData if the target language is not English
+    if(targetLanguague != "en") // == "fr" in this case
+    {
+        const ttsDataFrench = await utils.getTranslationResponse(ttsData.map(x => x["value"]), targetLanguague);
+        // ...
     }
 
     if (hasSimple || hasSegment) {

@@ -32,6 +32,12 @@ export type TTSResponse = {
     audio: string;
 }
 
+type TranslationResponse = {
+    translations: string[];
+    src_lang: string;
+    tgt_lang: string;
+}
+
 type Obj = { ID: number, type: string, area: number };
 
 type ObjDet = {
@@ -153,8 +159,38 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[]
     return objects;
 }
 
+export async function getTranslationResponse(text: string[], targetLang: string): Promise<TranslationResponse> {
+  /**
+   * Get translation from multilang-support service
+   * @param text: text to be translated
+   * @param targetLang: target language, in ISO 639-1 format
+   * @returns {Promise<TranslationResponse>}
+   */
+  return fetch("http://multilang-support/service/translate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text: text, targetLang: targetLang }),
+  }).then((resp) => resp.json() as Promise<TranslationResponse>);
+}
+
+
 export async function getTTS(text: string[]): Promise<TTSResponse> {
     return fetch("http://espnet-tts/service/tts/segments", {
+        "method": "POST",
+        "headers": {
+            "Content-Type": "application/json",
+        },
+        "body": JSON.stringify({ "segments": text })
+    }).then(resp => resp.json() as Promise<TTSResponse>);
+}
+
+export async function getTTSFrench(text: string[]): Promise<TTSResponse> {
+    /**
+     * Get TTS from espnet-tts-fr service
+     */
+    return fetch("http://espnet-tts-fr/service/tts/segments", {
         "method": "POST",
         "headers": {
             "Content-Type": "application/json",
