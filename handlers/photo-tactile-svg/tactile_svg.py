@@ -137,7 +137,8 @@ def handle():
     # or semantic segmentation is present
     svg = draw.Drawing(dimensions[0], dimensions[1])
 
-    if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors:
+    if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors\
+            and "ca.mcgill.a11y.image.preprocessor.grouping" in preprocessors:
         logging.debug("Object detector and grouping preprocessor found. "
                       "Adding data to response...")
         preprocessor_names.append('Things and people')
