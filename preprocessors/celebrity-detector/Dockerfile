@@ -13,10 +13,10 @@ RUN pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
 WORKDIR /app
-COPY /preprocessors/celeb-detector /app
+COPY /preprocessors/celebrity-detector /app
 
 
 EXPOSE 5000
-ENV FLASK_APP=celeb.py
+ENV FLASK_APP=celebrity-detector.py
 USER python
 CMD [ "gunicorn", "celebrity-detector:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
