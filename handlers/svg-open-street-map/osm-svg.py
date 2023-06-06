@@ -136,11 +136,11 @@ def handle():
         if "ca.mcgill.a11y.image.preprocessor.openstreetmap" in preprocessor:
             LOGGER.debug("Openstreetmap (OSM) response found!")
 
-            dt = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
-            if "streets" in dt:
-                streets = dt["streets"]
-                lat = dt["bounds"]["latitude"]
-                lon = dt["bounds"]["longitude"]
+            d = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
+            if "streets" in d:
+                streets = d["streets"]
+                lat = d["bounds"]["latitude"]
+                lon = d["bounds"]["longitude"]
                 lon_min = lon["min"]
                 lat_min = lat["min"]
                 lon_max = lon["max"]
@@ -234,9 +234,9 @@ def handle():
                                 "svg": svg.asDataUri()})
                         svg = draw.Drawing(dimensions[0], dimensions[1])
                 # Draw all points of interest (POIs)
-                if ("points_of_interest" in dt or
-                        len(dt["points_of_interest"]) != 0):
-                    for points_of_interest in dt["points_of_interest"]:
+                if ("points_of_interest" in d or
+                        len(d["points_of_interest"]) != 0):
+                    for points_of_interest in d["points_of_interest"]:
                         if points_of_interest["cat"] != "intersection":
                             latitude = (
                                 (points_of_interest["lat"] - lat_min)
