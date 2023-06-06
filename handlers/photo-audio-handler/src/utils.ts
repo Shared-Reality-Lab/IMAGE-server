@@ -177,7 +177,7 @@ export async function getTranslationSegments(text: string[], targetLang: string)
 
 export async function getTTS(text: string[], language: string): Promise<TTSResponse> {
     let serviceURL: string;
-    console.debug(`[getTTS()] Target Language: ${language}`);
+    console.debug(`Getting TTS in "${language}"`);
     if (language == "fr")
         serviceURL = "http://espnet-tts-fr/service/tts/segments";
     else if (language == "en")
@@ -208,8 +208,9 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
                     const arg = oscMsg["args"] as osc.Argument[];
                     if (arg[0] === "done") {
                         const respArry: SoundSegments = [];
-                        console.log(respArry);
-                        console.log(respArry.length);
+                        // console.log(respArry);
+                        // console.log(respArry.length);
+                        // These logs provide no useful information
                         if ((arg.length) > 1 && ((arg.length - 1) % 3 == 0)) {
                             for (let i = 1; i < arg.length; i += 3) {
                                 respArry.push({
@@ -255,6 +256,7 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
 }
 
 export function renderingTitle(semseg: { "segments": Record<string, unknown>[] }, objDet: ObjDet, objGroup: ObjGroup): string {
+    console.debug("Rendering title")
     const hasSemseg = (semseg !== undefined) && (semseg["segments"].length > 0);
     const hasObj = (objDet !== undefined) && (objGroup !== undefined) && (objDet["objects"].length > 0);
     if (hasSemseg && hasObj) {
