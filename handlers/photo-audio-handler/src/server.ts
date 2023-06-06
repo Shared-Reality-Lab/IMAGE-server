@@ -143,7 +143,7 @@ app.post("/handler", async (req, res) => {
         console.debug(`Language handling: tgt_lang="${targetLanguague}"`);
         console.debug("Sending ttsData to translation");
         try {
-            console.debug("Translating ttsData\'s [value]s")
+            console.debug("Translating ttsData's [value]s")
             const translatedValues = await utils.getTranslationSegments(
             ttsData.map((x) => x["value"]),
             targetLanguague
