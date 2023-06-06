@@ -33,6 +33,7 @@ logging.basicConfig(
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
+
 @app.route("/handler", methods=["POST"])
 def handle():
     logging.debug("Received request")
@@ -66,13 +67,13 @@ def handle():
         return jsonify("Invalid request received!"), 400
 
     # Check preprocessor data
-    if not "preprocessors" in contents:
-        LOGGER.debug (" Missing preprocessor key. OSM SVG can't handle this")
+    if "preprocessors" not in contents:
+        LOGGER.debug(" Missing preprocessor key. OSM SVG can't handle this")
         response = {
-                "request_uuid": contents["request_uuid"],
-                "timestamp": int(time.time()),
-                "renderings": []
-            }
+            "request_uuid": contents["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": []
+        }
         try:
             validator = jsonschema.Draft7Validator(
                 response_schema, resolver=resolver)
@@ -83,11 +84,11 @@ def handle():
         LOGGER.debug("Sending response")
         return response
 
-    if "preprocessors" in contents: 
+    if "preprocessors" in contents:
         preprocessor = contents['preprocessors']
 
         if ("ca.mcgill.a11y.image.capability.DebugMode"
-            not in contents['capabilities'q]
+            not in contents['capabilities']
                 or "ca.mcgill.a11y.image.renderer.SVGLayers"
                 not in contents["renderers"]):
             LOGGER.debug("OSM SVG renderer not supported!")
@@ -112,9 +113,9 @@ def handle():
                 not in preprocessor:
             LOGGER.info("OSM Preprocessor data not present. Skipping ...")
             response = {
-            "request_uuid": contents["request_uuid"],
-            "timestamp": int(time.time()),
-            "renderings": []
+                "request_uuid": contents["request_uuid"],
+                "timestamp": int(time.time()),
+                "renderings": []
             }
             try:
                 validator = jsonschema.Draft7Validator(
@@ -135,11 +136,11 @@ def handle():
         if "ca.mcgill.a11y.image.preprocessor.openstreetmap" in preprocessor:
             LOGGER.debug("Openstreetmap (OSM) response found!")
 
-            data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
-            if "streets" in data:
-                streets = data["streets"]
-                lat = data["bounds"]["latitude"]
-                lon = data["bounds"]["longitude"]
+            dt = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
+            if "streets" in dt:
+                streets = dt["streets"]
+                lat = dt["bounds"]["latitude"]
+                lon = dt["bounds"]["longitude"]
                 lon_min = lon["min"]
                 lat_min = lat["min"]
                 lon_max = lon["max"]
@@ -148,10 +149,10 @@ def handle():
                 scaled_longitude = dimensions[0] / (lon_max - lon_min)
                 scaled_latitude = dimensions[1] / (lat_max - lat_min)
                 bounds = [[lon_min, lat_min],
-                        [lon_min, lat_max],
-                        [lon_max, lat_max],
-                        [lon_max, lat_min],
-                        [lon_min, lat_min]]
+                          [lon_min, lat_max],
+                          [lon_max, lat_max],
+                          [lon_max, lat_min],
+                          [lon_min, lat_min]]
                 # Draw bounding box for the streets
                 for index in range(len(bounds) - 1):
                     p = draw.Path(stroke="orange", stroke_width=6, fill='none')
@@ -203,16 +204,16 @@ def handle():
                     for index in range(len(node_coordinates) - 1):
                         p.M(scaled_longitude *
                             (node_coordinates[index][0] -
-                            lon_min), scaled_latitude *
+                             lon_min), scaled_latitude *
                             (node_coordinates[index][1] -
-                            lat_min))
+                             lat_min))
                         p.L(scaled_longitude *
                             (node_coordinates[index +
-                                            1][0] -
-                            lon_min), scaled_latitude *
+                                              1][0] -
+                             lon_min), scaled_latitude *
                             (node_coordinates[index +
-                                            1][1] -
-                            lat_min))
+                                              1][1] -
+                             lat_min))
                     all_svg.append(p)
                     svg.append(p)
                     if "street_name" in streets[street]:
@@ -233,9 +234,9 @@ def handle():
                                 "svg": svg.asDataUri()})
                         svg = draw.Drawing(dimensions[0], dimensions[1])
                 # Draw all points of interest (POIs)
-                if ("points_of_interest" in data or
-                        len(data["points_of_interest"]) != 0):
-                    for points_of_interest in data["points_of_interest"]:
+                if ("points_of_interest" in dt or
+                        len(dt["points_of_interest"]) != 0):
+                    for points_of_interest in dt["points_of_interest"]:
                         if points_of_interest["cat"] != "intersection":
                             latitude = (
                                 (points_of_interest["lat"] - lat_min)
@@ -261,7 +262,7 @@ def handle():
 
                 svg_layers.append(
                     {"label": "AllLayers",
-                    "svg": all_svg.asDataUri()})
+                     "svg": all_svg.asDataUri()})
                 LOGGER.debug("Providing final rendering result!")
                 data = {
                     "layers": svg_layers
@@ -278,17 +279,19 @@ def handle():
                     )
                     validator.validate(data)
                 except ValidationError as e:
-                    LOGGER.debug("Failed to produce a valid renderer response!")
+                    LOGGER.debug(
+                        "Failed to produce a valid renderer response!")
                     LOGGER.error(e)
-                    return jsonify("Failed to produce a valid renderer response!"), 500
+                    return jsonify(
+                        "Failed to produce a valid renderer response!"), 500
             else:
                 LOGGER.info("No data for streets rendering. Skipping ...")
                 response = {
                     "request_uuid": contents["request_uuid"],
                     "timestamp": int(time.time()),
                     "renderings": []
-                    }
-                return response 
+                }
+                return response
             response = {
                 "request_uuid": contents["request_uuid"],
                 "timestamp": int(time.time()),
