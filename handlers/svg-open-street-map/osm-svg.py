@@ -84,14 +84,34 @@ def handle():
         LOGGER.debug("Sending response")
         return response
 
+    LOGGER.debug("Checking whether renderer is supported")
     if "preprocessors" in contents:
         preprocessor = contents['preprocessors']
 
-        if ("ca.mcgill.a11y.image.capability.DebugMode"
-            not in contents['capabilities']
-                or "ca.mcgill.a11y.image.renderer.SVGLayers"
+        # Check if renderer is supported
+        if ("ca.mcgill.a11y.image.renderer.OpenStreetMapSVG"
                 not in contents["renderers"]):
-            LOGGER.debug("OSM SVG renderer not supported!")
+            LOGGER.debug("OpenStreetMap SVG renderer not supported!")
+            response = {
+                "request_uuid": contents["request_uuid"],
+                "timestamp": int(time.time()),
+                "renderings": []
+            }
+            try:
+                validator = jsonschema.Draft7Validator(
+                    response_schema, resolver=resolver)
+                validator.validate(response)
+            except jsonschema.exceptions.ValidationError as error:
+                LOGGER.error(error)
+                return jsonify("Invalid Preprocessor JSON format"), 500
+            LOGGER.debug("Sending response")
+            return response
+
+        # Check if DebugMode is enabled
+        if ("ca.mcgill.a11y.image.capability.DebugMode"
+                not in contents['capabilities']):
+
+            LOGGER.debug("DebugMode not enabled. Can't process further!")
             response = {
                 "request_uuid": contents["request_uuid"],
                 "timestamp": int(time.time()),
@@ -108,7 +128,6 @@ def handle():
             return response
 
         LOGGER.debug("Checking for OpenStreetMap (OSM) preprocessor response ")
-
         if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
                 not in preprocessor:
             LOGGER.info("OSM Preprocessor data not present. Skipping ...")
@@ -127,15 +146,14 @@ def handle():
             LOGGER.debug("Sending response")
             return response
 
-        svg_layers = []
-        dimensions = 700, 700
-        svg = draw.Drawing(dimensions[0], dimensions[1])
-        # This gives the entire street view.
-        all_svg = draw.Drawing(dimensions[0], dimensions[1])
-
         if "ca.mcgill.a11y.image.preprocessor.openstreetmap" in preprocessor:
             LOGGER.debug("Openstreetmap (OSM) response found!")
 
+            svg_layers = []
+            dimensions = 700, 700
+            svg = draw.Drawing(dimensions[0], dimensions[1])
+            # This gives the entire street view.
+            all_svg = draw.Drawing(dimensions[0], dimensions[1])
             d = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
             if "streets" in d:
                 streets = d["streets"]
