@@ -269,7 +269,7 @@ app.post("/handler", async (req, res) => {
 			console.error("Failed to translate rendering descriptions to " + targetLanguague);
 			console.error(e);
 		}
-
+	}
     // Send response
 
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
