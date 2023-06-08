@@ -255,10 +255,25 @@ app.post("/handler", async (req, res) => {
         }
     }
 
+	
+	// Translate renderings description before sending response
+	if (targetLanguague !== "en") {
+		try {
+			console.debug("Translating renderings description to " + targetLanguague);
+			const translatedDesc:utils.TranslationResponse = await utils.getTranslationSegments(renderings.map(x => x["description"]), targetLanguague);
+
+			for (let i = 0; i < renderings.length; i++) {
+				renderings[i]["description"] = translatedDesc.translations[i];
+			}
+		} catch(e) {
+			console.error("Failed to translate rendering descriptions to " + targetLanguague);
+			console.error(e);
+		}
+
     // Send response
 
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-    response["renderings"] = renderings;
+    response["renderings"] = renderings;	
     console.debug("Sending response");
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);
