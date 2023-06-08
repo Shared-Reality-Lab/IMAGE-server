@@ -90,10 +90,10 @@ app.post("/handler", async (req, res) => {
         res.json(response);
         return;
     }
-
     // Begin forming text...
     // This is variable depending on which preprocessor data is available.
     const ttsData: utils.TTSSegment[] = [];
+
     ttsData.push({"value": utils.generateIntro(secondCat), "type": "text"});
     if (semseg && semseg["segments"].length > 0) {
         // Use all segments returned for now.
@@ -119,6 +119,25 @@ app.post("/handler", async (req, res) => {
     const renderingTitle = utils.renderingTitle(semseg, objDet, objGroup);
 
     // Construct Text (if requested)
+    // translate ttsData if the target language is not English
+    // this will change ttsData ["value"] fields
+    if (targetLanguague != "en") {
+        console.debug(`Translating ttsData values to ${targetLanguague}"`);
+        try {
+            const translatedValues = await utils.getTranslationSegments(
+                ttsData.map((x) => x["value"]),
+                targetLanguague
+                );
+            console.debug("Mapping translated values to ttsData")
+                
+            for (let i = 0; i < ttsData.length; i++) {
+                ttsData[i]["value"] = translatedValues.translations[i];
+            }
+        } catch (err) {
+            console.error(`Failed to translate ttsData to ${targetLanguague}!`);
+        }
+    }
+
     if (hasText) {
         console.debug("Constructing text renderings");
         const textString = ttsData.map(x => x["value"]).join(" ");
@@ -138,24 +157,6 @@ app.post("/handler", async (req, res) => {
         console.debug("Skipped text rendering.");
     }
     
-    // translate ttsData if the target language is not English
-    if (targetLanguague != "en") {
-        console.debug(`Language handling: tgt_lang="${targetLanguague}"`);
-        console.debug("Sending ttsData to translation");
-        try {
-            console.debug("Translating ttsData's [value]s")
-            const translatedValues = await utils.getTranslationSegments(
-            ttsData.map((x) => x["value"]),
-            targetLanguague
-            );
-            
-            for (let i = 0; i < ttsData.length; i++) {
-            ttsData[i]["value"] = translatedValues.translations[i];
-            }
-        } catch (err) {
-            console.error(`Failed to translate ttsData to ${targetLanguague}!`);
-        }
-    }
 
     // Construct SimpleAudio (if requested)
     if (hasSimple || hasSegment) {
@@ -200,7 +201,7 @@ app.post("/handler", async (req, res) => {
                 // TODO detect mime type from file
                 const dataURL = "data:audio/mp3;base64," + buffer.toString("base64");
                 if (hasSegment && segArray.length > 0) {
-                    console.debug("hasSegment == true")
+                    console.debug("Constructing segment audio rendering")
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
                         "description": renderingTitle,
@@ -219,7 +220,7 @@ app.post("/handler", async (req, res) => {
                     }
                 }
                 else if (hasSimple) {
-                    console.debug("hasSimple == true")
+                    console.debug("Constructing simple audio rendering")
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
                         "description": renderingTitle,
