@@ -30,6 +30,16 @@ services:
                     devices:
                     - driver: nvidia
                       capabilities: ["gpu", "utility", "compute"]
+    espnet-tts-fr:
+        image: ghcr.io/shared-reality-lab/image-service-espnet-tts-fr:unstable
+        environment:
+            - TORCH_DEVICE=cuda
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                    - driver: nvidia
+                      capabilities: ["gpu", "utility", "compute"]
     multilang-support:
         image: ghcr.io/shared-reality-lab/image-service-translation:unstable
         environment:
