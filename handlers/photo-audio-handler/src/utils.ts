@@ -32,7 +32,7 @@ export type TTSResponse = {
     audio: string;
 }
 
-type TranslationResponse = {
+export type TranslationResponse = {
     translations: string[];
     src_lang: string;
     tgt_lang: string;
