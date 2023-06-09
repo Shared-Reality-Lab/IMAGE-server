@@ -221,14 +221,12 @@ def handle():
                                   fill='none', aria_label=category,)
                 for c in contour:
                     coords = c["coordinates"]
-                    for i, coord in enumerate(coords):
-                        if (i == 0):
-                            continue
+                    for i in range(1, len(coords), 5):
                         if (i == 1):
-                            p.M(coord[0] * dimensions[0],
-                                (dimensions[1] - coord[1] * dimensions[1]))
-                        p.L(coord[0] * dimensions[0],
-                            dimensions[1] - coord[1] * dimensions[1])
+                            p.M(coords[i][0] * dimensions[0],
+                                (dimensions[1] - coords[i][1] * dimensions[1]))
+                        p.L(coords[i][0] * dimensions[0],
+                            dimensions[1] - coords[i][1] * dimensions[1])
                 svg.append(p)
 
     logging.debug("Generating final rendering")
