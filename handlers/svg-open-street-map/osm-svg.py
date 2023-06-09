@@ -85,12 +85,12 @@ def handle():
         LOGGER.debug("Sending response")
         return response
 
-    LOGGER.debug("Checking whether renderer is supported")
     if "preprocessors" in contents:
         preprocessor = contents['preprocessors']
 
         # Check if renderer is supported
-        if ("ca.mcgill.a11y.image.renderer.OpenStreetMapSVG"
+        LOGGER.debug("Checking whether renderer is supported")
+        if ("ca.mcgill.a11y.image.renderer.SVGLayers"
                 not in contents["renderers"]):
             LOGGER.debug("OpenStreetMap SVG renderer not supported!")
             response = {
@@ -128,10 +128,10 @@ def handle():
             LOGGER.debug("Sending response")
             return response
 
-        LOGGER.debug("Checking for OpenStreetMap (OSM) preprocessor response ")
+        LOGGER.debug("Checking for OpenStreetMap map data ")
         if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
                 not in preprocessor:
-            LOGGER.info("OSM Preprocessor data not present. Skipping ...")
+            LOGGER.info("OSM map data not present. Skipping ...")
             response = {
                 "request_uuid": contents["request_uuid"],
                 "timestamp": int(time.time()),
@@ -148,7 +148,7 @@ def handle():
             return response
 
         if "ca.mcgill.a11y.image.preprocessor.openstreetmap" in preprocessor:
-            LOGGER.debug("Openstreetmap (OSM) response found!")
+            LOGGER.debug("Map data found! Processing data!")
 
             svg_layers = []
             dimensions = 700, 700
@@ -282,7 +282,7 @@ def handle():
                 svg_layers.append(
                     {"label": "AllLayers",
                      "svg": all_svg.asDataUri()})
-                LOGGER.debug("Providing final rendering result!")
+                LOGGER.debug("Providing final result!")
                 data = {
                     "layers": svg_layers
 
