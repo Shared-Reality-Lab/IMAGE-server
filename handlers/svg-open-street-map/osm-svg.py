@@ -36,7 +36,7 @@ LOGGER.setLevel(logging.DEBUG)
 
 @app.route("/handler", methods=["POST"])
 def handle():
-    logging.debug("Received request")
+    LOGGER.debug("Received request")
     # Load necessary schema files
     with open("./schemas/definitions.json") as f:
         definitions_schema = json.load(f)
@@ -58,6 +58,7 @@ def handle():
     # Get and validate the request contents
     contents = request.get_json()
     try:
+        LOGGER.debug("Validating request")
         validator = jsonschema.Draft7Validator(
             request_schema, resolver=resolver
         )
