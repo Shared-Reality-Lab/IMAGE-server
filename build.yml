@@ -81,6 +81,11 @@ services:
             context: .
             dockerfile: ./preprocessors/emotion-recognition/Dockerfile
         image: "emotion-recognition:latest"
+    celebrity-detector:
+        build:
+            context: .
+            dockerfile: ./preprocessors/celebrity-detector/Dockerfile
+        image: "celebrity-detector:latest"
     openstreetmap:
         build:
             context: .
@@ -106,6 +111,11 @@ services:
             context: .
             dockerfile: ./preprocessors/depth-map-gen/Dockerfile
         image: "depth-map-generator:latest"
+    object-depth-calculator:
+        build:
+            context: .
+            dockerfile: ./preprocessors/object-depth-calculator/Dockerfile
+        image: "object-depth-calculator:latest"
     chart-pipeline:
         build:
             context: .
@@ -198,6 +208,26 @@ services:
             context: .
             dockerfile: ./handlers/svg-open-street-map/Dockerfile
         image: "osm-svg-handler:latest"
+    svg-depth-map:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-depth-map/Dockerfile
+        image: "svg-depth-map:latest"
+    photo-tactile-svg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/photo-tactile-svg/Dockerfile
+        image: "photo-tactile-svg:latest"
+    map-tactile-svg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/map-tactile-svg/Dockerfile
+        image: "map-tactile-svg:latest"
+    nominatim-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/nominatim/Dockerfile
+        image: "nominatim-preprocessor:latest"
     # Supercollider on Fedora 34
     supercollider-base:
         build:
@@ -214,4 +244,9 @@ services:
             context: ./schemas
             dockerfile: Dockerfile
         image: "schemas:latest"
+    multilang-service:
+        image: "multilang-service:latest"
+        build:
+            context: .
+            dockerfile: ./services/multilang-support/Dockerfile
 

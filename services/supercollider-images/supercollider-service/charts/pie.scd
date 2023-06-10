@@ -17,7 +17,7 @@
  var pieChart;
  "Simple Pie Chart".postln;
  pieChart = { |json, ttsData, outPath, addr|
-     var score, timing=0, order=5, baseGain=(5.dbamp), seriesData, wedgeStart = 0;
+     var score, timing=0, order=5, baseGain=(5.dbamp), seriesData, wedgeStart = 0, totalValue=0;
      score = IMAGE.newScore(order);
      score.add([
          timing,
@@ -41,11 +41,20 @@
         ]
      ]);
 
+     // Get sum of y
+     json.at("seriesData").do({ |item|
+         try {
+            totalValue = totalValue + item.at("y").asFloat;
+        } { |err|
+            err.postln;
+        }
+    });
+
      // Run through segments
      json.at("seriesData").do({ |item, i|
          var offset, duration, y;
          try {
-             y = item.at("y").asFloat;
+             y = item.at("y").asFloat / totalValue * 100;
          } { |err|
              y = 0;
          };
