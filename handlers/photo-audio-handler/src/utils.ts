@@ -183,7 +183,7 @@ export async function getTTS(text: string[], language: string): Promise<TTSRespo
     else if (language == "en")
         serviceURL = "http://espnet-tts/service/tts/segments";
     else
-        throw new Error("Language not supported");
+        throw new Error(`Language '${language}' not supported in getTTS`);
     return fetch(serviceURL, {
       method: "POST",
       headers: {
