@@ -99,6 +99,32 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
 }
 
 /**
+ * Sending a list of segments to Translation Service
+ */
+export async function getTranslationSegments(segments: string[], targetLanguage: string): Promise<string[]> {
+    const translationSegments = await fetch('http://multilang-support/service/translate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            "language": targetLanguage,
+            "segments": segments
+        })
+    }).then(resp => {
+        return resp.json();
+    })
+
+    try {
+        return translationSegments["translation"];
+    } catch (e) {
+        console.error("Failed to translate to " + targetLanguage);
+        throw new Error("Error in translation service");
+    }
+}            
+
+
+/**
  * The function will return the string representing the graph title and axes information
  * @param highChartsData
  * @returns graphInfo string

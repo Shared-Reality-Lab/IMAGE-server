@@ -87,19 +87,7 @@ app.post("/handler", async (req, res) => {
                     // Language Translation if target language is not English
                     if (targetLanguage !== "en") {
                         console.debug(`Translating to ${targetLanguage}...`);
-                        const translationSegments = await fetch('http://multilang-support/service/translate', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                "language": targetLanguage,
-                                "segments": graphInfo
-                            })
-                        }).then(resp => {
-                            return resp.json();
-                        }
-                    )};
+                        utils.getTranslationSegments([graphInfo], targetLanguage);
                     const ttsResponse = await utils.getTTS([graphInfo], targetLanguage);
                     const scData = {
                         "audio": {
@@ -173,7 +161,9 @@ app.post("/handler", async (req, res) => {
                     }
                 }
                 try {
-                    const ttsResponse = await utils.getTTS(segmentNames);
+                    // TODO: Language Translation if target language is not English
+
+                    const ttsResponse = await utils.getTTS(segmentNames, targetLanguage);
                     for (let offset=0, i = 0; i < data.length; i++) {
                         data[i]["offset"] = offset;
                         data[i]["duration"] = ttsResponse.durations[i];
