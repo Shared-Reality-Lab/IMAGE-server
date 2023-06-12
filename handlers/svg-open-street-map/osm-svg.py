@@ -85,7 +85,7 @@ def handle():
         LOGGER.debug("Sending response")
         return response
 
-    if "preprocessors" in contents:
+    else:
         preprocessor = contents['preprocessors']
 
         # Check if renderer is supported
@@ -147,7 +147,7 @@ def handle():
             LOGGER.debug("Sending response")
             return response
 
-        if "ca.mcgill.a11y.image.preprocessor.openstreetmap" in preprocessor:
+        else:
             LOGGER.debug("Map data found! Processing data!")
 
             svg_layers = []
@@ -325,7 +325,7 @@ def handle():
                 LOGGER.debug("Failed to generate a valid response")
                 LOGGER.error(e)
                 return jsonify("Failed to generate a valid response"), 500
-            LOGGER.debug("Sending response")
+            LOGGER.debug("Finalresponse")
             return response
 
 
