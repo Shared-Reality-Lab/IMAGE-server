@@ -101,6 +101,10 @@ app.post("/handler", async (req, res) => {
     places.sort((a: { dist: number }, b: { dist: number }) => a["dist"] - b["dist"]);
     places.splice(20);  // Cut off at 20 for now
 
+    // Getting language from request
+    const targetLanguage = req.body["language"] || "en";
+
+
     // Form TTS segments
     const ttsIntro = "From due north moving clockwise, there are the following";
     const segments = [ttsIntro];
@@ -108,9 +112,48 @@ app.post("/handler", async (req, res) => {
         segments.push(place["title"]);
     }
 
+    
+    let TTS_SERVICE:string;
+
+    if (targetLanguage == "en") {
+        // Will send segments to English TTS service
+        TTS_SERVICE = "http://espnet-tts/service/tts/segments";
+    } else if (targetLanguage == "fr") {
+        // Translate `segments` to French
+        const translatedSegments = await fetch("http://multilang-support/service/translate", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({
+                "segments": segments,
+                "src_lang": "en",
+                "tgt_lang": targetLanguage
+            })
+        }).then(resp => {
+            return resp.json();
+        });
+        console.log(`Translated segments to ${targetLanguage}`);
+
+        // Replace `segments` with translated segments
+        for(let i = 0; i < segments.length; i++) {
+            segments[i] = translatedSegments["translations"][i];
+        }
+
+        // Sending segments to French TTS service
+        TTS_SERVICE = "http://espnet-tts-fr/service/tts/segments";
+    } else {
+        console.error("Unsupported language");
+        res.status(500).json({
+            "Error": "Unsupported language",
+            "Attempted target": targetLanguage
+        });
+        return;
+    }
+    
     let ttsResponse;
     try {
-        ttsResponse = await fetch("http://espnet-tts/service/tts/segments", {
+        ttsResponse = await fetch(TTS_SERVICE, {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
