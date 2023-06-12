@@ -325,7 +325,7 @@ def handle():
                 LOGGER.debug("Failed to generate a valid response")
                 LOGGER.error(e)
                 return jsonify("Failed to generate a valid response"), 500
-            LOGGER.debug("Finalresponse")
+            LOGGER.debug("Sending final response")
             return response
 
 
