@@ -208,9 +208,6 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
                     const arg = oscMsg["args"] as osc.Argument[];
                     if (arg[0] === "done") {
                         const respArry: SoundSegments = [];
-                        // console.log(respArry);
-                        // console.log(respArry.length);
-                        // These logs provide no useful information
                         if ((arg.length) > 1 && ((arg.length - 1) % 3 == 0)) {
                             for (let i = 1; i < arg.length; i += 3) {
                                 respArry.push({
