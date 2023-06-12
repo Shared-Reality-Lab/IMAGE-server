@@ -273,7 +273,7 @@ app.post("/handler", async (req, res) => {
     // Send response
 
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
-    response["renderings"] = renderings;	
+    response["renderings"] = renderings;
     console.debug("Sending response");
     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", response)) {
         res.json(response);
