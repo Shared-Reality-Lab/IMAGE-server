@@ -83,11 +83,13 @@ app.post("/handler", async (req, res) => {
                 // We can work with this
                 console.log("Length: " + data.length);
                 try {
-                    const graphInfo:string = utils.getGraphInfo(highChartsData);
+                    let graphInfo:string = utils.getGraphInfo(highChartsData);
                     // Language Translation if target language is not English
                     if (targetLanguage !== "en") {
                         console.debug(`Translating to ${targetLanguage}...`);
-                        utils.getTranslationSegments([graphInfo], targetLanguage);
+                        const graphInfoTranslated = await utils.getTranslationSegments([graphInfo], targetLanguage);
+                        graphInfo = graphInfoTranslated[0];
+                    }
                     const ttsResponse = await utils.getTTS([graphInfo], targetLanguage);
                     const scData = {
                         "audio": {
