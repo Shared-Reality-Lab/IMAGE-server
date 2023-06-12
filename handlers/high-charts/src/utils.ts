@@ -29,8 +29,18 @@ export function generateEmptyResponse(requestUUID: string): { "request_uuid": st
     };
 }
 
-export async function getTTS(text: string[]): Promise<TTSResponse> {
-    return fetch("http://espnet-tts/service/tts/segments", {
+export async function getTTS(text: string[], targetLanguage: string): Promise<TTSResponse> {
+    let ttsUrl:string;
+    if (targetLanguage === "en") {
+        ttsUrl = "http://espnet-tts/service/tts/segments";
+    } else if (targetLanguage === "fr") {
+        ttsUrl = "http://espnet-tts-fr/service/tts/segments";
+    }
+    else {
+        console.error(`Unsupported language: ${targetLanguage}`);
+        throw new Error(`Unsupported language: ${targetLanguage}`);
+    }
+    return fetch(ttsUrl, {
         "method": "POST",
         "headers": {
             "Content-Type": "application/json",

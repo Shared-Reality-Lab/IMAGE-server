@@ -65,6 +65,11 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
+    // Get target language of request
+    const targetLanguage = req.body["language"];
+
+    
+    // Forming renderings
     const renderings: Record<string, unknown>[] = [];
     const highChartsData = req.body["highChartsData"];
 
@@ -78,8 +83,24 @@ app.post("/handler", async (req, res) => {
                 // We can work with this
                 console.log("Length: " + data.length);
                 try {
-                    const graphInfo = utils.getGraphInfo(highChartsData);
-                    const ttsResponse = await utils.getTTS([graphInfo]);
+                    const graphInfo:string = utils.getGraphInfo(highChartsData);
+                    // Language Translation if target language is not English
+                    if (targetLanguage !== "en") {
+                        console.debug(`Translating to ${targetLanguage}...`);
+                        const translationSegments = await fetch('http://multilang-support/service/translate', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                "language": targetLanguage,
+                                "segments": graphInfo
+                            })
+                        }).then(resp => {
+                            return resp.json();
+                        }
+                    )};
+                    const ttsResponse = await utils.getTTS([graphInfo], targetLanguage);
                     const scData = {
                         "audio": {
                             "offset": 0,
