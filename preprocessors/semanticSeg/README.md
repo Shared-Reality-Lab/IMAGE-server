@@ -1,3 +1,5 @@
+# [DEPRECATED]: This preprocessor is no longer used in production. IMAGE uses MMSegmentation preprocessor present [here](https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/mmsemseg)
+
 This preprocessor is used for segmenting an image. The entire code for this preprocessor has been refered from [CSAILVision Semantic Segmentation Repository](https://github.com/CSAILVision/semantic-segmentation-pytorch/blob/master/LICENSE). 
 
 

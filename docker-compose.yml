@@ -30,6 +30,16 @@ services:
                     devices:
                     - driver: nvidia
                       capabilities: ["gpu", "utility", "compute"]
+    multilang-support:
+        image: ghcr.io/shared-reality-lab/image-service-translation:unstable
+        environment:
+            - TORCH_DEVICE=cuda
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                    - driver: nvidia
+                      capabilities: ["gpu"]
     # Preprocessors
     autour-preprocessor:
         image: ghcr.io/shared-reality-lab/image-preprocessor-autour:unstable
@@ -83,6 +93,13 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
+    celebrity-detector:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-celebrity-detector:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 5
+            ca.mcgill.a11y.image.port: 5000
+        env_file:
+            - ./config/azure-api.env
     object-grouping:
         image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:unstable
         labels:
@@ -90,6 +107,8 @@ services:
             ca.mcgill.a11y.image.port: 5000
     openstreetmap:
         image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:unstable
+        env_file:
+            - ./config/maps.env
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
@@ -132,6 +151,17 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
+    object-depth-calculator:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-object-depth-calculator:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 4
+            ca.mcgill.a11y.image.port: 5000
+    nominatim-preprocessor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-nominatim:unstable
+        env_file:
+            - ./config/express-common.env
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 2
     # Handlers
     autour-handler:
         image: ghcr.io/shared-reality-lab/image-handler-autour:unstable
@@ -222,6 +252,18 @@ services:
         labels:
             ca.mcgill.a11y.image.handler: enable
             ca.mcgill.a11y.image.port: 5000
+    svg-depth-map:
+        image: ghcr.io/shared-reality-lab/image-handler-svg-depth-map:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+    photo-tactile-svg-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-photo-tactile-svg:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+    map-tactile-svg-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-map-tactile-svg:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
 volumes:
     sc-store:
     user-logs:
