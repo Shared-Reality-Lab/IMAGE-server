@@ -85,10 +85,10 @@ app.post("/handler", async (req, res) => {
                 try {
                     let graphInfo:string = utils.getGraphInfo(highChartsData);
                     // Language Translation if target language is not English
-                    if (targetLanguage !== "en") {
+                    if (targetLanguage != "en") {
                         console.debug(`Translating to ${targetLanguage}...`);
                         const graphInfoTranslated = await utils.getTranslationSegments([graphInfo], targetLanguage);
-                        graphInfo = graphInfoTranslated[0];
+                        graphInfo = graphInfoTranslated["translations"][0];
                     }
                     const ttsResponse = await utils.getTTS([graphInfo], targetLanguage);
                     const scData = {

@@ -21,6 +21,12 @@ export type TTSResponse = {
     audio: string;
 }
 
+export type TranslationResponse = {
+  translations: string[];
+  src_lang: string;
+  tgt_lang: string;
+};
+
 export function generateEmptyResponse(requestUUID: string): { "request_uuid": string, "timestamp": number, "renderings": Record<string, unknown>[] } {
     return {
         "request_uuid": requestUUID,
@@ -98,29 +104,23 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
     ]);
 }
 
-/**
- * Sending a list of segments to Translation Service
- */
-export async function getTranslationSegments(segments: string[], targetLanguage: string): Promise<string[]> {
-    const translationSegments = await fetch('http://multilang-support/service/translate', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            "language": targetLanguage,
-            "segments": segments
-        })
-    }).then(resp => {
-        return resp.json();
-    })
-
-    try {
-        return translationSegments["translation"];
-    } catch (e) {
-        console.error("Failed to translate to " + targetLanguage);
-        throw new Error("Error in translation service");
-    }
+export async function getTranslationSegments(
+  text: string[],
+  targetLang: string
+): Promise<TranslationResponse> {
+  /**
+   * Get translation from multilang-support service
+   * @param text: text to be translated
+   * @param targetLang: target language, in ISO 639-1 format
+   * @returns {Promise<TranslationResponse>}
+   */
+  return fetch("http://multilang-support/service/translate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ segments: text, tgt_lang: targetLang }),
+  }).then((resp) => resp.json() as Promise<TranslationResponse>);
 }            
 
 
