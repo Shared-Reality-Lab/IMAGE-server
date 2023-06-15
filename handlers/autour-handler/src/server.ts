@@ -102,7 +102,7 @@ app.post("/handler", async (req, res) => {
     places.splice(20);  // Cut off at 20 for now
 
     // Getting language from request
-    const targetLanguage = req.body["language"] || "en";
+    const targetLanguage = req.body["language"];
 
 
     // Form TTS segments
