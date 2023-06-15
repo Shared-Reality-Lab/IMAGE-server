@@ -256,7 +256,8 @@ def handle():
                 if ("points_of_interest" in d or
                         len(d["points_of_interest"]) != 0):
                     for points_of_interest in d["points_of_interest"]:
-                        if points_of_interest["cat"] != "intersection":
+                        if ("cat" in points_of_interest
+                                or "intersection" in points_of_interest):
                             latitude = (
                                 (points_of_interest["lat"] - lat_min)
                                 * scaled_latitude)
@@ -271,13 +272,14 @@ def handle():
                                     fill='red',
                                     stroke_width=1.5,
                                     stroke='red'))
-                            all_svg.append(
-                                draw.Text(
-                                    points_of_interest["cat"],
-                                    16,
-                                    longitude,
-                                    latitude,
-                                    fill='black'))
+                            if "cat" in points_of_interest:
+                                all_svg.append(
+                                    draw.Text(
+                                        points_of_interest["cat"],
+                                        16,
+                                        longitude,
+                                        latitude,
+                                        fill='black'))
 
                 svg_layers.append(
                     {"label": "AllLayers",
