@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from flask import Flask, request, jsonify
-from .utils import translate_helsinki, LOGGER
+from .utils import LOGGER, Translator, SUPPORTED_LANGS
 import json
 import jsonschema
 
@@ -66,14 +66,16 @@ def translate_request():
 
     # Handles source/target language
     if target_lang == source_lang:
-        LOGGER.error("Source and target languages are the same")
+        LOGGER.error(
+            f'Source and target languages are the same: "{source_lang}"')
         return jsonify("Source and target languages are the same"), 204
-    if target_lang not in ["fr", "en"]:
-        LOGGER.error("Target language is not yet implemented")
+    if target_lang not in SUPPORTED_LANGS:
+        LOGGER.error(f'Target "{target_lang}" is not yet implemented')
         return jsonify("Target language not implemented"), 501
     if source_lang == 'en' and target_lang == 'fr':
         # Translate, from list to list
-        translation, elapsed_time = translate_helsinki(segments)
+        translation, elapsed_time = \
+            Translator(source_lang, target_lang).translate(segments)
     else:
         LOGGER.error("Service Error, unable to handle")
         LOGGER.debug(f"Attempted request: '{source_lang}' -> '{target_lang}'")
