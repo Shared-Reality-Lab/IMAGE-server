@@ -103,6 +103,7 @@ app.post("/handler", async (req, res) => {
 
     // Getting language from request
     const targetLanguage = req.body["language"];
+    console.debug(`Target language: "${targetLanguage}"`)
 
     // Form TTS segments
     const ttsIntro = "From due north moving clockwise, there are the following";
@@ -111,9 +112,8 @@ app.post("/handler", async (req, res) => {
         segments.push(place["title"]);
     }
 
-    
     let TTS_SERVICE:string;
-
+    let description = "Points of interest around the location in the map.";
     if (targetLanguage == "en") {
         // Will send segments to English TTS service
         TTS_SERVICE = "http://espnet-tts/service/tts/segments";
@@ -129,8 +129,9 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    // Translate `segments` to target language if not English
+    // Translate `segments` & description to target language if not English
     if (targetLanguage != "en") {
+        console.log(`Translating maps data to ${targetLanguage}`);
         const translatedSegments:string[] = await fetch("http://multilang-support/service/translate", {
             "method": "POST",
             "headers": {
@@ -145,6 +146,23 @@ app.post("/handler", async (req, res) => {
             return resp.json();
         }).then(json => {
             return json["translations"];
+        });
+        
+        // Translate description
+        description = await fetch("http://multilang-support/service/translate", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({
+                "segments": [description],
+                "src_lang": "en",
+                "tgt_lang": targetLanguage
+            })
+        }).then(resp => {
+            return resp.json();
+        }).then(json => {
+            return json["translations"][0];
         });
 
         console.log(`Translated segments to ${targetLanguage}`);
@@ -269,7 +287,7 @@ app.post("/handler", async (req, res) => {
         const dataURL = "data:audio/mp3;base64," + buffer.toString("base64");
         renderings.push({
             "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-            "description": "Points of interest around the location in the map.",
+            "description": description,
             "data": {
                 "audio": dataURL
             },
