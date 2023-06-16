@@ -178,8 +178,10 @@ app.post("/handler", async (req, res) => {
                 "Attempted target": targetLanguage
             });
             return;
+        }
     }
     
+    // Forming Response
     let ttsResponse;
     try {
         ttsResponse = await fetch(TTS_SERVICE, {
