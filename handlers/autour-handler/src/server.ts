@@ -121,7 +121,7 @@ app.post("/handler", async (req, res) => {
         // Sending segments to French TTS service
         TTS_SERVICE = "http://espnet-tts-fr/service/tts/segments";
     } else {
-        console.error("Unsupported language");
+        console.error("Unsupported TTS language");
         res.status(500).json({
             "Error": "Unsupported language",
             "Attempted target": targetLanguage
@@ -131,46 +131,53 @@ app.post("/handler", async (req, res) => {
 
     // Translate `segments` & description to target language if not English
     if (targetLanguage != "en") {
-        console.log(`Translating maps data to ${targetLanguage}`);
-        const translatedSegments:string[] = await fetch("http://multilang-support/service/translate", {
-            "method": "POST",
-            "headers": {
-                "Content-Type": "application/json"
-            },
-            "body": JSON.stringify({
-                "segments": segments,
-                "src_lang": "en",
-                "tgt_lang": targetLanguage
-            })
-        }).then(resp => {
-            return resp.json();
-        }).then(json => {
-            return json["translations"];
-        });
-        
-        // Translate description
-        description = await fetch("http://multilang-support/service/translate", {
-            "method": "POST",
-            "headers": {
-                "Content-Type": "application/json"
-            },
-            "body": JSON.stringify({
-                "segments": [description],
-                "src_lang": "en",
-                "tgt_lang": targetLanguage
-            })
-        }).then(resp => {
-            return resp.json();
-        }).then(json => {
-            return json["translations"][0];
-        });
-
-        console.log(`Translated segments to ${targetLanguage}`);
-
-        // Replace `segments` with translated segments
-        for(let i = 0; i < segments.length; i++) {
-            segments[i] = translatedSegments[i];
-        }
+        try {
+                console.log(`Translating maps data to ${targetLanguage}`);
+                const translatedSegments:string[] = await fetch("http://multilang-support/service/translate", {
+                    "method": "POST",
+                    "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": JSON.stringify({
+                    "segments": segments,
+                    "src_lang": "en",
+                    "tgt_lang": targetLanguage
+                })
+            }).then(resp => {
+                return resp.json();
+            }).then(json => {
+                return json["translations"];
+            });
+            
+            // Translate description
+            description = await fetch("http://multilang-support/service/translate", {
+                "method": "POST",
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": JSON.stringify({
+                    "segments": [description],
+                    "src_lang": "en",
+                    "tgt_lang": targetLanguage
+                })
+            }).then(resp => {
+                return resp.json();
+            }).then(json => {
+                return json["translations"][0];
+            });
+            
+            // Replace `segments` with translated segments
+            for(let i = 0; i < segments.length; i++) {
+                segments[i] = translatedSegments[i];
+            }
+        } catch (e) {
+            console.error(e);
+            console.debug(`Cannot translate to ${targetLanguage}`);
+            res.status(500).json({
+                "Error": "Cannot translate to target language",
+                "Attempted target": targetLanguage
+            });
+            return;
     }
     
     let ttsResponse;
