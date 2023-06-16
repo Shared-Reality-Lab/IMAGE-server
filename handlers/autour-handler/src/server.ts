@@ -104,7 +104,6 @@ app.post("/handler", async (req, res) => {
     // Getting language from request
     const targetLanguage = req.body["language"];
 
-
     // Form TTS segments
     const ttsIntro = "From due north moving clockwise, there are the following";
     const segments = [ttsIntro];
@@ -119,8 +118,20 @@ app.post("/handler", async (req, res) => {
         // Will send segments to English TTS service
         TTS_SERVICE = "http://espnet-tts/service/tts/segments";
     } else if (targetLanguage == "fr") {
-        // Translate `segments` to French
-        const translatedSegments = await fetch("http://multilang-support/service/translate", {
+        // Sending segments to French TTS service
+        TTS_SERVICE = "http://espnet-tts-fr/service/tts/segments";
+    } else {
+        console.error("Unsupported language");
+        res.status(500).json({
+            "Error": "Unsupported language",
+            "Attempted target": targetLanguage
+        });
+        return;
+    }
+
+    // Translate `segments` to target language if not English
+    if (targetLanguage != "en") {
+        const translatedSegments:string[] = await fetch("http://multilang-support/service/translate", {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
@@ -132,23 +143,16 @@ app.post("/handler", async (req, res) => {
             })
         }).then(resp => {
             return resp.json();
+        }).then(json => {
+            return json["translations"];
         });
+
         console.log(`Translated segments to ${targetLanguage}`);
 
         // Replace `segments` with translated segments
         for(let i = 0; i < segments.length; i++) {
-            segments[i] = translatedSegments["translations"][i];
+            segments[i] = translatedSegments[i];
         }
-
-        // Sending segments to French TTS service
-        TTS_SERVICE = "http://espnet-tts-fr/service/tts/segments";
-    } else {
-        console.error("Unsupported language");
-        res.status(500).json({
-            "Error": "Unsupported language",
-            "Attempted target": targetLanguage
-        });
-        return;
     }
     
     let ttsResponse;
