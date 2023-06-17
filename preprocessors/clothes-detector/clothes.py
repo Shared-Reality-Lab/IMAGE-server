@@ -24,16 +24,33 @@ import cv2
 import numpy as np
 from PIL import Image
 import torch
-import webcolors
+from webcolors import (
+    CSS3_HEX_TO_NAMES,
+    hex_to_rgb,
+)
+import io
+from scipy.spatial import KDTree
 
-from colorthiefpy import colorthief as c
-from yolo.utils.utils import load_classes
+from colorthief import ColorThief
+from yolo.utils.utils import *
 from predictors.YOLOv3 import YOLOv3Predictor
 
 app = Flask(__name__)
 
-# extract the required results from the API returned values
 
+# code referred from https://medium.com/codex/rgb-to-color-names-in-python-the-robust-way-ec4a9d97a01f
+def convert_rgb_to_names(rgb_tuple):
+    # a dictionary of all the hex and their respective names in css3
+    css3_db = CSS3_HEX_TO_NAMES
+    names = []
+    rgb_values = []
+    for color_hex, color_name in css3_db.items():
+        names.append(color_name)
+        rgb_values.append(hex_to_rgb(color_hex))
+    
+    kdt_db = KDTree(rgb_values)
+    distance, index = kdt_db.query(rgb_tuple)
+    return names[index]
 
 def get_clothes(img):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -58,9 +75,12 @@ def get_clothes(img):
         x1 = 0 if x1 < 0 else x1
         img_crop = img[y1:y2][x1:x2]
         try:
-            color_thief = c.ColorThief(Image.fromarray(img_crop))
+            image = Image.fromarray(img_crop)
+            byte_object = io.BytesIO()
+            image.save(byte_object, 'JPEG')
+            color_thief = ColorThief(byte_object)
             dominant_color = color_thief.get_color(quality=1)
-            closest_name = webcolors.rgb_to_name(dominant_color)
+            closest_name = convert_rgb_to_names(dominant_color)
         except ValueError:
             closest_name = None
         print("Item: %s, Conf: %.5f" % (classes[int(cls_pred)], cls_conf))
