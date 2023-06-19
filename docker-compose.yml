@@ -127,6 +127,11 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 5
             ca.mcgill.a11y.image.port: 5000
+    emotion-recognition:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-emotion-recognition:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 5
+            ca.mcgill.a11y.image.port: 5000
     semantic-segmentation:
         image: ghcr.io/shared-reality-lab/image-preprocessor-mmsemantic-segmentation:unstable
         labels:

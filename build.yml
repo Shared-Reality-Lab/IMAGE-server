@@ -76,6 +76,11 @@ services:
             context: .
             dockerfile: ./preprocessors/graphic-tagger/Dockerfile
         image: "graphic-tagger:latest"
+    emotion-recognition:
+        build:
+            context: .
+            dockerfile: ./preprocessors/emotion-recognition/Dockerfile
+        image: "emotion-recognition:latest"
     celebrity-detector:
         build:
             context: .
