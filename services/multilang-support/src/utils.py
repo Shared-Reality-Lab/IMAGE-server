@@ -16,7 +16,6 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s]: %(message)s",
     datefmt="%y-%m-%d %H:%M %Z",
-    terminator="\r",
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -96,6 +95,8 @@ class Translator:
         @return: The tokenized query as a torch.Tensor.
         """
         # return TOKENIZER.encode(query).to(DEVICE)
+        print('(1) Tokenizing input segment\r', end="")
+
         return self.TOKENIZER(query, return_tensors="pt")\
             .to(self.DEVICE).input_ids
 
@@ -107,6 +108,8 @@ class Translator:
         input_ids: The decoded tensor (type<torch.Tensor>) to be translated.
         """
         # TODO: Add parameters to control/optimize the translation.
+        print("(2) Generating new tensor.  \r", end="")
+
         return self.MODEL.generate(input_ids, max_time=MAX_TIME)
 
     @log
@@ -116,6 +119,7 @@ class Translator:
         @param translated_tensor: <class 'torch.Tensor'>
         @return: <class 'str'>
         """
+        print("(3) Decoding translated tensor.\r")
         translated_result = self.TOKENIZER.decode(
             translated_tensor[0],
             skip_special_tokens=True,
@@ -138,22 +142,18 @@ class Translator:
         result = []
         for input_query in segment:
             # 1. Input query -> tensor
-            LOGGER.debug('(1) Tokenizing input segment')
             input_tensor, _time_inTensor = \
                 self.tokenize_query_to_tensor(input_query)
 
             # 2. Input tensor -> output tensor
-            LOGGER.debug("(2) Generating new tensor.")
             output_tensor, _time_outTensor = self.generate_output_tensor(
                 input_tensor)
 
             # 3. Output tensor -> query
-            LOGGER.debug("(3) Decoding translated tensor.")
             output_query, _time_outQuery = self.decode_generated_tensor(
                 output_tensor)
 
             # 4. Translated query -> result
-            LOGGER.debug('(4) Appending to result.')
             LOGGER.info(f'Translated: "{input_query}" to "{output_query}"')
             result.append(output_query)
 
