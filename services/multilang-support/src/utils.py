@@ -16,6 +16,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s]: %(message)s",
     datefmt="%y-%m-%d %H:%M %Z",
+    terminator="\r",
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -64,7 +65,8 @@ class Translator:
             LOGGER.info(f"Translator({src_lang}, {tgt_lang}) instantiated!")
             # set device
             self.set_model_device()
-            LOGGER.info(f"Model running on {self.DEVICE_NAME}")
+            LOGGER.info(
+                f"Model {self.CHECKPOINT} running on {self.DEVICE_NAME}")
         except Exception as e:
             LOGGER.error(e)
             LOGGER.info(
@@ -85,7 +87,6 @@ class Translator:
                 if device_id >= num_gpus:
                     LOGGER.warning("No GPU available, using CPU.")
                     break
-        LOGGER.info(f"Model {self.CHECKPOINT} running on {self.DEVICE_NAME}")
 
     @log
     def tokenize_query_to_tensor(self, query: str):
@@ -137,7 +138,7 @@ class Translator:
         result = []
         for input_query in segment:
             # 1. Input query -> tensor
-            LOGGER.debug(f'(1) Tokenizing input segment "{input_query}"')
+            LOGGER.debug('(1) Tokenizing input segment')
             input_tensor, _time_inTensor = \
                 self.tokenize_query_to_tensor(input_query)
 
@@ -152,8 +153,8 @@ class Translator:
                 output_tensor)
 
             # 4. Translated query -> result
-            LOGGER.debug(f'(4) Appending "{output_query}" to result.')
-            LOGGER.info(f'Translated: "{output_query}"')
+            LOGGER.debug('(4) Appending to result.')
+            LOGGER.info(f'Translated: "{input_query}" to "{output_query}"')
             result.append(output_query)
 
         return result

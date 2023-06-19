@@ -65,19 +65,20 @@ def translate_request():
     target_lang = content["tgt_lang"]
 
     # Handles source/target language
-    if target_lang == source_lang:
-        LOGGER.error(
-            f'Source and target languages are the same: "{source_lang}"')
-        return jsonify("Source and target languages are the same"), 204
-    if target_lang not in SUPPORTED_LANGS:
-        LOGGER.error(f'Target "{target_lang}" is not yet implemented')
-        return jsonify("Target language not implemented"), 501
-    if source_lang == 'en' and target_lang == 'fr':
-        # Translate, from list to list
-        translation, elapsed_time = \
-            Translator(source_lang, target_lang).translate(segments)
-    else:
-        LOGGER.error("Service Error, unable to handle")
+    try:
+        if target_lang == source_lang:
+            LOGGER.error(
+                f'Source and target languages are the same: "{source_lang}"')
+            return jsonify("Source and target languages are the same"), 204
+        elif target_lang not in SUPPORTED_LANGS:
+            LOGGER.error(f'Target "{target_lang}" is not yet implemented')
+            return jsonify("Target language not implemented"), 501
+        else:
+            # Translate the segments using a corresponding translator object
+            translation, elapsed_time = \
+                Translator(source_lang, target_lang).translate(segments)
+    except Exception as e:
+        LOGGER.error("Service Error: " + e.message)
         LOGGER.debug(f"Attempted request: '{source_lang}' -> '{target_lang}'")
         LOGGER.debug(f"Attempted segments: {segments}")
         return jsonify("Service Error"), 500
