@@ -101,6 +101,10 @@ app.post("/handler", async (req, res) => {
     places.sort((a: { dist: number }, b: { dist: number }) => a["dist"] - b["dist"]);
     places.splice(20);  // Cut off at 20 for now
 
+    // Getting language from request
+    const targetLanguage = req.body["language"];
+    console.debug(`Target language: "${targetLanguage}"`)
+
     // Form TTS segments
     const ttsIntro = "From due north moving clockwise, there are the following";
     const segments = [ttsIntro];
@@ -108,9 +112,79 @@ app.post("/handler", async (req, res) => {
         segments.push(place["title"]);
     }
 
+    let TTS_SERVICE:string;
+    let description = "Points of interest around the location in the map.";
+    if (targetLanguage == "en") {
+        // Will send segments to English TTS service
+        TTS_SERVICE = "http://espnet-tts/service/tts/segments";
+    } else if (targetLanguage == "fr") {
+        // Sending segments to French TTS service
+        TTS_SERVICE = "http://espnet-tts-fr/service/tts/segments";
+    } else {
+        console.error("Unsupported TTS language");
+        res.status(500).json({
+            "Error": "Unsupported language",
+            "Attempted target": targetLanguage
+        });
+        return;
+    }
+
+    // Translate `segments` & description to target language if not English
+    if (targetLanguage != "en") {
+        try {
+                console.log(`Translating maps data to ${targetLanguage}`);
+                const translatedSegments:string[] = await fetch("http://multilang-support/service/translate", {
+                    "method": "POST",
+                    "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": JSON.stringify({
+                    "segments": segments,
+                    "src_lang": "en",
+                    "tgt_lang": targetLanguage
+                })
+            }).then(resp => {
+                return resp.json();
+            }).then(json => {
+                return json["translations"];
+            });
+            
+            // Translate description
+            description = await fetch("http://multilang-support/service/translate", {
+                "method": "POST",
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": JSON.stringify({
+                    "segments": [description],
+                    "src_lang": "en",
+                    "tgt_lang": targetLanguage
+                })
+            }).then(resp => {
+                return resp.json();
+            }).then(json => {
+                return json["translations"][0];
+            });
+            
+            // Replace `segments` with translated segments
+            for(let i = 0; i < segments.length; i++) {
+                segments[i] = translatedSegments[i];
+            }
+        } catch (e) {
+            console.error(e);
+            console.debug(`Cannot translate to ${targetLanguage}`);
+            res.status(500).json({
+                "Error": "Cannot translate to target language",
+                "Attempted target": targetLanguage
+            });
+            return;
+        }
+    }
+    
+    // Forming Response
     let ttsResponse;
     try {
-        ttsResponse = await fetch("http://espnet-tts/service/tts/segments", {
+        ttsResponse = await fetch(TTS_SERVICE, {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
@@ -222,7 +296,7 @@ app.post("/handler", async (req, res) => {
         const dataURL = "data:audio/mp3;base64," + buffer.toString("base64");
         renderings.push({
             "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-            "description": "Points of interest around the location in the map.",
+            "description": description,
             "data": {
                 "audio": dataURL
             },
