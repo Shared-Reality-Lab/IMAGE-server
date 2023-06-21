@@ -21,6 +21,12 @@ export type TTSResponse = {
     audio: string;
 }
 
+export type TranslationResponse = {
+  translations: string[];
+  src_lang: string;
+  tgt_lang: string;
+};
+
 export function generateEmptyResponse(requestUUID: string): { "request_uuid": string, "timestamp": number, "renderings": Record<string, unknown>[] } {
     return {
         "request_uuid": requestUUID,
@@ -29,8 +35,18 @@ export function generateEmptyResponse(requestUUID: string): { "request_uuid": st
     };
 }
 
-export async function getTTS(text: string[]): Promise<TTSResponse> {
-    return fetch("http://espnet-tts/service/tts/segments", {
+export async function getTTS(text: string[], targetLanguage: string): Promise<TTSResponse> {
+    let ttsUrl:string;
+    if (targetLanguage === "en") {
+        ttsUrl = "http://espnet-tts/service/tts/segments";
+    } else if (targetLanguage === "fr") {
+        ttsUrl = "http://espnet-tts-fr/service/tts/segments";
+    }
+    else {
+        console.error(`Unsupported language: ${targetLanguage}`);
+        throw new Error(`Unsupported language: ${targetLanguage}`);
+    }
+    return fetch(ttsUrl, {
         "method": "POST",
         "headers": {
             "Content-Type": "application/json",
@@ -87,6 +103,26 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
         })
     ]);
 }
+
+export async function getTranslationSegments(
+  text: string[],
+  targetLang: string
+): Promise<TranslationResponse> {
+  /**
+   * Get translation from multilang-support service
+   * @param text: text to be translated
+   * @param targetLang: target language, in ISO 639-1 format
+   * @returns {Promise<TranslationResponse>}
+   */
+  return fetch("http://multilang-support/service/translate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ segments: text, tgt_lang: targetLang }),
+  }).then((resp) => resp.json() as Promise<TranslationResponse>);
+}            
+
 
 /**
  * The function will return the string representing the graph title and axes information
