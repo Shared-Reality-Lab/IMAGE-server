@@ -7,9 +7,9 @@ import time
 import logging
 
 # Constants
-MAX_TIME = 0.5  # [seconds], used for maximum time allowed
-# for translation generation in `generate_output_tensor()`
-SUPPORTED_LANGS = ["fr", "de", "es", "it", "nl", "ru", "zh", "vi"]
+# parameters for translation generation in `generate_output_tensor()`
+MAX_TIME = 0.5  # [seconds]
+SUPPORTED_LANGS = ["fr"]  # list of supported languages in ISO 639-1 code
 
 # Configure the logging settings
 logging.basicConfig(
@@ -33,7 +33,6 @@ def log(func):
         end_time = time.time()
         elapsed_time = end_time - start_time
         elapsed_time = int(elapsed_time*1000)  # convert [s] to [ms]
-        LOGGER.debug(f"\'{func.__name__}\' takes {int(elapsed_time)} ms")
         return function_output, elapsed_time
     return wrapper
 
@@ -95,10 +94,9 @@ class Translator:
         @return: The tokenized query as a torch.Tensor.
         """
         # return TOKENIZER.encode(query).to(DEVICE)
-        print('(1) Tokenizing input segment\r', end="")
-
+        LOGGER.debug('(1) Tokenizing input.')
         return self.TOKENIZER(query, return_tensors="pt")\
-            .to(self.DEVICE).input_ids
+            .to(self.DEVICE)["input_ids"]
 
     @log
     def generate_output_tensor(self, input_ids: torch.Tensor) -> torch.Tensor:
@@ -108,9 +106,13 @@ class Translator:
         input_ids: The decoded tensor (type<torch.Tensor>) to be translated.
         """
         # TODO: Add parameters to control/optimize the translation.
-        print("(2) Generating new tensor.  \r", end="")
-
-        return self.MODEL.generate(input_ids, max_time=MAX_TIME)
+        LOGGER.debug("(2) Generating tensor.")
+        return self.MODEL.generate(input_ids,
+                                   max_time=1,
+                                   num_beams=4,
+                                   use_cache=True,
+                                   temperature=0.7,
+                                   ).to(self.DEVICE)
 
     @log
     def decode_generated_tensor(self, translated_tensor: torch.Tensor) -> str:
@@ -119,7 +121,7 @@ class Translator:
         @param translated_tensor: <class 'torch.Tensor'>
         @return: <class 'str'>
         """
-        print("(3) Decoding translated tensor.\r")
+        LOGGER.debug("(3) Decoding tensor.")
         translated_result = self.TOKENIZER.decode(
             translated_tensor[0],
             skip_special_tokens=True,
@@ -154,7 +156,7 @@ class Translator:
                 output_tensor)
 
             # 4. Translated query -> result
-            LOGGER.info(f'Translated: "{input_query}" to "{output_query}"')
+            LOGGER.info(f'Translated: "{input_query}" --> "{output_query}"')
             result.append(output_query)
 
         return result
@@ -181,4 +183,4 @@ def instantiate():
 
 if "utils" in __name__ or __name__ == "__main__":
     instantiate()
-    LOGGER.info('Service is instantiated and ready.')
+    LOGGER.info('Translation service is instantiated and ready!')
