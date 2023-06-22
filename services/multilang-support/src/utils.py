@@ -48,6 +48,8 @@ class Translator:
     ! Public models: https://github.com/Helsinki-NLP/Opus-MT#public-mt-models
     ! Models license: CC-BY 4.0 License
     """
+    # Static variable to keep track of all Translator instances
+    Translators = []  # list of translator instances
 
     def __init__(self, src_lang: str, tgt_lang: str) -> None:
         """
@@ -65,6 +67,7 @@ class Translator:
             self.set_model_device()
             LOGGER.info(
                 f"Model {self.CHECKPOINT} running on {self.DEVICE_NAME}")
+            Translator.Translators.append(self)
         except Exception as e:
             LOGGER.error(e)
             LOGGER.info(
@@ -167,7 +170,9 @@ class Translator:
         """
         Get the Translator object
         """
-        return Translator(src_lang, tgt_lang)
+        for tr in Translator.Translators:
+            if tr.CHECKPOINT == f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}":
+                return tr
 
 
 @log

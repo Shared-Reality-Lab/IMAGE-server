@@ -75,8 +75,9 @@ def translate_request():
             return jsonify("Target language not implemented"), 501
         else:
             # Translate the segments using a corresponding translator object
-            translation, elapsed_time = \
-                Translator(source_lang, target_lang).translate(segments)
+            translation, elapsed_time = Translator\
+                .get_translator(source_lang, target_lang)\
+                .translate(segments)
     except Exception as e:
         LOGGER.error("Service Error: " + e.message)
         LOGGER.debug(f"Attempted request: '{source_lang}' -> '{target_lang}'")
