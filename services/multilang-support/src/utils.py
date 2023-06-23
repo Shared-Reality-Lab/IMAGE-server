@@ -128,6 +128,7 @@ class Translator:
         )
         return translated_result
 
+    @log
     def translate(self, segment: list) -> list:
         """
         Translate the segment - (a list of strings)
