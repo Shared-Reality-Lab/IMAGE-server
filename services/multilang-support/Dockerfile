@@ -20,4 +20,4 @@ COPY services/multilang-support/src/*.py /app/src/
 
 EXPOSE 80
 ENV FLASK_APP=src/app.py
-CMD [ "gunicorn", "src.translate:app", "--bind", "0.0.0.0:80", "--log-level=info", "--timeout=120", "--workers=2"]
+CMD [ "gunicorn", "src.translate:app", "--bind", "0.0.0.0:80", "--log-level=info", "--timeout=120"]

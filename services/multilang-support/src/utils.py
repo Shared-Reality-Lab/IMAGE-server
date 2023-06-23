@@ -191,4 +191,4 @@ if "utils" in __name__ or __name__ == "__main__":
     # Dummy translation to test the service
     for lang in SUPPORTED_LANGS:
         LOGGER.info(Translator.get_translator("en", lang)
-                    .translate([ready_message]).pop())
+                    .translate([ready_message])[0].pop())
