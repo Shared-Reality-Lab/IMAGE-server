@@ -6,10 +6,8 @@ import torch
 import time
 import logging
 
-# Constants
-# parameters for translation generation in `generate_output_tensor()`
-MAX_TIME = 0.5  # [seconds]
-SUPPORTED_LANGS = ["fr"]  # list of supported languages in ISO 639-1 code
+# list of supported languages in ISO 639-1 code
+SUPPORTED_LANGS = ["fr", "es", "de"]
 
 # Configure the logging settings
 logging.basicConfig(
@@ -89,7 +87,6 @@ class Translator:
                     LOGGER.warning("No GPU available, using CPU.")
                     break
 
-    @log
     def tokenize_query_to_tensor(self, query: str):
         """
         STEP 1: Tokenize the query using the tokenizer.
@@ -101,7 +98,6 @@ class Translator:
         return self.TOKENIZER(query, return_tensors="pt")\
             .to(self.DEVICE)["input_ids"]
 
-    @log
     def generate_output_tensor(self, input_ids: torch.Tensor) -> torch.Tensor:
         """
         STEP 2: Translate the input_ids tensor to an output query.
@@ -112,12 +108,12 @@ class Translator:
         LOGGER.debug("(2) Generating tensor.")
         return self.MODEL.generate(input_ids,
                                    max_time=1,
+                                   max_length=256,
                                    num_beams=4,
                                    use_cache=True,
                                    temperature=0.7,
                                    ).to(self.DEVICE)
 
-    @log
     def decode_generated_tensor(self, translated_tensor: torch.Tensor) -> str:
         """
         STEP 3: Decode the translated tensor to a string.
@@ -132,7 +128,6 @@ class Translator:
         )
         return translated_result
 
-    @log
     def translate(self, segment: list) -> list:
         """
         Translate the segment - (a list of strings)
@@ -147,16 +142,13 @@ class Translator:
         result = []
         for input_query in segment:
             # 1. Input query -> tensor
-            input_tensor, _time_inTensor = \
-                self.tokenize_query_to_tensor(input_query)
+            input_tensor = self.tokenize_query_to_tensor(input_query)
 
             # 2. Input tensor -> output tensor
-            output_tensor, _time_outTensor = self.generate_output_tensor(
-                input_tensor)
+            output_tensor = self.generate_output_tensor(input_tensor)
 
             # 3. Output tensor -> query
-            output_query, _time_outQuery = self.decode_generated_tensor(
-                output_tensor)
+            output_query = self.decode_generated_tensor(output_tensor)
 
             # 4. Translated query -> result
             LOGGER.info(f'Translated: "{input_query}" --> "{output_query}"')
@@ -164,15 +156,20 @@ class Translator:
 
         return result
 
-    @log
     @staticmethod
     def get_translator(src_lang: str, tgt_lang: str):
         """
         Get the Translator object
         """
-        for tr in Translator.Translators:
-            if tr.CHECKPOINT == f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}":
-                return tr
+        try:
+            for tr in Translator.Translators:
+                target_tr = f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}"
+                if tr.CHECKPOINT == target_tr:
+                    return tr
+        except Exception as e:
+            LOGGER.error(e)
+            LOGGER.debug(f"Failed to get Translator({src_lang}, {tgt_lang})!")
+            return None
 
 
 @log
@@ -188,4 +185,9 @@ def instantiate():
 
 if "utils" in __name__ or __name__ == "__main__":
     instantiate()
-    LOGGER.info('Translation service is instantiated and ready!')
+    ready_message = "Translation service is instantiated and ready!"
+    LOGGER.info(ready_message)
+    # Dummy translation to test the service
+    for lang in SUPPORTED_LANGS:
+        LOGGER.info(Translator.get_translator("en", lang)
+                    .translate([ready_message]).pop())
