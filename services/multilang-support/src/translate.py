@@ -45,17 +45,16 @@ def translate_request():
     """
     # Get request data
     content = request.get_json()
-    # print(content)
 
     # Validate incoming request
     if not validate_request(request=content):
         return jsonify("Invalid Request JSON format"), 400
 
-    LOGGER.debug("- Request validated! -")
+    LOGGER.debug("-- Request received & validated! --")
 
     # Get text to translate
     segments: list = content["segments"]
-    # source lang is optional, hence the try/except
+    # source lang is optional, hence try/except
     try:
         source_lang = content["src_lang"]
     except KeyError:
