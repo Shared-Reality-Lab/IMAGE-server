@@ -20,21 +20,6 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
 
-# A logging wrapper function/decorator
-def log(func):
-    """
-    Timing & logging decorator for functions.
-    """
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        function_output = func(*args, **kwargs)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        elapsed_time = int(elapsed_time*1000)  # convert [s] to [ms]
-        return function_output, elapsed_time
-    return wrapper
-
-
 class Translator:
     """
     A Translator class that handles the translation process, containing:
@@ -56,20 +41,33 @@ class Translator:
         - src_lang: the source language in ISO 639-1 code
         - tgt_lang: the target language in ISO 639-1 code
         """
-        self.CHECKPOINT = f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}"
+        # Getting model checkpoint from downloaded folder (see Dockerfile)
+        self.CHECKPOINT = f"/app/models/opus-mt-{src_lang}-{tgt_lang}"
+        self.NAME = f"Translator({src_lang}, {tgt_lang})"
         try:
-            self.TOKENIZER = AutoTokenizer.from_pretrained(self.CHECKPOINT)
-            self.MODEL = AutoModelForSeq2SeqLM.from_pretrained(self.CHECKPOINT)
-            LOGGER.info(f"Translator({src_lang}, {tgt_lang}) instantiated!")
-            # set device
+            try:
+                self.TOKENIZER = AutoTokenizer.from_pretrained(self.CHECKPOINT)
+                self.MODEL = AutoModelForSeq2SeqLM.from_pretrained(
+                    self.CHECKPOINT)
+            except Exception:
+                LOGGER.warning(
+                    f"Cannot find {self.CHECKPOINT}, is it pre-downloaded?")
+                LOGGER.info("Downloading model from HuggingFace model hub...")
+                self.TOKENIZER = AutoTokenizer.from_pretrained(
+                    f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}")
+                self.MODEL = AutoModelForSeq2SeqLM.from_pretrained(
+                    f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}")
+
+            LOGGER.info(f"{self.NAME} instantiated!")
+            # set GPU/CPU device
             self.set_model_device()
             LOGGER.info(
-                f"Model {self.CHECKPOINT} running on {self.DEVICE_NAME}")
+                f"{self.NAME} running on {self.DEVICE_NAME}")
             Translator.Translators.append(self)
         except Exception as e:
             LOGGER.error(e)
             LOGGER.info(
-                f"Failed to instantiate Translator({src_lang}, {tgt_lang})!")
+                f"Failed to instantiate {self.NAME}!")
             LOGGER.debug(f"Failed to start model: {self.CHECKPOINT}")
 
     def set_model_device(self):
@@ -128,19 +126,18 @@ class Translator:
         )
         return translated_result
 
-    @log
-    def translate(self, segment: list) -> list:
+    def translate(self, segment: list):
         """
         Translate the segment - (a list of strings)
         Steps:
         @param segment: The segment (type<list>) to be translated.
-        1. Tokenize the segment to a tensor.
-        2. Pass tokenized tensor through the model.
-        3. Decode the translated tensor to a string.
-        4. Append the translated string to a list.
+        @return:
+        - `translations`: list of translated segments (type<list>)
+        - `translate_time`: time taken in ms (type<int>)
         """
         # output list
-        result = []
+        translations = []
+        start_translate = time.time()
         for input_query in segment:
             # 1. Input query -> tensor
             input_tensor = self.tokenize_query_to_tensor(input_query)
@@ -153,27 +150,27 @@ class Translator:
 
             # 4. Translated query -> result
             LOGGER.info(f'Translated: "{input_query}" --> "{output_query}"')
-            result.append(output_query)
-
-        return result
+            translations.append(output_query)
+        finish_translate = time.time()
+        translate_time = int((finish_translate - start_translate)*1000)
+        return [translations, translate_time]
 
     @staticmethod
     def get_translator(src_lang: str, tgt_lang: str):
         """
         Get the Translator object
         """
+        target_Translator_name = f"Translator({src_lang}, {tgt_lang})"
         try:
             for tr in Translator.Translators:
-                target_tr = f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}"
-                if tr.CHECKPOINT == target_tr:
+                if tr.NAME == target_Translator_name:
                     return tr
         except Exception as e:
             LOGGER.error(e)
-            LOGGER.debug(f"Failed to get Translator({src_lang}, {tgt_lang})!")
+            LOGGER.debug(f"Failed to get {target_Translator_name}!")
             return None
 
 
-@log
 def instantiate():
     """
     Instantiate a list of Translator objects
