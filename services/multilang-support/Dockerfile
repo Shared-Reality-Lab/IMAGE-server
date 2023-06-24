@@ -13,7 +13,14 @@ RUN pip install -r requirements.txt
 
 # Clone the model
 RUN git lfs install
+# English -> French
 RUN git clone https://huggingface.co/Helsinki-NLP/opus-mt-en-fr ./models/opus-mt-en-fr
+
+# English -> German
+RUN git clone https://huggingface.co/Helsinki-NLP/opus-mt-en-de ./models/opus-mt-en-de
+
+# English -> Spanish
+RUN git clone https://huggingface.co/Helsinki-NLP/opus-mt-en-es ./models/opus-mt-en-es
 
 COPY schemas/services/translation.schema.json /app/
 COPY services/multilang-support/src/*.py /app/src/
