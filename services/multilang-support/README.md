@@ -73,7 +73,7 @@ Translation Service for IMAGE project. The service translate segments of text fr
 
 ### Extending to other languages
 - To properly extend the service to support other languages, one must follow these steps:
-  - [x] Add the language code (ISO ) to `SUPPORTED_LANGS` list in `src/utils.py`.
+  - [x] Add the language code (ISO 639-1) to `SUPPORTED_LANGS` list in `src/utils.py`.
   - [x] Add the model to `models/` directory in the docker image. With `git-lfs` installed, simply add in the `Dockerfile`:
   ```dockerfile
   # instantiate Git LFS
