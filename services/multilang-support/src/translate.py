@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from flask import Flask, request, jsonify
-from .utils import translate_helsinki, LOGGER
+from .utils import LOGGER, Translator, SUPPORTED_LANGS
 import json
 import jsonschema
 
@@ -45,17 +45,16 @@ def translate_request():
     """
     # Get request data
     content = request.get_json()
-    # print(content)
 
     # Validate incoming request
     if not validate_request(request=content):
         return jsonify("Invalid Request JSON format"), 400
 
-    LOGGER.debug("- Request validated! -")
+    LOGGER.debug("-- Request received & validated! --")
 
     # Get text to translate
     segments: list = content["segments"]
-    # source lang is optional, hence the try/except
+    # source lang is optional, hence try/except
     try:
         source_lang = content["src_lang"]
     except KeyError:
@@ -65,17 +64,21 @@ def translate_request():
     target_lang = content["tgt_lang"]
 
     # Handles source/target language
-    if target_lang == source_lang:
-        LOGGER.error("Source and target languages are the same")
-        return jsonify("Source and target languages are the same"), 204
-    if target_lang not in ["fr", "en"]:
-        LOGGER.error("Target language is not yet implemented")
-        return jsonify("Target language not implemented"), 501
-    if source_lang == 'en' and target_lang == 'fr':
-        # Translate, from list to list
-        translation, elapsed_time = translate_helsinki(segments)
-    else:
-        LOGGER.error("Service Error, unable to handle")
+    try:
+        if target_lang == source_lang:
+            LOGGER.error(
+                f'Source and target languages are the same: "{source_lang}"')
+            return jsonify("Source and target languages are the same"), 204
+        elif target_lang not in SUPPORTED_LANGS:
+            LOGGER.error(f'Target "{target_lang}" is not yet implemented')
+            return jsonify("Target language not implemented"), 501
+        else:
+            # Translate the segments using a corresponding translator object
+            translation, elapsed_time = Translator\
+                .get_translator(source_lang, target_lang)\
+                .translate(segments)
+    except Exception as e:
+        LOGGER.error("Service Error: " + e.message)
         LOGGER.debug(f"Attempted request: '{source_lang}' -> '{target_lang}'")
         LOGGER.debug(f"Attempted segments: {segments}")
         return jsonify("Service Error"), 500
