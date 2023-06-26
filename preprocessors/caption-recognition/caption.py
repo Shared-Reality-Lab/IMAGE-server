@@ -59,7 +59,7 @@ def captions():
     image = vis_processors["eval"](pil_img).unsqueeze(0).to(device)
     # generate caption
     caption = model.generate({"image": image})
-    data = {"caption":caption}
+    data = {"caption":caption[0]}
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(data)
