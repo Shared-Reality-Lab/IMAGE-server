@@ -85,7 +85,7 @@ def captions():
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
     logging.debug(data)
-    return jsonify(caption)
+    return response
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5001, debug=True)
