@@ -8,6 +8,8 @@ import cv2
 import logging
 import numpy as np
 import time
+import json
+import jsonschema
 
 
 device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
@@ -19,6 +21,32 @@ app = Flask(__name__)
 
 def captions():
     content = request.get_json()
+    with open('./schemas/preprocessors/caption.schema.json') \
+                as jsonfile:
+            data_schema = json.load(jsonfile)
+    with open('./schemas/preprocessor-response.schema.json') \
+            as jsonfile:
+        schema = json.load(jsonfile)
+    with open('./schemas/definitions.json') as jsonfile:
+        definitionSchema = json.load(jsonfile)
+    with open('./schemas/request.schema.json') as jsonfile:
+        first_schema = json.load(jsonfile)
+    # Following 6 lines of code are referred from
+    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
+    schema_store = {
+        schema['$id']: schema,
+        definitionSchema['$id']: definitionSchema
+    }
+    resolver = jsonschema.RefResolver.from_schema(
+        schema, store=schema_store)
+    content = request.get_json()
+    try:
+        validator = jsonschema.Draft7Validator(
+            first_schema, resolver=resolver)
+        validator.validate(content)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 400
     image = content["graphic"]
     image_b64 = image.split(",")[1]
     binary = base64.b64decode(image_b64)
@@ -31,16 +59,31 @@ def captions():
     image = vis_processors["eval"](pil_img).unsqueeze(0).to(device)
     # generate caption
     caption = model.generate({"image": image})
+    data = {"caption":caption}
+    try:
+        validator = jsonschema.Draft7Validator(data_schema)
+        validator.validate(data)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
+    
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.caption"
-    data = {"data":caption}
     response = {
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": name,
         "data": data
     }
+
+    try:
+        validator = jsonschema.Draft7Validator(
+            schema, resolver=resolver)
+        validator.validate(response)
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error(e)
+        return jsonify("Invalid Preprocessor JSON format"), 500
     logging.debug(data)
     return jsonify(caption)
 
