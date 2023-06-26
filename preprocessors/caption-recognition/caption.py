@@ -54,7 +54,8 @@ def captions():
     img = cv2.cvtColor(pil_image, cv2.COLOR_BGR2RGB)
     pil_img = Image.fromarray(img)
     model, vis_processors, _ = load_model_and_preprocess(
-        name="blip_caption", model_type="base_coco", is_eval=True, device=device)
+        name="blip_caption", model_type="base_coco",
+        is_eval=True, device=device)
     image = vis_processors["eval"](pil_img).unsqueeze(0).to(device)
     image = vis_processors["eval"](pil_img).unsqueeze(0).to(device)
     # generate caption
