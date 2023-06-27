@@ -16,7 +16,6 @@
  */
 import Ajv from "ajv";
 import express from "express";
-import fetch from "node-fetch";
 import fs from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
 
@@ -66,6 +65,10 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
+    // Get target language of request
+    const targetLanguage = req.body["language"];
+
+    // Forming renderings
     const renderings: Record<string, unknown>[] = [];
     const highChartsData = req.body["highChartsData"];
 
@@ -75,12 +78,24 @@ app.post("/handler", async (req, res) => {
         if (serie["data"] && serie["data"].length > 0) {
             const data = serie["data"];
             const supportedCharts = ["line", "area", "spline", "areaspline"];
+
             if (supportedCharts.indexOf(serie["type"]) != -1) {
-                // We can work with this
+                // Line charts, we can work with this
                 console.log("Length: " + data.length);
+                console.log(`Processing chart type: ${serie["type"]}`);
+                let description = "Simple Line Chart";
                 try {
-                    const graphInfo = utils.getGraphInfo(highChartsData);
-                    const ttsResponse = await utils.getTTS([graphInfo]);
+                    let graphInfo:string = utils.getGraphInfo(highChartsData);
+                    // Language Translation if target language is not English
+                    if (targetLanguage != "en") {
+                        console.debug(`Translating to ${targetLanguage}...`);
+                        const graphInfoTranslated = await utils.getTranslationSegments([graphInfo], targetLanguage);
+                        graphInfo = graphInfoTranslated["translations"][0];
+
+                        // Update description in target language
+                        description = (await utils.getTranslationSegments([description], targetLanguage)).translations[0];
+                    }
+                    const ttsResponse = await utils.getTTS([graphInfo], targetLanguage);
                     const scData = {
                         "audio": {
                             "offset": 0,
@@ -111,7 +126,7 @@ app.post("/handler", async (req, res) => {
                         const dataURL = "data:audio/mp3;base64," + buffer.toString("base64");
                         const rendering = {
                             "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                            "description": "Simple Line Chart",
+                            "description": description,
                             "data": {
                                 "audio": dataURL
                             },
@@ -141,7 +156,7 @@ app.post("/handler", async (req, res) => {
                     console.error(e);
                 }
             } else if (serie["type"] === "pie") {
-                console.log("Pie chart");
+                console.log("Describing Pie chart");
                 const segmentNames: string[] = [];
                 for (const segment of data) {
                     if ("name" in segment) {
@@ -153,16 +168,34 @@ app.post("/handler", async (req, res) => {
                     }
                 }
                 try {
-                    const ttsResponse = await utils.getTTS(segmentNames);
+                    // Chart description in English by default
+                    let description = "Simple Pie Chart";
+
+                    // Language Translation if target language is not English
+                    if (targetLanguage != "en") {
+                        console.debug(`Translating pie chart & description to ${targetLanguage}...`);
+                        const segmentNamesTranslated = await utils.getTranslationSegments(segmentNames, targetLanguage);
+                        for (let i = 0; i < segmentNames.length; i++) {
+                            segmentNames[i] = segmentNamesTranslated["translations"][i];
+                        }
+                        
+                        description = await utils.getTranslationSegments([description], targetLanguage).then((resp) => {
+                            return resp["translations"][0];
+                        });
+                    }
+
+                    const ttsResponse = await utils.getTTS(segmentNames, targetLanguage);
                     for (let offset=0, i = 0; i < data.length; i++) {
                         data[i]["offset"] = offset;
                         data[i]["duration"] = ttsResponse.durations[i];
                         offset += ttsResponse.durations[i];
                     }
+
                     const scData = {
-                        "seriesData": data,
-                        "ttsFileName": ""
+                        seriesData: data,
+                        ttsFileName: "",
                     };
+                    
                     // Write to file
                     let inFile: string, outFile:string, jsonFile: string;
                     await fetch(ttsResponse["audio"]).then(resp => {
@@ -182,12 +215,15 @@ app.post("/handler", async (req, res) => {
                         const buffer = await fs.readFile(outFile);
                         const dataURL = "data:audio/mp3;base64," + buffer.toString("base64");
                         const rendering = {
-                            "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                            "description": "Simple Pie Chart",
-                            "data": {
-                                "audio": dataURL
+                            type_id: "ca.mcgill.a11y.image.renderer.SimpleAudio",
+                            description: description,
+                            data: {
+                            audio: dataURL,
                             },
-                            "metadata": { "homepage": "https://image.a11y.mcgill.ca/pages/howto.html#interpretations-charts" }
+                            metadata: {
+                            homepage:
+                                "https://image.a11y.mcgill.ca/pages/howto.html#interpretations-charts",
+                            },
                         };
                         if (ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", rendering["data"])) {
                             renderings.push(rendering);

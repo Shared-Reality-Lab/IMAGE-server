@@ -1,3 +1,22 @@
+# Copyright (c) 2023 IMAGE Project, Shared Reality Lab, McGill University
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# and our Additional Terms along with this program.
+# If not, see
+# <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
+#
+# This was built using the AdelaiDepth library that can be found at
+# https://github.com/aim-uofa/AdelaiDepth
+
 import cv2
 import argparse
 import numpy as np
@@ -123,18 +142,21 @@ def depthgenerator():
 
     rgb_c = img[:, :, ::-1].copy()
     A_resize = cv2.resize(rgb_c, (448, 448))
+    try:
+        img_torch = scale_torch(A_resize)[None, :, :, :]
+        pred_depth = depth_model.inference(img_torch).cpu().numpy().squeeze()
+        pred_depth_ori = cv2.resize(pred_depth, (img.shape[1], img.shape[0]))
+        pred_depth_ori = pred_depth_ori/np.max(pred_depth_ori) * 255
 
-    img_torch = scale_torch(A_resize)[None, :, :, :]
-    pred_depth = depth_model.inference(img_torch).cpu().numpy().squeeze()
-    pred_depth_ori = cv2.resize(pred_depth, (img.shape[1], img.shape[0]))
-    pred_depth_ori = pred_depth_ori/np.max(pred_depth_ori)
+        _, pred_depth_jpg = cv2.imencode('.JPG', pred_depth_ori)
 
-    _, pred_depth_jpg = cv2.imencode('.JPG', pred_depth_ori)
-
-    # convert output image to base64
-    depthgraphic = base64.b64encode(pred_depth_jpg).decode("utf-8")
-    jsondepth = "data:image/jpeg;base64," + depthgraphic
-    depth = {"depth-map": jsondepth, "scaling": 0}
+        # convert output image to base64
+        depthgraphic = base64.b64encode(pred_depth_jpg).decode("utf-8")
+        jsondepth = "data:image/jpeg;base64," + depthgraphic
+        depth = {"depth-map": jsondepth, "scaling": 0}
+    except Exception as e:
+        logging.error(e)
+        return jsonify("Depth Model cannot complete"), 500
 
     try:
         validator = jsonschema.Draft7Validator(data_schema)

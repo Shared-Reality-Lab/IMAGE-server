@@ -55,15 +55,15 @@ def get_map_data():
     if validated is not None:
         return validated
 
-    # Check if request is for an openstreetmap
-    if 'coordinates' not in content:
+    # Check if this request is for an openstreetmap
+    if 'coordinates' not in content and 'placeID' not in content:
         logging.info("Not map content. Skipping...")
         return "", 204
 
     # Build OpenStreetMap request
     coords = get_coordinates(content)
     if coords is None:
-        error = 'Unable to find Lat/Lng'
+        error = 'Unable to find Latitude/Longitude'
         logging.error(error)
         return jsonify(error), 400
 

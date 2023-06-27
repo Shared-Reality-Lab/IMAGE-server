@@ -1,4 +1,4 @@
-FROM ghcr.io/shared-reality-lab/supercollider:extra-3.11.1
+FROM ghcr.io/shared-reality-lab/supercollider:extra-3.13.0
 
 USER root
 
