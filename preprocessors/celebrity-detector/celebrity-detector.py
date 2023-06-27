@@ -14,6 +14,11 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
+import requests  # pip3 install requests
+from re import search
+import operator
+
+import os
 import json
 import time
 import jsonschema
@@ -25,20 +30,8 @@ import numpy as np
 
 app = Flask(__name__)
 
+# extract the required results from the API returned values
 
-# code referred from https://medium.com/codex/rgb-to-color-names-in-python-the-robust-way-ec4a9d97a01f
-def convert_rgb_to_names(rgb_tuple):
-    # a dictionary of all the hex and their respective names in css3
-    css3_db = CSS3_HEX_TO_NAMES
-    names = []
-    rgb_values = []
-    for color_hex, color_name in css3_db.items():
-        names.append(color_name)
-        rgb_values.append(hex_to_rgb(color_hex))
-    
-    kdt_db = KDTree(rgb_values)
-    distance, index = kdt_db.query(rgb_tuple)
-    return names[index]
 
 def process_results(response, labels):
     logging.debug(response)
