@@ -73,15 +73,15 @@ def get_map_data():
             "request_uuid": request_uuid,
             "timestamp": time_stamp,
             "name": name,
-            "data": { }
+            "data": {}
         }
         try:
             validator = jsonschema.Draft7Validator(
-            response_schema, resolver=resolver)
+                response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-                LOGGER.error(error)
-                return jsonify("Invalid Preprocessor JSON format"), 500
+            LOGGER.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
         LOGGER.debug("Sending response")
         return response
 
@@ -94,15 +94,15 @@ def get_map_data():
             "request_uuid": request_uuid,
             "timestamp": time_stamp,
             "name": name,
-            "data": { }
+            "data": {}
         }
         try:
             validator = jsonschema.Draft7Validator(
-            response_schema, resolver=resolver)
+                response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-                LOGGER.error(error)
-                return jsonify("Invalid Preprocessor JSON format"), 500
+            LOGGER.error(error)
+            return jsonify("Invalid Preprocessor JSON format"), 500
         LOGGER.debug("Sending response")
         return response
 
