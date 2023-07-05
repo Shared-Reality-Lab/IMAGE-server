@@ -35,7 +35,7 @@ def get_map_data():
     """
     Gets map data from OpenStreetMap
     """
-    logging.debug("Received request")
+    LOGGER.debug("Received request")
     # Load schemas
     with open('./schemas/preprocessors/openstreetmap.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
@@ -67,15 +67,43 @@ def get_map_data():
 
     # Check if this request is for an openstreetmap
     if 'coordinates' not in content and 'placeID' not in content:
-        logging.info("Not map content. Skipping...")
-        return "", 204
+        LOGGER.info("Not map content. Skipping...")
+        response = {
+            "request_uuid": request_uuid,
+            "timestamp": time_stamp,
+            "name": name,
+            "data": { }
+        }
+        try:
+            validator = jsonschema.Draft7Validator(
+            response_schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+                LOGGER.error(error)
+                return jsonify("Invalid Preprocessor JSON format"), 500
+        LOGGER.debug("Sending response")
+        return response
 
     # Build OpenStreetMap request
     coords = get_coordinates(content)
     if coords is None:
         error = 'Unable to find Latitude/Longitude'
-        logging.error(error)
-        return jsonify(error), 400
+        LOGGER.error(error)
+        response = {
+            "request_uuid": request_uuid,
+            "timestamp": time_stamp,
+            "name": name,
+            "data": { }
+        }
+        try:
+            validator = jsonschema.Draft7Validator(
+            response_schema, resolver=resolver)
+            validator.validate(response)
+        except jsonschema.exceptions.ValidationError as error:
+                LOGGER.error(error)
+                return jsonify("Invalid Preprocessor JSON format"), 500
+        LOGGER.debug("Sending response")
+        return response
 
     latitude = coords["latitude"]
     longitude = coords["longitude"]
@@ -166,7 +194,7 @@ def get_map_data():
 
     if validated is not None:
         return validated
-    logging.debug("Sending response")
+    LOGGER.debug("Sending response")
     return response
 
 
