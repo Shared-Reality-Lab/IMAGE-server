@@ -1005,7 +1005,7 @@ def get_coordinates(content):
         error = 'Unable to find placeID'
         LOGGER.error(error)
         return jsonify("Processing Aborted!"), 400
-        
+
     if "GOOGLE_PLACES_KEY" not in os.environ:
         return None
     google_api_key = os.environ["GOOGLE_PLACES_KEY"]
@@ -1019,7 +1019,6 @@ def get_coordinates(content):
 
     if not check_google_response(place_response):
         return jsonify("Processing Aborted!"), 400
-        
 
     location = place_response['result']['geometry']['location']
     coordinates = {
