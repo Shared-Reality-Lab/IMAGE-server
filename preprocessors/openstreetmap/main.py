@@ -49,6 +49,7 @@ def get_map_data():
         definition_schema['$id']: definition_schema
     }
     content = request.get_json()
+    LOGGER.debug("Validating request")
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
     # Validate incoming request
