@@ -19,6 +19,16 @@ from osm_service import (
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 
+# Configure logging settings
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s]: %(message)s",
+    datefmt="%y-%m-%d %H:%M %Z",
+)
+
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
+
 
 @app.route('/preprocessor', methods=['POST', ])
 def get_map_data():
