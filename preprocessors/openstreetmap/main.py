@@ -77,13 +77,15 @@ def get_map_data():
             "name": name,
             "data": {}
         }
-        try:
-            validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as error:
-            LOGGER.error(error)
-            return jsonify("Invalid Preprocessor JSON format"), 500
+        validated = validate(
+            schema=schema,
+            data=response,
+            resolver=resolver,
+            json_message='Invalid Preprocessor JSON format',
+            error_code=500)
+
+        if validated is not None:
+            return validated
         LOGGER.debug("Sending response")
         return response
 
@@ -98,13 +100,15 @@ def get_map_data():
             "name": name,
             "data": {}
         }
-        try:
-            validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as error:
-            LOGGER.error(error)
-            return jsonify("Invalid Preprocessor JSON format"), 500
+        validated = validate(
+            schema=schema,
+            data=response,
+            resolver=resolver,
+            json_message='Invalid Preprocessor JSON format',
+            error_code=500)
+
+        if validated is not None:
+            return validated
         LOGGER.debug("Sending response")
         return response
 
