@@ -65,7 +65,9 @@ def get_map_data():
 
     if validated is not None:
         return validated
-
+    time_stamp = int(get_timestamp())
+    name = "ca.mcgill.a11y.image.preprocessor.openstreetmap"
+    request_uuid = content["request_uuid"]
     # Check if this request is for an openstreetmap
     if 'coordinates' not in content and 'placeID' not in content:
         LOGGER.info("Not map content. Skipping...")
@@ -110,9 +112,7 @@ def get_map_data():
     longitude = coords["longitude"]
     # distance in metres
     distance = 100
-    time_stamp = int(get_timestamp())
     bbox_coordinates = create_bbox_coordinates(distance, latitude, longitude)
-    name = "ca.mcgill.a11y.image.preprocessor.openstreetmap"
     header_info = {
         "latitude": {
             "min": bbox_coordinates[0],
@@ -124,7 +124,6 @@ def get_map_data():
         }
     }
     OSM_data = get_streets(bbox_coordinates)
-    request_uuid = content["request_uuid"]
     amenity = get_amenities(bbox_coordinates)
     if OSM_data is not None:
         processed_OSM_data = process_streets_data(OSM_data, bbox_coordinates)
