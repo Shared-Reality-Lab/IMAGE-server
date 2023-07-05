@@ -87,7 +87,7 @@ def get_map_data():
     # Build OpenStreetMap request
     coords = get_coordinates(content)
     if coords is None:
-        error = 'Unable to find Latitude/Longitude'
+        error = 'Unable to find API key'
         LOGGER.error(error)
         response = {
             "request_uuid": request_uuid,
@@ -194,7 +194,7 @@ def get_map_data():
 
     if validated is not None:
         return validated
-    LOGGER.debug("Sending response")
+    LOGGER.debug("Sending final response")
     return response
 
 
