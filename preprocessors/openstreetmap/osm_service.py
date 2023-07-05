@@ -13,6 +13,17 @@ from config import defaultServer, secondaryServer1, secondaryServer2
 from geographiclib.geodesic import Geodesic
 
 
+# Configure logging settings
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s]: %(message)s",
+    datefmt="%y-%m-%d %H:%M %Z",
+)
+
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
+
+
 def create_bbox_coordinates(distance, lat, lon):
     assert distance > 0
     assert lat >= -90.0 and lat <= 90.0
