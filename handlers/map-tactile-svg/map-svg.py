@@ -380,7 +380,7 @@ def getDescriptions(street):
 
 
 # Returns the description at nodes with intersections,
-# crossing, traffic lights or tactile paving 
+# crossing, traffic lights or tactile paving
 def getNodeDescription(POI):
     label = ""
     drawPOI = False
@@ -400,6 +400,7 @@ def getNodeDescription(POI):
             label += ", "
         label += tag
     return label, drawPOI
+
 
 # Check for nodes of category
 # traffic signal or crossing
