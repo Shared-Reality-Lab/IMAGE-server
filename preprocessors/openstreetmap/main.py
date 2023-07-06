@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, jsonify, request
 import jsonschema
 import json
 import logging
@@ -71,46 +71,14 @@ def get_map_data():
     # Check if this request is for an openstreetmap
     if 'coordinates' not in content and 'placeID' not in content:
         LOGGER.info("Not map content. Skipping...")
-        response = {
-            "request_uuid": request_uuid,
-            "timestamp": time_stamp,
-            "name": name,
-            "data": {}
-        }
-        validated = validate(
-            schema=schema,
-            data=response,
-            resolver=resolver,
-            json_message='Invalid Preprocessor JSON format',
-            error_code=500)
-
-        if validated is not None:
-            return validated
-        LOGGER.debug("Sending response")
-        return response
+        return jsonify(""), 204
 
     # Build OpenStreetMap request
     coords = get_coordinates(content)
     if coords is None:
         error = 'Unable to find API key'
         LOGGER.error(error)
-        response = {
-            "request_uuid": request_uuid,
-            "timestamp": time_stamp,
-            "name": name,
-            "data": {}
-        }
-        validated = validate(
-            schema=schema,
-            data=response,
-            resolver=resolver,
-            json_message='Invalid Preprocessor JSON format',
-            error_code=500)
-
-        if validated is not None:
-            return validated
-        LOGGER.debug("Sending response")
-        return response
+        return jsonify(""), 400
 
     latitude = coords["latitude"]
     longitude = coords["longitude"]
