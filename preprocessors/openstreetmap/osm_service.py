@@ -93,16 +93,16 @@ def get_streets(bbox_coord):
     except Exception:
         try:
             error = 'Primary server not responding, so connecting server 1'
-            LOGGER.error(error)
+            LOGGER.debug(error)
             OSM_data = server_config1(secondaryServer1, bbox_coord)
         except Exception:
             try:
                 error = 'Server 1 not responding, so connecting server 2'
-                LOGGER.error(error)
+                LOGGER.debug(error)
                 OSM_data = server_config1(secondaryServer2, bbox_coord)
             except Exception:
                 error = 'Unable to get data. All servers down!'
-                LOGGER.error(error)
+                LOGGER.debug(error)
                 OSM_data = None
     return (OSM_data)
 
@@ -191,7 +191,7 @@ def process_streets_data(OSM_data, bbox_coordinates):
                     processed_OSM_data.append(way_object)
     except AttributeError:
         error = 'Overpass Attibute error. Retry again'
-        LOGGER.error(error)
+        LOGGER.debug(error)
     else:
         return processed_OSM_data
 
@@ -672,16 +672,16 @@ def get_amenities(bbox_coord):
     except Exception:
         try:
             error = 'Primary server not responding, so connecting server 1'
-            LOGGER.error(error)
+            LOGGER.debug(error)
             amenities = server_config2(secondaryServer1, bbox_coord)
         except Exception:
             try:
                 error = 'Server 1 not responding, so connecting server 2'
-                LOGGER.error(error)
+                LOGGER.debug(error)
                 amenities = server_config2(secondaryServer2, bbox_coord)
             except Exception:
                 error = 'Unable to get data. All servers down!'
-                LOGGER.error(error)
+                LOGGER.debug(error)
                 amenities = None
 
     # Fetch the basic amenity tags
