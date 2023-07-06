@@ -6,5 +6,5 @@
 
 This is a [handler](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#handlers=) component that creates a SVG that can be rendered as a tactile graphic to convey detected objects and detected semantic segments.
 
-Data from these two sources are used to create a SVG.
-This SVG will be as per a specified [format](https://github.com/Shared-Reality-Lab/IMAGE-Monarch/tree/main#tactile-graphics) and might contain multiple layers with the number of layers equal to the number of object classes found within the photo and semantic segments available independent of the layers.
+Data from object detection and semantic segmentation are used to create a SVG.
+This SVG will be as per a specified [format](https://github.com/Shared-Reality-Lab/IMAGE-Monarch/tree/main#tactile-graphics) and might contain multiple layers with the number of layers equal to the number of object classes found within the photo. The semantic segments will be available independent of the layers.

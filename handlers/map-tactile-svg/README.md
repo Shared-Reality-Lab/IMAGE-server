@@ -4,7 +4,7 @@
 
 ## What is this?
 
-This is a [handler](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#handlers=) component that creates a SVG that can be rendered as a tactile graphic to convey important streets, intersections and the point of interest.
+This is a [handler](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#handlers=) component that creates a SVG that can be rendered as a tactile graphic to convey important streets, intersections and the point of interest (i.e. the location tag if found at the input latitude longitude coordinates).
 
 Data from Open Street Maps(OSM) and Nominatim are used to create a SVG.
-This SVG will be as per a specified [format](https://github.com/Shared-Reality-Lab/IMAGE-Monarch/tree/main#tactile-graphics) and might contain a layer with the streets. The intersections, if any, and a location tag if found at the input latitude longitude pair, called the point of interest, are available independent of the layers.  
+This SVG will be as per a specified [format](https://github.com/Shared-Reality-Lab/IMAGE-Monarch/tree/main#tactile-graphics) and will contain a layer with the streets. The intersections and the point of interest will be available independent of the layers.  

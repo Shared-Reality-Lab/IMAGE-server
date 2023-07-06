@@ -60,6 +60,7 @@ def handle():
 
     preprocessor = contents["preprocessors"]
 
+    # Checking for TactileSVG renderer in request
     if "ca.mcgill.a11y.image.renderer.TactileSVG" not in contents["renderers"]:
         logging.debug("TactileSVG Renderer not supported")
         response = {
@@ -79,6 +80,7 @@ def handle():
                       " Sending empty response.")
         return response
 
+    # Checking for data from OSM preprocessor
     if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
             not in preprocessor:
         logging.debug("OSM Preprocessor data not present. Skipping ...")
@@ -151,6 +153,7 @@ def handle():
                   ]
         # Draw the streets with svg.
         checkPOIs = []
+        # Drawing streets in the first layer
         g = draw.Group(data_image_layer="firstLayer", aria_label="Streets")
         for i, street in enumerate(streets):
             color = i % len(colors)
@@ -191,6 +194,7 @@ def handle():
                 g.append(p)
         svg.append(g)
 
+    # Checking for location tag from nominatim preprocessor
     if "ca.mcgill.a11y.image.preprocessor.nominatim"\
             in preprocessor:
         targetData = preprocessor[
@@ -208,6 +212,7 @@ def handle():
                 is not None else targetData["type"]
             if type(targetTag) is not str:
                 raise TypeError
+            # Drawing a circle at point of interest if location tag is found
             svg.append(
                         draw.Circle(
                                     longitude,
@@ -259,6 +264,9 @@ def handle():
                           "POI name in nominatim ")
             logging.debug("Obtained type " + str(type(targetTag)))
 
+    # Drawing in the nodes of category
+    # intersection, traffic lights or crossing
+    # along with their descriptions
     if "points_of_interest" in data:
         for POI in data["points_of_interest"]:
             if POI["id"] in checkPOIs:
@@ -310,7 +318,7 @@ def handle():
     logging.debug("Sending response")
     return response
 
-
+# Returns stroke width for various street types
 def return_stroke_width(street_type):
     if (street_type == "primary" or street_type == "secondary"):
         stroke_width = 7.5
@@ -324,7 +332,7 @@ def return_stroke_width(street_type):
         stroke_width = 1.5
     return stroke_width
 
-
+# Generates the long description for streets
 def getDescriptions(street):
     description = ""
     # default_attributes = ["street_id", "street_name", "nodes", "service"]
@@ -368,7 +376,8 @@ def getDescriptions(street):
     else:
         return description[:-2]
 
-
+# Returns the description at nodes with intersections,
+# crossing, traffic lights or tactile paving 
 def getNodeDescription(POI):
     label = ""
     drawPOI = False
@@ -389,7 +398,9 @@ def getNodeDescription(POI):
         label += tag
     return label, drawPOI
 
-
+# Check for nodes of category
+# traffic signal or crossing 
+# and generate their descriptions
 def getNodeCategoryData(POI):
     tag = ""
     draw = True
@@ -410,7 +421,7 @@ def getNodeCategoryData(POI):
             draw = False
     return (tag if len(tag) == 0 else tag[:-2]), draw
 
-
+# Generate tactile paving description
 def getNodePavingData(POI):
     tag = ""
     paving = POI["tactile_paving"]
