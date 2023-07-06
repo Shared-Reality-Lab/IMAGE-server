@@ -318,6 +318,7 @@ def handle():
     logging.debug("Sending response")
     return response
 
+
 # Returns stroke width for various street types
 def return_stroke_width(street_type):
     if (street_type == "primary" or street_type == "secondary"):
@@ -331,6 +332,7 @@ def return_stroke_width(street_type):
     else:
         stroke_width = 1.5
     return stroke_width
+
 
 # Generates the long description for streets
 def getDescriptions(street):
@@ -376,6 +378,7 @@ def getDescriptions(street):
     else:
         return description[:-2]
 
+
 # Returns the description at nodes with intersections,
 # crossing, traffic lights or tactile paving 
 def getNodeDescription(POI):
@@ -399,7 +402,7 @@ def getNodeDescription(POI):
     return label, drawPOI
 
 # Check for nodes of category
-# traffic signal or crossing 
+# traffic signal or crossing
 # and generate their descriptions
 def getNodeCategoryData(POI):
     tag = ""
@@ -420,6 +423,7 @@ def getNodeCategoryData(POI):
         case _:
             draw = False
     return (tag if len(tag) == 0 else tag[:-2]), draw
+
 
 # Generate tactile paving description
 def getNodePavingData(POI):
