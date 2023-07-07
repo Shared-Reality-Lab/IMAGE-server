@@ -11,6 +11,7 @@ import os
 import requests
 from config import defaultServer, secondaryServer1, secondaryServer2
 from geographiclib.geodesic import Geodesic
+import traceback
 
 
 # Configure logging settings
@@ -194,6 +195,7 @@ def process_streets_data(OSM_data, bbox_coordinates):
     except AttributeError:
         error = 'Overpass Attibute error. Retry again'
         LOGGER.debug(error)
+        LOGGER.debug(traceback.format_exc())
     else:
         return processed_OSM_data
 
