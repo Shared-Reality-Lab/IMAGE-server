@@ -92,12 +92,12 @@ def get_streets(bbox_coord):
         OSM_data = server_config1(defaultServer, bbox_coord)
     except Exception:
         try:
-            error = 'Primary server not responding, so connecting server 1'
+            error = 'Pegasus Server not responding, so connecting VK Maps Overpass API Server'
             LOGGER.debug(error)
             OSM_data = server_config1(secondaryServer1, bbox_coord)
         except Exception:
             try:
-                error = 'Server 1 not responding, so connecting server 2'
+                error = 'VK Maps Overpass Server not responding, so connecting Main Overpass Server'
                 LOGGER.debug(error)
                 OSM_data = server_config1(secondaryServer2, bbox_coord)
             except Exception:
