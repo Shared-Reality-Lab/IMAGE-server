@@ -671,12 +671,12 @@ def get_amenities(bbox_coord):
         amenities = server_config2(defaultServer, bbox_coord)
     except Exception:
         try:
-            error = 'Primary server not responding, so connecting server 1'
+            error = 'Pegasus Server not responding, so connecting VK Maps Overpass API Server'
             LOGGER.debug(error)
             amenities = server_config2(secondaryServer1, bbox_coord)
         except Exception:
             try:
-                error = 'Server 1 not responding, so connecting server 2'
+                error = 'VK Maps Overpass Server not responding, so connecting Main Overpass Server'
                 LOGGER.debug(error)
                 amenities = server_config2(secondaryServer2, bbox_coord)
             except Exception:
