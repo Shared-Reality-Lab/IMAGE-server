@@ -1019,7 +1019,8 @@ def get_coordinates(content):
     place_response = requests.get(request).json()
 
     if not check_google_response(place_response):
-        return jsonify("Processing Aborted!"), 400
+        LOGGER.debug("Zero or Incomplete results returned for place ID")
+        return jsonify("Processing Aborted!"), 500
 
     location = place_response['result']['geometry']['location']
     coordinates = {
