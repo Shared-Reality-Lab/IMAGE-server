@@ -76,7 +76,7 @@ def get_map_data():
     # Build OpenStreetMap request
     coords = get_coordinates(content)
     if coords is None:
-        error = 'Unable to find API key'
+        error = 'Unable to find latitude/longitude'
         LOGGER.error(error)
         return jsonify(""), 400
 
