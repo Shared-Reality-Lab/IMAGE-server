@@ -1007,7 +1007,8 @@ def get_coordinates(content):
         return jsonify("Processing Aborted!"), 400
 
     if "GOOGLE_PLACES_KEY" not in os.environ:
-        return None
+        LOGGER.debug("Unable to find path to API key directory")
+        return jsonify(""), 500
     google_api_key = os.environ["GOOGLE_PLACES_KEY"]
 
     # Query google places API to find latitude longitude
