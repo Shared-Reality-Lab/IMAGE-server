@@ -1010,7 +1010,7 @@ def get_coordinates(content):
     if "placeID" not in content:
         error = 'Unable to find placeID'
         LOGGER.error(error)
-        return jsonify("Processing Aborted!"), 400
+        return jsonify(""), 400
 
     if "GOOGLE_PLACES_KEY" not in os.environ:
         LOGGER.debug("Unable to find path to API key directory")
@@ -1026,7 +1026,7 @@ def get_coordinates(content):
 
     if not check_google_response(place_response):
         LOGGER.debug("Zero or Incomplete results returned for place ID")
-        return jsonify("Processing Aborted!"), 500
+        return jsonify(""), 500
 
     location = place_response['result']['geometry']['location']
     coordinates = {
