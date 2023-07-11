@@ -1,5 +1,5 @@
-FROM fedora:35
-ARG VERSION=Version-3.12.2
+FROM fedora:38
+ARG VERSION=Version-3.13.0
 
 RUN dnf install -q -y pipewire git cmake gcc-c++ pipewire-jack-audio-connection-kit-devel fftw-devel libsndfile-devel avahi-devel readline-devel libatomic && \
     rm -rf /var/cache/dnf

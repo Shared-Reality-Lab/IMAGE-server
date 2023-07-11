@@ -16,7 +16,6 @@
  */
 import Articles from "articles";
 import pluralize from "pluralize";
-import fetch from "node-fetch";
 import osc from "osc";
 
 const MIN_OBJ_AREA = 0.0005; // For ungrouped objects only, for grouped objects applies to whole group.
@@ -31,6 +30,12 @@ export type TTSSegment = {
 export type TTSResponse = {
     durations: number[];
     audio: string;
+}
+
+export type TranslationResponse = {
+    translations: string[];
+    src_lang: string;
+    tgt_lang: string;
 }
 
 type Obj = { ID: number, type: string, area: number };
@@ -154,14 +159,38 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[]
     return objects;
 }
 
-export async function getTTS(text: string[]): Promise<TTSResponse> {
-    return fetch("http://espnet-tts/service/tts/segments", {
-        "method": "POST",
-        "headers": {
-            "Content-Type": "application/json",
-        },
-        "body": JSON.stringify({ "segments": text })
-    }).then(resp => resp.json() as Promise<TTSResponse>);
+export async function getTranslationSegments(text: string[], targetLang: string): Promise<TranslationResponse> {
+  /**
+   * Get translation from multilang-support service
+   * @param text: text to be translated
+   * @param targetLang: target language, in ISO 639-1 format
+   * @returns {Promise<TranslationResponse>}
+   */
+  return fetch("http://multilang-support/service/translate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ segments: text, tgt_lang: targetLang }),
+  }).then((resp) => resp.json() as Promise<TranslationResponse>);
+}
+
+export async function getTTS(text: string[], language: string): Promise<TTSResponse> {
+    let serviceURL: string;
+    console.debug(`Getting TTS in "${language}"`);
+    if (language == "fr")
+        serviceURL = "http://espnet-tts-fr/service/tts/segments";
+    else if (language == "en")
+        serviceURL = "http://espnet-tts/service/tts/segments";
+    else
+        throw new Error(`Language '${language}' not supported in getTTS`);
+    return fetch(serviceURL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ segments: text }),
+    }).then((resp) => resp.json() as Promise<TTSResponse>);
 }
 
 export async function sendOSC(jsonFile: string, outFile: string, server: string, port: number) {
@@ -179,8 +208,6 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
                     const arg = oscMsg["args"] as osc.Argument[];
                     if (arg[0] === "done") {
                         const respArry: SoundSegments = [];
-                        console.log(respArry);
-                        console.log(respArry.length);
                         if ((arg.length) > 1 && ((arg.length - 1) % 3 == 0)) {
                             for (let i = 1; i < arg.length; i += 3) {
                                 respArry.push({
@@ -226,6 +253,7 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
 }
 
 export function renderingTitle(semseg: { "segments": Record<string, unknown>[] }, objDet: ObjDet, objGroup: ObjGroup): string {
+    console.debug("Rendering title")
     const hasSemseg = (semseg !== undefined) && (semseg["segments"].length > 0);
     const hasObj = (objDet !== undefined) && (objGroup !== undefined) && (objDet["objects"].length > 0);
     if (hasSemseg && hasObj) {

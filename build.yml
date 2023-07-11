@@ -31,6 +31,11 @@ services:
             context: .
             dockerfile: ./preprocessors/hello-preprocessor/Dockerfile
         image: "hello-preprocessor:latest"
+    collage-detector-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/collage-detector/Dockerfile
+        image: "collage-detector-preprocessor:latest"
     autour-preprocessor:
         build:
             context: .
@@ -71,6 +76,16 @@ services:
             context: .
             dockerfile: ./preprocessors/graphic-tagger/Dockerfile
         image: "graphic-tagger:latest"
+    emotion-recognition:
+        build:
+            context: .
+            dockerfile: ./preprocessors/emotion-recognition/Dockerfile
+        image: "emotion-recognition:latest"
+    celebrity-detector:
+        build:
+            context: .
+            dockerfile: ./preprocessors/celebrity-detector/Dockerfile
+        image: "celebrity-detector:latest"
     openstreetmap:
         build:
             context: .
@@ -89,8 +104,18 @@ services:
     semantic-segmentation:
         build:
             context: .
-            dockerfile: ./preprocessors/semanticSeg/./Dockerfile
-        image: "semantic-segmentation:latest"
+            dockerfile: ./preprocessors/mmsemseg/Dockerfile
+        image: "mmsemantic-segmentation:latest"
+    depth-map-generator:
+        build:
+            context: .
+            dockerfile: ./preprocessors/depth-map-gen/Dockerfile
+        image: "depth-map-generator:latest"
+    object-depth-calculator:
+        build:
+            context: .
+            dockerfile: ./preprocessors/object-depth-calculator/Dockerfile
+        image: "object-depth-calculator:latest"
     chart-pipeline:
         build:
             context: .
@@ -178,7 +203,31 @@ services:
             context: .
             dockerfile: ./handlers/osm-streets-handler/Dockerfile
         image: "osm-streets-handler:latest"
-
+    osm-svg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-open-street-map/Dockerfile
+        image: "osm-svg-handler:latest"
+    svg-depth-map:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-depth-map/Dockerfile
+        image: "svg-depth-map:latest"
+    photo-tactile-svg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/photo-tactile-svg/Dockerfile
+        image: "photo-tactile-svg:latest"
+    map-tactile-svg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/map-tactile-svg/Dockerfile
+        image: "map-tactile-svg:latest"
+    nominatim-preprocessor:
+        build:
+            context: .
+            dockerfile: ./preprocessors/nominatim/Dockerfile
+        image: "nominatim-preprocessor:latest"
     # Supercollider on Fedora 34
     supercollider-base:
         build:
@@ -195,4 +244,9 @@ services:
             context: ./schemas
             dockerfile: Dockerfile
         image: "schemas:latest"
+    multilang-service:
+        image: "multilang-service:latest"
+        build:
+            context: .
+            dockerfile: ./services/multilang-support/Dockerfile
 

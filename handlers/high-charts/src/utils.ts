@@ -14,13 +14,18 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
  */
-import fetch from "node-fetch";
 import osc from "osc";
 
 export type TTSResponse = {
     durations: number[];
     audio: string;
 }
+
+export type TranslationResponse = {
+  translations: string[];
+  src_lang: string;
+  tgt_lang: string;
+};
 
 export function generateEmptyResponse(requestUUID: string): { "request_uuid": string, "timestamp": number, "renderings": Record<string, unknown>[] } {
     return {
@@ -30,8 +35,18 @@ export function generateEmptyResponse(requestUUID: string): { "request_uuid": st
     };
 }
 
-export async function getTTS(text: string[]): Promise<TTSResponse> {
-    return fetch("http://espnet-tts/service/tts/segments", {
+export async function getTTS(text: string[], targetLanguage: string): Promise<TTSResponse> {
+    let ttsUrl:string;
+    if (targetLanguage === "en") {
+        ttsUrl = "http://espnet-tts/service/tts/segments";
+    } else if (targetLanguage === "fr") {
+        ttsUrl = "http://espnet-tts-fr/service/tts/segments";
+    }
+    else {
+        console.error(`Unsupported language: ${targetLanguage}`);
+        throw new Error(`Unsupported language: ${targetLanguage}`);
+    }
+    return fetch(ttsUrl, {
         "method": "POST",
         "headers": {
             "Content-Type": "application/json",
@@ -89,9 +104,29 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
     ]);
 }
 
+export async function getTranslationSegments(
+  text: string[],
+  targetLang: string
+): Promise<TranslationResponse> {
+  /**
+   * Get translation from multilang-support service
+   * @param text: text to be translated
+   * @param targetLang: target language, in ISO 639-1 format
+   * @returns {Promise<TranslationResponse>}
+   */
+  return fetch("http://multilang-support/service/translate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ segments: text, tgt_lang: targetLang }),
+  }).then((resp) => resp.json() as Promise<TranslationResponse>);
+}            
+
+
 /**
  * The function will return the string representing the graph title and axes information
- * @param highChartsData 
+ * @param highChartsData
  * @returns graphInfo string
  */
 export function getGraphInfo(highChartsData: any): string{
@@ -107,13 +142,13 @@ export function getGraphInfo(highChartsData: any): string{
         const xDataMax = new Date(xAxis.dataMax);
         xStart = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(xDataMin)
         xEnd = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(xDataMax)
-    } 
+    }
     if (yAxis.type.toLowerCase() === "datetime"){
         const yDataMin = new Date(yAxis.dataMin);
         const yDataMax = new Date(yAxis.dataMax);
         yStart = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(yDataMin)
         yEnd = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(yDataMax)
-    } 
+    }
     const xAxisInfo = `x Axis,${xAxis.title},from ${xStart} to ${xEnd}`;
     const yAxisInfo = `y Axis,${yAxis.title},from ${yStart} to ${yEnd}`;
     return `${title}. ${xAxisInfo}. ${yAxisInfo}`;

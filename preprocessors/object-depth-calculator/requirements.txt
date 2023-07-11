@@ -1,0 +1,6 @@
+opencv-python==4.7.0.72
+Flask==2.2.5
+flask_api==2.0.0
+numpy==1.24.2
+jsonschema==4.17.3
+gunicorn==20.1.0

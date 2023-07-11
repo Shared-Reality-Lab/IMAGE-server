@@ -1,5 +1,5 @@
 FROM ghcr.io/shared-reality-lab/supercollider:latest
-ARG VERSION=Version-3.11.1
+ARG VERSION=Version-3.13.0
 
 USER root
 

@@ -1,0 +1,7 @@
+node_modules
+.env
+old
+tests
+demo*
+log*
+*.ipynb
