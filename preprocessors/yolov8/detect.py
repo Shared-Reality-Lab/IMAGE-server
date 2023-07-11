@@ -27,6 +27,8 @@ import jsonschema
 import json
 import logging
 import os
+from argparse import ArgumentParser
+import sys
 
 from ultralytics.nn.tasks import attempt_load_weights
 from ultralytics.yolo.utils import plt_settings
@@ -35,7 +37,21 @@ from ultralytics.yolo.utils.checks import check_imgsz
 from ultralytics.yolo.utils.ops import scale_coords, non_max_suppression
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-app = Flask(__name__)
+
+global conf
+conf = 1.0
+
+def build(c_thres=conf):
+    app = Flask(__name__)
+    def set_conf(c_thres=c_thres):
+        global conf 
+        conf = c_thres
+        return app
+    return set_conf
+
+build_app = build()
+app = build_app()
+
 
 def load_image(path, img_size=640, stride=32):
     image_b64 = path.split(",")[1]
@@ -103,6 +119,8 @@ def detect_objects(send,
                    view_img,
                    hide_labels,
                    hide_conf):
+    global conf
+    conf_thres = conf
     model = attempt_load_weights(weights, device=device)
     stride = int(model.stride.max())
     imgsz = check_imgsz(imgsz, stride=stride)    ## may need to change min_dim, max_dim
@@ -173,7 +191,7 @@ def detect_objects(send,
 def runyolo(weights='yolov8x.pt',  ## choose correct size
         source='data/images',
         imgsz=640,
-        conf_thres=0.5,
+        conf_thres=0,
         iou_thres=0.45,
         max_det=1000,
         device='',
@@ -344,7 +362,8 @@ def runyolo(weights='yolov8x.pt',  ## choose correct size
 def main():
     runyolo()
 
-
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True) 
     main()
+
+    
