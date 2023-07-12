@@ -1,5 +1,4 @@
 FROM ultralytics/ultralytics:latest@sha256:af4572bf0df164d5708e4a1f50bddb5a74cb7d793fe46b7daf42b1768fbec608
-ARG conf_thres=0.25
 
 WORKDIR /usr/src/app
 RUN adduser --disabled-password python #
@@ -23,5 +22,4 @@ EXPOSE 5000
 ENV FLASK_APP=detect.py 
 
 USER python
- 
-CMD [ "gunicorn", "detect:build_app(c_thres=0.75)", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
+CMD [ "gunicorn", "detect:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
