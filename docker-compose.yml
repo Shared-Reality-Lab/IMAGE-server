@@ -71,7 +71,7 @@ services:
             ca.mcgill.a11y.image.preprocessor: 4
             ca.mcgill.a11y.image.port: 5000
     object-detection:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection:unstable
+        image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
