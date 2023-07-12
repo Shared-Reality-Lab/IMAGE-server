@@ -27,8 +27,6 @@ import jsonschema
 import json
 import logging
 import os
-from argparse import ArgumentParser
-import sys
 
 from ultralytics.nn.tasks import attempt_load_weights
 from ultralytics.yolo.utils import plt_settings
@@ -64,7 +62,7 @@ def letterbox(
         new_shape=(
             640,
             640),
-    color=(
+        color=(
             114,
             114,
             114),
@@ -163,7 +161,8 @@ def detect_objects(send,
         if len(det):
             coords = torch.reshape(det[:, :4], (det.size()[0], 2, 2))
             det[:, :4] = scale_coords(
-                img.shape[2:], coords, im0.shape, normalize=True).flatten(1, -1).clone()
+                img.shape[2:], coords, im0.shape, normalize=True
+                ).flatten(1, -1).clone()
             for c in det[:, -1].unique():
                 n = (det[:, -1] == c).sum()
                 s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "
