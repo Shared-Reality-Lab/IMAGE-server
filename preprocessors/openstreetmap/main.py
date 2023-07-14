@@ -82,6 +82,16 @@ def get_map_data():
 
     latitude = coords["latitude"]
     longitude = coords["longitude"]
+
+    if latitude is None:
+        error = 'Unable to find latitude'
+        LOGGER.error(error)
+        return jsonify(""), 400
+    if longitude is None:
+        error = 'Unable to find longitude'
+        LOGGER.error(error)
+        return jsonify(""), 400
+
     # distance in metres
     distance = 100
     bbox_coordinates = create_bbox_coordinates(distance, latitude, longitude)
