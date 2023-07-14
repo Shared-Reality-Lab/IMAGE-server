@@ -60,7 +60,6 @@ def handle():
         logging.error(e)
         return jsonify("Invalid request received!"), 400
 
-    # Check preprocessor data
     preprocessors = contents['preprocessors']
     preprocessor_names = []
 
@@ -148,6 +147,7 @@ def handle():
         grouped = g["grouped"]
         ungrouped = g["ungrouped"]
         layer = 0
+        # Loop through the object groups and generate a layer for each
         for group in grouped:
             ids = group["IDs"]
             category = objects[ids[0]]["type"]
@@ -175,6 +175,7 @@ def handle():
 
             svg.append(g)
 
+        # Loop through ungrouped objects and generate a layer for each
         for val in ungrouped:
             category = objects[val]["type"]
             layer += 1
@@ -201,6 +202,7 @@ def handle():
                     aria_label=category,
                     data_image_layer="Layer "+str(layer)))
 
+    # Include semantic segmentation in SVG independent of the layers
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
             in preprocessors:
         logging.debug("Semantic segmentation found. "
