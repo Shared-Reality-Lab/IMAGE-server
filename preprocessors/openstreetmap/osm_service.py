@@ -12,6 +12,7 @@ import requests
 from config import defaultServer, secondaryServer1, secondaryServer2
 from geographiclib.geodesic import Geodesic
 import traceback
+from config import map_server_1, map_server_2, map_server_3
 
 
 # Configure logging settings
@@ -93,14 +94,15 @@ def get_streets(bbox_coord):
         OSM_data = server_config1(defaultServer, bbox_coord)
     except Exception:
         try:
-            error = 'Pegasus Server not responding, so connecting VK Maps' \
-                'Overpass API Server'
+            error = error = (f"{map_server_1} not responding, so connecting "
+                             f"{map_server_2}")
             LOGGER.debug(error)
             OSM_data = server_config1(secondaryServer1, bbox_coord)
         except Exception:
             try:
-                error = 'VK Maps Overpass Server not responding, so' \
-                    'connecting Main Overpass Server'
+                error = error = (
+                    f"{map_server_2} not responding, so connecting "
+                    f"{map_server_3}")
                 LOGGER.debug(error)
                 OSM_data = server_config1(secondaryServer2, bbox_coord)
             except Exception:
@@ -675,14 +677,14 @@ def get_amenities(bbox_coord):
         amenities = server_config2(defaultServer, bbox_coord)
     except Exception:
         try:
-            error = 'Pegasus Server not responding, so connecting VK Maps'\
-                'Overpass API Server'
+            error = (f"{map_server_1} not responding, so connecting "
+                     f"{map_server_2}")
             LOGGER.debug(error)
             amenities = server_config2(secondaryServer1, bbox_coord)
         except Exception:
             try:
-                error = 'VK Maps Overpass Server not responding, so' \
-                    'connecting Main Overpass Server'
+                error = (f"{map_server_2} not responding, so connecting "
+                         f"{map_server_3}")
                 LOGGER.debug(error)
                 amenities = server_config2(secondaryServer2, bbox_coord)
             except Exception:
