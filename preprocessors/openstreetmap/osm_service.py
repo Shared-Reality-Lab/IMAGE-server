@@ -683,7 +683,7 @@ def get_amenities(bbox_coord):
         except Exception:
             try:
                 error = (f"{secondaryServer1} not responding, so connecting "
-                         f"{secondayServer2}")
+                         f"{secondaryServer2}")
                 LOGGER.debug(error)
                 amenities = server_config2(secondaryServer2, bbox_coord)
             except Exception:
