@@ -75,22 +75,9 @@ def get_map_data():
 
     # Build OpenStreetMap request
     coords = get_coordinates(content)
-    if coords is None:
-        error = 'Unable to find latitude/longitude'
-        LOGGER.error(error)
-        return jsonify(""), 400
 
     latitude = coords["latitude"]
     longitude = coords["longitude"]
-
-    if latitude is None:
-        error = 'Unable to find latitude'
-        LOGGER.error(error)
-        return jsonify(""), 400
-    if longitude is None:
-        error = 'Unable to find longitude'
-        LOGGER.error(error)
-        return jsonify(""), 400
 
     # distance in metres
     distance = 100
