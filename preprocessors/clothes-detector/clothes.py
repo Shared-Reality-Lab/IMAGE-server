@@ -32,13 +32,14 @@ import io
 from scipy.spatial import KDTree
 
 from colorthief import ColorThief
-from yolo.utils.utils import *
+from yolo.utils.utils import load_classes
 from predictors.YOLOv3 import YOLOv3Predictor
 
 app = Flask(__name__)
 
 
-# code referred from https://medium.com/codex/rgb-to-color-names-in-python-the-robust-way-ec4a9d97a01f
+# code referred from
+# https://medium.com/codex/rgb-to-color-names-in-python-the-robust-way-ec4a9d97a01f
 def convert_rgb_to_names(rgb_tuple):
     # a dictionary of all the hex and their respective names in css3
     css3_db = CSS3_HEX_TO_NAMES
@@ -47,10 +48,10 @@ def convert_rgb_to_names(rgb_tuple):
     for color_hex, color_name in css3_db.items():
         names.append(color_name)
         rgb_values.append(hex_to_rgb(color_hex))
-    
     kdt_db = KDTree(rgb_values)
     distance, index = kdt_db.query(rgb_tuple)
     return names[index]
+
 
 def get_clothes(img):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
