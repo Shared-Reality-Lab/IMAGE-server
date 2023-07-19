@@ -11,6 +11,18 @@ import os
 import requests
 from config import defaultServer, secondaryServer1, secondaryServer2
 from geographiclib.geodesic import Geodesic
+import traceback
+
+
+# Configure logging settings
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s]: %(message)s",
+    datefmt="%y-%m-%d %H:%M %Z",
+)
+
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
 
 
 def create_bbox_coordinates(distance, lat, lon):
@@ -81,17 +93,20 @@ def get_streets(bbox_coord):
         OSM_data = server_config1(defaultServer, bbox_coord)
     except Exception:
         try:
-            error = 'Primary server not responding, so connecting server 1'
-            logging.error(error)
+            error = error = (f"{defaultServer} not responding, so connecting "
+                             f"{secondaryServer1}")
+            LOGGER.debug(error)
             OSM_data = server_config1(secondaryServer1, bbox_coord)
         except Exception:
             try:
-                error = 'Server 1 not responding, so connecting server 2'
-                logging.error(error)
+                error = error = (
+                    f"{secondaryServer1} not responding, so connecting "
+                    f"{secondaryServer2}")
+                LOGGER.debug(error)
                 OSM_data = server_config1(secondaryServer2, bbox_coord)
             except Exception:
                 error = 'Unable to get data. All servers down!'
-                logging.error(error)
+                LOGGER.debug(error)
                 OSM_data = None
     return (OSM_data)
 
@@ -180,7 +195,8 @@ def process_streets_data(OSM_data, bbox_coordinates):
                     processed_OSM_data.append(way_object)
     except AttributeError:
         error = 'Overpass Attibute error. Retry again'
-        logging.error(error)
+        LOGGER.debug(error)
+        LOGGER.debug(traceback.format_exc())
     else:
         return processed_OSM_data
 
@@ -660,17 +676,19 @@ def get_amenities(bbox_coord):
         amenities = server_config2(defaultServer, bbox_coord)
     except Exception:
         try:
-            error = 'Primary server not responding, so connecting server 1'
-            logging.error(error)
+            error = (f"{defaultServer} not responding, so connecting "
+                     f"{secondaryServer1}")
+            LOGGER.debug(error)
             amenities = server_config2(secondaryServer1, bbox_coord)
         except Exception:
             try:
-                error = 'Server 1 not responding, so connecting server 2'
-                logging.error(error)
+                error = (f"{secondaryServer1} not responding, so connecting "
+                         f"{secondaryServer2}")
+                LOGGER.debug(error)
                 amenities = server_config2(secondaryServer2, bbox_coord)
             except Exception:
                 error = 'Unable to get data. All servers down!'
-                logging.error(error)
+                LOGGER.debug(error)
                 amenities = None
 
     # Fetch the basic amenity tags
@@ -975,7 +993,7 @@ def validate(schema, data, resolver, json_message, error_code):
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(data)
     except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
+        LOGGER.error(error)
         return jsonify(json_message), error_code
     return None
 
@@ -992,12 +1010,12 @@ def get_coordinates(content):
 
     if "placeID" not in content:
         error = 'Unable to find placeID'
-        logging.error(error)
-        return None
+        LOGGER.error(error)
+        return jsonify(""), 400
+
     if "GOOGLE_PLACES_KEY" not in os.environ:
-        error = 'Unable to find API Key'
-        logging.error(error)
-        return None
+        LOGGER.debug("Unable to find path to API key directory")
+        return jsonify(""), 500
     google_api_key = os.environ["GOOGLE_PLACES_KEY"]
 
     # Query google places API to find latitude longitude
@@ -1008,7 +1026,8 @@ def get_coordinates(content):
     place_response = requests.get(request).json()
 
     if not check_google_response(place_response):
-        return None
+        LOGGER.debug("Zero or Incomplete results returned for place ID")
+        return jsonify(""), 500
 
     location = place_response['result']['geometry']['location']
     coordinates = {
@@ -1031,26 +1050,26 @@ def check_google_response(place_response):
         bool: True if valid, False otherwise
     """
     if 'result' not in place_response or len(place_response['result']) == 0:
-        logging.error("No results found for placeID")
-        logging.error(place_response)
+        LOGGER.error("No results found for placeID")
+        LOGGER.error(place_response)
         return False
 
     result = place_response['result']
 
     if 'geometry' not in result:
-        logging.error("No geometry found for placeID")
+        LOGGER.error("No geometry found for placeID")
         return False
 
     if 'location' not in result['geometry']:
-        logging.error("No location found for placeID")
+        LOGGER.error("No location found for placeID")
         return False
 
     if 'lat' not in result['geometry']['location']:
-        logging.error("No latitude found for placeID")
+        LOGGER.error("No latitude found for placeID")
         return False
 
     if 'lng' not in result['geometry']['location']:
-        logging.error("No longitude found for placeID")
+        LOGGER.error("No longitude found for placeID")
         return False
 
     return True
