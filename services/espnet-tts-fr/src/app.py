@@ -26,6 +26,7 @@ from io import BytesIO
 from jsonschema import validate
 from torch.cuda import empty_cache
 from werkzeug.wsgi import FileWrapper
+from num2words import num2words
 
 logging.basicConfig(format="%(asctime)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -38,6 +39,33 @@ with open("segment.response.json", "r") as f:
     segment_response = json.load(f)
 
 app = Flask(__name__)
+
+
+def isfloat(num):
+    try:
+        float(num)
+        return True
+    except ValueError:
+        return False
+
+
+def processSegment(s):
+    if s.isdigit() or isfloat(s):
+        return num2words(s, lang='fr')
+    if "." in s:
+        temps = s.replace(".", "")
+        if temps.isnumeric():
+            temps = int(temps)
+            s = num2words(int(temps), lang='fr')
+    if "," in s:
+        tempns = s.replace(",", ".")
+        if isfloat(tempns):
+            s = num2words(tempns, lang='fr')
+    if "-" in s:
+        num_in_ns = s.split("-")
+        s = " ".join(["de", num2words(num_in_ns[0], lang='fr'),
+                      "à", num2words(num_in_ns[1], lang='fr')])
+    return s
 
 
 @app.route("/service/tts/simple", methods=["POST"])
@@ -82,7 +110,17 @@ def segment_tts():
     try:
         totalWav = None
         durations = []
-        wavs = [tts(segment) for segment in data["segments"]]
+        wavs = []
+        for segment in data["segments"]:
+            # detect numerical in segments
+            segment_new = []
+            logger.debug(segment.split())
+            for s in segment.split():
+                logger.debug(f'Performing on: {s}')
+                segment_new.append(processSegment(s))
+            segment_new = " ".join(segment_new)
+            logger.debug(f'New Segment: {segment_new}')
+            wavs.append(tts(segment_new))
         for wav in wavs:
             if totalWav is not None:
                 totalWav = np.append(totalWav, wav)
