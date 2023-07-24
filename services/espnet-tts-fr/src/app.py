@@ -50,22 +50,19 @@ def isfloat(num):
 
 
 def processSegment(s):
-    if s.isdigit() or isfloat(s):
+    if s.isnumeric() or isfloat(s):
+        logger.debug(f"Case: '{s}' is numeric or float.")
         return num2words(s, lang='fr')
-    if "." in s:
-        temps = s.replace(".", "")
-        if temps.isnumeric():
-            temps = int(temps)
-            s = num2words(int(temps), lang='fr')
-    if "," in s:
+    elif "," in s:
+        logger.debug(f"Case: '{s}' has , as separator")
         tempns = s.replace(",", ".")
         if isfloat(tempns):
-            s = num2words(tempns, lang='fr')
-    if "-" in s:
+            return num2words(float(tempns), lang='fr')
+    elif "-" in s:
+        logger.debug("case 3: -")
         num_in_ns = s.split("-")
-        s = " ".join(["de", num2words(num_in_ns[0], lang='fr'),
-                      "à", num2words(num_in_ns[1], lang='fr')])
-    return s
+        return " ".join(["de", num2words(num_in_ns[0], lang='fr'),
+                         "à", num2words(num_in_ns[1], lang='fr')])
 
 
 @app.route("/service/tts/simple", methods=["POST"])
@@ -116,8 +113,14 @@ def segment_tts():
             segment_new = []
             logger.debug(segment.split())
             for s in segment.split():
-                logger.debug(f'Performing on: {s}')
-                segment_new.append(processSegment(s))
+                try:
+                    logger.debug(f'Performing on: "{s}"')
+                    segment_new.append(processSegment(s))
+                except Exception as e:
+                    logger.error("ERROR processing")
+                    logger.error(e)
+                    segment_new.append(s)
+
             segment_new = " ".join(segment_new)
             logger.debug(f'New Segment: {segment_new}')
             wavs.append(tts(segment_new))
