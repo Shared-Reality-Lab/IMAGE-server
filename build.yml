@@ -81,6 +81,11 @@ services:
             context: .
             dockerfile: ./preprocessors/emotion-recognition/Dockerfile
         image: "emotion-recognition:latest"
+    caption-recognition:
+        build:
+            context: .
+            dockerfile: ./preprocessors/caption-recognition/Dockerfile
+        image: "caption-recognition:latest"
     celebrity-detector:
         build:
             context: .
