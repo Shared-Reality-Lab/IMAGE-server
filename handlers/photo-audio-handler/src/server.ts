@@ -61,7 +61,7 @@ app.post("/handler", async (req, res) => {
     const semseg = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"];
     const objDet = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
     const objGroup = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
-    const targetLanguague = req.body["language"];
+    const targetLanguage = req.body["language"];
 
     // Ignore secondCat since it isn't useful on its own
     if (!(semseg && semseg?.segments) && !(objDet && objDet?.objects) && !objGroup) {
@@ -121,12 +121,12 @@ app.post("/handler", async (req, res) => {
     // Construct Text (if requested)
     // translate ttsData if the target language is not English
     // this will change ttsData ["value"] fields
-    if (targetLanguague != "en") {
-        console.debug(`Translating ttsData values to ${targetLanguague}"`);
+    if (targetLanguage != "en") {
+        console.debug(`Translating ttsData values to ${targetLanguage}"`);
         try {
             const translatedValues = await utils.getTranslationSegments(
                 ttsData.map((x) => x["value"]),
-                targetLanguague
+                targetLanguage
                 );
             console.debug("Mapping translated values to ttsData")
                 
@@ -134,7 +134,7 @@ app.post("/handler", async (req, res) => {
                 ttsData[i]["value"] = translatedValues.translations[i];
             }
         } catch (err) {
-            console.error(`Failed to translate ttsData to ${targetLanguague}!`);
+            console.error(`Failed to translate ttsData to ${targetLanguage}!`);
         }
     }
 
@@ -164,7 +164,7 @@ app.post("/handler", async (req, res) => {
             // Do TTS
             console.debug("Generating TTS Response");
             const ttsResponse = await utils.getTTS(
-            ttsData.map((x) => x["value"]), targetLanguague
+            ttsData.map((x) => x["value"]), targetLanguage
             );
             // Add offset values to data
             for (let i = 0, offset = 0; i < ttsData.length; i++) {
@@ -201,6 +201,18 @@ app.post("/handler", async (req, res) => {
                 // TODO detect mime type from file
                 const dataURL = "data:audio/mp3;base64," + buffer.toString("base64");
                 if (hasSegment && segArray.length > 0) {
+                    if(targetLanguage !== 'en')
+                    {
+                        console.debug("Translating the segment labels (['audioInfo']['name'])")
+                        const segmentLabels = await utils.getTranslationSegments(
+                            segArray.map((x) => x['name']),
+                            targetLanguage
+                        )
+                        for(let i = 0; i < segArray.length; i++) {
+                            segArray[i]['name'] = segmentLabels.translations[i];
+                        }
+                    }
+
                     console.debug("Constructing segment audio rendering")
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
@@ -255,18 +267,17 @@ app.post("/handler", async (req, res) => {
         }
     }
 
-	
 	// Translate renderings description before sending response
-	if (targetLanguague !== "en") {
+	if (targetLanguage !== "en") {
 		try {
-			console.debug("Translating renderings description to " + targetLanguague);
-			const translatedDesc:utils.TranslationResponse = await utils.getTranslationSegments(renderings.map(x => x["description"]), targetLanguague);
+			console.debug("Translating renderings description to " + targetLanguage);
+			const translatedDesc:utils.TranslationResponse = await utils.getTranslationSegments(renderings.map(x => x["description"]), targetLanguage);
 
 			for (let i = 0; i < renderings.length; i++) {
 				renderings[i]["description"] = translatedDesc.translations[i];
 			}
 		} catch(e) {
-			console.error("Failed to translate rendering descriptions to " + targetLanguague);
+			console.error("Failed to translate rendering descriptions to " + targetLanguage);
 			console.error(e);
 		}
 	}
