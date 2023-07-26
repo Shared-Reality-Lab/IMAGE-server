@@ -129,7 +129,6 @@ def segment_tts():
                     segment_new.append(s)
 
             segment_new = " ".join(str(s) for s in segment_new)
-            logger.debug(f'New Segment: {segment_new}')
             wavs.append(tts(segment_new))
         for wav in wavs:
             if totalWav is not None:
