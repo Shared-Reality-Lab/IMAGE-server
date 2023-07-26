@@ -51,18 +51,26 @@ def isfloat(num):
 
 def processSegment(s):
     if s.isnumeric() or isfloat(s):
-        logger.debug(f"Case: '{s}' is numeric or float.")
-        return num2words(s, lang='fr')
+        logger.debug("Case: numeric or float.")
+        s = num2words(s, lang='fr')
     elif "," in s:
-        logger.debug(f"Case: '{s}' has , as separator")
+        logger.debug("Case: has a , as separator")
         tempns = s.replace(",", ".")
         if isfloat(tempns):
-            return num2words(float(tempns), lang='fr')
+            s = num2words(float(tempns), lang='fr')
     elif "-" in s:
-        logger.debug("case 3: -")
+        logger.debug("Case: has a - as separator")
         num_in_ns = s.split("-")
-        return " ".join(["de", num2words(num_in_ns[0], lang='fr'),
-                         "à", num2words(num_in_ns[1], lang='fr')])
+        ableToConvert = True
+        # making sure parts of segment are numbers (cast-able)
+        for num in num_in_ns:
+            if not isfloat(num):
+                ableToConvert = False
+        if ableToConvert:
+            s = " ".join(["de", num2words(num_in_ns[0], lang='fr'),
+                          "à", num2words(num_in_ns[1], lang='fr')])
+    # without any abnormal syntax, return unchanged s
+    return s
 
 
 @app.route("/service/tts/simple", methods=["POST"])
@@ -111,17 +119,16 @@ def segment_tts():
         for segment in data["segments"]:
             # detect numerical in segments
             segment_new = []
-            logger.debug(segment.split())
             for s in segment.split():
                 try:
-                    logger.debug(f'Performing on: "{s}"')
+                    # logger.debug(f'Performing on: "{s}"')
                     segment_new.append(processSegment(s))
                 except Exception as e:
                     logger.error("ERROR processing")
                     logger.error(e)
                     segment_new.append(s)
 
-            segment_new = " ".join(segment_new)
+            segment_new = " ".join(str(s) for s in segment_new)
             logger.debug(f'New Segment: {segment_new}')
             wavs.append(tts(segment_new))
         for wav in wavs:
