@@ -81,6 +81,19 @@ services:
         #             devices:
         #             - driver: nvidia
         #               capabilities: ["gpu", "utility", "compute"]
+
+    clothes-detctor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-clothes-detector:unstable
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                    - driver: nvidia
+                    device_ids: ['1']
+                    capabilities: ["gpu", "utility", "compute"]
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 5
+            ca.mcgill.a11y.image.port: 5000
     content-categoriser:
         image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:unstable
         labels:
