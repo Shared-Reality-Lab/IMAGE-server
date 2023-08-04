@@ -134,7 +134,7 @@ def segment_tts():
                 try:
                     segment_new.append(processSegment(s))
                 except Exception as e:
-                    logger.error(f"ERROR processing {s}")
+                    # logger.error(f"ERROR processing {s}")
                     logger.error(e)
                     segment_new.append(s)
 
