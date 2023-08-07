@@ -132,44 +132,34 @@ app.post("/handler", async (req, res) => {
     // Translate `segments` & description to target language if not English
     if (targetLanguage != "en") {
         try {
-                console.log(`Translating maps data to ${targetLanguage}`);
-                const translatedSegments:string[] = await fetch("http://multilang-support/service/translate", {
-                    "method": "POST",
-                    "headers": {
-                    "Content-Type": "application/json"
-                },
-                "body": JSON.stringify({
-                    "segments": segments,
-                    "src_lang": "en",
-                    "tgt_lang": targetLanguage
-                })
-            }).then(resp => {
-                return resp.json();
-            }).then(json => {
-                return json["translations"];
-            });
+            console.log(`Translating description & map data to '${targetLanguage}'`);
+            const translateSegments = []; // Combine map description with data to translate
+            translateSegments.push(description);
+            translateSegments.push(...segments);
             
-            // Translate description
-            description = await fetch("http://multilang-support/service/translate", {
+            const translated:string[] = await fetch( "http://multilang-support/service/translate", {
                 "method": "POST",
                 "headers": {
                     "Content-Type": "application/json"
                 },
                 "body": JSON.stringify({
-                    "segments": [description],
+                    "segments": translateSegments,
                     "src_lang": "en",
                     "tgt_lang": targetLanguage
                 })
             }).then(resp => {
-                return resp.json();
+            return resp.json();
             }).then(json => {
-                return json["translations"][0];
+                return json["translations"];
             });
-            
+
+            // Mapping description & segments
+            description = translated[0];
             // Replace `segments` with translated segments
-            for(let i = 0; i < segments.length; i++) {
-                segments[i] = translatedSegments[i];
+            for(let i = 1; i < translated.length; i++) {
+                segments[i - 1] = translated[i];
             }
+            
         } catch (e) {
             console.error(e);
             console.debug(`Cannot translate to ${targetLanguage}`);
