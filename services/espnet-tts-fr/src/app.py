@@ -26,10 +26,16 @@ from io import BytesIO
 from jsonschema import validate
 from torch.cuda import empty_cache
 from werkzeug.wsgi import FileWrapper
+from num2words import num2words
+import re  # for regular expression processing
 
 logging.basicConfig(format="%(asctime)s %(message)s")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+# Define regular expression (regex)
+numRegex = r'\d+(?:[,.]\d+)?'
+rangeRegex = r'\d+(?:[,.]\d+)?\s*-\s*\d+(?:[,.]\d+)?'
 
 with open("segment.request.json", "r") as f:
     segment_request = json.load(f)
@@ -38,6 +44,44 @@ with open("segment.response.json", "r") as f:
     segment_response = json.load(f)
 
 app = Flask(__name__)
+
+
+def frenchNum(num):
+    '''
+    Convert numeric number to French words
+    - @param: `num` - could be str or int type
+    - The function can also process `,` separated numbers
+    '''
+    commaSeparateRegex = re.compile(r'\d+\,\d+')
+    if commaSeparateRegex.search(num):
+        num = num.replace(",", ".")
+    return num2words(num, lang='fr')
+
+
+def processRange(match):
+    '''
+    Processing a number range (having a hyphen as a separator)
+    Cases: age, year, statistic ranges
+    E.g.: 12-24, 12,56 - 25,67
+    '''
+    phrase = match.group()
+    numRange = re.findall(numRegex, phrase)  # num range will have 2 elements
+    if len(numRange) != 2:
+        logger.debug(
+            f"Error: processing range, but having {len(numRange)} numbers")
+        return
+    return f"de {frenchNum(numRange[0])} à {frenchNum(numRange[1])}"
+
+
+def processSegment(s):
+    if re.match(rangeRegex, s):
+        # If the match is a range type
+        return re.sub(rangeRegex, processRange, s)
+    elif re.match(numRegex, s):
+        # If the match is a standalone number
+        return frenchNum(s)
+    else:
+        return s
 
 
 @app.route("/service/tts/simple", methods=["POST"])
@@ -82,7 +126,20 @@ def segment_tts():
     try:
         totalWav = None
         durations = []
-        wavs = [tts(segment) for segment in data["segments"]]
+        wavs = []
+        for segment in data["segments"]:
+            # detect numerical in segments
+            segment_new = []
+            for s in segment.split():
+                try:
+                    segment_new.append(processSegment(s))
+                except Exception as e:
+                    # logger.error(f"ERROR processing {s}")
+                    logger.error(e)
+                    segment_new.append(s)
+
+            segment_new = " ".join(str(s) for s in segment_new)
+            wavs.append(tts(segment_new))
         for wav in wavs:
             if totalWav is not None:
                 totalWav = np.append(totalWav, wav)

@@ -149,7 +149,7 @@ class Translator:
             output_query = self.decode_generated_tensor(output_tensor)
 
             # 4. Translated query -> result
-            LOGGER.info(f'Translated: "{input_query}" --> "{output_query}"')
+            # LOGGER.info(f'Translated: "{input_query}" --> "{output_query}"')
             translations.append(output_query)
         finish_translate = time.time()
         translate_time = int((finish_translate - start_translate)*1000)
@@ -185,7 +185,7 @@ if "utils" in __name__ or __name__ == "__main__":
     instantiate()
     ready_message = "Translation service is instantiated and ready!"
     LOGGER.info(ready_message)
-    # Dummy translation to test the service
+    # Dummy translation to test if the service is ready
     for lang in SUPPORTED_LANGS:
         LOGGER.info(Translator.get_translator("en", lang)
                     .translate([ready_message])[0].pop())
