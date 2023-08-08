@@ -90,10 +90,10 @@ app.post("/handler", async (req, res) => {
                     if (targetLanguage != "en") {
                         console.debug(`Translating to ${targetLanguage}...`);
                         const graphInfoTranslated = await utils.getTranslationSegments([graphInfo], targetLanguage);
-                        graphInfo = graphInfoTranslated["translations"][0];
+                        graphInfo = graphInfoTranslated[0];
 
                         // Update description in target language
-                        description = (await utils.getTranslationSegments([description], targetLanguage)).translations[0];
+                        description = (await utils.getTranslationSegments([description], targetLanguage))[0];
                     }
                     const ttsResponse = await utils.getTTS([graphInfo], targetLanguage);
                     const scData = {
