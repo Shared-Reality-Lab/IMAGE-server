@@ -172,6 +172,11 @@ services:
             - ./config/express-common.env
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
+    action-recognition:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-action-recognition:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 4
+            ca.mcgill.a11y.image.port: 5000
     # Handlers
     autour-handler:
         image: ghcr.io/shared-reality-lab/image-handler-autour:unstable
@@ -272,6 +277,10 @@ services:
             ca.mcgill.a11y.image.handler: enable
     map-tactile-svg-handler:
         image: ghcr.io/shared-reality-lab/image-handler-map-tactile-svg:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+    svg-action-recognition-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-svg-action-recognition:unstable
         labels:
             ca.mcgill.a11y.image.handler: enable
 volumes:
