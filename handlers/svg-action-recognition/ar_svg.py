@@ -146,8 +146,6 @@ def handle():
     u = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
     actions = a["actions"]
     objects = o["objects"]
-    grouped = g["grouped"]
-    ungrouped = u["ungrouped"]
     svg = draw.Drawing(dimensions[0], dimensions[1])
     print(dimensions[0], dimensions[1])
     svg_layers = []
