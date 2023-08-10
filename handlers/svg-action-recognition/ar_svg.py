@@ -142,8 +142,6 @@ def handle():
 
     a = preprocessors["ca.mcgill.a11y.image.preprocessor.actionRecognition"]
     o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
-    g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
-    u = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
     actions = a["actions"]
     objects = o["objects"]
     svg = draw.Drawing(dimensions[0], dimensions[1])
