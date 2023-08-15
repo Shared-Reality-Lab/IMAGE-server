@@ -32,12 +32,6 @@ export type TTSResponse = {
     audio: string;
 }
 
-export type TranslationResponse = {
-    translations: string[];
-    src_lang: string;
-    tgt_lang: string;
-}
-
 type Obj = { ID: number, type: string, area: number };
 
 type ObjDet = {
@@ -161,22 +155,25 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[]
 
 /**
  * Get translation from multilang-support service
- * @param text: text to be translated
- * @param targetLang: target language, in ISO 639-1 format (e.g. 'en', 'fr')
- * @returns {Promise<TranslationResponse>}
+ * @param inputSegment array of text to be translated
+ * @param targetLang target language in ISO 639-1 format (e.g. 'en', 'fr')
+ * @returns an array of translated segments, corresponse to the inputSegment
  */
-export async function getTranslationSegments(text: string[], targetLang: string): Promise<TranslationResponse> {
-  return fetch("http://multilang-support/service/translate", {
+export async function getTranslationSegments(inputSegment: string[], targetLang: string) {
+  const translatedSegments = await fetch("http://multilang-support/service/translate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-        segments: text,
-        src_lang: 'en',
+        segments: inputSegment,
+        src_lang: 'en', // default
         tgt_lang: targetLang
     }),
-  }).then((resp) => resp.json() as Promise<TranslationResponse>);
+  }).then(resp => resp.json())
+  .then(json => json['translations']);
+
+  return translatedSegments;
 }
 
 export async function getTTS(text: string[], language: string): Promise<TTSResponse> {

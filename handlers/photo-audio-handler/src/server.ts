@@ -118,26 +118,25 @@ app.post("/handler", async (req, res) => {
     // Generate rendering title
     const renderingTitle = utils.renderingTitle(semseg, objDet, objGroup);
 
-    // Construct Text (if requested)
-    // translate ttsData if the target language is not English
-    // this will change ttsData ["value"] fields
+    // Handle language if targetLanguage is not English
     if (targetLanguage != "en") {
         console.debug(`Translating ttsData values to ${targetLanguage}"`);
         try {
             const translatedValues = await utils.getTranslationSegments(
                 ttsData.map((x) => x["value"]),
                 targetLanguage
-                );
+            );
             console.debug("Mapping translated values to ttsData")
                 
             for (let i = 0; i < ttsData.length; i++) {
-                ttsData[i]["value"] = translatedValues.translations[i];
+                ttsData[i]["value"] = translatedValues[i];
             }
         } catch (err) {
             console.error(`Failed to translate ttsData to ${targetLanguage}!`);
         }
     }
 
+    // Construct Text (if requested)
     if (hasText) {
         console.debug("Constructing text renderings");
         const textString = ttsData.map(x => x["value"]).join(" ");
@@ -164,7 +163,8 @@ app.post("/handler", async (req, res) => {
             // Do TTS
             console.debug("Generating TTS Response");
             const ttsResponse = await utils.getTTS(
-            ttsData.map((x) => x["value"]), targetLanguage
+                ttsData.map((x) => x["value"]),
+                targetLanguage
             );
             // Add offset values to data
             for (let i = 0, offset = 0; i < ttsData.length; i++) {
@@ -209,7 +209,7 @@ app.post("/handler", async (req, res) => {
                             targetLanguage
                         )
                         for(let i = 0; i < segArray.length; i++) {
-                            segArray[i]['name'] = segmentLabels.translations[i];
+                            segArray[i]['name'] = segmentLabels[i];
                         }
                     }
 
@@ -267,14 +267,17 @@ app.post("/handler", async (req, res) => {
         }
     }
 
-	// Translate renderings description before sending response
+	// Translate renderings' description before sending response
 	if (targetLanguage !== "en") {
 		try {
 			console.debug("Translating renderings description to " + targetLanguage);
-			const translatedDesc:utils.TranslationResponse = await utils.getTranslationSegments(renderings.map(x => x["description"]), targetLanguage);
+			const translatedDesc = await utils.getTranslationSegments(
+                renderings.map(x => x["description"]),
+                targetLanguage
+            );
 
 			for (let i = 0; i < renderings.length; i++) {
-				renderings[i]["description"] = translatedDesc.translations[i];
+				renderings[i]["description"] = translatedDesc[i];
 			}
 		} catch(e) {
 			console.error("Failed to translate rendering descriptions to " + targetLanguage);
