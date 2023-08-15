@@ -3,7 +3,7 @@ FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv wget git gcc mono-mcs && rm -rf /var/lib/apt/lists/*
 
 #COPY /preprocessors/caption-recognition/huggingface /home/python/.cache/huggingface/
-RUN wget https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP/blip_coco_caption_base.pth -P /home/python/.cache/torch>
+RUN wget https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP/blip_coco_caption_base.pth -P /home/python/.cache/torch/hub/checkpoints
 WORKDIR /app
 RUN adduser --disabled-password python
 ENV PATH="/home/python/.local/bin:${PATH}"
