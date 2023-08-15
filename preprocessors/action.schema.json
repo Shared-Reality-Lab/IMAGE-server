@@ -7,7 +7,7 @@
     "properties":{
         "actions":{
             "type":"array",
-            "description": "Contains a list of actions detected by the preprocessor 'ca.mcgill.a11y.image.preprocessor.actionRecognition'",
+            "description": "Contains a list of actions detected by the preprocessor 'ca.mcgill.a11y.image.preprocessor.actionRecognition' or empty list if no actions are found",
             "items": {
                 "type": "object",
                 "properties": {
@@ -22,7 +22,9 @@
                     },
                     "confidence":{
                         "description": "The confidence value of the output",
-                        "type":"number"
+                        "type":"number",
+                        "minimum": 0,
+                        "maximum": 1
                     }
                 },
                 "required": [
