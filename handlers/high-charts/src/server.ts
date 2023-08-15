@@ -88,11 +88,8 @@ app.post("/handler", async (req, res) => {
                     let graphInfo:string = utils.getGraphInfo(highChartsData);
                     // Language Translation if target language is not English
                     if (targetLanguage != "en") {
-                        console.debug(`Translating to ${targetLanguage}...`);
-                        const graphInfoTranslated = await utils.getTranslationSegments([graphInfo], targetLanguage);
-                        graphInfo = graphInfoTranslated[0];
-
-                        // Update description in target language
+                        console.debug(`Translating graph info & description to ${targetLanguage}...`);
+                        graphInfo = (await utils.getTranslationSegments([graphInfo], targetLanguage))[0];
                         description = (await utils.getTranslationSegments([description], targetLanguage))[0];
                     }
                     const ttsResponse = await utils.getTTS([graphInfo], targetLanguage);
@@ -175,13 +172,12 @@ app.post("/handler", async (req, res) => {
                     if (targetLanguage != "en") {
                         console.debug(`Translating pie chart & description to ${targetLanguage}...`);
                         const segmentNamesTranslated = await utils.getTranslationSegments(segmentNames, targetLanguage);
+
                         for (let i = 0; i < segmentNames.length; i++) {
-                            segmentNames[i] = segmentNamesTranslated["translations"][i];
+                            segmentNames[i] = segmentNamesTranslated[i];
                         }
                         
-                        description = await utils.getTranslationSegments([description], targetLanguage).then((resp) => {
-                            return resp["translations"][0];
-                        });
+                        description = (await utils.getTranslationSegments([description], targetLanguage))[0];
                     }
 
                     const ttsResponse = await utils.getTTS(segmentNames, targetLanguage);
