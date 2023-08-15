@@ -36,7 +36,7 @@ from yolo.utils.utils import load_classes
 from predictors.YOLOv3 import YOLOv3Predictor
 
 app = Flask(__name__)
-
+logging.basicConfig(level=logging.NOTSET)
 
 # code referred from
 # https://medium.com/codex/rgb-to-color-names-in-python-the-robust-way-ec4a9d97a01f
@@ -65,21 +65,25 @@ def get_clothes(img):
                    "nms_thres": 0.4,
                    "img_size": 416,
                    "device": device}
-
+    logging.info("loading YOLO")
     classes = load_classes(yolo_params["class_path"])
     detectron = YOLOv3Predictor(params=yolo_params)
+    logging.info("getting clothes information")
     detections = detectron.get_detections(img)
+    logging.info("retrieved clothes information")
     clothes = []
     for x1, y1, x2, y2, cls_conf, cls_pred in detections:
         x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
         y1 = 0 if y1 < 0 else y1
         x1 = 0 if x1 < 0 else x1
+        logging.info("Cropping clothes to get dominant color")
         img_crop = img[y1:y2][x1:x2]
         try:
             image = Image.fromarray(img_crop)
             byte_object = io.BytesIO()
             image.save(byte_object, 'JPEG')
             color_thief = ColorThief(byte_object)
+            logging.info("Getting dominant color")
             dominant_color = color_thief.get_color(quality=1)
             closest_name = convert_rgb_to_names(dominant_color)
         except ValueError:
@@ -140,6 +144,7 @@ def categorise():
         image = np.asarray(bytearray(binary), dtype="uint8")
         pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
         img_original = np.array(pil_image)
+        logging.info("Image decoded")
         height, width, channels = img_original.shape
         for i in range(len(objects)):
             # print(objects[i]["type"])
@@ -149,6 +154,7 @@ def categorise():
                 dimy = int(objects[i]["dimensions"][1] * height)
                 dimy1 = int(objects[i]["dimensions"][3] * height)
                 img = img_original[dimy:dimy1, dimx:dimx1]
+                logging.info("Person detected, getting clothes information")
                 cloth_list = get_clothes(img)
                 if (len(cloth_list) == 0):
 
@@ -161,7 +167,7 @@ def categorise():
                     # "confidence": conf
                 }
                 final_data.append(clothes)
-                print(final_data)
+                logging.info(final_data)
         data = {"clothes": final_data}
         try:
             validator = jsonschema.Draft7Validator(data_schema)
