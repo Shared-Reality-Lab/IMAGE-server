@@ -148,7 +148,7 @@ app.post("/handler", async (req, res) => {
                     "tgt_lang": targetLanguage
                 })
             }).then(resp => {
-            return resp.json();
+                return resp.json();
             }).then(json => {
                 return json["translations"];
             });
