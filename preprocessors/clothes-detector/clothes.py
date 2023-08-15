@@ -40,6 +40,8 @@ logging.basicConfig(level=logging.NOTSET)
 
 # code referred from
 # https://medium.com/codex/rgb-to-color-names-in-python-the-robust-way-ec4a9d97a01f
+
+
 def convert_rgb_to_names(rgb_tuple):
     # a dictionary of all the hex and their respective names in css3
     css3_db = CSS3_HEX_TO_NAMES
