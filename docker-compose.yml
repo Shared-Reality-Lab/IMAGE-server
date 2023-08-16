@@ -89,8 +89,8 @@ services:
                 reservations:
                     devices:
                     - driver: nvidia
-                    device_ids: ['1']
-                    capabilities: ["gpu", "utility", "compute"]
+                      device_ids: ['1']
+                      capabilities: ["gpu", "utility", "compute"]
         labels:
             ca.mcgill.a11y.image.preprocessor: 5
             ca.mcgill.a11y.image.port: 5000
