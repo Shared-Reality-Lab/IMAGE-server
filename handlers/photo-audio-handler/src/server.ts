@@ -203,7 +203,7 @@ app.post("/handler", async (req, res) => {
                 if (hasSegment && segArray.length > 0) {
                     if(targetLanguage !== 'en')
                     {
-                        console.debug("Translating the segment labels (['audioInfo']['name'])")
+                        console.debug("Translating the segment labels (audioInfo/name)")
                         const segmentLabels = await utils.getTranslationSegments(
                             segArray.map((x) => x['name']),
                             targetLanguage
