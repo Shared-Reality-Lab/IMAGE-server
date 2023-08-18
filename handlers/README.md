@@ -46,4 +46,4 @@ Some handlers use `multilang-support` microservice to translate its rendering to
 * `high-charts` 
 * `autour-handler`
 
-Please refer to [Section 7 of the IMAGE wiki](/Shared-Reality-Lab/IMAGE-server/wiki/7.-Multilang-Support-for-IMAGE-Guide) regarding the handlers for more details.
+Please refer to [Section 7 of the IMAGE wiki](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/7.-Multilang-Support-for-IMAGE-Guide) regarding the handlers for more details.
