@@ -121,7 +121,7 @@ app.post("/handler", async (req, res) => {
         // Sending segments to French TTS service
         TTS_SERVICE = "http://espnet-tts-fr/service/tts/segments";
     } else {
-        console.error("Unsupported TTS language");
+        console.error(`Autour handler doesn't support '${targetLanguage}' language`);
         res.status(500).json({
             "Error": "Unsupported language",
             "Attempted target": targetLanguage

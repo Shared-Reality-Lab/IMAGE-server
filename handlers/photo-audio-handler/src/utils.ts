@@ -186,7 +186,7 @@ export async function getTTS(text: string[], language: string): Promise<TTSRespo
     // Future TTS can be added here
     else
     {
-        console.warn(`Handler doesn't support '${language}' language at the moment`);
+        console.error(`photo-audio-handler doesn't support '${language}' language`);
         throw new Error("Unable to send segment to TTS");
     }
     

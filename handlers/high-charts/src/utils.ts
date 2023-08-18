@@ -37,7 +37,7 @@ export async function getTTS(text: string[], targetLanguage: string): Promise<TT
         ttsUrl = "http://espnet-tts-fr/service/tts/segments";
     }
     else {
-        console.error(`Unsupported language: ${targetLanguage}`);
+        console.error(`High-charts handler doesn't support '${targetLanguage}' language`);
         throw new Error(`Unsupported language: ${targetLanguage}`);
     }
     return fetch(ttsUrl, {
