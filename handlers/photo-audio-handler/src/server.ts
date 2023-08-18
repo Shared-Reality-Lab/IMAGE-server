@@ -272,9 +272,9 @@ app.post("/handler", async (req, res) => {
 		try {
 			console.debug("Translating renderings description to " + targetLanguage);
 			const translatedDesc = await utils.getTranslationSegments(
-                renderings.map(x => x["description"]),
-                targetLanguage
-            );
+                            renderings.map(x => x["description"]),
+                            targetLanguage
+                        );
 
 			for (let i = 0; i < renderings.length; i++) {
 				renderings[i]["description"] = translatedDesc[i];
