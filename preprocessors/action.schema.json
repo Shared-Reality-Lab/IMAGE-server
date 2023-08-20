@@ -17,9 +17,9 @@
                         "minimum": 0
                     },
                     "action":{
-                        "description": "Action label: Labels are one to three words long with words separated by an underscore. Action label contains all lowercase letters and first word is a verb ending in 'ing'.",
+                        "description": "Action label: Labels are one to three words long with words separated by an underscore. Action label contains all lowercase letters.",
                         "type": "string",
-                        "pattern": "[a-z]+ing(_[a-z]+)*"
+                        "pattern": "^[a-z]+(_[a-z]+)*$"
                     },
                     "confidence":{
                         "description": "The confidence value obtained by applying softmax to the output tensor from the model.",
