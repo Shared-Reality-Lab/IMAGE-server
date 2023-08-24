@@ -1,4 +1,4 @@
-# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+# Copyright (c) 2023 IMAGE Project, Shared Reality Lab, McGill University
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -28,8 +28,6 @@ from PIL import Image
 from io import BytesIO
 
 from utils import detect
-
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 app = Flask(__name__)
 
 

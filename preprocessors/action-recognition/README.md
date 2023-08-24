@@ -1,5 +1,17 @@
 # About
+This preprocessor is used for detecting human action from images. The preprocessor was trained using transfer learning with a pretrained DINOv2 model as a base and a linear head trained from scratch on action images. DINOv2 ViT-S/14 distilled was released by Meta AI Research (https://github.com/facebookresearch/dinov2). Output from object detection is used to find all instances of 'person' in a graphic and classify each instance individually
 
-This preprocessor is used for detecting human action from images. The model used is DINOv2 ViT-S/14 distilled, released by Meta AI Research (https://github.com/facebookresearch/dinov2).
+# Datasets Used
+The following datasets were used to train the model:
 
-The preprocessor uses the output from object detection to find people in the graphic and then outputs any actions detected with confidence over 50%.
+| Dataset Name  | Link |
+| ------------- | ------------- | 
+| BU101  | [Link](https://cs-people.bu.edu/sbargal/BU-action/)  |
+| Stanford 40 Actions  | [Link](http://vision.stanford.edu/Datasets/40actions.html)  | 
+| Pascal VOC  | [Link](https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/shape/action/)  |
+| Action-net  | [Link](https://github.com/OlafenwaMoses/Action-Net)  |
+| Willow Actions  | [Link](https://www.di.ens.fr/willow/research/stillactions/)  |
+| People Playing Musical Instruments | [Link](http://ai.stanford.edu/~bangpeng/ppmi.html)  |
+
+# Output
+The preprocessor outputs any actions detected with confidence over 50% with the object ID of the person from the object detection preprocessor.
