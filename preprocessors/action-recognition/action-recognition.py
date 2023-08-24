@@ -14,7 +14,6 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
-import os
 import json
 import time
 import jsonschema
