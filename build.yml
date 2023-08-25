@@ -197,6 +197,11 @@ services:
             context: .
             dockerfile: ./handlers/svg-semantic-seg/Dockerfile
         image: "semseg-svg:latest"
+    action-recognition:
+        build:
+            context: .
+            dockerfile: ./preprocessors/action-recognition/Dockerfile
+        image: "action-recognition:latest"
 
     high-charts-handler:
         build:
@@ -233,6 +238,11 @@ services:
             context: .
             dockerfile: ./preprocessors/nominatim/Dockerfile
         image: "nominatim-preprocessor:latest"
+    svg-action-recognition:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-action-recognition/Dockerfile
+        image: "svg-action-recognition:latest"
     # Supercollider on Fedora 34
     supercollider-base:
         build:
