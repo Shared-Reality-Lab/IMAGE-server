@@ -32,12 +32,6 @@ export type TTSResponse = {
     audio: string;
 }
 
-export type TranslationResponse = {
-    translations: string[];
-    src_lang: string;
-    tgt_lang: string;
-}
-
 type Obj = { ID: number, type: string, area: number };
 
 type ObjDet = {
@@ -159,31 +153,43 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[]
     return objects;
 }
 
-export async function getTranslationSegments(text: string[], targetLang: string): Promise<TranslationResponse> {
-  /**
-   * Get translation from multilang-support service
-   * @param text: text to be translated
-   * @param targetLang: target language, in ISO 639-1 format
-   * @returns {Promise<TranslationResponse>}
-   */
-  return fetch("http://multilang-support/service/translate", {
+/**
+ * Get translation from multilang-support service
+ * @param inputSegment array of text to be translated
+ * @param targetLang target language in ISO 639-1 format (e.g. 'en', 'fr')
+ * @returns an array of translated segments, corresponse to the inputSegment
+ */
+export async function getTranslationSegments(inputSegment: string[], targetLang: string) {
+  const translatedSegments = await fetch("http://multilang-support/service/translate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ segments: text, tgt_lang: targetLang }),
-  }).then((resp) => resp.json() as Promise<TranslationResponse>);
+    body: JSON.stringify({
+        segments: inputSegment,
+        src_lang: 'en', // default
+        tgt_lang: targetLang
+    }),
+  }).then(resp => resp.json())
+  .then(json => json['translations']);
+
+  return translatedSegments;
 }
 
 export async function getTTS(text: string[], language: string): Promise<TTSResponse> {
     let serviceURL: string;
     console.debug(`Getting TTS in "${language}"`);
-    if (language == "fr")
-        serviceURL = "http://espnet-tts-fr/service/tts/segments";
-    else if (language == "en")
+    if (language === "en")
         serviceURL = "http://espnet-tts/service/tts/segments";
+    else if (language === "fr")
+        serviceURL = "http://espnet-tts-fr/service/tts/segments";
+    // Future TTS can be added here
     else
-        throw new Error(`Language '${language}' not supported in getTTS`);
+    {
+        console.error(`photo-audio-handler doesn't support '${language}' language`);
+        throw new Error("Unable to send segment to TTS");
+    }
+    
     return fetch(serviceURL, {
       method: "POST",
       headers: {
