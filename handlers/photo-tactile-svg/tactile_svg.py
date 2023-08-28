@@ -231,6 +231,9 @@ def handle():
                             dimensions[1] - coords[i][1] * dimensions[1])
                 svg.append(p)
 
+    caption=""
+    title = draw.Title(caption)
+    svg.append(title)
     logging.debug("Generating final rendering")
     data = {"graphic": svg.asDataUri()}
 
