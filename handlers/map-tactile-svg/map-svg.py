@@ -107,7 +107,10 @@ def handle():
                             str(contents["coordinates"]["latitude"]) +
                             " and longitude " +
                             str(contents["coordinates"]["longitude"]))
-
+    caption = ("Map centered at latitude " +
+               str(contents["coordinates"]["latitude"]) +
+               " and longitude " +
+               str(contents["coordinates"]["longitude"]))
     # List of minor street types ('footway', 'crossing' and 'steps')
     # to be filtered out to simplify the resulting rendering
     remove_streets = ["footway", "crossing", "steps", "elevator"]
@@ -255,6 +258,7 @@ def handle():
             """
             renderingDescription = "Tactile rendering of map centered at "\
                 + targetTag
+            caption = "Map centered at " + targetTag
         except KeyError as e:
             logging.debug("Missing key " + str(e)
                           + " in nominatim preprocessor")
@@ -287,6 +291,8 @@ def handle():
                                             stroke_width=1.5,
                                             stroke='red',
                                             aria_label=label))
+    title = draw.Title(caption)
+    svg.append(title)
     data = {"graphic": svg.asDataUri()}
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
