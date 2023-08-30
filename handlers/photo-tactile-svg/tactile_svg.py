@@ -137,14 +137,14 @@ def handle():
     # or semantic segmentation is present
     svg = draw.Drawing(dimensions[0], dimensions[1])
     form = inflect.engine()
-    caption=""
+    caption = ""
 
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors\
             and "ca.mcgill.a11y.image.preprocessor.grouping" in preprocessors:
         logging.debug("Object detector and grouping preprocessor found. "
                       "Adding data to response...")
         caption = "This photo contains "
-        obj_list=[]
+        obj_list = []
         preprocessor_names.append('Things and people')
         o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
         g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
@@ -157,7 +157,7 @@ def handle():
             ids = group["IDs"]
             # Pluralize names of layers with more than 1 object
             category = form.plural(objects[ids[0]]["type"]).strip()
-            obj_list.append(str(len(ids))+ " "+ category)
+            obj_list.append(str(len(ids)) + " " + category)
             layer += 1
             g = draw.Group(data_image_layer="Layer " +
                            str(layer), aria_label=category)
@@ -185,6 +185,7 @@ def handle():
         # Loop through ungrouped objects and generate a layer for each
         for val in ungrouped:
             category = objects[val]["type"].strip()
+            # appending singular objects with appropriate article
             obj_list.append(form.a(category))
             layer += 1
             x1 = (objects[val]
@@ -210,12 +211,12 @@ def handle():
                     aria_label=category,
                     data_image_layer="Layer "+str(layer)))
 
-        if len(obj_list)>0:
-            if len(obj_list)>1:
-                obj_list[-1] = "and "+ obj_list[-1]+"." 
+        if len(obj_list) > 0:
+            if len(obj_list) > 1:
+                obj_list[-1] = "and " + obj_list[-1] + "." 
                 caption += ", ".join(obj_list)
             else:
-                caption += obj_list[0]+"."   
+                caption += obj_list[0] + "."   
 
     # Include semantic segmentation in SVG independent of the layers
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
@@ -223,9 +224,9 @@ def handle():
         logging.debug("Semantic segmentation found. "
                       "Adding data to response...")
         preprocessor_names.append("Outlines of regions")
-        obj_list=[]
+        obj_list = []
         caption += ("This photo " +
-                    ("" if len(caption)==0 else "also ") +
+                    ("" if len(caption) == 0 else "also ") +
                     "contains the following outlines of regions: ")
         s = preprocessors["ca.mcgill.a11y.image."
                           "preprocessor.semanticSegmentation"]
@@ -250,15 +251,14 @@ def handle():
                         p.L(coords[i][0] * dimensions[0],
                             dimensions[1] - coords[i][1] * dimensions[1])
                 svg.append(p)
-                
-        if len(obj_list)>0:
-            if len(obj_list)>1:
-                obj_list[-1] = "and "+ obj_list[-1]+"." 
+           
+        if len(obj_list) > 0:
+            if len(obj_list) > 1:
+                obj_list[-1] = "and " + obj_list[-1] + "." 
                 caption += ", ".join(obj_list)
             else:
-                caption += obj_list[0]+"."
+                caption += obj_list[0] + "."
 
-    
     title = draw.Title(caption)
     svg.append(title)
     logging.debug("Generating final rendering")
