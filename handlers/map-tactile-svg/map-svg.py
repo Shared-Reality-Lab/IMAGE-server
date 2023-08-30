@@ -107,7 +107,10 @@ def handle():
                             str(contents["coordinates"]["latitude"]) +
                             " and longitude " +
                             str(contents["coordinates"]["longitude"]))
-
+    caption = ("Map centered at latitude " +
+               str(contents["coordinates"]["latitude"]) +
+               " and longitude " +
+               str(contents["coordinates"]["longitude"]))
     # List of minor street types ('footway', 'crossing' and 'steps')
     # to be filtered out to simplify the resulting rendering
     remove_streets = ["footway", "crossing", "steps", "elevator"]
@@ -206,12 +209,17 @@ def handle():
             longitude = (
                         (float(targetData["lon"]) - lon_min)
                         * scaled_longitude)
-            targetTag = targetData["name"] if targetData["name"]\
-                is not None else targetData["display_name"]\
-                if targetData["display_name"]\
-                is not None else targetData["type"]
+            targetTag = targetData["name"] if ((targetData["name"]\
+                is not None) and (targetData["name"].strip() != ""))\
+                else targetData["display_name"]\
+                if ((targetData["display_name"]\
+                is not None) and\
+                (targetData["display_name"].strip() != ""))\
+                else targetData["type"]
             if type(targetTag) is not str:
                 raise TypeError
+            if targetTag.strip() == "":
+                raise ValueError
             # Drawing a circle at point of interest if location tag is found
             svg.append(
                         draw.Circle(
@@ -255,6 +263,7 @@ def handle():
             """
             renderingDescription = "Tactile rendering of map centered at "\
                 + targetTag
+            caption = "Map centered at " + targetTag
         except KeyError as e:
             logging.debug("Missing key " + str(e)
                           + " in nominatim preprocessor")
@@ -263,6 +272,10 @@ def handle():
             logging.debug("Expected to obtain string as "
                           "POI name in nominatim ")
             logging.debug("Obtained type " + str(type(targetTag)))
+        except ValueError:
+            logging.debug("Expected to obtain string as "
+                          "POI name in nominatim ")
+            logging.debug("Obtained empty string instead")
 
     # Drawing in the nodes of category
     # intersection, traffic lights or crossing
@@ -287,6 +300,8 @@ def handle():
                                             stroke_width=1.5,
                                             stroke='red',
                                             aria_label=label))
+    title = draw.Title(caption)
+    svg.append(title)
     data = {"graphic": svg.asDataUri()}
     rendering = {
         "type_id": "ca.mcgill.a11y.image.renderer.TactileSVG",
