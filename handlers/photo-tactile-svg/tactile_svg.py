@@ -213,10 +213,10 @@ def handle():
 
         if len(obj_list) > 0:
             if len(obj_list) > 1:
-                obj_list[-1] = "and " + obj_list[-1] + "." 
+                obj_list[-1] = "and " + obj_list[-1] + "."
                 caption += ", ".join(obj_list)
             else:
-                caption += obj_list[0] + "."   
+                caption += obj_list[0] + "."
 
     # Include semantic segmentation in SVG independent of the layers
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
@@ -251,10 +251,10 @@ def handle():
                         p.L(coords[i][0] * dimensions[0],
                             dimensions[1] - coords[i][1] * dimensions[1])
                 svg.append(p)
-           
+
         if len(obj_list) > 0:
             if len(obj_list) > 1:
-                obj_list[-1] = "and " + obj_list[-1] + "." 
+                obj_list[-1] = "and " + obj_list[-1] + "."
                 caption += ", ".join(obj_list)
             else:
                 caption += obj_list[0] + "."
