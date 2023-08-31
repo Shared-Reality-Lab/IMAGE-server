@@ -29,20 +29,26 @@ from io import BytesIO
 from utils import detect
 app = Flask(__name__)
 
+logging.basicConfig(
+    level=logging.DEBUG,  # Set the desired logging level
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'  # Optional: Specify date and time format
+)
 
-@app.route("/preprocessor", methods=['POST', ])
-def run(weights="/app/model.pth",
-        conf_thres=0.5,
-        imgsz=224,
-        padding=0.3,
-        mean=[0.5397, 0.5037, 0.4667],
-        std=[0.2916, 0.2850, 0.2944],
-        device=torch.device("cuda:0")
-        ):
-    logging.debug("Received request")
+@app.route("/preprocessor", methods=['POST'])
+def run():
+    weights="/app/model.pth"
+    conf_thres=0.5
+    imgsz=224
+    padding=0.3
+    mean=[0.5397, 0.5037, 0.4667]
+    std=[0.2916, 0.2850, 0.2944]
+    device=torch.device("cuda:0")
+    logging.info("Received request")
     data = []
 
     # load schemas
+    logging.info("Validating schemas")
     with open('./schemas/preprocessors/action.schema.json') \
             as jsonfile:
         data_schema = json.load(jsonfile)
@@ -66,12 +72,15 @@ def run(weights="/app/model.pth",
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
+    logging.info("Schemas validated")
+    
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.actionRecognition"
     preprocessor = content["preprocessors"]
     # convert the uri to processable image
     if "graphic" not in content.keys():
+        logging.info("Not image content. Skipping ...")
         return "", 204
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" \
             not in preprocessor:
@@ -88,34 +97,41 @@ def run(weights="/app/model.pth",
         pil_image = Image.open(BytesIO(image))
         img_original = np.array(pil_image)
         height, width, channels = img_original.shape
-        for i in range(len(objects)):
-            if ("person" in objects[i]["type"]):
-                person_id = int(objects[i]["ID"])
-                xleft = int(objects[i]["dimensions"][0] * width)
-                xright = int(objects[i]["dimensions"][2] * width)
-                ybottom = int(objects[i]["dimensions"][1] * height)
-                ytop = int(objects[i]["dimensions"][3] * height)
+        logging.info("Running action detection on each person found")
+        try:
+            for i in range(len(objects)):
+                if ("person" in objects[i]["type"]):
+                    person_id = int(objects[i]["ID"])
+                    xleft = int(objects[i]["dimensions"][0] * width)
+                    xright = int(objects[i]["dimensions"][2] * width)
+                    ybottom = int(objects[i]["dimensions"][1] * height)
+                    ytop = int(objects[i]["dimensions"][3] * height)
 
-                # preprocess
-                h = ytop - ybottom
-                w = xright - xleft
-                dim = int(max(h, w) * (1 + padding))
-                img = transforms.ToTensor()(img_original)
-                top = (h - dim) + ytop
-                left = xleft - (w - dim)
-                img = transforms.functional.crop(
-                    img, top=top, left=left, height=dim, width=dim)
-                img = transforms.Resize(size=[imgsz, ], antialias=True)(img)
-                img = transforms.Normalize(mean=mean, std=std)(img)
-
-                action = detect(img,
-                                person_id,
-                                conf_thres,
-                                weights,
-                                device)
-                if action:
-                    data.append(action)
+                    # preprocess
+                    h = ytop - ybottom
+                    w = xright - xleft
+                    dim = int(max(h, w) * (1 + padding))
+                    img = transforms.ToTensor()(img_original)
+                    top = (h - dim) + ytop
+                    left = xleft - (w - dim)
+                    img = transforms.functional.crop(
+                        img, top=top, left=left, height=dim, width=dim)
+                    img = transforms.Resize(size=[imgsz, ], antialias=True)(img)
+                    img = transforms.Normalize(mean=mean, std=std)(img)
+                    
+                    action = detect(img,
+                                    person_id,
+                                    conf_thres,
+                                    weights,
+                                    device)
+                    if action:
+                        data.append(action)
+        except Exception as e:
+            logging.error(f"Error while predicting action: {e}")
+            return jsonify("Error while predicting action"), 500
+        
         final = {"actions": data}
+        logging.info("Validating results schema")
         try:
             validator = jsonschema.Draft7Validator(data_schema)
             validator.validate(final)
@@ -136,10 +152,10 @@ def run(weights="/app/model.pth",
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Sending response")
+        logging.info("Schema validated")
+        logging.info("Returning response")
         return response
 
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
-    run()
