@@ -14,6 +14,8 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
+import os
+import gc
 import json
 import time
 import jsonschema
@@ -26,7 +28,8 @@ import torch
 from PIL import Image
 from io import BytesIO
 
-from utils import detect
+from utils import detect, Classifier
+
 app = Flask(__name__)
 
 logging.basicConfig(
@@ -35,17 +38,26 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'  # Optional: Specify date and time format
 )
 
+assert torch.cuda.is_available(), "CUDA not available, failing early"
+
+WEIGHTS="/app/model.pth"
+assert os.path.isfile(WEIGHTS), "Model weights not found, failing early"
+
+MODEL = Classifier()
+MODEL.load_state_dict(torch.load(WEIGHTS)['model'])
+
 @app.route("/preprocessor", methods=['POST'])
 def run():
-    weights="/app/model.pth"
     conf_thres=0.5
     imgsz=224
     padding=0.3
     mean=[0.5397, 0.5037, 0.4667]
     std=[0.2916, 0.2850, 0.2944]
-    device=torch.device("cuda:0")
-    logging.info("Received request")
     data = []
+
+    logging.info("Received request")
+    gc.collect()
+    torch.cuda.empty_cache()
 
     # load schemas
     logging.info("Validating schemas")
@@ -122,13 +134,12 @@ def run():
                     action = detect(img,
                                     person_id,
                                     conf_thres,
-                                    weights,
-                                    device)
+                                    MODEL)
                     if action:
                         data.append(action)
         except Exception as e:
-            logging.error(f"Error while predicting action: {e}")
-            return jsonify("Error while predicting action"), 500
+            logging.error(f"Error while predicting actions: {e}")
+            return jsonify("Error while predicting actions"), 500
         
         final = {"actions": data}
         logging.info("Validating results schema")

@@ -44,15 +44,24 @@ labels = ['baby_crawling',
           'writing_on_board']
 
 
-def detect(img, id, conf_thres, weights, device):
-    logging.debug("Person detected")
+def detect(img, id, conf_thres, model):
+    logging.info("Person detected")
 
-    model = Classifier().to(device)
-    checkpoint = torch.load(weights)
-    model.load_state_dict(checkpoint['model'])
+    try:
+        model = model.to("cuda")
+    except Exception as e:
+        logging.error("Error while loading model on GPU: {}".format(e))
+        raise e
+    
     if img.ndim == 3:
         img = torch.unsqueeze(img, 0)
-    img = img.cuda().to(device)
+
+    try:    
+        img = img.to("cuda")
+    except Exception as e:
+        logging.error("Error while loading image on GPU: {}".format(e))
+        raise e
+    
     out = model(img)
     conf, pred = torch.max(out, 1)
     conf = conf.item()
@@ -61,7 +70,7 @@ def detect(img, id, conf_thres, weights, device):
     conf = soft[0][pred.item()].item()
 
     if conf < conf_thres:
-        logging.debug("Confidence too low")
+        logging.info("Confidence too low")
         return None
 
     action_data = {
@@ -69,4 +78,8 @@ def detect(img, id, conf_thres, weights, device):
         "action": labels[pred.item()],
         "confidence": conf
     }
+
+    model.to("cpu")
+    torch.cuda.empty_cache()
+
     return action_data
