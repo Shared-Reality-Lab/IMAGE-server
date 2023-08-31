@@ -28,4 +28,4 @@ RUN wget https://image.a11y.mcgill.ca/models/action_recognition/model.pth
 
 EXPOSE 5000
 USER python
-CMD [ "gunicorn", "action-recognition:app", "-b", "0.0.0.0:5000","--capture-output" ]
+ENTRYPOINT [ "gunicorn", "action-recognition:app", "-b", "0.0.0.0:5000","--capture-output" ]
