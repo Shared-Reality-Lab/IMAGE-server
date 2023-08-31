@@ -48,7 +48,7 @@ MODEL.load_state_dict(torch.load(WEIGHTS)['model'])
 
 @app.route("/preprocessor", methods=['POST'])
 def run():
-    conf_thres=0.5
+    conf_thres=0.6
     imgsz=224
     padding=0.3
     mean=[0.5397, 0.5037, 0.4667]
