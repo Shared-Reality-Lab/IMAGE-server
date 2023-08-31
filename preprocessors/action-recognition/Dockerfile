@@ -1,7 +1,9 @@
-ARG PYTORCH="1.13.1"
-ARG CUDA="11.6"
+ARG PYTORCH="2.0.1"
+ARG CUDA="11.7"
 ARG CUDNN="8"
 FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-runtime
+
+ENV PYTHONUNBUFFERED=TRUE
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
@@ -9,22 +11,21 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 RUN adduser --disabled-password python
-WORKDIR /usr/src/app
+
+WORKDIR /app
+
 ENV PATH="/home/python/.local/bin:${PATH}"
 
-RUN pip3 install --upgrade pip
+RUN pip3 install --no-cache-dir --upgrade pip
+COPY --chown=python:python /preprocessors/action-recognition/requirements.txt /app/requirements.txt
+RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
-COPY /preprocessors/action-recognition/requirements.txt /app/requirements.txt
-RUN pip install -r /app/requirements.txt
+COPY --chown=python:python /schemas /app/schemas
 
-COPY /schemas /app/schemas
-WORKDIR /app
-COPY /preprocessors/action-recognition /app
+COPY --chown=python:python /preprocessors/action-recognition /app
 
 RUN wget https://image.a11y.mcgill.ca/models/action_recognition/model.pth
 
-
-EXPOSE 8080
-ENV FLASK_APP=action-recognition.py
+EXPOSE 5000
 USER python
-CMD [ "gunicorn", "action-recognition:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
+CMD [ "gunicorn", "action-recognition:app", "-b", "0.0.0.0:5000","--capture-output" ]
