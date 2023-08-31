@@ -4,9 +4,10 @@ ARG CUDNN="8"
 FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-runtime
 
 ENV PYTHONUNBUFFERED=TRUE
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+    apt-get install --no-install-recommends -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
