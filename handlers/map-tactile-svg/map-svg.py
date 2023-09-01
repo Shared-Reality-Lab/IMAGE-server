@@ -209,13 +209,13 @@ def handle():
             longitude = (
                         (float(targetData["lon"]) - lon_min)
                         * scaled_longitude)
-            targetTag = targetData["name"] if ((targetData["name"]\
-                is not None) and (targetData["name"].strip() != ""))\
+            targetTag = targetData["name"] if ((targetData["name"]
+                                                is not None) and (targetData["name"].strip() != ""))\
                 else targetData["display_name"]\
-                if ((targetData["display_name"]\
-                is not None) and\
-                (targetData["display_name"].strip() != ""))\
-                else targetData["type"]
+                if ((targetData["display_name"]
+                     is not None) and
+                    (targetData["display_name"].strip() != ""))\
+                    else targetData["type"]
             if type(targetTag) is not str:
                 raise TypeError
             if targetTag.strip() == "":
