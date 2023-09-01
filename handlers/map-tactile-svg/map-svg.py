@@ -210,7 +210,8 @@ def handle():
                         (float(targetData["lon"]) - lon_min)
                         * scaled_longitude)
             targetTag = targetData["name"] if ((targetData["name"]
-                                                is not None) and (targetData["name"].strip() != ""))\
+                                                is not None) and 
+                                               (targetData["name"].strip() != ""))\
                 else targetData["display_name"]\
                 if ((targetData["display_name"]
                      is not None) and
