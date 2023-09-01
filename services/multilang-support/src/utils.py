@@ -7,7 +7,7 @@ import time
 import logging
 
 # list of supported languages in ISO 639-1 code
-SUPPORTED_LANGS = ["fr", "es", "de"]
+SUPPORTED_LANGS = ["fr"]
 
 # Configure the logging settings
 logging.basicConfig(
