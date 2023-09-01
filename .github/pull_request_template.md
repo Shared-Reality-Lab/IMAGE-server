@@ -21,3 +21,4 @@ Don't delete below this line.
 
 * [ ] I added an entry to `docker-compose.yml` and `build.yml`.
 * [ ] I created A CI workflow under `.github/workflows`.
+* [ ] I have created a `README.md` file that describes what the component does and what it depends on (other microservices, ML models, etc.).
