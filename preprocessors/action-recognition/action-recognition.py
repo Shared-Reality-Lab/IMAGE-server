@@ -55,6 +55,8 @@ def run():
     std=[0.2916, 0.2850, 0.2944]
     data = []
 
+    global MODEL
+
     logging.info("Received request")
     gc.collect()
     torch.cuda.empty_cache()
@@ -106,7 +108,7 @@ def run():
         image_b64 = content["graphic"].split(",")[1]
         binary = base64.b64decode(image_b64)
         image = np.asarray(bytearray(binary), dtype="uint8")
-        pil_image = Image.open(BytesIO(image))
+        pil_image = Image.open(BytesIO(image)).convert("RGB")
         img_original = np.array(pil_image)
         height, width, channels = img_original.shape
         logging.info("Running action detection on each person found")
@@ -140,7 +142,7 @@ def run():
                     action = detect(img, person_id, conf_thres, MODEL)
                     if action:
                         data.append(action)
-                        
+
                     MODEL.to("cpu")
                     torch.cuda.empty_cache()
                     

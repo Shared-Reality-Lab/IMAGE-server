@@ -73,4 +73,6 @@ def detect(img, id, conf_thres, model):
         "confidence": conf
     }
 
+    logging.info("Action detected")
+
     return action_data
