@@ -47,12 +47,6 @@ labels = ['baby_crawling',
 def detect(img, id, conf_thres, model):
     logging.info("Person detected")
 
-    try:
-        model = model.to("cuda")
-    except Exception as e:
-        logging.error("Error while loading model on GPU: {}".format(e))
-        raise e
-    
     if img.ndim == 3:
         img = torch.unsqueeze(img, 0)
 
@@ -70,7 +64,7 @@ def detect(img, id, conf_thres, model):
     conf = soft[0][pred.item()].item()
 
     if conf < conf_thres:
-        logging.info("Confidence too low")
+        logging.info("Confidence too low, skipping detected person")
         return None
 
     action_data = {
@@ -78,8 +72,5 @@ def detect(img, id, conf_thres, model):
         "action": labels[pred.item()],
         "confidence": conf
     }
-
-    model.to("cpu")
-    torch.cuda.empty_cache()
 
     return action_data

@@ -130,13 +130,20 @@ def run():
                         img, top=top, left=left, height=dim, width=dim)
                     img = transforms.Resize(size=[imgsz, ], antialias=True)(img)
                     img = transforms.Normalize(mean=mean, std=std)(img)
-                    
-                    action = detect(img,
-                                    person_id,
-                                    conf_thres,
-                                    MODEL)
+
+                    try:
+                        MODEL = MODEL.to("cuda")
+                    except Exception as e:
+                        logging.error("Error while loading model on GPU: {}".format(e))
+                        return jsonify("Error while loading model on GPU"), 500
+
+                    action = detect(img, person_id, conf_thres, MODEL)
                     if action:
                         data.append(action)
+                        
+                    MODEL.to("cpu")
+                    torch.cuda.empty_cache()
+                    
         except Exception as e:
             logging.error(f"Error while predicting actions: {e}")
             return jsonify("Error while predicting actions"), 500
