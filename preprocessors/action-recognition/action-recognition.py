@@ -113,6 +113,12 @@ def run():
         height, width, channels = img_original.shape
         logging.info("Running action detection on each person found")
         try:
+            try:
+                MODEL = MODEL.to("cuda")
+            except Exception as e:
+                logging.error("Error while loading model on GPU: {}".format(e))
+                return jsonify("Error while loading model on GPU"), 500
+            
             for i in range(len(objects)):
                 if ("person" in objects[i]["type"]):
                     person_id = int(objects[i]["ID"])
@@ -133,18 +139,13 @@ def run():
                     img = transforms.Resize(size=[imgsz, ], antialias=True)(img)
                     img = transforms.Normalize(mean=mean, std=std)(img)
 
-                    try:
-                        MODEL = MODEL.to("cuda")
-                    except Exception as e:
-                        logging.error("Error while loading model on GPU: {}".format(e))
-                        return jsonify("Error while loading model on GPU"), 500
+                    
 
                     action = detect(img, person_id, conf_thres, MODEL)
                     if action:
                         data.append(action)
 
-                    MODEL.to("cpu")
-                    torch.cuda.empty_cache()
+            MODEL.to("cpu")
                     
         except Exception as e:
             logging.error(f"Error while predicting actions: {e}")
