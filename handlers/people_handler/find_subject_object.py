@@ -320,58 +320,45 @@ def findSVOs(tokens):
                 for sub in subs:
                     for obj in objs:
                         objNegated = _is_negated(obj)
+                        if (verbNegated or objNegated):
+                            val1 = v.lemma_
+                        else:
+                            val1 = v.lemma_
+                        if (verbNegated or objNegated):
+                            val2 = v2.lemma_
+                        else:
+                            val2 = v2.lemma_
                         if is_pas:  # reverse object / subject for passive
                             svos.append(
                                 (to_str(
-                                    expand(
-                                        obj,
-                                        tokens,
-                                        visited)),
+                                    expand(obj, tokens, visited)),
                                     "!" +
-                                    v.lemma_ if verbNegated or objNegated else v.lemma_,
-                                    to_str(
-                                    expand(
-                                        sub,
-                                        tokens,
-                                        visited))))
+                                    val1,
+                                    to_str(expand(sub, tokens, visited))))
                             svos.append(
                                 (to_str(
-                                    expand(
-                                        obj,
-                                        tokens,
-                                        visited)),
+                                    expand(obj, tokens, visited)),
                                     "!" +
-                                    v2.lemma_ if verbNegated or objNegated else v2.lemma_,
-                                    to_str(
-                                    expand(
-                                        sub,
-                                        tokens,
-                                        visited))))
+                                    val2,
+                                    to_str(expand(sub, tokens, visited))))
                         else:
+                            if (verbNegated or objNegated):
+                                val1 = v.lower_
+                            else:
+                                val1 = v.lower_
+                            if (verbNegated or objNegated):
+                                val2 = v2.lower_
+                            else:
+                                val2 = v2.lower_
+                            svos.append((to_str(expand(sub, tokens, visited)),
+                                         "!" +
+                                         val1,
+                                         to_str(expand(obj, tokens, visited))))
                             svos.append(
-                                (to_str(expand(
-                                        sub,
-                                        tokens,
-                                        visited)),
+                                (to_str(expand(sub, tokens, visited)),
                                     "!" +
-                                    v.lower_ if verbNegated or objNegated else v.lower_,
-                                    to_str(
-                                    expand(
-                                        obj,
-                                        tokens,
-                                        visited))))
-                            svos.append(
-                                (to_str(expand(
-                                        sub,
-                                        tokens,
-                                        visited)),
-                                    "!" +
-                                    v2.lower_ if verbNegated or objNegated else v2.lower_,
-                                    to_str(
-                                    expand(
-                                        obj,
-                                        tokens,
-                                        visited))))
+                                    val2,
+                                    to_str(expand(obj, tokens, visited))))
             else:
                 v, objs = _get_all_objs(v, is_pas)
                 for sub in subs:
@@ -379,43 +366,36 @@ def findSVOs(tokens):
                         for obj in objs:
                             objNegated = _is_negated(obj)
                             if is_pas:  # reverse object / subject for passive
+                                if (verbNegated or objNegated):
+                                    lemma_value = v.lemma_
+                                else:
+                                    lemma_value = v.lemma_
                                 svos.append(
-                                    (to_str(
-                                        expand(
-                                            obj,
-                                            tokens,
-                                            visited)),
-                                        "!" +
-                                        v.lemma_ if verbNegated or objNegated else v.lemma_,
-                                        to_str(
-                                        expand(
-                                            sub,
-                                            tokens,
-                                            visited))))
+                                    (
+                                        to_str(expand(obj, tokens, visited)),
+                                        "!" + lemma_value,
+                                        to_str(expand(sub, tokens, visited))
+                                    )
+                                )
                             else:
+                                if (verbNegated or objNegated):
+                                    val1 = v.lower_
+                                else:
+                                    val1 = v.lower_,
                                 svos.append(
-                                    (to_str(
-                                        expand(
-                                            sub,
-                                            tokens,
-                                            visited)),
-                                        "!" +
-                                        v.lower_ if verbNegated or objNegated else v.lower_,
-                                        to_str(
-                                        expand(
-                                            obj,
-                                            tokens,
-                                            visited))))
+                                    (
+                                        to_str(expand(sub, tokens, visited)),
+                                        "!" + val1,
+                                        to_str(expand(obj, tokens, visited))
+                                    )
+                                )
                     else:
                         # no obj - just return the SV parts
                         svos.append(
-                            (to_str(
-                                expand(
-                                    sub,
-                                    tokens,
-                                    visited)),
-                                "!" +
-                                v.lower_ if verbNegated else v.lower_,
-                             ))
+                            (
+                                to_str(expand(sub, tokens, visited)),
+                                "!" + v.lower_ if verbNegated else v.lower_,
+                            )
+                        )
 
     return svos
