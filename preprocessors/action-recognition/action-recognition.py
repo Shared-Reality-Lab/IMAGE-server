@@ -40,19 +40,20 @@ logging.basicConfig(
 
 assert torch.cuda.is_available(), "CUDA not available, failing early"
 
-WEIGHTS="/app/model.pth"
+WEIGHTS = "/app/model.pth"
 assert os.path.isfile(WEIGHTS), "Model weights not found, failing early"
 
 MODEL = Classifier()
 MODEL.load_state_dict(torch.load(WEIGHTS)['model'])
 
+
 @app.route("/preprocessor", methods=['POST'])
 def run():
-    conf_thres=0.6
-    imgsz=224
-    padding=0.3
-    mean=[0.5397, 0.5037, 0.4667]
-    std=[0.2916, 0.2850, 0.2944]
+    conf_thres = 0.7
+    imgsz = 224
+    padding = 0.3
+    mean = [0.5397, 0.5037, 0.4667]
+    std = [0.2916, 0.2850, 0.2944]
     data = []
 
     global MODEL
@@ -87,7 +88,7 @@ def run():
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
     logging.info("Schemas validated")
-    
+
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.actionRecognition"
@@ -109,24 +110,35 @@ def run():
         binary = base64.b64decode(image_b64)
         image = np.asarray(bytearray(binary), dtype="uint8")
         pil_image = Image.open(BytesIO(image)).convert("RGB")
-        img_original = np.array(pil_image)
-        height, width, channels = img_original.shape
-        logging.info("Running action detection on each person found")
+        people = [person for person in objects if "person" in person["type"]]
         try:
             try:
                 MODEL = MODEL.to("cuda")
             except Exception as e:
                 logging.error("Error while loading model on GPU: {}".format(e))
                 return jsonify("Error while loading model on GPU"), 500
-            
-            for i in range(len(objects)):
-                if ("person" in objects[i]["type"]):
-                    person_id = int(objects[i]["ID"])
-                    xleft = int(objects[i]["dimensions"][0] * width)
-                    xright = int(objects[i]["dimensions"][2] * width)
-                    ybottom = int(objects[i]["dimensions"][1] * height)
-                    ytop = int(objects[i]["dimensions"][3] * height)
 
+            if len(people) == 1:
+                # don't crop if only one person detected
+                logging.info("Running action detection on the person found")
+                person_id = int(people[0]["ID"])
+                img = pil_image.resize((imgsz, imgsz))
+                img = transforms.ToTensor()(img)
+                img = transforms.Normalize(mean=mean, std=std)(img)
+                action = detect(img, person_id, conf_thres, MODEL)
+                if action:
+                    data.append(action)
+
+            else:
+                logging.info("Running action detection on each person found")
+                img_original = np.array(pil_image)
+                height, width, channels = img_original.shape
+                for person in people:
+                    person_id = int(person["ID"])
+                    xleft = int(person["dimensions"][0] * width)
+                    xright = int(person["dimensions"][2] * width)
+                    ybottom = int(person["dimensions"][1] * height)
+                    ytop = int(person["dimensions"][3] * height)
                     # preprocess
                     h = ytop - ybottom
                     w = xright - xleft
@@ -136,21 +148,19 @@ def run():
                     left = xleft - (w - dim)
                     img = transforms.functional.crop(
                         img, top=top, left=left, height=dim, width=dim)
-                    img = transforms.Resize(size=[imgsz, ], antialias=True)(img)
+                    img = transforms.Resize(
+                        size=[imgsz, ], antialias=True)(img)
                     img = transforms.Normalize(mean=mean, std=std)(img)
-
-                    
-
                     action = detect(img, person_id, conf_thres, MODEL)
                     if action:
                         data.append(action)
 
             MODEL.to("cpu")
-                    
+
         except Exception as e:
             logging.error(f"Error while predicting actions: {e}")
             return jsonify("Error while predicting actions"), 500
-        
+
         final = {"actions": data}
         logging.info("Validating results schema")
         try:
