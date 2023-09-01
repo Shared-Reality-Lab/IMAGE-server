@@ -211,12 +211,11 @@ def handle():
                     aria_label=category,
                     data_image_layer="Layer "+str(layer)))
 
-        if len(obj_list) > 0:
-            if len(obj_list) > 1:
-                obj_list[-1] = "and " + obj_list[-1] + "."
-                caption += ", ".join(obj_list)
-            else:
-                caption += obj_list[0] + "."
+        if len(obj_list) > 1:
+            obj_list[-1] = "and " + obj_list[-1] + "."
+            caption += ", ".join(obj_list)
+        elif len(obj_list) == 1:
+            caption += obj_list[0] + "."
 
     # Include semantic segmentation in SVG independent of the layers
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
