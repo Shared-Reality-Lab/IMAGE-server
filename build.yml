@@ -192,7 +192,11 @@ services:
             context: .
             dockerfile: ./handlers/svg-semantic-seg/Dockerfile
         image: "semseg-svg:latest"
-
+    people-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/people-handler/Dockerfile
+        image: "people-handler:latest"
     high-charts-handler:
         build:
             context: .
