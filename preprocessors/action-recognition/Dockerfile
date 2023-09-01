@@ -15,6 +15,8 @@ RUN adduser --disabled-password python
 
 WORKDIR /app
 
+RUN wget https://image.a11y.mcgill.ca/models/action_recognition/model.pth
+
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip3 install --no-cache-dir --upgrade pip
@@ -24,8 +26,6 @@ RUN pip3 install --no-cache-dir -r /app/requirements.txt
 COPY --chown=python:python /schemas /app/schemas
 
 COPY --chown=python:python /preprocessors/action-recognition /app
-
-RUN wget https://image.a11y.mcgill.ca/models/action_recognition/model.pth
 
 EXPOSE 5000
 USER python
