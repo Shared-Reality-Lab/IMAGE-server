@@ -50,12 +50,12 @@ def detect(img, id, conf_thres, model):
     if img.ndim == 3:
         img = torch.unsqueeze(img, 0)
 
-    try:    
+    try:
         img = img.to("cuda")
     except Exception as e:
         logging.error("Error while loading image on GPU: {}".format(e))
         raise e
-    
+
     out = model(img)
     conf, pred = torch.max(out, 1)
     conf = conf.item()
