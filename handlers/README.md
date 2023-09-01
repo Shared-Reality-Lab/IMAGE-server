@@ -39,3 +39,11 @@ As of 2022-06-29, these are the statuses of the handlers:
     * `segment-handler` (see photo-audio-handler)
 
 For more information, consult the individual READMEs of the handlers.
+
+## Language Handling
+Some handlers use `multilang-support` microservice to translate its rendering to different languages:
+* `photo-audio-handler`
+* `high-charts` 
+* `autour-handler`
+
+Please refer to [Section 7 of the IMAGE wiki](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/7.-Multilang-Support-for-IMAGE-Guide) regarding the handlers for more details.
