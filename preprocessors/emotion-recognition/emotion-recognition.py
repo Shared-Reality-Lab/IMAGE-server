@@ -82,6 +82,7 @@ def readImage():
     pil_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     img_original = np.array(pil_image)
     height, width, channels = img_original.shape
+    logging.info("Image decoded")
     print(img_original.shape, flush=True)
 #    logging.debug("in here")
     final_data = []
@@ -89,6 +90,7 @@ def readImage():
         # print(objects[i]["type"])
 
         if ("person" in objects[i]["type"]):
+            logging.info("Person detected")
             object_type.append(objects[i]["type"])
             dimensions.append(objects[i]["dimensions"])
             area.append(objects[i]["area"])
@@ -96,8 +98,10 @@ def readImage():
             dimx1 = int(objects[i]["dimensions"][2] * width)
             dimy = int(objects[i]["dimensions"][1] * height)
             dimy1 = int(objects[i]["dimensions"][3] * height)
+            logging.info("Cropping image")
             img = img_original[dimy:dimy1, dimx:dimx1]
             try:
+                logging.info("Running emotion detection")
                 obj = DeepFace.analyze(img, actions=['emotion'])
 
             except BaseException:
@@ -120,6 +124,7 @@ def readImage():
                         "confidence": conf
                     }
                 }
+            logging.info(data)
             final_data.append(data)
     request_uuid = content["request_uuid"]
     timestamp = time.time()

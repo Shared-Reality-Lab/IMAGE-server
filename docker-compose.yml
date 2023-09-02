@@ -71,7 +71,7 @@ services:
             ca.mcgill.a11y.image.preprocessor: 4
             ca.mcgill.a11y.image.port: 5000
     object-detection:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection:unstable
+        image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:unstable
         labels:
             ca.mcgill.a11y.image.preprocessor: 3
             ca.mcgill.a11y.image.port: 5000
@@ -81,6 +81,19 @@ services:
         #             devices:
         #             - driver: nvidia
         #               capabilities: ["gpu", "utility", "compute"]
+
+    clothes-detctor:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-clothes-detector:unstable
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                    - driver: nvidia
+                      device_ids: ['1']
+                      capabilities: ["gpu", "utility", "compute"]
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 5
+            ca.mcgill.a11y.image.port: 5000
     content-categoriser:
         image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:unstable
         labels:
@@ -132,6 +145,11 @@ services:
         labels:
             ca.mcgill.a11y.image.preprocessor: 5
             ca.mcgill.a11y.image.port: 5000
+    caption-recognition:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-caption-recognition:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 5
+            ca.mcgill.a11y.image.port: 5000
     semantic-segmentation:
         image: ghcr.io/shared-reality-lab/image-preprocessor-mmsemantic-segmentation:unstable
         labels:
@@ -172,6 +190,11 @@ services:
             - ./config/express-common.env
         labels:
             ca.mcgill.a11y.image.preprocessor: 2
+    action-recognition:
+        image: ghcr.io/shared-reality-lab/image-preprocessor-action-recognition:unstable
+        labels:
+            ca.mcgill.a11y.image.preprocessor: 4
+            ca.mcgill.a11y.image.port: 5000
     # Handlers
     autour-handler:
         image: ghcr.io/shared-reality-lab/image-handler-autour:unstable
@@ -276,6 +299,10 @@ services:
             ca.mcgill.a11y.image.handler: enable
     map-tactile-svg-handler:
         image: ghcr.io/shared-reality-lab/image-handler-map-tactile-svg:unstable
+        labels:
+            ca.mcgill.a11y.image.handler: enable
+    svg-action-recognition-handler:
+        image: ghcr.io/shared-reality-lab/image-handler-svg-action-recognition:unstable
         labels:
             ca.mcgill.a11y.image.handler: enable
 volumes:

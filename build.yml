@@ -59,7 +59,7 @@ services:
     object-detection:
         build:
             context: .
-            dockerfile: ./preprocessors/yolo/Dockerfile
+            dockerfile: ./preprocessors/yolov8/Dockerfile
         image: "object-detection:latest"
     object-detection-azure:
         build:
@@ -81,6 +81,11 @@ services:
             context: .
             dockerfile: ./preprocessors/emotion-recognition/Dockerfile
         image: "emotion-recognition:latest"
+    caption-recognition:
+        build:
+            context: .
+            dockerfile: ./preprocessors/caption-recognition/Dockerfile
+        image: "caption-recognition:latest"
     celebrity-detector:
         build:
             context: .
@@ -192,11 +197,19 @@ services:
             context: .
             dockerfile: ./handlers/svg-semantic-seg/Dockerfile
         image: "semseg-svg:latest"
+
     people-handler:
         build:
             context: .
             dockerfile: ./handlers/people-handler/Dockerfile
         image: "people-handler:latest"
+
+    action-recognition:
+        build:
+            context: .
+            dockerfile: ./preprocessors/action-recognition/Dockerfile
+        image: "action-recognition:latest"
+
     high-charts-handler:
         build:
             context: .
@@ -232,6 +245,11 @@ services:
             context: .
             dockerfile: ./preprocessors/nominatim/Dockerfile
         image: "nominatim-preprocessor:latest"
+    svg-action-recognition:
+        build:
+            context: .
+            dockerfile: ./handlers/svg-action-recognition/Dockerfile
+        image: "svg-action-recognition:latest"
     # Supercollider on Fedora 34
     supercollider-base:
         build:

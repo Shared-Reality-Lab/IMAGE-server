@@ -21,6 +21,7 @@ from jsonschema.exceptions import ValidationError
 import logging
 import time
 import drawSvg as draw
+import inflect
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -60,7 +61,6 @@ def handle():
         logging.error(e)
         return jsonify("Invalid request received!"), 400
 
-    # Check preprocessor data
     preprocessors = contents['preprocessors']
     preprocessor_names = []
 
@@ -136,11 +136,15 @@ def handle():
     # Initialize svg if either object detection
     # or semantic segmentation is present
     svg = draw.Drawing(dimensions[0], dimensions[1])
+    form = inflect.engine()
+    caption = ""
 
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors\
             and "ca.mcgill.a11y.image.preprocessor.grouping" in preprocessors:
         logging.debug("Object detector and grouping preprocessor found. "
                       "Adding data to response...")
+        caption = "This photo contains "
+        obj_list = []
         preprocessor_names.append('Things and people')
         o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
         g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
@@ -148,9 +152,12 @@ def handle():
         grouped = g["grouped"]
         ungrouped = g["ungrouped"]
         layer = 0
+        # Loop through the object groups and generate a layer for each
         for group in grouped:
             ids = group["IDs"]
-            category = objects[ids[0]]["type"]
+            # Pluralize names of layers with more than 1 object
+            category = form.plural(objects[ids[0]]["type"]).strip()
+            obj_list.append(str(len(ids)) + " " + category)
             layer += 1
             g = draw.Group(data_image_layer="Layer " +
                            str(layer), aria_label=category)
@@ -175,8 +182,11 @@ def handle():
 
             svg.append(g)
 
+        # Loop through ungrouped objects and generate a layer for each
         for val in ungrouped:
-            category = objects[val]["type"]
+            category = objects[val]["type"].strip()
+            # appending singular objects with appropriate article
+            obj_list.append(form.a(category))
             layer += 1
             x1 = (objects[val]
                   ['dimensions'][0] * dimensions[0])
@@ -201,17 +211,29 @@ def handle():
                     aria_label=category,
                     data_image_layer="Layer "+str(layer)))
 
+        if len(obj_list) > 1:
+            obj_list[-1] = "and " + obj_list[-1] + "."
+            caption += ", ".join(obj_list)
+        elif len(obj_list) == 1:
+            caption += obj_list[0] + "."
+
+    # Include semantic segmentation in SVG independent of the layers
     if "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"\
             in preprocessors:
         logging.debug("Semantic segmentation found. "
                       "Adding data to response...")
         preprocessor_names.append("Outlines of regions")
+        obj_list = []
+        caption += ("This photo " +
+                    ("" if len(caption) == 0 else "also ") +
+                    "contains the following outlines of regions: ")
         s = preprocessors["ca.mcgill.a11y.image."
                           "preprocessor.semanticSegmentation"]
         segments = s["segments"]
         if (len(segments) > 0):
             for segment in segments:
                 category = segment["name"]
+                obj_list.append(category)
                 contour = segment["contours"]
                 try:
                     p = draw.Path(stroke="#ff4477", stroke_width=10,
@@ -229,6 +251,15 @@ def handle():
                             dimensions[1] - coords[i][1] * dimensions[1])
                 svg.append(p)
 
+        if len(obj_list) > 0:
+            if len(obj_list) > 1:
+                obj_list[-1] = "and " + obj_list[-1] + "."
+                caption += ", ".join(obj_list)
+            else:
+                caption += obj_list[0] + "."
+
+    title = draw.Title(caption)
+    svg.append(title)
     logging.debug("Generating final rendering")
     data = {"graphic": svg.asDataUri()}
 

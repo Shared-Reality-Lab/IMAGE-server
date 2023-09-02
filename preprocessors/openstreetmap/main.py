@@ -19,13 +19,23 @@ from osm_service import (
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 
+# Configure logging settings
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s]: %(message)s",
+    datefmt="%y-%m-%d %H:%M %Z",
+)
+
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
+
 
 @app.route('/preprocessor', methods=['POST', ])
 def get_map_data():
     """
     Gets map data from OpenStreetMap
     """
-    logging.debug("Received request")
+    LOGGER.debug("Received request")
     # Load schemas
     with open('./schemas/preprocessors/openstreetmap.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
@@ -39,6 +49,7 @@ def get_map_data():
         definition_schema['$id']: definition_schema
     }
     content = request.get_json()
+    LOGGER.debug("Validating request")
     with open('./schemas/request.schema.json') as jsonfile:
         request_schema = json.load(jsonfile)
     # Validate incoming request
@@ -54,26 +65,23 @@ def get_map_data():
 
     if validated is not None:
         return validated
-
+    time_stamp = int(get_timestamp())
+    name = "ca.mcgill.a11y.image.preprocessor.openstreetmap"
+    request_uuid = content["request_uuid"]
     # Check if this request is for an openstreetmap
     if 'coordinates' not in content and 'placeID' not in content:
-        logging.info("Not map content. Skipping...")
-        return "", 204
+        LOGGER.info("Not map content. Skipping...")
+        return jsonify(""), 204
 
     # Build OpenStreetMap request
     coords = get_coordinates(content)
-    if coords is None:
-        error = 'Unable to find Latitude/Longitude'
-        logging.error(error)
-        return jsonify(error), 400
 
     latitude = coords["latitude"]
     longitude = coords["longitude"]
+
     # distance in metres
     distance = 100
-    time_stamp = int(get_timestamp())
     bbox_coordinates = create_bbox_coordinates(distance, latitude, longitude)
-    name = "ca.mcgill.a11y.image.preprocessor.openstreetmap"
     header_info = {
         "latitude": {
             "min": bbox_coordinates[0],
@@ -85,7 +93,6 @@ def get_map_data():
         }
     }
     OSM_data = get_streets(bbox_coordinates)
-    request_uuid = content["request_uuid"]
     amenity = get_amenities(bbox_coordinates)
     if OSM_data is not None:
         processed_OSM_data = process_streets_data(OSM_data, bbox_coordinates)
@@ -156,7 +163,7 @@ def get_map_data():
 
     if validated is not None:
         return validated
-    logging.debug("Sending response")
+    LOGGER.debug("Sending final response")
     return response
 
 
