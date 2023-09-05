@@ -10,7 +10,6 @@ import time
 import json
 import jsonschema
 
-
 device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
 
 logging.basicConfig(level=logging.NOTSET)
@@ -56,10 +55,13 @@ def captions():
     model, vis_processors, _ = load_model_and_preprocess(
         name="blip_caption", model_type="base_coco",
         is_eval=True, device=device)
+    logging.info("running Vision Transfromer")
     image = vis_processors["eval"](pil_img).unsqueeze(0).to(device)
     image = vis_processors["eval"](pil_img).unsqueeze(0).to(device)
+    logging.info("Finished running Transformer")
     # generate caption
     caption = model.generate({"image": image})
+    logging.info("Caption generated")
     data = {"caption": caption[0]}
     try:
         validator = jsonschema.Draft7Validator(data_schema)
