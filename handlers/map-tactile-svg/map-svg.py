@@ -459,8 +459,8 @@ def getNodePavingData(POI):
 
 # Checks whether input value is None or empty
 def notNoneorBlank(x):
-    if ((x is not None) and
-        (x.strip()!= "")):
+    if ((x is not None) and\
+            (x.strip() != "")):
         return True
     else:
         return False
