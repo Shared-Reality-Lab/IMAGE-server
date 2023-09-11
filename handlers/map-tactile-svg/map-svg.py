@@ -209,12 +209,18 @@ def handle():
             longitude = (
                         (float(targetData["lon"]) - lon_min)
                         * scaled_longitude)
-            targetTag = targetData["name"] if targetData["name"]\
-                is not None else targetData["display_name"]\
-                if targetData["display_name"]\
-                is not None else targetData["type"]
+            targetTag = targetData["name"] if\
+                (notNoneorBlank(targetData["name"]))\
+                else targetData["display_name"]\
+                if (notNoneorBlank(targetData["display_name"]))\
+                else targetData["type"]
             if type(targetTag) is not str:
-                raise TypeError
+                raise TypeError("Type Error. Obtained " +
+                                "variable of type " + str(type(targetTag)))
+            if targetTag.strip() == "":
+                raise ValueError("Value Error. Obtained "
+                                 "empty or blank string:"
+                                 "'"+targetTag+"'")
             # Drawing a circle at point of interest if location tag is found
             svg.append(
                         draw.Circle(
@@ -263,10 +269,11 @@ def handle():
             logging.debug("Missing key " + str(e)
                           + " in nominatim preprocessor")
             logging.debug("Reverse geocode data not added to response")
-        except TypeError:
-            logging.debug("Expected to obtain string as "
-                          "POI name in nominatim ")
-            logging.debug("Obtained type " + str(type(targetTag)))
+        except (TypeError, ValueError) as e:
+            logging.debug("Did not obtain expected value as "
+                          "POI name in nominatim")
+            logging.debug(str(e))
+            logging.debug("Reverse geocode data not added to response")
 
     # Drawing in the nodes of category
     # intersection, traffic lights or crossing
@@ -448,6 +455,15 @@ def getNodePavingData(POI):
         case _:
             pass
     return (tag if len(tag) == 0 else tag[:-2])
+
+
+# Checks whether input value is None or empty
+def notNoneorBlank(x):
+    if ((x is not None) and
+            (x.strip() != "")):
+        return True
+    else:
+        return False
 
 
 if __name__ == "__main__":
