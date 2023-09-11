@@ -14,6 +14,8 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
+import os
+import gc
 import json
 import time
 import jsonschema
@@ -26,23 +28,42 @@ import torch
 from PIL import Image
 from io import BytesIO
 
-from utils import detect
+from utils import detect, Classifier
+
 app = Flask(__name__)
 
+logging.basicConfig(
+    level=logging.DEBUG,  # Set the desired logging level
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'  # Optional: Specify date and time format
+)
 
-@app.route("/preprocessor", methods=['POST', ])
-def run(weights="/app/model.pth",
-        conf_thres=0.5,
-        imgsz=224,
-        padding=0.3,
-        mean=[0.5397, 0.5037, 0.4667],
-        std=[0.2916, 0.2850, 0.2944],
-        device=torch.device("cuda:0")
-        ):
-    logging.debug("Received request")
+assert torch.cuda.is_available(), "CUDA not available, failing early"
+
+WEIGHTS = "/app/model.pth"
+assert os.path.isfile(WEIGHTS), "Model weights not found, failing early"
+
+MODEL = Classifier()
+MODEL.load_state_dict(torch.load(WEIGHTS)['model'])
+
+
+@app.route("/preprocessor", methods=['POST'])
+def run():
+    conf_thres = 0.7
+    imgsz = 224
+    padding = 0.3
+    mean = [0.5397, 0.5037, 0.4667]
+    std = [0.2916, 0.2850, 0.2944]
     data = []
 
+    global MODEL
+
+    logging.info("Received request")
+    gc.collect()
+    torch.cuda.empty_cache()
+
     # load schemas
+    logging.info("Validating schemas")
     with open('./schemas/preprocessors/action.schema.json') \
             as jsonfile:
         data_schema = json.load(jsonfile)
@@ -66,12 +87,15 @@ def run(weights="/app/model.pth",
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
+    logging.info("Schemas validated")
+
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.actionRecognition"
     preprocessor = content["preprocessors"]
     # convert the uri to processable image
     if "graphic" not in content.keys():
+        logging.info("Not image content. Skipping ...")
         return "", 204
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" \
             not in preprocessor:
@@ -85,37 +109,60 @@ def run(weights="/app/model.pth",
         image_b64 = content["graphic"].split(",")[1]
         binary = base64.b64decode(image_b64)
         image = np.asarray(bytearray(binary), dtype="uint8")
-        pil_image = Image.open(BytesIO(image))
-        img_original = np.array(pil_image)
-        height, width, channels = img_original.shape
-        for i in range(len(objects)):
-            if ("person" in objects[i]["type"]):
-                person_id = int(objects[i]["ID"])
-                xleft = int(objects[i]["dimensions"][0] * width)
-                xright = int(objects[i]["dimensions"][2] * width)
-                ybottom = int(objects[i]["dimensions"][1] * height)
-                ytop = int(objects[i]["dimensions"][3] * height)
+        pil_image = Image.open(BytesIO(image)).convert("RGB")
+        people = [person for person in objects if "person" in person["type"]]
+        try:
+            try:
+                MODEL = MODEL.to("cuda")
+            except Exception as e:
+                logging.error("Error while loading model on GPU: {}".format(e))
+                return jsonify("Error while loading model on GPU"), 500
 
-                # preprocess
-                h = ytop - ybottom
-                w = xright - xleft
-                dim = int(max(h, w) * (1 + padding))
-                img = transforms.ToTensor()(img_original)
-                top = (h - dim) + ytop
-                left = xleft - (w - dim)
-                img = transforms.functional.crop(
-                    img, top=top, left=left, height=dim, width=dim)
-                img = transforms.Resize(size=[imgsz, ], antialias=True)(img)
+            if len(people) == 1:
+                # don't crop if only one person detected
+                logging.info("Running action detection on the person found")
+                person_id = int(people[0]["ID"])
+                img = pil_image.resize((imgsz, imgsz))
+                img = transforms.ToTensor()(img)
                 img = transforms.Normalize(mean=mean, std=std)(img)
-
-                action = detect(img,
-                                person_id,
-                                conf_thres,
-                                weights,
-                                device)
+                action = detect(img, person_id, conf_thres, MODEL)
                 if action:
                     data.append(action)
+
+            else:
+                logging.info("Running action detection on each person found")
+                img_original = np.array(pil_image)
+                height, width, channels = img_original.shape
+                for person in people:
+                    person_id = int(person["ID"])
+                    xleft = int(person["dimensions"][0] * width)
+                    xright = int(person["dimensions"][2] * width)
+                    ybottom = int(person["dimensions"][1] * height)
+                    ytop = int(person["dimensions"][3] * height)
+                    # preprocess
+                    h = ytop - ybottom
+                    w = xright - xleft
+                    dim = int(max(h, w) * (1 + padding))
+                    img = transforms.ToTensor()(img_original)
+                    top = (h - dim) + ytop
+                    left = xleft - (w - dim)
+                    img = transforms.functional.crop(
+                        img, top=top, left=left, height=dim, width=dim)
+                    img = transforms.Resize(
+                        size=[imgsz, ], antialias=True)(img)
+                    img = transforms.Normalize(mean=mean, std=std)(img)
+                    action = detect(img, person_id, conf_thres, MODEL)
+                    if action:
+                        data.append(action)
+
+            MODEL.to("cpu")
+
+        except Exception as e:
+            logging.error(f"Error while predicting actions: {e}")
+            return jsonify("Error while predicting actions"), 500
+
         final = {"actions": data}
+        logging.info("Validating results schema")
         try:
             validator = jsonschema.Draft7Validator(data_schema)
             validator.validate(final)
@@ -136,10 +183,10 @@ def run(weights="/app/model.pth",
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Sending response")
+        logging.info("Schema validated")
+        logging.info("Returning response")
         return response
 
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
-    run()
