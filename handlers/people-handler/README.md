@@ -12,4 +12,4 @@ If the aforementioned AI models detect people, it then determines the number of 
 The processed sentence is then concatenated with a generated caption in `people_handler.py.` Only the portion of the caption containing information about actions and scenes in the image is appended. This information is obtained from `find_subject_object.py.`
 
 The following is a pictorial representation of the handler
-![Sample Image](images/sample.png)
+![Architecture of handler](system.png)
