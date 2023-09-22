@@ -155,8 +155,9 @@ def handle():
         # Loop through the object groups and generate a layer for each
         for group in grouped:
             ids = group["IDs"]
+            obj_tag = objects[ids[0]]["type"]
             # Pluralize names of layers with more than 1 object
-            category = form.plural(objects[ids[0]]["type"]).strip()
+            category = form.plural(obj_tag).strip()
             obj_list.append(str(len(ids)) + " " + category)
             layer += 1
             g = draw.Group(data_image_layer="Layer " +
@@ -178,7 +179,7 @@ def handle():
                         stroke="#ff4477",
                         stroke_width=2.5,
                         fill="none",
-                        aria_label=category+" "+str(i+1)))
+                        aria_label= obj_tag+" "+str(i+1)))
 
             svg.append(g)
 
