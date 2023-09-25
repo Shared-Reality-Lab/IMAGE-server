@@ -163,7 +163,7 @@ def handle():
             g = draw.Group(data_image_layer="Layer " +
                            str(layer), aria_label=category)
             # Loop through the individual items
-            # Draw a rectangle for each and tag objects 
+            # Draw a rectangle for each and tag objects
             for i, id in enumerate(ids):
                 x1 = objects[id]['dimensions'][0] * dimensions[0]
                 x2 = objects[id]['dimensions'][2] * dimensions[0]
