@@ -1,3 +1,5 @@
+# The file will generate a rendering if the image contains more than 3 people
+
 import supplementary as s
 import logging
 

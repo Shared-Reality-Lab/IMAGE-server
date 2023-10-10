@@ -1,3 +1,17 @@
+# this file rearranges the code to the following format
+# {
+# "objectID",
+# "emotion",
+# "celebrity",
+# "clothes"
+# "position"
+# "object"
+# }
+# The "objectID" field, contains the ID of the person and 
+# the "object" field refers to the number of objects near that person
+# the "position" object is a non-mandatory field. The option has been provided to the use in case the action of the individual is detected. 
+# We have not integrated the action in this handler as the preprocessor was not available at that time
+
 def check_multiple(objects, major):
     count = 0
     for i in range(len(objects)):
@@ -54,6 +68,8 @@ def area(a, b):
 def get_ideal_format(objects, emotion, preprocessors):
     ideal_format = []
     left2right_object = []
+    # check if the position preprocessor exists, 
+    # else skip
     try:
         posi_data = preprocessors['ca.mcgill.a11y.image.preprocessor.position']
         position = posi_data['data']
@@ -94,15 +110,12 @@ def get_ideal_format(objects, emotion, preprocessors):
                             "emotion": "None",
                             "confidence": "None",
                             "gender": "None",
-
                         }
-
                 else:
                     emotion_to_be_sent = {
                         "emotion": "None",
                         "confidence": "None",
                         "gender": "None",
-
                     }
                 for k in range(len(position)):
                     if (left2right_object[i]["ID"] == position[k]["id"]):

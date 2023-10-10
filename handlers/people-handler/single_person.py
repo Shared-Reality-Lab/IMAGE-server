@@ -1,3 +1,5 @@
+# This file will generate a rendering if the image contains only one person
+
 import supplementary as s
 
 

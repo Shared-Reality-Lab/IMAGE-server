@@ -1,3 +1,5 @@
+# This file will generate a rendering if the image contains two people
+
 import logging
 
 

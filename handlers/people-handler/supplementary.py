@@ -1,3 +1,5 @@
+
+
 def get_position(object_emotion_inanimate, person_count, rendering):
     posi = []
     print(person_count)

@@ -7,18 +7,10 @@ ENV PATH="/home/python/.local/bin:${PATH}"
 
 COPY /handlers/people_handler/ /usr/src/app
 
-#RUN apt update -y && apt-get install -y software-properties-common && \
-#    apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main' && apt update -y && \
-#    apt-get install -y openjdk-8-jdk-headless && \
-#    pip install --no-cache-dir -r requirements.txt && \
-#    export JAVA_HOME && \
-#    apt-get clean
-
 RUN pip install --upgrade pip
 
 RUN pip install -r requirements.txt
 RUN python -m spacy download en_core_web_sm
-#RUN pip show language-tool-python
 RUN chmod -R 777 /usr/src/app
 ENV LTP_PATH = ./
 

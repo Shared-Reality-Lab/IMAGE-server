@@ -12,11 +12,6 @@ def remove_low_confidence(objects, left2right):
 
 def custom_check(preprocessors):
     possible_people = 0
-    # remove low confidence objects
-    # sort the od in descending order
-    # if frst object is person,
-    # then check how small the first non-person object is wrt to person,
-    # if not,then check first person wrt to frst object
     od_prep = "ca.mcgill.a11y.image.preprocessor.objectDetection"
     sort_prep = "ca.mcgill.a11y.image.preprocessor.sorting"
     segment_prep = "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
