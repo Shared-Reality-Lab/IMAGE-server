@@ -30,43 +30,43 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.NOTSET)
 
 
-def remove_emotion(emotion):
-    detected_emotion = []
-    cloth_flag = False
-    for i in range(len(emotion)):
-        if ((emotion[i]["emotion"] is not None or emotion[i]
-                ["celeb"] is not None)):
-            detected_emotion.append(emotion[i])
-        if (emotion[i]["clothes"] is not None):
-            cloth_flag = True
-    return detected_emotion, cloth_flag
+# def remove_emotion(emotion):
+#     detected_emotion = []
+#     cloth_flag = False
+#     for i in range(len(emotion)):
+#         if ((emotion[i]["emotion"] is not None or emotion[i]
+#                 ["celeb"] is not None)):
+#             detected_emotion.append(emotion[i])
+#         if (emotion[i]["clothes"] is not None):
+#             cloth_flag = True
+#     return detected_emotion, cloth_flag
 
 
-def rendering_emotion(emotion):
-    emotion, cloth_flag = remove_emotion(emotion)
-    if (len(emotion) > 0):
-        return True, cloth_flag, emotion
-    else:
-        return False, cloth_flag, emotion
+# def rendering_emotion(emotion):
+#     emotion, cloth_flag = remove_emotion(emotion)
+#     if (len(emotion) > 0):
+#         return True, cloth_flag, emotion
+#     else:
+#         return False, cloth_flag, emotion
 
 
-def area(a, b):
-    dx = min(a[2] * 100, b[2] * 100) - max(a[0] * 100, b[0] * 100)
-    dy = min(a[3] * 100, b[3] * 100) - max(a[1] * 100, b[1] * 100)
-    if (dx >= 0) and (dy >= 0):
-        return (dx * dy)
-    else:
-        return None
+# def area(a, b):
+#     dx = min(a[2] * 100, b[2] * 100) - max(a[0] * 100, b[0] * 100)
+#     dy = min(a[3] * 100, b[3] * 100) - max(a[1] * 100, b[1] * 100)
+#     if (dx >= 0) and (dy >= 0):
+#         return (dx * dy)
+#     else:
+#         return None
 
 
-def common_check(inanimate1, inanimate2):
-    check_common = []
-    for i in range(len(inanimate1)):
-        for j in range(len(inanimate2)):
-            if (inanimate1[i]["ID"] == inanimate2[j]["ID"]):
-                check_common.append(inanimate1[i])
-                break
-    return check_common
+# def common_check(inanimate1, inanimate2):
+#     check_common = []
+#     for i in range(len(inanimate1)):
+#         for j in range(len(inanimate2)):
+#             if (inanimate1[i]["ID"] == inanimate2[j]["ID"]):
+#                 check_common.append(inanimate1[i])
+#                 break
+#     return check_common
 
 
 def per_change(objects):
@@ -80,157 +80,157 @@ def per_change(objects):
     return change
 
 
-def rendering_format_check(object_emotion_inanimate, rendering, preprocessors):
-    caption = 0
-    celeb0 = object_emotion_inanimate[0]["celebrity"]["name"]
-    celeb1 = object_emotion_inanimate[1]["celebrity"]["name"]
-    clothes = object_emotion_inanimate[0]["clothes"]
-    cloth0 = ""
-    cloth1 = ""
-    for i in range(len(clothes)):
+# def rendering_format_check(object_emotion_inanimate, rendering, preprocessors):
+#     caption = 0
+#     celeb0 = object_emotion_inanimate[0]["celebrity"]["name"]
+#     celeb1 = object_emotion_inanimate[1]["celebrity"]["name"]
+#     clothes = object_emotion_inanimate[0]["clothes"]
+#     cloth0 = ""
+#     cloth1 = ""
+#     for i in range(len(clothes)):
 
-        if (clothes[i]["article"] is not None and clothes[i]
-                ["confidence"] >= 0.40):
-            try:
-                if (clothes[i]["color"] is not None):
-                    cloth0 += " " + clothes[i]["color"] + " "
-                cloth0 = cloth0 + clothes[i]["article"]
-            except BaseException:
-                cloth0 = cloth0 + clothes[i]["article"]
-        if (len(clothes) == 1):
-            cloth0 = cloth0
+#         if (clothes[i]["article"] is not None and clothes[i]
+#                 ["confidence"] >= 0.40):
+#             try:
+#                 if (clothes[i]["color"] is not None):
+#                     cloth0 += " " + clothes[i]["color"] + " "
+#                 cloth0 = cloth0 + clothes[i]["article"]
+#             except BaseException:
+#                 cloth0 = cloth0 + clothes[i]["article"]
+#         if (len(clothes) == 1):
+#             cloth0 = cloth0
 
-        elif (i == (len(clothes) - 2) and len(clothes) > 1):
-            cloth0 = cloth0 + " and "
-        else:
-            cloth0 = cloth0 + " , "
-    clothes = object_emotion_inanimate[1]["clothes"]
-    for i in range(len(clothes)):
-        if (clothes[i]["article"] is not None and clothes[i]
-                ["confidence"] >= 0.40):
-            try:
-                if (clothes[i]["color"] is not None):
-                    cloth1 += " " + clothes[i]["color"] + " "
-                cloth1 = cloth1 + clothes[i]["artcile"]
-            except BaseException:
-                cloth1 = cloth1 + clothes[i]["article"]
-        if (len(clothes) == 1):
-            cloth1 = cloth1
-        elif (i == (len(clothes) - 2) and len(clothes) > 1):
-            cloth1 = cloth1 + " and "
-        else:
-            cloth1 = cloth1 + " , "
-    happy = 0
-    sad = 0
-    neutral = 0
-    for i in range(len(object_emotion_inanimate)):
-        if (object_emotion_inanimate[i]["emotion"]["emotion"] is not None):
-            emo = object_emotion_inanimate[i]["emotion"]
-            if ("happy" in emo["emotion"]):
-                happy = happy + 1
-            elif ("neutral" in emo["emotion"]):
-                neutral = neutral + 1
-            elif ("sad" in emo["emotion"]):
-                sad = sad + 1
-    dominant_emotion = tp.calculate_dominant_emotion_for_two(
-        happy, sad, neutral)
-    if (celeb0 is not None or celeb1 is not None):
-        caption += 2
-    if (cloth0 is not None or cloth1 is not None):
-        caption += 1
-    if (dominant_emotion is not None):
-        caption += 1
-    return caption
-
-
-def rendering_two_people_caption(
-        object_emotion_inanimate, rendering, preprocessors):
-    clothes = object_emotion_inanimate[0]["clothes"]
-    happy = 0
-    sad = 0
-    neutral = 0
-    cloth0 = ""
-    cloth1 = ""
-    for i in range(len(object_emotion_inanimate)):
-        if (object_emotion_inanimate[i]["emotion"]["emotion"] is not None):
-            emo = object_emotion_inanimate[i]["emotion"]
-            if ("happy" in emo["emotion"]):
-                happy = happy + 1
-            elif ("neutral" in emo["emotion"]):
-                neutral = neutral + 1
-            elif ("sad" in emo["emotion"]):
-                sad = sad + 1
-    dominant_emotion = tp.calculate_dominant_emotion_for_two(
-        happy, sad, neutral)
-    for i in range(len(clothes)):
-        if (clothes[i]["cloth"] is not None and clothes[i]
-                ["confidence"] >= 0.40):
-            try:
-                if (clothes[i]["color"] is not None):
-                    cloth0 += " " + clothes[i]["color"] + " "
-                cloth0 = cloth0 + clothes[i]["cloth"]
-            except BaseException:
-                cloth0 = cloth0 + clothes[i]["cloth"]
-        if (len(clothes) == 1):
-            cloth0 = cloth0
-
-        elif (i == (len(clothes) - 2) and len(clothes) > 1):
-            cloth0 = cloth0 + " and "
-        else:
-            cloth0 = cloth0 + " , "
-    clothes = object_emotion_inanimate[1]["clothes"]
-    for i in range(len(clothes)):
-        if (clothes[i]["cloth"] is not None and clothes[i]
-                ["confidence"] >= 0.40):
-            try:
-                if (clothes[i]["color"] is not None):
-                    cloth1 += " " + clothes[i]["color"] + " "
-                cloth1 = cloth1 + clothes[i]["cloth"]
-            except BaseException:
-                cloth1 = cloth1 + clothes[i]["cloth"]
-        if (len(clothes) == 1):
-            cloth1 = cloth1
-        elif (i == (len(clothes) - 2) and len(clothes) > 1):
-            cloth1 = cloth1 + " and "
-        else:
-            cloth1 = cloth1 + " , "
-
-    if (len(cloth0) > 0 and cloth0 != " , "):
-        rendering += "The first person seems to be wearing " + cloth0
-        if (len(cloth1) > 0 and cloth1 != " , "):
-            rendering += " and the second person seems to be wearing " + cloth1
-    elif (len(cloth1) > 0 and cloth1 != " , "):
-        rendering += " The second person seems to be wearing " + cloth1
-    if (dominant_emotion is not None):
-        if ((len(cloth0) > 0 and cloth0 != " , ") or (
-                len(cloth1) > 0 and cloth1 != " , ")):
-            expr = "and all the mentioned people seem to be "
-            rendering += expr + dominant_emotion
-        else:
-            expr = " Additionally all the mentioned people seem to be "
-            rendering += expr + dominant_emotion
-    return rendering
+#         elif (i == (len(clothes) - 2) and len(clothes) > 1):
+#             cloth0 = cloth0 + " and "
+#         else:
+#             cloth0 = cloth0 + " , "
+#     clothes = object_emotion_inanimate[1]["clothes"]
+#     for i in range(len(clothes)):
+#         if (clothes[i]["article"] is not None and clothes[i]
+#                 ["confidence"] >= 0.40):
+#             try:
+#                 if (clothes[i]["color"] is not None):
+#                     cloth1 += " " + clothes[i]["color"] + " "
+#                 cloth1 = cloth1 + clothes[i]["artcile"]
+#             except BaseException:
+#                 cloth1 = cloth1 + clothes[i]["article"]
+#         if (len(clothes) == 1):
+#             cloth1 = cloth1
+#         elif (i == (len(clothes) - 2) and len(clothes) > 1):
+#             cloth1 = cloth1 + " and "
+#         else:
+#             cloth1 = cloth1 + " , "
+#     happy = 0
+#     sad = 0
+#     neutral = 0
+#     for i in range(len(object_emotion_inanimate)):
+#         if (object_emotion_inanimate[i]["emotion"]["emotion"] is not None):
+#             emo = object_emotion_inanimate[i]["emotion"]
+#             if ("happy" in emo["emotion"]):
+#                 happy = happy + 1
+#             elif ("neutral" in emo["emotion"]):
+#                 neutral = neutral + 1
+#             elif ("sad" in emo["emotion"]):
+#                 sad = sad + 1
+#     dominant_emotion = tp.calculate_dominant_emotion_for_two(
+#         happy, sad, neutral)
+#     if (celeb0 is not None or celeb1 is not None):
+#         caption += 2
+#     if (cloth0 is not None or cloth1 is not None):
+#         caption += 1
+#     if (dominant_emotion is not None):
+#         caption += 1
+#     return caption
 
 
-def image_description(preprocessors, rendering):
-    if ("ca.mcgill.a11y.image.preprocessor.graphicTagger" in preprocessors):
-        gt = preprocessors["ca.mcgill.a11y.image.preprocessor.graphicTagger"]
-        if ("category" in gt):
-            graphicTagger = gt["category"]
-            # print(graphicTagger)
-            if ("captions" in graphicTagger):
-                desc = graphicTagger["description"]["captions"][0]["text"]
-                expr = "Hence looking at the overall image, "
-                expr += "this image seems to be of "
-                rendering += expr + desc
-                rendering += ". "
-            else:
-                rendering = rendering
-            return rendering
-        else:
-            return ""
-    else:
-        return ""
+# def rendering_two_people_caption(
+#         object_emotion_inanimate, rendering, preprocessors):
+#     clothes = object_emotion_inanimate[0]["clothes"]
+#     happy = 0
+#     sad = 0
+#     neutral = 0
+#     cloth0 = ""
+#     cloth1 = ""
+#     for i in range(len(object_emotion_inanimate)):
+#         if (object_emotion_inanimate[i]["emotion"]["emotion"] is not None):
+#             emo = object_emotion_inanimate[i]["emotion"]
+#             if ("happy" in emo["emotion"]):
+#                 happy = happy + 1
+#             elif ("neutral" in emo["emotion"]):
+#                 neutral = neutral + 1
+#             elif ("sad" in emo["emotion"]):
+#                 sad = sad + 1
+#     dominant_emotion = tp.calculate_dominant_emotion_for_two(
+#         happy, sad, neutral)
+#     for i in range(len(clothes)):
+#         if (clothes[i]["cloth"] is not None and clothes[i]
+#                 ["confidence"] >= 0.40):
+#             try:
+#                 if (clothes[i]["color"] is not None):
+#                     cloth0 += " " + clothes[i]["color"] + " "
+#                 cloth0 = cloth0 + clothes[i]["cloth"]
+#             except BaseException:
+#                 cloth0 = cloth0 + clothes[i]["cloth"]
+#         if (len(clothes) == 1):
+#             cloth0 = cloth0
+
+#         elif (i == (len(clothes) - 2) and len(clothes) > 1):
+#             cloth0 = cloth0 + " and "
+#         else:
+#             cloth0 = cloth0 + " , "
+#     clothes = object_emotion_inanimate[1]["clothes"]
+#     for i in range(len(clothes)):
+#         if (clothes[i]["cloth"] is not None and clothes[i]
+#                 ["confidence"] >= 0.40):
+#             try:
+#                 if (clothes[i]["color"] is not None):
+#                     cloth1 += " " + clothes[i]["color"] + " "
+#                 cloth1 = cloth1 + clothes[i]["cloth"]
+#             except BaseException:
+#                 cloth1 = cloth1 + clothes[i]["cloth"]
+#         if (len(clothes) == 1):
+#             cloth1 = cloth1
+#         elif (i == (len(clothes) - 2) and len(clothes) > 1):
+#             cloth1 = cloth1 + " and "
+#         else:
+#             cloth1 = cloth1 + " , "
+
+#     if (len(cloth0) > 0 and cloth0 != " , "):
+#         rendering += "The first person seems to be wearing " + cloth0
+#         if (len(cloth1) > 0 and cloth1 != " , "):
+#             rendering += " and the second person seems to be wearing " + cloth1
+#     elif (len(cloth1) > 0 and cloth1 != " , "):
+#         rendering += " The second person seems to be wearing " + cloth1
+#     if (dominant_emotion is not None):
+#         if ((len(cloth0) > 0 and cloth0 != " , ") or (
+#                 len(cloth1) > 0 and cloth1 != " , ")):
+#             expr = "and all the mentioned people seem to be "
+#             rendering += expr + dominant_emotion
+#         else:
+#             expr = " Additionally all the mentioned people seem to be "
+#             rendering += expr + dominant_emotion
+#     return rendering
+
+
+# def image_description(preprocessors, rendering):
+#     if ("ca.mcgill.a11y.image.preprocessor.graphicTagger" in preprocessors):
+#         gt = preprocessors["ca.mcgill.a11y.image.preprocessor.graphicTagger"]
+#         if ("category" in gt):
+#             graphicTagger = gt["category"]
+#             # print(graphicTagger)
+#             if ("captions" in graphicTagger):
+#                 desc = graphicTagger["description"]["captions"][0]["text"]
+#                 expr = "Hence looking at the overall image, "
+#                 expr += "this image seems to be of "
+#                 rendering += expr + desc
+#                 rendering += ". "
+#             else:
+#                 rendering = rendering
+#             return rendering
+#         else:
+#             return ""
+#     else:
+#         return ""
 
 def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
                   preprocessors, objects, just_person_count,
@@ -250,6 +250,7 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
     person_count = f.check_multiple(objects, False)
     print("person count is(people_handler,285)", person_count)
     s.get_position(object_emotion_inanimate, person_count, rendering)
+    # change the description based on number of people
     if (multiple_flag):
         if (person_count < 3):
             rendering = rendering + str(person_count) + " people "
@@ -260,6 +261,8 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
             rendering = rendering + " a single person "
         else:
             rendering = rendering + str(person_count) + " " + "people "
+    # if no people are detected, or the detected people were too small, 
+    # or the confidence threshold was not met, then return a standard response
     if ((len(object_emotion_inanimate) == 0 or emotion_flag)
             and cloth_flag):
         cloth = ""
@@ -291,8 +294,9 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
     caption = 0
     nlp = spacy.load("en_core_web_sm")
     print(len(object_emotion_inanimate))
-    # find the verb and object
+    # generate a description when image contains just one individual
     if (len(object_emotion_inanimate) == 1):
+        # get the subject, verb and object
         nlp = spacy.load("en_core_web_sm")
         doc = nlp(res)
         svo = so.findSVOs(doc)
@@ -312,15 +316,17 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
                 continue
         sentence = re.sub('[^A-Za-z0-9]+', ' ', sentence)
         rendering += sentence
+        # generate the description by compiling all the information
         rendering, caption = sp.rendering_for_one_person(
             object_emotion_inanimate, rendering,
             preprocessors, person_count, sentence)
-        print("rendering is,people_handler(354):", rendering)
 
+    # generate a description when image contains two individuals
     elif (len(object_emotion_inanimate) == 2):
         rendering, emo_count, clothes_count = tp.rendering_for_two_people(
             object_emotion_inanimate, rendering, preprocessors)
         sentence = re.sub('[^A-Za-z0-9]+', ' ', res)
+        # add the verb and object of the caption to the description
         if (emo_count > 0 and clothes_count > 0):
             rendering += ". Interpretation: " + sentence
         elif (emo_count == 0 and clothes_count == 0):
@@ -348,6 +354,7 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
                     continue
             sentence = re.sub('[^A-Za-z0-9]+', ' ', sentence)
             rendering += sentence
+    # generate descriptions for images containing multiple people
     else:
         rendering, emo_count, clothes_count = m.rendering_for_multiple_people(
             object_emotion_inanimate, rendering, preprocessors)
@@ -370,10 +377,6 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
                 i += 1
             sentence = re.sub('[^A-Za-z0-9]+', ' ', sentence)
             rendering += sentence
-
-    print("final output is: ")
-    print(rendering)
-    print("\n")
     return rendering
 
 
