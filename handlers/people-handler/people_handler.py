@@ -249,7 +249,8 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
     # get number of people in the image
     person_count = f.check_multiple(objects, False)
     print("person count is(people_handler,285)", person_count)
-    s.get_position(object_emotion_inanimate, person_count, rendering)
+    # detremine whether the object is in the middle, left or right portion of the image
+    # s.get_position(object_emotion_inanimate, person_count, rendering)
     # change the description based on number of people
     if (multiple_flag):
         if (person_count < 3):

@@ -33,7 +33,7 @@ def calculate_dominant_emotion_for_two(happy, sad, neutral):
     return ""
 
 
-# testing: add inanimate rendering to 2 people
+
 def rendering_for_two_people(
         object_emotion_inanimate, rendering, preprocessors):
     # common = common_check(
