@@ -232,15 +232,6 @@ def image_description(preprocessors, rendering):
     else:
         return ""
 
-
-# def check_major_person(object_emotion_inanimate, rendering):
-#     objects = deepcopy(object_emotion_inanimate)
-#     objects_sorted = sorted(
-#         objects['objects'],
-#         key=lambda d: d['area'],
-#         reverse=True)
-
-
 def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
                   preprocessors, objects, just_person_count,
                   cloth_flag, contents, res):
@@ -255,6 +246,7 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
     for i in range(len(segment)):
         if ("person" in segment[i]["name"]):
             break
+    # get number of people in the image
     person_count = f.check_multiple(objects, False)
     print("person count is(people_handler,285)", person_count)
     s.get_position(object_emotion_inanimate, person_count, rendering)
@@ -268,9 +260,6 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
             rendering = rendering + " a single person "
         else:
             rendering = rendering + str(person_count) + " " + "people "
-    print("rendering is(people_hanlder,300):", rendering)
-    print("length of object emotion inanimate", len(object_emotion_inanimate))
-    print(object_emotion_inanimate)
     if ((len(object_emotion_inanimate) == 0 or emotion_flag)
             and cloth_flag):
         cloth = ""
@@ -302,12 +291,11 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
     caption = 0
     nlp = spacy.load("en_core_web_sm")
     print(len(object_emotion_inanimate))
+    # find the verb and object
     if (len(object_emotion_inanimate) == 1):
-        print("single person caption", res)
         nlp = spacy.load("en_core_web_sm")
         doc = nlp(res)
         svo = so.findSVOs(doc)
-        print("verb positions are", svo[0])
         verb = svo[0][1]
         verb_posi = [token.i for token in doc if token.pos_ == "VERB"]
         posi = verb_posi[0]
@@ -416,7 +404,7 @@ def handle():
             objects = preprocessors[prep]["objects"]
             possible_people += 1
 
-    # checks if emotion detection detects face
+    # Run the Stage 1 of the handler
     possible_people += c.custom_check(preprocessors)
     objects = preprocessors[prep]["objects"]
     res = preprocessors["ca.mcgill.a11y.image.preprocessor.caption"]["caption"]
@@ -437,47 +425,47 @@ def handle():
         return response
     else:
         sort = "ca.mcgill.a11y.image.preprocessor.sorting"
+        # remove low confidence predictions
         objects, left2right = f.remove_low_confidence(
             objects, preprocessors[sort]["leftToRight"])
+        # sort the objects based on their area
         objects_sorted = sorted(objects, key=lambda d: d['area'], reverse=True)
+        # determine the percentage change that happens with consecutive objects
+        # this shows how much larger the previous object was compared to current one
         change = per_change(objects_sorted)
-        if ("ca.mcgill.a11y.image.preprocessor.emotion" in preprocessors):
-            # print(preprocessors['ca.mcgill.a11y.image.preprocessor.position']["data"])
-            preprocessors = f.get_original_format(preprocessors)
-            mf, ef, oei, objects, just_person_count, cf = f.format_json(
-                objects_sorted, change, preprocessors)
-            multiple_flag = mf
-            emotion_flag = ef
-            cloth_flag = cf
-            object_emotion_inanimate = oei
-            rendering = get_rendering(
-                multiple_flag,
-                emotion_flag,
-                object_emotion_inanimate,
-                preprocessors,
-                objects,
-                just_person_count,
-                cloth_flag,
-                contents,
-                res)
-            logging.critical(rendering)
-            response = {
-                "request_uuid": contents["request_uuid"],
-                "timestamp": int(time.time()),
-                "renderings": [
-                    {
-                        "type_id": "ca.mcgill.a11y.image.renderer.Text",
-                        "description": "Image description",
-                        "data": {
-                            "text": rendering
-                        }
+        # the input format needs to be reorganised for easy manipulation of data
+        preprocessors = f.get_original_format(preprocessors)
+        mf, ef, oei, objects, just_person_count, cf = f.format_json(
+            objects_sorted, change, preprocessors)
+        multiple_flag = mf
+        emotion_flag = ef
+        cloth_flag = cf
+        object_emotion_inanimate = oei
+        rendering = get_rendering(
+            multiple_flag,
+            emotion_flag,
+            object_emotion_inanimate,
+            preprocessors,
+            objects,
+            just_person_count,
+            cloth_flag,
+            contents,
+            res)
+        logging.critical(rendering)
+        response = {
+            "request_uuid": contents["request_uuid"],
+            "timestamp": int(time.time()),
+            "renderings": [
+                {
+                    "type_id": "ca.mcgill.a11y.image.renderer.Text",
+                    "description": "Image description",
+                    "data": {
+                        "text": rendering
                     }
-                ]
-            }
-            return response
-
-        else:
-            return "cannot be rendered"
+                }
+            ]
+        }
+        return response
 
 
 if __name__ == "__main__":

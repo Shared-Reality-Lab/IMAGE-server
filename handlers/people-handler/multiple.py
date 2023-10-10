@@ -3,7 +3,8 @@
 import supplementary as s
 import logging
 
-
+# get the dominant emotion. 
+# If multiple people have different emotions then render the most common one
 def calculate_dominant_emotion(happy, sad, neutral):
     if (happy >= 1 and neutral >= 1 and sad == 0):
         return " mostly having a happy or neutral expression "
@@ -24,8 +25,10 @@ def calculate_dominant_emotion(happy, sad, neutral):
             "while others seem to have neutral or sad expression."
         )
 
-
+# render the inanimate objects that are near the individuals.  
 def inanimate_rendering_multiple(object_emotion_inanimate, rendering):
+    # get a list of inanimate objects 
+    # in the form of a dict for easier processing 
     inanimate_dict = {}
     for i in range(len(object_emotion_inanimate)):
         inanimate = object_emotion_inanimate[i]["inanimate"]
@@ -47,6 +50,7 @@ def inanimate_rendering_multiple(object_emotion_inanimate, rendering):
     single_flag = 0
     printed = 0
     for key in (inanimate_dict):
+        # if there are multiple objects near the people
         if (inanimate_dict[key] > 1):
             if (multiple_flag == 0):
                 rendering += "a few seem to be "
@@ -64,6 +68,7 @@ def inanimate_rendering_multiple(object_emotion_inanimate, rendering):
                     printed += 1
                 elif (printed > 1):
                     continue
+        # if there is just one object beside the people.
         elif (inanimate_dict[key] == 1):
             if (multiple_flag >= 2):
                 rendering += ". Additionally "
@@ -79,7 +84,8 @@ def inanimate_rendering_multiple(object_emotion_inanimate, rendering):
                 rendering += s.get_action(key)
                 rendering += ","
             single_flag += 1
-
+        # render only 2 objects, 
+        # as rendering more than two objects becomes burdensome for listener
         if (i == 2):
             break
 
@@ -98,6 +104,7 @@ def rendering_for_multiple_people(
         if (object_emotion_inanimate[i]["celebrity"]["name"] != 'None'):
             celeb_position.append(i)
     print("celeb position in multiple", celeb_position)
+    # if there is no celebrity in the image
     if (len(celeb_position) == 0):
         happy = 0
         sad = 0
@@ -113,10 +120,13 @@ def rendering_for_multiple_people(
                     neutral = neutral + 1
                 elif ("sad" in emo):
                     sad = sad + 1
+        # get the dominant emotion
         dominant_emotion = calculate_dominant_emotion(happy, sad, neutral)
         if (dominant_emotion is not None):
             emotion_count += 1
             rendering = rendering + dominant_emotion
+        # combine the information regarding 
+        # color of clothes and type of clothes together
         for i in range(len(object_emotion_inanimate)):
             if (object_emotion_inanimate[i]["clothes"] != 'None'):
                 for j in range(len(object_emotion_inanimate[i]["clothes"])):
@@ -139,6 +149,7 @@ def rendering_for_multiple_people(
             if (clothes_count >= 3):
                 cloth += " etc. "
                 break
+        # add clothes information to the description
         if (len(cloth) != 0):
             if (emotion_count > 0):
                 rendering += " and wearing: "
@@ -148,13 +159,14 @@ def rendering_for_multiple_people(
     else:
         i_list = 0
         render_add = 0
+        # add celebrity information to the description
         if (len(celeb_position) == 1):
             rendering += "with one of them being "
         elif (len(celeb_position) == 2):
             rendering += "with two of them being "
         else:
             rendering += " with a few of them being "
-
+        # provide the expressions of the celebrity
         while (i_list < len(object_emotion_inanimate)):
             if (i_list in celeb_position):
                 if (object_emotion_inanimate[i_list]

@@ -1,17 +1,20 @@
 # this file rearranges the code to the following format
 # {
-# "objectID",
+# "object",
 # "emotion",
 # "celebrity",
 # "clothes"
 # "position"
-# "object"
+# "inanimate"
 # }
-# The "objectID" field, contains the ID of the person and 
-# the "object" field refers to the number of objects near that person
+# The "object" field, contains the ID of the person and 
+# the "inanimate" field refers to the number of objects near that person
 # the "position" object is a non-mandatory field. The option has been provided to the use in case the action of the individual is detected. 
 # We have not integrated the action in this handler as the preprocessor was not available at that time
 
+# check number of people in the image that occupy more than 10% of the area of the image. 
+# We have chosen 10% empirically as from our testing with 30-40 images, people that occupy 
+# lesser area than that are generally in the background and are not important for the image 
 def check_multiple(objects, major):
     count = 0
     for i in range(len(objects)):
@@ -55,7 +58,7 @@ def remove_low_confidence(objects, left2right):
             objects_high_conf.append(o)
     return objects_high_conf, left2right
 
-
+# calculate the area occupied by the object
 def area(a, b):
     dx = min(a[2] * 100, b[2] * 100) - max(a[0] * 100, b[0] * 100)
     dy = min(a[3] * 100, b[3] * 100) - max(a[1] * 100, b[1] * 100)
@@ -79,8 +82,10 @@ def get_ideal_format(objects, emotion, preprocessors):
     ob_json = objson['objects']
     l2rjson = preprocessors["ca.mcgill.a11y.image.preprocessor.sorting"]
     l2r_json = l2rjson["leftToRight"]
+    # remove low confidence objects
     objects, left2right = remove_low_confidence(
         ob_json, l2r_json)
+    # arrange objects from left to right based on centroid positions 
     for i in range(len(left2right)):
         for j in range(len(objects)):
             if (left2right[i] == objects[j]["ID"]):
@@ -92,12 +97,15 @@ def get_ideal_format(objects, emotion, preprocessors):
     for i in range(len(left2right_object)):
         for j in range(len(emotion)):
             if (left2right_object[i]["ID"] == emotion[j]["id"]):
+                # if person is a celebrity include that information
                 celeb = {
                     "name": emotion[j]['celeb']["name"],
                     "confidence": emotion[j]['celeb']["confidence"]
                 }
+                # if clothes information is available include that
                 clothes = emotion[j]["clothes"]
                 posi_obj = None
+                # if emotion information is available include that
                 if (emotion[j]["confidence"] is not None):
                     if (emotion[j]["confidence"] >= 0.40):
                         emotion_to_be_sent = {
@@ -158,6 +166,8 @@ def get_original_format(preprocessors):
     cloth = json2["clothes"]
     celeb = json["celebrities"]
     data = []
+    # the expected output should be
+    # {[id, emotion, celebrity, clothes]}
     for i in range(len(emotion)):
         json_data = {}
         id = emotion[i]["personID"]
@@ -187,8 +197,18 @@ def format_json(objects, change, preprocessors):
         emotion = of["data"]
         emotion_flag, cloth_flag, no_none_emotion = rendering_emotion(emotion)
         if (emotion_flag):
+            # expected output will contain all the information of an individual, 
+            # for instance a sample output of this function will be
+            # {
+            # ["object",
+            # "emotion",
+            # "celebrity",
+            # "clothes"
+            # "position"]
+            # }
             object_emotion = get_ideal_format(
                 objects, no_none_emotion, preprocessors)
+            # add inanimated objects to the aforementioned output
             object_emotion_inanimate = inanimated_interaction(
                 object_emotion, objects)
         else:

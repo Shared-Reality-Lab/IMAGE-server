@@ -36,7 +36,6 @@ def rendering_for_one_person(
         rendering += emotion + gender
     clothes = object_emotion_inanimate[0]["clothes"]
     if (clothes != "None"):
-        # print("rendering before clothes process:", rendering)
         caption += 1
         cloth = ""
         for i in range(len(clothes)):
