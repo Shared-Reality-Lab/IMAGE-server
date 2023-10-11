@@ -3,8 +3,10 @@
 import supplementary as s
 import logging
 
-# get the dominant emotion. 
+# get the dominant emotion.
 # If multiple people have different emotions then render the most common one
+
+
 def calculate_dominant_emotion(happy, sad, neutral):
     if (happy >= 1 and neutral >= 1 and sad == 0):
         return " mostly having a happy or neutral expression "
@@ -25,10 +27,12 @@ def calculate_dominant_emotion(happy, sad, neutral):
             "while others seem to have neutral or sad expression."
         )
 
-# render the inanimate objects that are near the individuals.  
+# render the inanimate objects that are near the individuals.
+
+
 def inanimate_rendering_multiple(object_emotion_inanimate, rendering):
-    # get a list of inanimate objects 
-    # in the form of a dict for easier processing 
+    # get a list of inanimate objects
+    # in the form of a dict for easier processing
     inanimate_dict = {}
     for i in range(len(object_emotion_inanimate)):
         inanimate = object_emotion_inanimate[i]["inanimate"]
@@ -84,7 +88,7 @@ def inanimate_rendering_multiple(object_emotion_inanimate, rendering):
                 rendering += s.get_action(key)
                 rendering += ","
             single_flag += 1
-        # render only 2 objects, 
+        # render only 2 objects,
         # as rendering more than two objects becomes burdensome for listener
         if (i == 2):
             break
@@ -125,7 +129,7 @@ def rendering_for_multiple_people(
         if (dominant_emotion is not None):
             emotion_count += 1
             rendering = rendering + dominant_emotion
-        # combine the information regarding 
+        # combine the information regarding
         # color of clothes and type of clothes together
         for i in range(len(object_emotion_inanimate)):
             if (object_emotion_inanimate[i]["clothes"] != 'None'):

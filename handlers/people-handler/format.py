@@ -7,14 +7,21 @@
 # "position"
 # "inanimate"
 # }
-# The "object" field, contains the ID of the person and 
+# The "object" field, contains the ID of the person and
 # the "inanimate" field refers to the number of objects near that person
-# the "position" object is a non-mandatory field. The option has been provided to the use in case the action of the individual is detected. 
-# We have not integrated the action in this handler as the preprocessor was not available at that time
+# the "position" object is a non-mandatory field.
+# The option has been provided in case the position (sitting, standing)
+# is detected.
+# We initially planned to integrate this information in the handler,
+# but decided to not provide the information
+# as the associated ML model gave incorrect responses
 
-# check number of people in the image that occupy more than 10% of the area of the image. 
-# We have chosen 10% empirically as from our testing with 30-40 images, people that occupy 
-# lesser area than that are generally in the background and are not important for the image 
+# check number of people in the image
+# that occupy more than 10% area of the image.
+# We have chosen 10% empirically as from our testing
+# with 30-40 images. People that occupy
+# lesser area than that are generally in the background and are not
+# important for the image
 def check_multiple(objects, major):
     count = 0
     for i in range(len(objects)):
@@ -59,6 +66,8 @@ def remove_low_confidence(objects, left2right):
     return objects_high_conf, left2right
 
 # calculate the area occupied by the object
+
+
 def area(a, b):
     dx = min(a[2] * 100, b[2] * 100) - max(a[0] * 100, b[0] * 100)
     dy = min(a[3] * 100, b[3] * 100) - max(a[1] * 100, b[1] * 100)
@@ -71,7 +80,7 @@ def area(a, b):
 def get_ideal_format(objects, emotion, preprocessors):
     ideal_format = []
     left2right_object = []
-    # check if the position preprocessor exists, 
+    # check if the position preprocessor exists,
     # else skip
     try:
         posi_data = preprocessors['ca.mcgill.a11y.image.preprocessor.position']
@@ -85,7 +94,7 @@ def get_ideal_format(objects, emotion, preprocessors):
     # remove low confidence objects
     objects, left2right = remove_low_confidence(
         ob_json, l2r_json)
-    # arrange objects from left to right based on centroid positions 
+    # arrange objects from left to right based on centroid positions
     for i in range(len(left2right)):
         for j in range(len(objects)):
             if (left2right[i] == objects[j]["ID"]):
@@ -197,7 +206,7 @@ def format_json(objects, change, preprocessors):
         emotion = of["data"]
         emotion_flag, cloth_flag, no_none_emotion = rendering_emotion(emotion)
         if (emotion_flag):
-            # expected output will contain all the information of an individual, 
+            # expected output will contain the information of an individual,
             # for instance a sample output of this function will be
             # {
             # ["object",

@@ -11,8 +11,11 @@ def remove_low_confidence(objects, left2right):
             objects_high_conf.append(o)
     return objects_high_conf, left2right
 
-# this function checks if there are people in the input image. 
-# This is the Stage 1 of the handler, that checks if the input image should be rendered by the handler
+# this function checks if there are people in the input image.
+# This is the Stage 1 of the handler, that checks if the input image
+# should be rendered by the handler
+
+
 def custom_check(preprocessors):
     possible_people = 0
     od_prep = "ca.mcgill.a11y.image.preprocessor.objectDetection"

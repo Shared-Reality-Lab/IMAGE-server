@@ -23,7 +23,6 @@ import check as c
 import format as f
 import single_person as sp
 import two_people as tp
-import supplementary as s
 import multiple as m
 import find_subject_object as so
 app = Flask(__name__)
@@ -80,7 +79,8 @@ def per_change(objects):
     return change
 
 
-# def rendering_format_check(object_emotion_inanimate, rendering, preprocessors):
+# def rendering_format_check
+# (object_emotion_inanimate, rendering, preprocessors):
 #     caption = 0
 #     celeb0 = object_emotion_inanimate[0]["celebrity"]["name"]
 #     celeb1 = object_emotion_inanimate[1]["celebrity"]["name"]
@@ -198,7 +198,8 @@ def per_change(objects):
 #     if (len(cloth0) > 0 and cloth0 != " , "):
 #         rendering += "The first person seems to be wearing " + cloth0
 #         if (len(cloth1) > 0 and cloth1 != " , "):
-#             rendering += " and the second person seems to be wearing " + cloth1
+#             rendering +=
+# " and the second person seems to be wearing " + cloth1
 #     elif (len(cloth1) > 0 and cloth1 != " , "):
 #         rendering += " The second person seems to be wearing " + cloth1
 #     if (dominant_emotion is not None):
@@ -249,7 +250,8 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
     # get number of people in the image
     person_count = f.check_multiple(objects, False)
     print("person count is(people_handler,285)", person_count)
-    # detremine whether the object is in the middle, left or right portion of the image
+    # determine whether the object is
+    # in the middle, left or right portion of the image
     # s.get_position(object_emotion_inanimate, person_count, rendering)
     # change the description based on number of people
     if (multiple_flag):
@@ -262,7 +264,7 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
             rendering = rendering + " a single person "
         else:
             rendering = rendering + str(person_count) + " " + "people "
-    # if no people are detected, or the detected people were too small, 
+    # if no people are detected, or the detected people were too small,
     # or the confidence threshold was not met, then return a standard response
     if ((len(object_emotion_inanimate) == 0 or emotion_flag)
             and cloth_flag):
@@ -435,9 +437,11 @@ def handle():
         # sort the objects based on their area
         objects_sorted = sorted(objects, key=lambda d: d['area'], reverse=True)
         # determine the percentage change that happens with consecutive objects
-        # this shows how much larger the previous object was compared to current one
+        # this shows how much larger the previous object was compared to
+        # current one
         change = per_change(objects_sorted)
-        # the input format needs to be reorganised for easy manipulation of data
+        # the input format needs to be reorganised for easy manipulation of
+        # data
         preprocessors = f.get_original_format(preprocessors)
         mf, ef, oei, objects, just_person_count, cf = f.format_json(
             objects_sorted, change, preprocessors)

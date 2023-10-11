@@ -1,8 +1,8 @@
 def get_position(object_emotion_inanimate, person_count, rendering):
     posi = []
     print(person_count)
-    # if the image contains just one person, 
-    # then determine the x coordinate of the centroid 
+    # if the image contains just one person,
+    # then determine the x coordinate of the centroid
     # and determine if its left, middle or right portion of the image
     if (person_count == 1):
         try:
@@ -10,7 +10,7 @@ def get_position(object_emotion_inanimate, person_count, rendering):
         except BaseException:
             x_val = 0.5
         # have empirically mentioned the alues of 0.3 and 0.7
-        # if x coordinate is less that 0.3 then it belongs to left portion 
+        # if x coordinate is less that 0.3 then it belongs to left portion
         # and of its greater than 0.7 then its in the right portion of image
         if (x_val < 0.3):
             posi.append(['left'])
@@ -26,8 +26,9 @@ def get_position(object_emotion_inanimate, person_count, rendering):
             x_val1 = object_emotion_inanimate[0]['objects']['centroid'][0]
             x_val2 = object_emotion_inanimate[1]['objects']['centroid'][0]
             # have empirically mentioned the alues of 0.3 and 0.7
-            # if x coordinate is less that 0.3 then it belongs to left portion 
-            # and of its greater than 0.6 then its in the right portion of image
+            # if x coordinate is less that 0.3 then it belongs to left portion
+            # and of its greater than 0.6 then its in the right portion of
+            # image
             if (x_val1 < 0.3):
                 if (x_val2 < 0.3):
                     posi.append(['left', 'left'])
@@ -71,7 +72,7 @@ def get_position(object_emotion_inanimate, person_count, rendering):
         except ZeroDivisionError:
             posi.append(['middle'])
         # have empirically mentioned the alues of 0.3 and 0.7
-        # if x coordinate is less that 0.3 then it belongs to left portion 
+        # if x coordinate is less that 0.3 then it belongs to left portion
         # and of its greater than 0.7 then its in the right portion of image
         if (x_val < 0.3):
             posi.append(['left'])
@@ -91,6 +92,8 @@ def check_caption_inanimate(obj, caption):
     return True
 
 # determine the type of interaction the people have with inanimate objects
+
+
 def get_action(obj):
     vehicle = ["bicycle", "car", "motorcycle", "bus", "train", "truck", "boat"]
     outdoor = ["bench", "chair", "couch"]
