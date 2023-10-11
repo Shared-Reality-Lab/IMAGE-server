@@ -35,7 +35,7 @@ const ajv = new Ajv2020({
     "schemas": [definitionsJSON, querySchemaJSON, responseSchemaJSON, handlerResponseSchemaJSON, preprocessorResponseSchemaJSON]
 });
 
-const PREPROCESSOR_TIME_MS = 15000;
+const PREPROCESSOR_TIME_MS = (!isNaN(parseInt(process.env.PREPROCESSOR_TIMEOUT || ""))) ? parseInt(process.env.PREPROCESSOR_TIMEOUT || "") : 15000;
 
 const BASE_LOG_PATH = path.join("/var", "log", "IMAGE");
 
