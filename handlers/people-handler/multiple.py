@@ -107,7 +107,6 @@ def rendering_for_multiple_people(
     for i in range(len(object_emotion_inanimate)):
         if (object_emotion_inanimate[i]["celebrity"]["name"] != 'None'):
             celeb_position.append(i)
-    print("celeb position in multiple", celeb_position)
     # if there is no celebrity in the image
     if (len(celeb_position) == 0):
         happy = 0

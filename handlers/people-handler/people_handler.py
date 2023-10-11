@@ -56,7 +56,6 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
             break
     # get number of people in the image
     person_count = f.check_multiple(objects, False)
-    print("person count is(people_handler,285)", person_count)
     # determine whether the object is
     # in the middle, left or right portion of the image
     # s.get_position(object_emotion_inanimate, person_count, rendering)
@@ -103,7 +102,6 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
                 "as the face of the people are not clearly visible."
     caption = 0
     nlp = spacy.load("en_core_web_sm")
-    print(len(object_emotion_inanimate))
     # generate a description when image contains just one individual
     if (len(object_emotion_inanimate) == 1):
         # get the subject, verb and object
@@ -147,7 +145,6 @@ def get_rendering(multiple_flag, emotion_flag, object_emotion_inanimate,
             nlp = spacy.load("en_core_web_sm")
             doc = nlp(res)
             svo = so.findSVOs(doc)
-            print("verb positions are", svo[0])
             verb = svo[0][1]
             verb_posi = [token.i for token in doc if token.pos_ == "VERB"]
             posi = verb_posi[0]

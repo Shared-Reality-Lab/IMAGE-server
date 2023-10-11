@@ -12,7 +12,8 @@ def common_check(inanimate1, inanimate2):
                 break
     return check_common
 
-
+# calculate the dominant emotion 
+# among the two individuals present in the image
 def calculate_dominant_emotion_for_two(happy, sad, neutral):
     if (happy == 2):
         return "happy expression "
@@ -35,9 +36,6 @@ def calculate_dominant_emotion_for_two(happy, sad, neutral):
 
 def rendering_for_two_people(
         object_emotion_inanimate, rendering, preprocessors):
-    # common = common_check(
-    #     object_emotion_inanimate[0]["inanimate"],
-    #     object_emotion_inanimate[1]["inanimate"])
     emo_count = 0
     clothes_count = 0
     cloth0 = ""
@@ -53,7 +51,6 @@ def rendering_for_two_people(
     clothes = object_emotion_inanimate[0]["clothes"]
     if (celeb0 != 'None' and celeb1 != 'None'):
         rendering = "Image possibly contains: "
-        print("line 38, two_people")
 
     for i in range(len(clothes)):
         if (clothes[i]["confidence"] != 'None'):
@@ -136,8 +133,6 @@ def rendering_for_two_people(
                 len(cloth0) > 0 and (cloth0 != " , " or cloth0 != " and "))):
             rendering += " wearing "
             clothes_count += 1
-            print(cloth0)
-            print(cloth1)
             if (len(cloth0) >= 2 and len(cloth1) == 0):
                 rendering += cloth0
                 # rendering += " etc. "
