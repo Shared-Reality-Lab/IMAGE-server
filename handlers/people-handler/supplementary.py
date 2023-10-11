@@ -90,7 +90,7 @@ def check_caption_inanimate(obj, caption):
         return False
     return True
 
-
+# determine the type of interaction the people have with inanimate objects
 def get_action(obj):
     vehicle = ["bicycle", "car", "motorcycle", "bus", "train", "truck", "boat"]
     outdoor = ["bench", "chair", "couch"]
@@ -117,7 +117,6 @@ def get_action(obj):
     electronic = ["cell phone", "laptop", "remote", "tv"]
 
     obj = obj.replace(" ", "")
-    # print(obj)
     if (obj in vehicle):
         return " near a " + obj
     elif (obj in outdoor):
