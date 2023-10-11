@@ -12,8 +12,10 @@ def common_check(inanimate1, inanimate2):
                 break
     return check_common
 
-# calculate the dominant emotion 
+# calculate the dominant emotion
 # among the two individuals present in the image
+
+
 def calculate_dominant_emotion_for_two(happy, sad, neutral):
     if (happy == 2):
         return "happy expression "

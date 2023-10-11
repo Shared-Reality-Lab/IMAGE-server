@@ -7,6 +7,8 @@ def rendering_for_one_person(
         object_emotion_inanimate, rendering, preprocessors, person_count, res):
     caption = 0
     celeb = object_emotion_inanimate[0]["celebrity"]["name"]
+    # rendering stratergy will be different
+    # if the person is not a celebrity
     if (celeb != "None"):
         caption += 1
         rendering = "Image possibly contains: "
@@ -35,6 +37,7 @@ def rendering_for_one_person(
             emotion += " faced "
         rendering += emotion + gender
     clothes = object_emotion_inanimate[0]["clothes"]
+    # add clothes information to the description
     if (clothes != "None"):
         caption += 1
         cloth = ""
