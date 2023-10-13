@@ -41,6 +41,7 @@ def per_change(objects):
         change.append(area)
     return change
 
+
 def get_rendering(
         multiple_flag,
         emotion_flag,
