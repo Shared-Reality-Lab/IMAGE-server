@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# the entire file is referred from
+# https://github.com/rock3125/enhanced-subject-verb-object-extraction/blob/master/subject_verb_object_extract_test.py
 
 import en_core_web_sm
 from collections.abc import Iterable

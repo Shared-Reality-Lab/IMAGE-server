@@ -14,12 +14,8 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
-from copy import deepcopy
-from flask import Flask, jsonify, request
-from jsonschema.exceptions import ValidationError
+from flask import Flask, request
 import logging
-import time
-from copy import deepcopy
 import spacy
 import re
 import time
@@ -93,7 +89,8 @@ def rendering_format_check(object_emotion_inanimate, rendering, preprocessors):
         if (object_emotion_inanimate[i]["emotion"]["emotion"] is not None):
             if ("happy" in object_emotion_inanimate[i]["emotion"]["emotion"]):
                 happy = happy + 1
-            elif ("neutral" in object_emotion_inanimate[i]["emotion"]["emotion"]):
+            elif ("neutral" in
+                  object_emotion_inanimate[i]["emotion"]["emotion"]):
                 neutral = neutral + 1
             elif ("sad" in object_emotion_inanimate[i]["emotion"]["emotion"]):
                 sad = sad + 1
@@ -122,7 +119,8 @@ def rendering_two_people_caption(
         if (object_emotion_inanimate[i]["emotion"]["emotion"] is not None):
             if ("happy" in object_emotion_inanimate[i]["emotion"]["emotion"]):
                 happy = happy + 1
-            elif ("neutral" in object_emotion_inanimate[i]["emotion"]["emotion"]):
+            elif ("neutral" in
+                  object_emotion_inanimate[i]["emotion"]["emotion"]):
                 neutral = neutral + 1
             elif ("sad" in object_emotion_inanimate[i]["emotion"]["emotion"]):
                 sad = sad + 1
@@ -170,18 +168,12 @@ def rendering_two_people_caption(
     if (dominant_emotion is not None):
         if ((len(cloth0) > 0 and cloth0 != " , ") or (
                 len(cloth1) > 0 and cloth1 != " , ")):
-            rendering += "and all the mentioned people seem to be " + dominant_emotion
+            rendering += "and all the mentioned people seem to be " \
+                + dominant_emotion
         else:
-            rendering += " Additionally all the mentioned people seem to be " + dominant_emotion
+            rendering += " Additionally all the mentioned people seem to be "\
+                + dominant_emotion
     return rendering
-
-
-def check_major_person(object_emotion_inanimate, rendering):
-    objects = deepcopy(object_emotion_inanimate)
-    objects_sorted = sorted(
-        objects['objects'],
-        key=lambda d: d['area'],
-        reverse=True)
 
 
 def get_rendering(
@@ -200,10 +192,10 @@ def get_rendering(
         rendering += "Image possibly contains: "
     else:
         rendering += "Moreover, on further inspection I can see "
-    segment = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"]["segments"]
+    semseg_prep = "ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
+    segment = preprocessors[semseg_prep]["segments"]
     for i in range(len(segment)):
         if ("person" in segment[i]["name"]):
-            area = segment[i]["area"]
             break
     person_count = f.check_multiple(objects, False)
     print("person count is(people_handler,285)", person_count)
@@ -216,14 +208,14 @@ def get_rendering(
             rendering += "multiple people "
     else:
         if (person_count == 1):
-            # ,standing in the centre of the image. This person occupies " + str(int(area*100)) + " percent of the image. "
             rendering = rendering + " a single person "
         else:
             rendering = rendering + str(person_count) + " " + "people "
     print("rendering is(people_hanlder,300):", rendering)
     print("length of object emotion inanimate", len(object_emotion_inanimate))
     print(object_emotion_inanimate)
-    if ((len(object_emotion_inanimate) == 0 or emotion_flag == False) and cloth_flag):
+    if ((len(object_emotion_inanimate) == 0 or
+         emotion_flag is False) and cloth_flag):
         cloth = ""
         number = 0
         for i in range(len(object_emotion_inanimate)):
@@ -232,17 +224,23 @@ def get_rendering(
                 number += 1
                 cloth += ' , '
         if (number > 1 and len(object_emotion_inanimate) != 2):
-            rendering += "A few of these people seem to be wearing " + cloth + \
-                ". However, I cannot give you more information than this. This is because the people are either too small or not properly oriented in the image to give more details."
+            rendering += "A few of these people seem to be wearing " \
+                + cloth + \
+                ". However, I cannot give you more information than this."\
+                + " This is because the people are either too small" \
+                + " or not properly oriented in the image to give more details"
         elif (number > 1 and len(object_emotion_inanimate) == 1):
             rendering += "This person seems to be wearing " + cloth + \
-                ". However, I cannot give you more information than this as the face of the person is not clearly visible."
+                ". However, I cannot give you more information than this"\
+                + " as the face of the person is not clearly visible."
         elif (len(object_emotion_inanimate) == 2):
             rendering += "One of the person seems to be wearing " + cloth + \
-                ". However, I cannot give you more information than this as the face of the people are not clearly visible."
+                ". However, I cannot give you more information than this"\
+                + " as the face of the people are not clearly visible."
         elif (len(object_emotion_inanimate) >= 2):
             rendering += "A few people seem to be wearing " + cloth + \
-                ". However, I cannot give you more information than this as the face of the people are not clearly visible."
+                ". However, I cannot give you more information than this"\
+                + " as the face of the people are not clearly visible."
     caption = 0
     nlp = spacy.load("en_core_web_sm")
     print(len(object_emotion_inanimate))
@@ -270,12 +268,11 @@ def get_rendering(
         rendering += sentence
         # print(sentence)
         rendering, caption = sp.rendering_for_one_person(
-            object_emotion_inanimate, rendering, preprocessors, person_count, sentence)
+            object_emotion_inanimate, rendering,
+            preprocessors, person_count, sentence)
         print("rendering is,people_handler(354):", rendering)
 
     elif (len(object_emotion_inanimate) == 2):
-        caption = rendering_format_check(
-            object_emotion_inanimate, rendering, preprocessors)
         rendering, emo_count, clothes_count = tp.rendering_for_two_people(
             object_emotion_inanimate, rendering, preprocessors)
         sentence = re.sub('[^A-Za-z0-9]+', ' ', res)
@@ -346,7 +343,8 @@ def handle():
     possible_people = 0
 
     # No Object Detector found
-    if "ca.mcgill.a11y.image.preprocessor.objectDetection" not in preprocessors:
+    if "ca.mcgill.a11y.image.preprocessor.objectDetection" \
+            not in preprocessors:
         logging.debug("No Object Detector found")
         logging.debug("Sending response")
         response = {
@@ -355,20 +353,18 @@ def handle():
             "renderings": []
         }
         return response
-    # add check
-    # possible_people = 0
+
     if ("ca.mcgill.a11y.image.preprocessor.graphicTagger" in preprocessors):
         if (preprocessors["ca.mcgill.a11y.image.preprocessor.graphicTagger"]
                 ["category"] == "people"):
-            objects = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]["objects"]
+            odprep = "ca.mcgill.a11y.image.preprocessor.objectDetection"
+            objects = preprocessors[odprep]["objects"]
             possible_people += 1
-            # print("SC")
-            count = 0
 
     # checks if emotion detection detects face
     possible_people += c.custom_check(preprocessors)
-    # print("possible people: ",possible_people)
-    objects = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]["objects"]
+    odprep = "ca.mcgill.a11y.image.preprocessor.objectDetection"
+    objects = preprocessors[odprep]["objects"]
     # print("Possible people", possible_people)
     res = preprocessors["ca.mcgill.a11y.image.preprocessor.caption"]["caption"]
     print("Caption is:(line 422) ", res)
@@ -392,14 +388,16 @@ def handle():
         # return str(possible_people)
     else:
         # return "people"
+        sortprep = "ca.mcgill.a11y.image.preprocessor.sorting"
         objects, left2right = f.remove_low_confidence(
-            objects, preprocessors["ca.mcgill.a11y.image.preprocessor.sorting"]["leftToRight"])
+            objects, preprocessors[sortprep]["leftToRight"])
         objects_sorted = sorted(objects, key=lambda d: d['area'], reverse=True)
         change = per_change(objects_sorted)
         if ("ca.mcgill.a11y.image.preprocessor.emotion" in preprocessors):
             preprocessors = f.get_original_format(preprocessors)
-            multiple_flag, emotion_flag, object_emotion_inanimate, objects, just_person_count, cloth_flag = f.format_json(
-                objects_sorted, change, preprocessors)
+            multiple_flag, emotion_flag, object_emotion_inanimate, \
+                objects, just_person_count, cloth_flag = f.format_json(
+                    objects_sorted, change, preprocessors)
             rendering = get_rendering(
                 multiple_flag,
                 emotion_flag,

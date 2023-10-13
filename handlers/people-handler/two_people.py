@@ -137,7 +137,6 @@ def rendering_for_two_people(
             clothes_count += 1
             if (len(cloth0) >= 2 and len(cloth1) == 0):
                 rendering += cloth0
-                # rendering += " etc. "
             elif (len(cloth1) >= 2 and len(cloth0) == 0):
                 rendering = rendering + cloth1
             else:
