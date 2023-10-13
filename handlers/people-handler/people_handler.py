@@ -243,13 +243,11 @@ def get_rendering(
                 + " as the face of the people are not clearly visible."
     caption = 0
     nlp = spacy.load("en_core_web_sm")
-    print(len(object_emotion_inanimate))
     if (len(object_emotion_inanimate) == 1):
         print("single person caption", res)
         nlp = spacy.load("en_core_web_sm")
         doc = nlp(res)
         svo = so.findSVOs(doc)
-        print("verb positions are", svo[0])
         verb = svo[0][1]
         verb_posi = [token.i for token in doc if token.pos_ == "VERB"]
         posi = verb_posi[0]
@@ -266,11 +264,9 @@ def get_rendering(
                 continue
         sentence = re.sub('[^A-Za-z0-9]+', ' ', sentence)
         rendering += sentence
-        # print(sentence)
         rendering, caption = sp.rendering_for_one_person(
             object_emotion_inanimate, rendering,
             preprocessors, person_count, sentence)
-        print("rendering is,people_handler(354):", rendering)
 
     elif (len(object_emotion_inanimate) == 2):
         rendering, emo_count, clothes_count = tp.rendering_for_two_people(
@@ -286,7 +282,6 @@ def get_rendering(
             nlp = spacy.load("en_core_web_sm")
             doc = nlp(res)
             svo = so.findSVOs(doc)
-            print("verb positions are", svo[0])
             verb = svo[0][1]
             verb_posi = [token.i for token in doc if token.pos_ == "VERB"]
             posi = verb_posi[0]
@@ -326,10 +321,6 @@ def get_rendering(
                 i += 1
             sentence = re.sub('[^A-Za-z0-9]+', ' ', sentence)
             rendering += sentence
-
-    print("final output is: ")
-    print(rendering)
-    print("\n")
     return rendering
 
 
@@ -365,11 +356,7 @@ def handle():
     possible_people += c.custom_check(preprocessors)
     odprep = "ca.mcgill.a11y.image.preprocessor.objectDetection"
     objects = preprocessors[odprep]["objects"]
-    # print("Possible people", possible_people)
     res = preprocessors["ca.mcgill.a11y.image.preprocessor.caption"]["caption"]
-    print("Caption is:(line 422) ", res)
-    print("\n")
-    print("\n")
     if (possible_people <= 1):
         response = {
             "request_uuid": contents["request_uuid"],
@@ -385,9 +372,7 @@ def handle():
             ]
         }
         return response
-        # return str(possible_people)
     else:
-        # return "people"
         sortprep = "ca.mcgill.a11y.image.preprocessor.sorting"
         objects, left2right = f.remove_low_confidence(
             objects, preprocessors[sortprep]["leftToRight"])
@@ -427,8 +412,21 @@ def handle():
             return response
 
         else:
-            return "cannot be rendered"
+            response = {
+                "request_uuid": contents["request_uuid"],
+                "timestamp": int(time.time()),
+                "renderings": [
+                    {
+                        "type_id": "ca.mcgill.a11y.image.renderer.Text",
+                        "description": "Image description",
+                        "data": {
+                            "text": "Cannot be rendered"
+                        }
+                    }
+                ]
+            }
+            return response
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=82, debug=True)
+    app.run(host="0.0.0.0", port=80, debug=True)
