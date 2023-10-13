@@ -4,7 +4,7 @@ RUN adduser --disabled-password python
 WORKDIR /usr/src/app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
-COPY /handlers/people_handler/ /usr/src/app
+COPY /handlers/people-handler/ /usr/src/app
 
 RUN pip install --upgrade pip
 
