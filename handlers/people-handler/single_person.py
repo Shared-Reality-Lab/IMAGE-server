@@ -1,15 +1,17 @@
 # This file will generate a rendering if the image contains only one person
 
 import supplementary as s
+import logging
+logging.basicConfig(level=logging.NOTSET)
 
 
 def rendering_for_one_person(
         object_emotion_inanimate, rendering, preprocessors, person_count, res):
     caption = 0
     celeb = object_emotion_inanimate[0]["celebrity"]["name"]
-    # rendering stratergy will be different
-    # if the person is not a celebrity
+    # if there is no celebrity
     if (celeb != "None"):
+        logging.info('no celebrity detected')
         caption += 1
         rendering = "Image possibly contains: "
         if (person_count > 1):
@@ -17,6 +19,7 @@ def rendering_for_one_person(
                 str(person_count) + " people with one of them being "
         emotion = " "
         if (object_emotion_inanimate[0]["emotion"]["emotion"] != "None"):
+            logging.info("adding information about expression")
             emotion = object_emotion_inanimate[0]["emotion"]["emotion"]
             if ("happy" in emotion or "sad" in emotion):
                 emotion = emotion + " "
@@ -24,11 +27,13 @@ def rendering_for_one_person(
                 emotion = " a neutral faced "
         rendering = rendering + emotion + celeb
     else:
+        logging.info('celebrity detected')
         caption += 1
         rendering = "Image possibly contains: "
         gender = " person "
         emotion = " "
         if (object_emotion_inanimate[0]["emotion"]["emotion"] != "None"):
+            logging.info("adding information about expression")
             emotion = object_emotion_inanimate[0]["emotion"]["emotion"]
             if ("happy" in emotion or "sad" in emotion):
                 emotion = "a " + emotion
@@ -39,6 +44,7 @@ def rendering_for_one_person(
     clothes = object_emotion_inanimate[0]["clothes"]
     # add clothes information to the description
     if (clothes != "None"):
+        logging.info("adding information about clothes")
         caption += 1
         cloth = ""
         for i in range(len(clothes)):
@@ -52,7 +58,6 @@ def rendering_for_one_person(
                     cloth = cloth + clothes[i]["article"]
             if (len(clothes) == 1):
                 cloth = cloth
-
             elif (i == (len(clothes) - 2) and len(clothes) > 1):
                 cloth = cloth + " and "
             else:

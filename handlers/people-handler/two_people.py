@@ -1,6 +1,7 @@
 # This file will generate a rendering if the image contains two people
 
 import logging
+logging.basicConfig(level=logging.NOTSET)
 
 
 def common_check(inanimate1, inanimate2):
@@ -49,7 +50,6 @@ def rendering_for_two_people(
     neutral = 0
     celeb0 = object_emotion_inanimate[0]["celebrity"]["name"]
     celeb1 = object_emotion_inanimate[1]["celebrity"]["name"]
-    logging.critical("line 34,two_people: {}".format(celeb1))
     clothes = object_emotion_inanimate[0]["clothes"]
     if (celeb0 != 'None' and celeb1 != 'None'):
         rendering = "Image possibly contains: "
@@ -90,17 +90,21 @@ def rendering_for_two_people(
             cloth1 = cloth1 + " , "
 
     if (celeb0 != 'None'):
+        logging.info("Adding celebrity information")
         rendering = "Image possibly contains: "
         rendering = rendering + celeb0
         if (object_emotion_inanimate[0]["emotion"]["emotion"] != 'None'):
+            logging.info("adding expression information")
             rendering += " having a " + \
                 object_emotion_inanimate[0]["emotion"]["emotion"] + \
                 " expression, "
             emo_count += 1
         if (len(cloth0) > 0 and cloth0 != " , "):
+            logging.info("adding clothes information")
             rendering = rendering + " wearing " + cloth0
             clothes_count += 1
     if (celeb1 != 'None'):
+        logging.info("Adding celebrity information")
         if (celeb0 != 'None'):
             rendering = rendering + " and " + celeb1 + ""
         else:
@@ -109,14 +113,17 @@ def rendering_for_two_people(
         if ((len(cloth1) > 0 and (cloth1 != " , " or cloth1 != " and "))
                 or first_person["emotion"]["emotion"] != 'None'):
             if (object_emotion_inanimate[0]["emotion"]["emotion"] != 'None'):
+                logging.info("adding expression information")
                 rendering += " having a " + \
                     object_emotion_inanimate[1]["emotion"]["emotion"] + \
                     " expression, "
                 emo_count += 1
             if (len(cloth0) > 0 and cloth0 != " , "):
+                logging.info("adding clothes information")
                 rendering = rendering + " wearing " + cloth1
                 clothes_count += 1
     elif (celeb0 == 'None' and celeb1 == 'None'):
+        logging.info("no celebrity detected")
         second_person = object_emotion_inanimate[0]
         if (object_emotion_inanimate[1]["emotion"]["emotion"] !=
                 'None' or second_person["emotion"]["emotion"] != 'None'):
@@ -129,10 +136,12 @@ def rendering_for_two_people(
             emo_combined = calculate_dominant_emotion_for_two(
                 happy, neutral, sad)
             if (len(emo_combined) > 0):
+                logging.info("expression detected")
                 rendering = rendering + " having a " + emo_combined
                 emo_count += 1
         if ((len(cloth1) > 0 and (cloth1 != " , " or cloth1 != " and ")) or (
                 len(cloth0) > 0 and (cloth0 != " , " or cloth0 != " and "))):
+            logging.info("clothes detected")
             rendering += " wearing "
             clothes_count += 1
             if (len(cloth0) >= 2 and len(cloth1) == 0):

@@ -2,6 +2,7 @@
 
 import supplementary as s
 import logging
+logging.basicConfig(level=logging.NOTSET)
 
 # get the dominant emotion.
 # If multiple people have different emotions then render the most common one
@@ -109,6 +110,7 @@ def rendering_for_multiple_people(
             celeb_position.append(i)
     # if there is no celebrity in the image
     if (len(celeb_position) == 0):
+        logging.info("no celebrity detected")
         happy = 0
         sad = 0
         neutral = 0
@@ -126,6 +128,7 @@ def rendering_for_multiple_people(
         # get the dominant emotion
         dominant_emotion = calculate_dominant_emotion(happy, sad, neutral)
         if (dominant_emotion is not None):
+            logging.info("expression detected")
             emotion_count += 1
             rendering = rendering + dominant_emotion
         # combine the information regarding
@@ -137,8 +140,6 @@ def rendering_for_multiple_people(
                     if (please_flake8["clothes"][j]["article"] != 'None'):
                         article = \
                             please_flake8["clothes"][j]["article"]
-                        logging.critical(article)
-                        logging.critical(unique_cloth)
                         if (any(
                                 article in s for s in unique_cloth)):
                             continue
@@ -156,12 +157,15 @@ def rendering_for_multiple_people(
         if (len(cloth) != 0):
             if (emotion_count > 0):
                 rendering += " and wearing: "
+                logging.info('clothes detected')
             else:
                 rendering += " mostly wearing: "
+                logging.info('clothes detected')
             rendering += cloth
     else:
         i_list = 0
         render_add = 0
+        logging.info('celebrity detected')
         # add celebrity information to the description
         if (len(celeb_position) == 1):
             rendering += "with one of them being "
@@ -175,6 +179,7 @@ def rendering_for_multiple_people(
                 if (object_emotion_inanimate[i_list]
                         ["emotion"]["emotion"] is not None):
                     random_obj = object_emotion_inanimate[i_list]
+                    logging.info('expression detected')
                     rendering = rendering + " a " + \
                         random_obj["emotion"]["emotion"] + " faced "
                     emotion_count += 1

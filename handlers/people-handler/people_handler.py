@@ -78,6 +78,7 @@ def get_rendering(
     # if image does not contain a person, send a standard response
     if ((len(object_emotion_inanimate) == 0 or
          emotion_flag is False) and cloth_flag):
+        logging.info("No people detected")
         cloth = ""
         number = 0
         for i in range(len(object_emotion_inanimate)):
@@ -107,7 +108,7 @@ def get_rendering(
     nlp = spacy.load("en_core_web_sm")
     # generate a description for image containing one person
     if (len(object_emotion_inanimate) == 1):
-        print("single person caption", res)
+        logging.info("one person detected")
         nlp = spacy.load("en_core_web_sm")
         doc = nlp(res)
         svo = so.findSVOs(doc)
@@ -127,11 +128,13 @@ def get_rendering(
                 continue
         sentence = re.sub('[^A-Za-z0-9]+', ' ', sentence)
         rendering += sentence
+        logging.info('get finer details about the person')
         rendering, caption = sp.rendering_for_one_person(
             object_emotion_inanimate, rendering,
             preprocessors, person_count, sentence)
     # generate a description for image containing 2 people
     elif (len(object_emotion_inanimate) == 2):
+        logging.info("generating rendering for two people")
         rendering, emo_count, clothes_count = tp.rendering_for_two_people(
             object_emotion_inanimate, rendering, preprocessors)
         sentence = re.sub('[^A-Za-z0-9]+', ' ', res)
@@ -151,7 +154,7 @@ def get_rendering(
             sentence = ""
             passed = False
             i = 0
-
+            # split the subject and object
             sentence_split = res.split()
             for word in sentence_split:
                 if (word == verb or passed):
@@ -164,6 +167,7 @@ def get_rendering(
             rendering += sentence
     # generate a description if image contains more than 2 people
     else:
+        logging.info("generating rendering for multiple people")
         rendering, emo_count, clothes_count = m.rendering_for_multiple_people(
             object_emotion_inanimate, rendering, preprocessors)
         sentence = re.sub('[^A-Za-z0-9]+', ' ', res)
@@ -221,7 +225,8 @@ def handle():
     odprep = "ca.mcgill.a11y.image.preprocessor.objectDetection"
     objects = preprocessors[odprep]["objects"]
     res = preprocessors["ca.mcgill.a11y.image.preprocessor.caption"]["caption"]
-    # a check to detect number of people in the image
+    # if no people are detected 
+    # return null response
     if (possible_people <= 1):
         response = {
             "request_uuid": contents["request_uuid"],
@@ -250,7 +255,7 @@ def handle():
                 cloth_flag,
                 contents,
                 res)
-            logging.critical(rendering)
+            logging.info(rendering)
             response = {
                 "request_uuid": contents["request_uuid"],
                 "timestamp": int(time.time()),
