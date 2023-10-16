@@ -1,6 +1,6 @@
 # Expression Recognition Preprocessor
 
-This preprocessor has been designed to recognize human expressions and categorize them as `happy, neutral, or sad`. It is built on the Deepface library, which offers a variety of models like `FaceNet, Openface, DeepFace,` and more. The models can be easily switched by specifying the `detector_backend` parameter when calling the Deepface.analyze function. For more information on model selection, please refer to the [Deepface Readme](https://github.com/serengil/deepface).
+This preprocessor has been designed to recognize human expressions and categorize them as `happy, neutral, or sad`. It is built on the Deepface library, which offers a variety of models like `FaceNet, Openface, DeepFace,` and more. The models can be easily switched by specifying the `detector_backend` parameter when calling the `Deepface.analyze` function. For more information on model selection, please refer to the [Deepface Readme](https://github.com/serengil/deepface).
 
 To use this module as an API, you can follow the example provided in the `emotion-recognition.py` file. The necessary dependencies and their associated versions are clearly specified in the `requirements.txt`
 
