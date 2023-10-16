@@ -226,15 +226,7 @@ def handle():
         response = {
             "request_uuid": contents["request_uuid"],
             "timestamp": int(time.time()),
-            "renderings": [
-                {
-                    "type_id": "ca.mcgill.a11y.image.renderer.Text",
-                    "description": "The text found in a graphic.",
-                    "data": {
-                        "text": "Cannot be rendered"
-                    }
-                }
-            ]
+            "renderings": []
         }
         return response
     else:
@@ -278,15 +270,7 @@ def handle():
             response = {
                 "request_uuid": contents["request_uuid"],
                 "timestamp": int(time.time()),
-                "renderings": [
-                    {
-                        "type_id": "ca.mcgill.a11y.image.renderer.Text",
-                        "description": "Image description",
-                        "data": {
-                            "text": "Cannot be rendered"
-                        }
-                    }
-                ]
+                "renderings": []
             }
             return response
 
