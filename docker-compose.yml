@@ -208,7 +208,7 @@ services:
         volumes:
             - sc-store:/tmp/sc-store
     people-handler:
-        image: ghcr.io/shared-reality-lab/image-people-handler:unstable
+        image: ghcr.io/shared-reality-lab/image-handler-people:unstable
         labels:
             ca.mcgill.a11y.image.handler: enable
     photo-audio-handler:
