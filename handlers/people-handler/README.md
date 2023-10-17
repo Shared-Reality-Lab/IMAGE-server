@@ -24,3 +24,4 @@ This handler would not work if the any one preprocessors is disabled:
 5. Clothes Detector
 6. Caption Detector
 
+For additional details about the design of the handler and the expected performance, please refer the [following thesis](https://srl.mcgill.ca/publications/thesis/2023-MASTER-Akut.pdf)
