@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: shared-reality-lab/image-people-handler
+  IMAGE_NAME: shared-reality-lab/image-handler-people
 jobs:
   lint:
     name: PEP 8 style check.
