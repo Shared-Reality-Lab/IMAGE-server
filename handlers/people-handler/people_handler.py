@@ -225,7 +225,7 @@ def handle():
     odprep = "ca.mcgill.a11y.image.preprocessor.objectDetection"
     objects = preprocessors[odprep]["objects"]
     res = preprocessors["ca.mcgill.a11y.image.preprocessor.caption"]["caption"]
-    # if no people are detected 
+    # if no people are detected
     # return null response
     if (possible_people <= 1):
         response = {
