@@ -19,6 +19,7 @@ import pluralize from "pluralize";
 import osc from "osc";
 
 const MIN_OBJ_AREA = 0.0005; // For ungrouped objects only, for grouped objects applies to whole group.
+const ACT_THRES = 0.85;  // confidence threshold for action recognition
 
 export type TTSSegment = {
     value: string;
@@ -42,6 +43,9 @@ type ObjGroup = {
     grouped: { IDs: number[] }[];
     ungrouped: number[];
 };
+
+type ActionData = { personID: number, action: string, confidence: number };
+type Action = { actions: ActionData[] };
 
 export type SoundSegments = {
     name: string;
@@ -114,38 +118,128 @@ export function filterObjectsBySize(objDet: ObjDet, objGroup: ObjGroup) {
     }
 }
 
+export function generateActions(objs: Obj[], group: number[], actionRec: Action): TTSSegment[] {
+    console.log("generating actions")
+    const objects: TTSSegment[] = [];
+    objects.push({"type": "text", "label": "people", "value": group.length.toString() + " people doing the following actions:"});
+    const actions: Record<string, number[]> = {};
+    const maybeActions: Record<string, number[]> = {};
+    const other: number[] = [];
+    for (const o of objs){
+        const id = o["ID"];
+        const act = actionRec["actions"].find((x: { "personID": number }) => x["personID"] === id);
+        if (act !== undefined) {
+            const label = act["action"].trim();
+            if (act["confidence"] < ACT_THRES) { 
+                if (maybeActions[label]) {
+                    maybeActions[label].push(id);
+                }
+                else { maybeActions[label] = [id]; }
+            }
+            else {
+                if (actions[label]) {
+                    actions[label].push(id);
+                }
+                else { actions[label] = [id]; }
+            }
+        }
+        else {
+            other.push(id);
+        } 
+    }
+    
+    for (const label in actions) {
+        const len = actions[label].length;
+        const pType = len > 1 ? "people" : "person";
+        const acts = objs.filter((x: { "ID": number }) => actions[label].includes(x["ID"])) as Obj[];
+        const actionTxt = label.split('_').join(' ');
+        const object = {
+            "type": "object",
+            "objects": acts,
+            "label": pType + " " + actionTxt,
+            "value": len.toString() + " " + pType + " " + actionTxt + ","
+        };
+        objects.push(object);       
+    }
+    for (const label in maybeActions) {
+        const len = maybeActions[label].length;
+        const pType = len > 1 ? "people" : "person";
+        const acts = objs.filter((x: { "ID": number }) => maybeActions[label].includes(x["ID"])) as Obj[];
+        const actionTxt = label.split('_').join(' ');
+        const object = {
+            "type": "object",
+            "objects": acts,
+            "value": len.toString() + " " + pType + " who might be " + actionTxt + ","
+        };
+        objects.push(object);       
+    }
+    if (other.length > 0) {
+        const len = other.length;
+        const pType = len > 1 ? "people" : "person";
+        const acts = objs.filter((x: { "ID": number }) => other.includes(x["ID"])) as Obj[];
+        const object = {
+            "type": "object",
+            "label": pType,
+            "objects": acts,
+            "value": len.toString() + " other " + pType + ","
+        };
+        objects.push(object);
+    }
 
-export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup): TTSSegment[] {
+    return objects;
+}
+
+export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup, actionRec: Action): TTSSegment[] {
+    const actionOut = (actionRec && actionRec["actions"].length > 0)? true : false;
     const objects: TTSSegment[] = [];
     objects.push({"type": "text", "value": "contains the following objects or people:"});
+    let actionTTS: TTSSegment[] = []; // to be filled with action TTS data from grouped and/or ungrouped objects
     for (const group of objGroup["grouped"]) {
         const objs = objDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"])) as Obj[];
         const totalArea = objs.map(a => a.area).reduce((a, b) => a+ b, 0);
         if (totalArea > MIN_OBJ_AREA) {
             const sType = (objs.length > 0) ? objs[0]["type"] : "object";
             const pType = pluralize(sType.trim());
-            const object = {
-                "type": "object",
-                "objects": objs,
-                "label": pType,
-                "value": objs.length.toString() + " " + pType + ","
-            };
-            objects.push(object);
+
+            if (actionOut && sType.trim() === "person") {
+                actionTTS = generateActions(objs, group["IDs"], actionRec);
+            }
+            else {
+                const object = {
+                    "type": "object",
+                    "objects": objs,
+                    "label": pType,
+                    "value": objs.length.toString() + " " + pType + ","
+                };
+                objects.push(object);
+            }
         }
     }
     for (const idx of objGroup["ungrouped"]) {
         const obj = objDet["objects"].find((x: { "ID": number }) => x["ID"] === idx);
+        let actionTxt = "";
+        if (actionOut) {
+            const act = actionRec["actions"].find((x: { "personID": number }) => x["personID"] === idx);
+            if (act !== undefined) {
+                actionTxt = " " + act["action"].trim().split('_').join(' ');
+                if (act["confidence"] < ACT_THRES) { actionTxt = " who might be" + actionTxt; }
+            }
+        }
         if (obj !== undefined) {
             if (obj["area"] > MIN_OBJ_AREA) {
                 objects.push({
                     "type": "object",
                     "objects": [obj],
-                    "label": obj["type"].trim(),
-                    "value": (Articles.articlize(obj["type"].trim()) as string) + ","
+                    "label": obj["type"].trim() + " " + actionTxt,
+                    "value": (Articles.articlize(obj["type"].trim() + actionTxt) as string) + ","
                 } as TTSSegment);
             }
         }
     }
+    if (objects.length > 1 && actionTTS.length > 0) {
+        objects[objects.length-1]["value"] = objects[objects.length-1]["value"] + " and ";
+    }
+    objects.push(...actionTTS);
     objects[objects.length-1]["value"] = objects[objects.length - 1]["value"].replace(",", ".");
     if (objects.length > 2) {
         objects[objects.length-1]["value"] = "and " + objects[objects.length-1]["value"];

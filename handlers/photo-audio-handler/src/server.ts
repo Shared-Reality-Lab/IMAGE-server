@@ -61,6 +61,7 @@ app.post("/handler", async (req, res) => {
     const semseg = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"];
     const objDet = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
     const objGroup = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
+    const action = preprocessors["ca.mcgill.a11y.image.preprocessor.actionRecognition"];
     const targetLanguage = req.body["language"];
 
     // Ignore secondCat since it isn't useful on its own
@@ -104,8 +105,9 @@ app.post("/handler", async (req, res) => {
         }
     }
     if (objDet && objGroup && objDet["objects"].length > 0) {
-        ttsData.push(...utils.generateObjDet(objDet, objGroup));
+        ttsData.push(...utils.generateObjDet(objDet, objGroup, action));
     }
+    
 
     // Concatenate adjacent text entries
     for (let i = 0; i < ttsData.length - 1; i++) {
