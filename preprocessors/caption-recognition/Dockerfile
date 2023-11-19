@@ -14,7 +14,7 @@ COPY --chown=python:python . $HOME/app
 COPY /preprocessors/caption-recognition/requirements.txt /app/requirements.txt
 
 RUN pip3 install --upgrade pip
-RUN pip install -r /app/requirements.txt
+RUN pip3 install -r /app/requirements.txt
 
 
 COPY /schemas /app/schemas
