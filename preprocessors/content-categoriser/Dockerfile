@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime
+FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
 
 COPY /preprocessors/content-categoriser/requirements.txt /app/requirements.txt
 
@@ -9,7 +9,7 @@ WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip3 install --upgrade pip
-RUN pip3 install -r /app/requirements.txt
+RUN pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
 COPY /preprocessors/content-categoriser/ /app

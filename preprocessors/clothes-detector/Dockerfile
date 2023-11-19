@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime
+FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
 
 RUN adduser --disabled-password python
 WORKDIR /app
@@ -19,8 +19,8 @@ RUN apt-get install -y p7zip \
     unace \
     zip \
     unzip
-RUN pip3 install --upgrade pip
-RUN pip3 install -r /app/requirements.txt
+RUN pip3. install --upgrade pip
+RUN pip install -r /app/requirements.txt
 RUN wget https://image.a11y.mcgill.ca/models/clothesDetector/yolo.zip
 RUN unzip yolo.zip
 
