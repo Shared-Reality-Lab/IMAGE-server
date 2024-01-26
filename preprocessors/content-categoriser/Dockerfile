@@ -9,7 +9,7 @@ WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip3 install --upgrade pip
-RUN pip install -r /app/requirements.txt
+RUN pip3 install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
 COPY /preprocessors/content-categoriser/ /app
