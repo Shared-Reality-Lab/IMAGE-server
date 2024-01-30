@@ -19,7 +19,7 @@ RUN apt-get install -y p7zip \
     unace \
     zip \
     unzip
-RUN pip3 install --upgrade pip
+RUN pip install --upgrade pip
 RUN pip3 install -r /app/requirements.txt
 RUN wget https://image.a11y.mcgill.ca/models/clothesDetector/yolo.zip
 RUN unzip yolo.zip
