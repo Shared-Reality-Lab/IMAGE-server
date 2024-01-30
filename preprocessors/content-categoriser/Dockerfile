@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
+FROM pytorch/pytorch:1.13.0-cuda11.6-cudnn8-runtime
 
 COPY /preprocessors/content-categoriser/requirements.txt /app/requirements.txt
 
