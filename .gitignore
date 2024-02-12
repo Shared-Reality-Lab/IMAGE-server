@@ -1,7 +1,8 @@
 .DS_Store
 __pycache__/
 *.swp
-.env
+pegasus.env
+unicorn.env
 config/maps.env
 config/azure-api.env
 config/chart.env
