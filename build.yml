@@ -36,6 +36,11 @@ services:
             context: .
             dockerfile: ./preprocessors/collage-detector/Dockerfile
         image: "collage-detector-preprocessor:latest"
+    people-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/people-handler/Dockerfile
+        image: "people-handler:latest"
     autour-preprocessor:
         build:
             context: .
