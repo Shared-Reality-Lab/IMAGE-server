@@ -103,7 +103,7 @@ services:
               - driver: nvidia
                 capabilities: ["gpu", "utility", "compute"]
   
-  object-detection:
+  object-detection-test:
     profiles: [test]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:${REGISTRY_TAG}
     restart: unless-stopped
