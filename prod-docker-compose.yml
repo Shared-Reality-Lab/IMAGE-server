@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  image-pegasus-cim-mcgill-ca:
+    image: nginx:latest
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.atp-pegasus.rule=Host(`pegasus.cim.mcgill.ca`) && PathPrefix(`/image`)"
+      - "traefik.http.routers.atp-pegasus.tls.certresolver=myresolver"
+      - "traefik.http.middlewares.peg-redirect.redirectregex.regex=^(https?)://pegasus.cim.mcgill.ca/image(/?.*)"
+      - "traefik.http.middlewares.peg-redirect.redirectregex.replacement=$${1}://image.a11y.mcgill.ca$${2}"
+      - "traefik.http.middlewares.peg-redirect.redirectregex.permanent=true"
+      - "traefik.http.routers.atp-pegasus.middlewares=peg-redirect@docker"
+
+      - "traefik.http.routers.image.rule=Host(`image.a11y.mcgill.ca`) || Host(`image.ally.mcgill.ca`) || Host(`image.accessibility.mcgill.ca`)"
+      - "traefik.http.middlewares.ally-redirect.redirectregex.regex=^(https?)://image.(ally|accessibility).mcgill.ca(/?.*)"
+      - "traefik.http.middlewares.ally-redirect.redirectregex.replacement=$${1}://image.a11y.mcgill.ca$${3}"
+      - "traefik.http.middlewares.ally-redirect.redirectregex.permanent=true"
+      - "traefik.http.routers.image.middlewares=ally-redirect@docker"
+      - "traefik.http.routers.image.tls.certresolver=myresolver"
+      - traefik.docker.network=traefik
+    environment:
+      - SERVER_NAME=image.a11y.mcgill.ca
+    volumes:
+      - ./www/html:/var/www/html:ro
+      - ./www/image.conf:/etc/nginx/templates/image.conf.template:ro
+      - website-logs:/var/log/nginx
+      - ./www/passwords:/etc/nginx/passwords
+      - ./resources/current:/var/www/resources:ro
+    depends_on:
+      - orchestrator
+    networks:
+      - traefik
+      - default
+
+  goaccess:
+    container_name: image-goaccess
+    image: allinurl/goaccess:1.6.1
+    restart: unless-stopped
+    command: /srv/logs/image-a11y-mcgill-ca-access.log --log-format=COMBINED --date-format='%d/%b/%Y' --time-format='%T' --no-global-config --real-time-html -o /srv/report/report.html --persist --restore
+    volumes:
+      - website-logs:/srv/logs:ro
+      - ./goaccess_report:/srv/report

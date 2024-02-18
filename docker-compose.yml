@@ -1,78 +1,9 @@
 version: '3'
 
 services:
-  image-unicorn-cim-mcgill-ca:
-    profiles: [unicorn]
-    image: nginx:latest
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.image-unicorn.rule=Host(`unicorn.cim.mcgill.ca`) && PathPrefix(`/image`)"
-      - "traefik.http.routers.image-unicorn.tls.certresolver=myresolver"
-      - "traefik.http.middlewares.image-unicorn.stripprefix.prefixes=/image"
-      - "traefik.http.routers.image-unicorn.middlewares=image-unicorn@docker"
-      - traefik.docker.network=traefik
-    environment:
-      - SERVER_NAME=unicorn.cim.mcgill.ca
-    volumes:
-      - ./auditory-haptic-graphics-website/html:/var/www/html:ro
-      - ./auditory-haptic-graphics-website/image.conf:/etc/nginx/templates/image.conf.template:ro
-      - ./auditory-haptic-graphics-website/passwords:/etc/nginx/passwords
-      - ./resources/current:/var/www/resources:ro
-      - website-logs:/var/log/nginx
-    depends_on:
-      - orchestrator
-    networks:
-      - traefik
-      - default
-
-  image-pegasus-cim-mcgill-ca:
-    profiles: [pegasus]
-    image: nginx:latest
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.atp-pegasus.rule=Host(`pegasus.cim.mcgill.ca`) && PathPrefix(`/image`)"
-      - "traefik.http.routers.atp-pegasus.tls.certresolver=myresolver"
-      - "traefik.http.middlewares.peg-redirect.redirectregex.regex=^(https?)://pegasus.cim.mcgill.ca/image(/?.*)"
-      - "traefik.http.middlewares.peg-redirect.redirectregex.replacement=$${1}://image.a11y.mcgill.ca$${2}"
-      - "traefik.http.middlewares.peg-redirect.redirectregex.permanent=true"
-      - "traefik.http.routers.atp-pegasus.middlewares=peg-redirect@docker"
-
-      - "traefik.http.routers.image.rule=Host(`image.a11y.mcgill.ca`) || Host(`image.ally.mcgill.ca`) || Host(`image.accessibility.mcgill.ca`)"
-      - "traefik.http.middlewares.ally-redirect.redirectregex.regex=^(https?)://image.(ally|accessibility).mcgill.ca(/?.*)"
-      - "traefik.http.middlewares.ally-redirect.redirectregex.replacement=$${1}://image.a11y.mcgill.ca$${3}"
-      - "traefik.http.middlewares.ally-redirect.redirectregex.permanent=true"
-      - "traefik.http.routers.image.middlewares=ally-redirect@docker"
-      - "traefik.http.routers.image.tls.certresolver=myresolver"
-      - traefik.docker.network=traefik
-    environment:
-      - SERVER_NAME=image.a11y.mcgill.ca
-    volumes:
-      - ./www/html:/var/www/html:ro
-      - ./www/image.conf:/etc/nginx/templates/image.conf.template:ro
-      - website-logs:/var/log/nginx
-      - ./www/passwords:/etc/nginx/passwords
-      - ./resources/current:/var/www/resources:ro
-    depends_on:
-      - orchestrator
-    networks:
-      - traefik
-      - default
-
-  goaccess:
-    profiles: [unicorn, pegasus]
-    container_name: image-goaccess
-    image: allinurl/goaccess:1.6.1
-    restart: unless-stopped
-    command: /srv/logs/image-a11y-mcgill-ca-access.log --log-format=COMBINED --date-format='%d/%b/%Y' --time-format='%T' --no-global-config --real-time-html -o /srv/report/report.html --persist --restore
-    volumes:
-      - website-logs:/srv/logs:ro
-      - ./goaccess_report:/srv/report
-
 # start - common services
   orchestrator:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-orchestrator:${REGISTRY_TAG}
     restart: unless-stopped
     environment:
@@ -88,7 +19,7 @@ services:
       - user-logs:/var/log/IMAGE
 
   espnet-tts:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-espnet-tts:${REGISTRY_TAG}
     restart: unless-stopped
     environment:
@@ -103,7 +34,7 @@ services:
             capabilities: ["gpu", "utility", "compute"]
 
   espnet-tts-fr:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-espnet-tts-fr:${REGISTRY_TAG}
     restart: unless-stopped
     environment:
@@ -116,7 +47,7 @@ services:
               capabilities: ["gpu", "compute", "utility"]
 
   multilang-support:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-translation:${REGISTRY_TAG}
     restart: unless-stopped
     deploy:
@@ -127,7 +58,7 @@ services:
               capabilities: ["gpu", "compute", "utility"]
 
   autour-preprocessor:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-autour:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
@@ -137,7 +68,7 @@ services:
       ca.mcgill.a11y.image.port: 5000
 
   content-categoriser:
-      profiles: [pegasus, unicorn, default]
+      profiles: [production, test, default]
       image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:${REGISTRY_TAG}
       restart: unless-stopped
       labels:
@@ -149,7 +80,7 @@ services:
             memory: 2g
 
   graphic-tagger:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
@@ -159,7 +90,21 @@ services:
       ca.mcgill.a11y.image.port: 5000
 
   object-detection:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 3
+      ca.mcgill.a11y.image.port: 5000
+    deploy:
+          resources:
+            reservations:
+              devices:
+              - driver: nvidia
+                capabilities: ["gpu", "utility", "compute"]
+  
+  object-detection:
+    profiles: [test]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
@@ -174,7 +119,7 @@ services:
                 capabilities: ["gpu", "utility", "compute"]
 
   object-grouping:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
@@ -182,7 +127,7 @@ services:
       ca.mcgill.a11y.image.port: 5000
 
   openstreetmap:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
@@ -192,7 +137,7 @@ services:
       ca.mcgill.a11y.image.port: 5000
 
   object-sorting:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-sorting:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
@@ -200,7 +145,7 @@ services:
       ca.mcgill.a11y.image.port: 5000
 
   semantic-segmentation:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-mmsemantic-segmentation:${REGISTRY_TAG}
     restart: unless-stopped
     deploy:
@@ -215,7 +160,7 @@ services:
       ca.mcgill.a11y.image.port: 5000
 
   supercollider:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-supercollider:${REGISTRY_TAG}
     command: sclang -D ./loader.scd
     restart: unless-stopped
@@ -225,7 +170,7 @@ services:
         replicas: 2
 
   photo-audio-handler:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-audio:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
@@ -236,7 +181,7 @@ services:
       - sc-store:/tmp/sc-store
 
   autour-handler:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-autour:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
@@ -247,7 +192,7 @@ services:
       - sc-store:/tmp/sc-store
 
   photo-audio-haptics-handler:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-audio-haptics:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
@@ -258,7 +203,7 @@ services:
       - sc-store:/tmp/sc-store
 
   high-charts-handler:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-high-charts:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
@@ -269,21 +214,21 @@ services:
       - sc-store:/tmp/sc-store
 
   svg-od-handler:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-od:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
         ca.mcgill.a11y.image.handler: enable
 
   svg-semantic-seg-handler:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-semantic-seg:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
         ca.mcgill.a11y.image.handler: enable
 
   depth-map-generator:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-depth-map-generator:${REGISTRY_TAG}
     restart: unless-stopped
     deploy:
@@ -298,14 +243,14 @@ services:
         ca.mcgill.a11y.image.port: 5000
 
   svg-depth-map:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-depth-map:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
         ca.mcgill.a11y.image.handler: enable
 
   nominatim-preprocessor:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-nominatim:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
@@ -314,14 +259,14 @@ services:
         ca.mcgill.a11y.image.preprocessor: 2
 
   photo-tactile-svg-handler:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-tactile-svg:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
         ca.mcgill.a11y.image.handler: enable
 
   map-tactile-svg-handler:
-    profiles: [pegasus, unicorn, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-map-tactile-svg:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
@@ -332,7 +277,7 @@ services:
 # start - unicorn exclusive services
 
   motd-handler:
-    profiles: [unicorn, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-motd:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
@@ -343,7 +288,7 @@ services:
       ca.mcgill.a11y.image.handler: enable
 
   hello-haptics-handler:
-    profiles: [unicorn, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-hello-haptics:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
@@ -351,8 +296,9 @@ services:
     labels:
       ca.mcgill.a11y.image.handler: enable
 
+  # For environment setup refer to https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/ocr
   ocr-clouds-preprocessor:
-    profiles: [unicorn, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
@@ -362,7 +308,7 @@ services:
       ca.mcgill.a11y.image.port: 5000
 
   object-depth-calculator:
-    profiles: [unicorn, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-depth-calculator:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
@@ -370,7 +316,7 @@ services:
       ca.mcgill.a11y.image.port: 5000
 
   action-recognition:
-    profiles: [unicorn, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-action-recognition:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
@@ -385,14 +331,14 @@ services:
             capabilities: ["gpu", "utility", "compute"]
 
   ocr-handler:
-    profiles: [unicorn, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-ocr:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
       ca.mcgill.a11y.image.handler: enable
 
   osm-streets-handler:
-    profiles: [unicorn, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-osm-streets:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
@@ -406,7 +352,7 @@ services:
         - sc-store:/tmp/sc-store
 
   svg-open-street-map-handler:
-    profiles: [unicorn, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-open-street-map:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
@@ -414,7 +360,7 @@ services:
         ca.mcgill.a11y.image.port: 5000
 
   collage-detector-preprocessor:
-    profiles: [unicorn, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-collage-detector:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
@@ -422,7 +368,7 @@ services:
         ca.mcgill.a11y.image.port: 5000
 
   svg-action-recognition-handler:
-    profiles: [unicorn, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-action-recognition:${REGISTRY_TAG}
     labels:
         ca.mcgill.a11y.image.handler: enable
