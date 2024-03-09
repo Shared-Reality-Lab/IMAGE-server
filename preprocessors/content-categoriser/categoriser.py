@@ -25,8 +25,22 @@ import time
 import jsonschema
 import logging
 import base64
+from flask_caching import Cache
 
 app = Flask(__name__)
+
+config = {
+    "DEBUG": True,
+    "CACHE_TYPE": "redis",
+    "CACHE_REDIS_HOST": "redis",
+    "CACHE_REDIS_PORT": 6379,
+    "CACHE_REDIS_DB": 0,
+    "CACHE_REDIS_URL": "redis://redis:6379/0",
+    "CACHE_DEFAULT_TIMEOUT": 500
+}
+
+app.config.from_mapping(config)
+cache = Cache(app)
 
 
 class Net(pl.LightningModule):
@@ -48,7 +62,16 @@ class Net(pl.LightningModule):
         return str(pred_int[0])
 
 
+def make_key():
+    print("cache function called")
+    content = request.get_json()
+    request_uuid = content["request_uuid"]
+    print(request_uuid)
+    return request_uuid
+
+
 @app.route("/preprocessor", methods=['POST', ])
+@cache.cached(timeout=60, make_cache_key=make_key)
 def categorise():
     logging.debug("Received request")
     # load the schema

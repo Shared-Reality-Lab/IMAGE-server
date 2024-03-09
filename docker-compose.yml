@@ -1,6 +1,11 @@
 version: "3"
 
 services:
+    redis:
+        image: 'redis:alpine'
+        ports:
+          - '6379:6379'
+    
     orchestrator:
         image: ghcr.io/shared-reality-lab/image-orchestrator:unstable
         env_file:
