@@ -100,7 +100,10 @@ services:
             ca.mcgill.a11y.image.preprocessor: 5
             ca.mcgill.a11y.image.port: 5000
     content-categoriser:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:unstable
+        build:
+            context: .
+            dockerfile: ./preprocessors/content-categoriser/Dockerfile
+        image: "content-categoriser:latest"
         labels:
             ca.mcgill.a11y.image.preprocessor: 1
             ca.mcgill.a11y.image.port: 5000
