@@ -62,16 +62,16 @@ class Net(pl.LightningModule):
         return str(pred_int[0])
 
 
-def make_key():
-    logging.info("cache function called")
-    content = request.get_json()
-    request_uuid = content["request_uuid"]
-    logging.info(request_uuid)
-    return request_uuid
+# def make_key():
+#     logging.info("cache function called")
+#     content = request.get_json()
+#     request_uuid = content["request_uuid"]
+#     logging.info(request_uuid)
+#     return request_uuid
 
 
 @app.route("/preprocessor", methods=['POST', ])
-@cache.cached(timeout=60, make_cache_key=make_key)
+# @cache.cached(timeout=60)
 def categorise():
     logging.info("Logging Recieved Request")
     logging.debug("Received request")
@@ -148,7 +148,10 @@ def categorise():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
-    torch.cuda.empty_cache()
+    # torch.cuda.empty_cache()
+    key = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
+    value = request_uuid
+    cache.set(key, value)
     logging.debug("Sending response")
     print()
     return response
