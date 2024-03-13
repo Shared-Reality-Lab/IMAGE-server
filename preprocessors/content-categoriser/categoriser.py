@@ -148,9 +148,9 @@ def categorise():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
-    # torch.cuda.empty_cache()
-    key = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
-    value = request_uuid
+    torch.cuda.empty_cache()
+    key = "contentCategoriser+/" + request_uuid
+    value = type
     cache.set(key, value)
     logging.debug("Sending response")
     print()
