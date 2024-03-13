@@ -63,16 +63,17 @@ class Net(pl.LightningModule):
 
 
 def make_key():
-    print("cache function called")
+    logging.info("cache function called")
     content = request.get_json()
     request_uuid = content["request_uuid"]
-    print(request_uuid)
+    logging.info(request_uuid)
     return request_uuid
 
 
 @app.route("/preprocessor", methods=['POST', ])
 @cache.cached(timeout=60, make_cache_key=make_key)
 def categorise():
+    logging.info("Logging Recieved Request")
     logging.debug("Received request")
     # load the schema
     labels_dict = {"0": "chart", "1": "photograph", "2": "other", "3": "text"}
@@ -149,6 +150,7 @@ def categorise():
         return jsonify("Invalid Preprocessor JSON format"), 500
     torch.cuda.empty_cache()
     logging.debug("Sending response")
+    print()
     return response
 
 
