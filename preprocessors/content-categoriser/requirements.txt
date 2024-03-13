@@ -7,3 +7,4 @@ Werkzeug==2.3.8
 pytorch_lightning==1.6.0
 opencv-python== 4.5.1.48
 gunicorn==20.1.0
+flask-caching=2.1.0
