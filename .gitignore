@@ -1,10 +1,10 @@
 .DS_Store
 __pycache__/
 *.swp
-# config/maps.env
-# config/azure-api.env
-# config/chart.env
-# config/apis-and-selection.env
-# config/vision_api_key.json
+config/maps.env
+config/azure-api.env
+config/chart.env
+config/apis-and-selection.env
+config/vision_api_key.json
 *.sh
 docker-compose.override.yml

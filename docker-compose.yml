@@ -89,6 +89,7 @@ services:
       ca.mcgill.a11y.image.preprocessor: 2
       ca.mcgill.a11y.image.port: 5000
 
+# object-detection service running for production and default profile - single GPU
   object-detection:
     profiles: [production, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:${REGISTRY_TAG}
@@ -102,7 +103,8 @@ services:
               devices:
               - driver: nvidia
                 capabilities: ["gpu", "utility", "compute"]
-  
+                
+# object-detection service running for test profile - multiple GPU
   object-detection-test:
     profiles: [test]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:${REGISTRY_TAG}
