@@ -23,8 +23,9 @@ services:
     environment:
       - SERVER_NAME=image.a11y.mcgill.ca
     volumes:
-      - ./www/html:/var/www/html:ro
+      # Following volume mounts are used only by IMAGE website, not required for IMAGE server 
       - ./www/image.conf:/etc/nginx/templates/image.conf.template:ro
+      - ./www/html:/var/www/html:ro
       - website-logs:/var/log/nginx
       - ./www/passwords:/etc/nginx/passwords
       - ./resources/current:/var/www/resources:ro

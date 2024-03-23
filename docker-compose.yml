@@ -382,8 +382,12 @@ volumes:
   website-logs:
 # https://docs.docker.com/compose/networking/
 networks:
+# start - reverse proxy setup
+# traefik is a reverse proxy used, any other reverse proxy (nginx, HAProxy) can be used as well  
+# following section is not required if the server is hosted on a normal webserver.
   traefik:
     external: true
     name: traefik
+# end - reverse proxy setup
   default:
     name: image
