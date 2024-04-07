@@ -21,6 +21,7 @@ import fs from "fs/promises";
 import path from "path";
 import hash from "object-hash";
 import { validate, version } from "uuid";
+import { Client } from "memjs";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
@@ -30,6 +31,8 @@ import definitionsJSON from "./schemas/definitions.json";
 import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
 
 const app = express();
+const memcached = Client.create();
+
 const port = 8080;
 const ajv = new Ajv2020({
     "schemas": [definitionsJSON, querySchemaJSON, responseSchemaJSON, handlerResponseSchemaJSON, preprocessorResponseSchemaJSON]
@@ -57,6 +60,11 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                     const json = await resp.json();
                     if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                         (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+                        // set data in memcached
+                        memcached.set(json[name], JSON.stringify(json["data"]), {expires: 1000});
+                        console.log("data stored in memcahed");
+                        console.log("cache key", json[name]);
+
                     } else {
                         console.error("Preprocessor response failed validation!");
                         console.error(JSON.stringify(ajv.errors));
