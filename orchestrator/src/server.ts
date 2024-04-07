@@ -33,6 +33,11 @@ import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
 const app = express();
 const memcached = Client.create();
 
+console.log("env Variable", process.env.MEMCACHIER_SERVERS)
+
+console.log("memcached server", memcached.servers);
+
+
 const port = 8080;
 const ajv = new Ajv2020({
     "schemas": [definitionsJSON, querySchemaJSON, responseSchemaJSON, handlerResponseSchemaJSON, preprocessorResponseSchemaJSON]
