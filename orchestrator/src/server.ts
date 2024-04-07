@@ -61,8 +61,8 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                     if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                         (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
                         // set data in memcached
-                        memcached.set(json["name"], JSON.stringify(json["data"]), {expires: 1000});
-                        console.log("data stored in memcahed");
+                        console.log("storing data in memcached");
+                        await memcached.set(json["name"], JSON.stringify(json["data"]), {expires: 1000});
                         console.log("cache key", json["name"]);
 
                     } else {
