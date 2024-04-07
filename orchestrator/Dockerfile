@@ -10,6 +10,9 @@ RUN npm run build && npm prune --production
 
 FROM node:alpine as final
 
+RUN apt-get update && \
+    apt-get install memcached
+
 # Set up for logging
 WORKDIR /var/log/IMAGE
 RUN apk add supercronic
