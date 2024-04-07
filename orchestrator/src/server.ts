@@ -33,7 +33,7 @@ import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
 const app = express();
 const memcached = Client.create();
 
-console.log("env Variable Memcachier services", process.env.MEMCACHIER_SERVERS)
+console.log("env Variable Memcachier services", process.env.MEMCACHE_SERVERS)
 console.log("env Variable store image data", process.env.STORE_IMAGE_DATA)
 
 console.log("memcached server", memcached.servers);
