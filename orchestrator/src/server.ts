@@ -63,7 +63,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                         // set data in memcached
                         memcached.set(json["name"], JSON.stringify(json["data"]), {expires: 1000});
                         console.log("data stored in memcahed");
-                        console.log("cache key", json[name]);
+                        console.log("cache key", json["name"]);
 
                     } else {
                         console.error("Preprocessor response failed validation!");
