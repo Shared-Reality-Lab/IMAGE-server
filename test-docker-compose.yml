@@ -1,0 +1,37 @@
+## docker compose to run image website
+version: '3'
+
+services:
+  image-unicorn-cim-mcgill-ca:
+    image: nginx:latest
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.image-unicorn.rule=Host(`unicorn.cim.mcgill.ca`) && PathPrefix(`/image`)"
+      - "traefik.http.routers.image-unicorn.tls.certresolver=myresolver"
+      - "traefik.http.middlewares.image-unicorn.stripprefix.prefixes=/image"
+      - "traefik.http.routers.image-unicorn.middlewares=image-unicorn@docker"
+      - traefik.docker.network=traefik
+    environment:
+      - SERVER_NAME=unicorn.cim.mcgill.ca
+    volumes:
+      # Following volume mounts are used only by the IMAGE project's website, not required for IMAGE server 
+      - ./auditory-haptic-graphics-website/html:/var/www/html:ro
+      - ./auditory-haptic-graphics-website/image.conf:/etc/nginx/templates/image.conf.template:ro
+      - ./auditory-haptic-graphics-website/passwords:/etc/nginx/passwords
+      - ./resources/current:/var/www/resources:ro
+      - website-logs:/var/log/nginx
+    depends_on:
+      - orchestrator
+    networks:
+      - traefik
+      - default
+
+  goaccess:
+    container_name: image-goaccess
+    image: allinurl/goaccess:1.6.1
+    restart: unless-stopped
+    command: /srv/logs/image-a11y-mcgill-ca-access.log --log-format=COMBINED --date-format='%d/%b/%Y' --time-format='%T' --no-global-config --real-time-html -o /srv/report/report.html --persist --restore
+    volumes:
+      - website-logs:/srv/logs:ro
+      - ./goaccess_report:/srv/report
