@@ -10,7 +10,7 @@ services:
       - PARALLEL_PREPROCESSORS=ON
       - STORE_IMAGE_DATA=ON
     env_file:
-      - ./auditory-haptics-server/config/express-common.env
+      - ./config/express-common.env
     group_add:
       # This should be set in an environment variable or .env
       - ${DOCKER_GID}
@@ -62,7 +62,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-preprocessor-autour:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
-      - ./auditory-haptic-graphics-server/config/maps.env
+      - ./config/maps.env
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
@@ -84,7 +84,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
-      - ./auditory-haptic-graphics-server/config/azure-api.env
+      - ./config/azure-api.env
     labels:
       ca.mcgill.a11y.image.preprocessor: 2
       ca.mcgill.a11y.image.port: 5000
@@ -133,7 +133,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
-      - ./auditory-haptic-graphics-server/config/maps.env
+      - ./config/maps.env
     labels:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
@@ -176,7 +176,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-handler-photo-audio:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
-      - ./auditory-haptic-graphics-server/config/express-common.env
+      - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
     volumes:
@@ -187,7 +187,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-handler-autour:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
-      - ./auditory-haptic-graphics-server/config/express-common.env
+      - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
     volumes:
@@ -198,7 +198,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-handler-photo-audio-haptics:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
-      - ./auditory-haptic-graphics-server/config/express-common.env
+      - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
     volumes:
@@ -209,7 +209,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-handler-high-charts:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
-      - ./auditory-haptic-graphics-server/config/express-common.env
+      - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
     volumes:
@@ -256,7 +256,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-preprocessor-nominatim:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
-        - ./auditory-haptic-graphics-server/config/express-common.env
+        - ./config/express-common.env
     labels:
         ca.mcgill.a11y.image.preprocessor: 2
 
@@ -283,7 +283,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-handler-motd:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
-      - ./auditory-haptic-graphics-server/config/express-common.env
+      - ./config/express-common.env
     environment:
       - MOTD=Hello, world!
     labels:
@@ -294,7 +294,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-handler-hello-haptics:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
-      - ./auditory-haptic-graphics-server/config/express-common.env
+      - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
 
@@ -304,7 +304,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
-      - ./auditory-haptic-graphics-server/config/apis-and-selection.env
+      - ./config/apis-and-selection.env
     labels:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
@@ -344,7 +344,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-handler-osm-streets:${REGISTRY_TAG}
     restart: unless-stopped
     env_file:
-        - ./auditory-haptic-graphics-server/config/express-common.env
+        - ./config/express-common.env
     depends_on:
         - supercollider
         - espnet-tts
