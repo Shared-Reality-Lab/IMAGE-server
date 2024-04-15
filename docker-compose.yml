@@ -1,306 +1,393 @@
-version: "3"
+version: '3'
 
 services:
-    orchestrator:
-        image: ghcr.io/shared-reality-lab/image-orchestrator:unstable
-        env_file:
-            - ./config/express-common.env
-        environment:
-            - STORE_IMAGE_DATA=ON
-            - PARALLEL_PREPROCESSORS=ON
-        group_add:
-            # This should be set in an environment variable or .env
-            - ${DOCKER_GID}
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock:ro
-            - user-logs:/var/log/IMAGE
-    # Services
-    supercollider:
-        image: ghcr.io/shared-reality-lab/image-service-supercollider:unstable
-        command: sclang -D ./loader.scd
-        volumes:
-            - sc-store:/tmp/sc-store
-    espnet-tts:
-        image: ghcr.io/shared-reality-lab/image-service-espnet-tts:unstable
-        environment:
-            - TORCH_DEVICE=cuda
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                    - driver: nvidia
-                      capabilities: ["gpu", "utility", "compute"]
-    espnet-tts-fr:
-        image: ghcr.io/shared-reality-lab/image-service-espnet-tts-fr:unstable
-        environment:
-            - TORCH_DEVICE=cuda
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                    - driver: nvidia
-                      capabilities: ["gpu", "utility", "compute"]
-    multilang-support:
-        image: ghcr.io/shared-reality-lab/image-service-translation:unstable
-        environment:
-            - TORCH_DEVICE=cuda
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                    - driver: nvidia
-                      capabilities: ["gpu"]
-    # Preprocessors
-    autour-preprocessor:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-autour:unstable
-        env_file:
-            - ./config/maps.env
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 2
-            ca.mcgill.a11y.image.port: 5000
-    ner:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-ner:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 2
-            ca.mcgill.a11y.image.port: 5000
-    ocr-clouds-preprocessor:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:unstable
-        env_file:
-            - ./config/apis-and-selection.env
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 4
-            ca.mcgill.a11y.image.port: 5000
-    object-detection:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 5000
-        # deploy:
-        #     resources:
-        #         reservations:
-        #             devices:
-        #             - driver: nvidia
-        #               capabilities: ["gpu", "utility", "compute"]
+# start - common services
+  orchestrator:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-orchestrator:${REGISTRY_TAG}
+    restart: unless-stopped
+    environment:
+      - PARALLEL_PREPROCESSORS=ON
+      - STORE_IMAGE_DATA=ON
+    env_file:
+      - ./config/express-common.env
+    group_add:
+      # This should be set in an environment variable or .env
+      - ${DOCKER_GID}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - user-logs:/var/log/IMAGE
 
-    clothes-detctor:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-clothes-detector:unstable
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                    - driver: nvidia
-                      device_ids: ['1']
-                      capabilities: ["gpu", "utility", "compute"]
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 5
-            ca.mcgill.a11y.image.port: 5000
-    content-categoriser:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 1
-            ca.mcgill.a11y.image.port: 5000
-    line-charts-preprocessor:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-line-charts:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 1
-            ca.mcgill.a11y.image.port: 5000
-    graphic-tagger:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 2
-            ca.mcgill.a11y.image.port: 5000
-        env_file:
-            - ./config/azure-api.env
-    collage-detector-preprocessor:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-collage-detector:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 1
-            ca.mcgill.a11y.image.port: 5000
-    celebrity-detector:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-celebrity-detector:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 5
-            ca.mcgill.a11y.image.port: 5000
-        env_file:
-            - ./config/azure-api.env
-    object-grouping:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 4
-            ca.mcgill.a11y.image.port: 5000
-    openstreetmap:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:unstable
-        env_file:
-            - ./config/maps.env
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 5000
-    object-sorting:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-sorting:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 5
-            ca.mcgill.a11y.image.port: 5000
-    emotion-recognition:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-emotion-recognition:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 5
-            ca.mcgill.a11y.image.port: 5000
-    caption-recognition:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-caption-recognition:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 5
-            ca.mcgill.a11y.image.port: 5000
-    semantic-segmentation:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-mmsemantic-segmentation:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 5000
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                    - driver: nvidia
-                      capabilities: ["gpu", "utility", "compute"]
-    object-detection-azure:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-azure:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 5000
-        env_file:
-            - ./config/azure-api.env
-    depth-map-generator:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-depth-map-generator:unstable
-        deploy:
-            resources:
-              reservations:
-                 devices:
-                 - driver: nvidia
-                   capabilities: ["gpu", "utility", "compute"]
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 3
-            ca.mcgill.a11y.image.port: 5000
-    object-depth-calculator:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-object-depth-calculator:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 4
-            ca.mcgill.a11y.image.port: 5000
-    nominatim-preprocessor:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-nominatim:unstable
-        env_file:
-            - ./config/express-common.env
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 2
-    action-recognition:
-        image: ghcr.io/shared-reality-lab/image-preprocessor-action-recognition:unstable
-        labels:
-            ca.mcgill.a11y.image.preprocessor: 4
-            ca.mcgill.a11y.image.port: 5000
-    # Handlers
-    autour-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-autour:unstable
-        env_file:
-            - ./config/express-common.env
-        depends_on:
-            - supercollider
-            - espnet-tts
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-        volumes:
-            - sc-store:/tmp/sc-store
-    photo-audio-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-photo-audio:unstable
-        env_file:
-            - ./config/express-common.env
-        depends_on:
-            - supercollider
-            - espnet-tts
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-        volumes:
-            - sc-store:/tmp/sc-store
-    hello-haptics-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-hello-haptics:unstable
-        env_file:
-            - ./config/express-common.env
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-    photo-audio-haptics-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-photo-audio-haptics:unstable
-        env_file:
-            - ./config/express-common.env
-        depends_on:
-            - supercollider
-            - espnet-tts
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-        volumes:
-            - sc-store:/tmp/sc-store
-    ocr-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-ocr:unstable
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-    motd-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-motd:unstable
-        environment:
-            - MOTD=Hello, world!
-        env_file:
-            - ./config/express-common.env
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-    high-charts-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-high-charts:unstable
-        env_file:
-            - ./config/express-common.env
-        depends_on:
-            - supercollider
-            - espnet-tts
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-        volumes:
-            - sc-store:/tmp/sc-store
+  espnet-tts:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-service-espnet-tts:${REGISTRY_TAG}
+    restart: unless-stopped
+    environment:
+      - TORCH_DEVICE=cuda
+    ports:
+      - "8001:80"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu", "utility", "compute"]
 
-    svg-od-handler:
-         image: ghcr.io/shared-reality-lab/image-handler-svg-od:unstable
-         labels:
-             ca.mcgill.a11y.image.handler: enable
+  espnet-tts-fr:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-service-espnet-tts-fr:${REGISTRY_TAG}
+    restart: unless-stopped
+    environment:
+      - TORCH_DEVICE=cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: ["gpu", "compute", "utility"]
 
+  multilang-support:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-service-translation:${REGISTRY_TAG}
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: ["gpu", "compute", "utility"]
 
-    osm-streets-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-osm-streets:unstable
-        env_file:
-            - ./config/express-common.env
-        depends_on:
-            - supercollider
-            - espnet-tts
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-        volumes:
-            - sc-store:/tmp/sc-store
-    svg-semantic-seg-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-svg-semantic-seg:unstable
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-    svg-open-street-map-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-svg-open-street-map:unstable
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-            ca.mcgill.a11y.image.port: 5000
-    svg-depth-map:
-        image: ghcr.io/shared-reality-lab/image-handler-svg-depth-map:unstable
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-    photo-tactile-svg-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-photo-tactile-svg:unstable
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-    map-tactile-svg-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-map-tactile-svg:unstable
-        labels:
-            ca.mcgill.a11y.image.handler: enable
-    svg-action-recognition-handler:
-        image: ghcr.io/shared-reality-lab/image-handler-svg-action-recognition:unstable
-        labels:
-            ca.mcgill.a11y.image.handler: enable
+  autour-preprocessor:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-autour:${REGISTRY_TAG}
+    restart: unless-stopped
+    env_file:
+      - ./config/maps.env
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 1
+      ca.mcgill.a11y.image.port: 5000
+
+  content-categoriser:
+      profiles: [production, test, default]
+      image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:${REGISTRY_TAG}
+      restart: unless-stopped
+      labels:
+        ca.mcgill.a11y.image.preprocessor: 1
+        ca.mcgill.a11y.image.port: 5000
+      deploy:
+        resources:
+          limits:
+            memory: 2g
+
+  graphic-tagger:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:${REGISTRY_TAG}
+    restart: unless-stopped
+    env_file:
+      - ./config/azure-api.env
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 2
+      ca.mcgill.a11y.image.port: 5000
+
+# object-detection service running for production and default profile - single GPU
+  object-detection:
+    profiles: [production, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 3
+      ca.mcgill.a11y.image.port: 5000
+    deploy:
+          resources:
+            reservations:
+              devices:
+              - driver: nvidia
+                capabilities: ["gpu", "utility", "compute"]
+                
+# object-detection service running for test profile - multiple GPU
+  object-detection-test:
+    profiles: [test]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 3
+      ca.mcgill.a11y.image.port: 5000
+    deploy:
+          resources:
+            reservations:
+              devices:
+              - driver: nvidia
+                device_ids: ['1']
+                capabilities: ["gpu", "utility", "compute"]
+
+  object-grouping:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 4
+      ca.mcgill.a11y.image.port: 5000
+
+  openstreetmap:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:${REGISTRY_TAG}
+    restart: unless-stopped
+    env_file:
+      - ./config/maps.env
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 3
+      ca.mcgill.a11y.image.port: 5000
+
+  object-sorting:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-sorting:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 5
+      ca.mcgill.a11y.image.port: 5000
+
+  semantic-segmentation:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-mmsemantic-segmentation:${REGISTRY_TAG}
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['1']
+            capabilities: ["gpu", "utility", "compute"]
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 3
+      ca.mcgill.a11y.image.port: 5000
+
+  supercollider:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-service-supercollider:${REGISTRY_TAG}
+    command: sclang -D ./loader.scd
+    restart: unless-stopped
+    volumes:
+      - sc-store:/tmp/sc-store
+    deploy:
+        replicas: 2
+
+  photo-audio-handler:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-photo-audio:${REGISTRY_TAG}
+    restart: unless-stopped
+    env_file:
+      - ./config/express-common.env
+    labels:
+      ca.mcgill.a11y.image.handler: enable
+    volumes:
+      - sc-store:/tmp/sc-store
+
+  autour-handler:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-autour:${REGISTRY_TAG}
+    restart: unless-stopped
+    env_file:
+      - ./config/express-common.env
+    labels:
+      ca.mcgill.a11y.image.handler: enable
+    volumes:
+      - sc-store:/tmp/sc-store
+
+  photo-audio-haptics-handler:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-photo-audio-haptics:${REGISTRY_TAG}
+    restart: unless-stopped
+    env_file:
+      - ./config/express-common.env
+    labels:
+      ca.mcgill.a11y.image.handler: enable
+    volumes:
+      - sc-store:/tmp/sc-store
+
+  high-charts-handler:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-high-charts:${REGISTRY_TAG}
+    restart: unless-stopped
+    env_file:
+      - ./config/express-common.env
+    labels:
+      ca.mcgill.a11y.image.handler: enable
+    volumes:
+      - sc-store:/tmp/sc-store
+
+  svg-od-handler:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-svg-od:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+        ca.mcgill.a11y.image.handler: enable
+
+  svg-semantic-seg-handler:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-svg-semantic-seg:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+        ca.mcgill.a11y.image.handler: enable
+
+  depth-map-generator:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-depth-map-generator:${REGISTRY_TAG}
+    restart: unless-stopped
+    deploy:
+        resources:
+          reservations:
+             devices:
+             - driver: nvidia
+               device_ids: ['1']
+               capabilities: ["gpu", "utility", "compute"]
+    labels:
+        ca.mcgill.a11y.image.preprocessor: 3
+        ca.mcgill.a11y.image.port: 5000
+
+  svg-depth-map:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-svg-depth-map:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+        ca.mcgill.a11y.image.handler: enable
+
+  nominatim-preprocessor:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-nominatim:${REGISTRY_TAG}
+    restart: unless-stopped
+    env_file:
+        - ./config/express-common.env
+    labels:
+        ca.mcgill.a11y.image.preprocessor: 2
+
+  photo-tactile-svg-handler:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-photo-tactile-svg:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+        ca.mcgill.a11y.image.handler: enable
+
+  map-tactile-svg-handler:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-map-tactile-svg:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+        ca.mcgill.a11y.image.handler: enable
+
+# end - common services
+
+# start - unicorn exclusive services
+
+  motd-handler:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-motd:${REGISTRY_TAG}
+    restart: unless-stopped
+    env_file:
+      - ./config/express-common.env
+    environment:
+      - MOTD=Hello, world!
+    labels:
+      ca.mcgill.a11y.image.handler: enable
+
+  hello-haptics-handler:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-hello-haptics:${REGISTRY_TAG}
+    restart: unless-stopped
+    env_file:
+      - ./config/express-common.env
+    labels:
+      ca.mcgill.a11y.image.handler: enable
+
+  # For environment setup refer to https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/ocr
+  ocr-clouds-preprocessor:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:${REGISTRY_TAG}
+    restart: unless-stopped
+    env_file:
+      - ./config/apis-and-selection.env
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 4
+      ca.mcgill.a11y.image.port: 5000
+
+  object-depth-calculator:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-object-depth-calculator:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 4
+      ca.mcgill.a11y.image.port: 5000
+
+  action-recognition:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-action-recognition:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+        ca.mcgill.a11y.image.preprocessor: 4
+        ca.mcgill.a11y.image.port: 5000
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['1']
+            capabilities: ["gpu", "utility", "compute"]
+
+  ocr-handler:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-ocr:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.handler: enable
+
+  osm-streets-handler:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-osm-streets:${REGISTRY_TAG}
+    restart: unless-stopped
+    env_file:
+        - ./config/express-common.env
+    depends_on:
+        - supercollider
+        - espnet-tts
+    labels:
+        ca.mcgill.a11y.image.handler: enable
+    volumes:
+        - sc-store:/tmp/sc-store
+
+  svg-open-street-map-handler:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-svg-open-street-map:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+        ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.port: 5000
+
+  collage-detector-preprocessor:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-collage-detector:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+        ca.mcgill.a11y.image.preprocessor: 1
+        ca.mcgill.a11y.image.port: 5000
+
+  svg-action-recognition-handler:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-svg-action-recognition:${REGISTRY_TAG}
+    labels:
+        ca.mcgill.a11y.image.handler: enable
+
+# end - unicorn exclusive services        
 volumes:
-    sc-store:
-    user-logs:
+  sc-store:
+  user-logs:
+  website-logs:
+# https://docs.docker.com/compose/networking/
+networks:
+# start - reverse proxy setup
+# traefik is a reverse proxy used, any other reverse proxy (nginx, HAProxy) can be used as well  
+# following section is not required if the server is hosted in another way
+  traefik:
+    external: true
+    name: traefik
+# end - reverse proxy setup
+  default:
+    name: image

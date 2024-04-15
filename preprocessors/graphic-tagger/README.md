@@ -5,3 +5,12 @@ According to Azure documents the preprocessor can return [86 tags](https://docs.
 Once the Azure API returns the values, we have dockerised the container and ensured that the Azure values are returned in an appropriate format. The codefile also has appropriate comments.
 
 ```Note: This preprocessor would not work by directly pulling this repository. One would need the API key to run this preprocessor.```
+
+
+## Environment setup
+The environment file (azure-api.env) should contain the API key used to call Azure API. `AZURE_API_KEY` is found in your [Azure portal](https://portal.azure.com).: 
+
+Following is the sample format of azure-api.env file:
+```
+AZURE_API_KEY = [INSERT KEY STRING]
+```
