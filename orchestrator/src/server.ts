@@ -56,7 +56,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
-    const reqCapabilities = data["capabilities"] as String[];
+    const reqCapabilities = data["capabilities"] as string[];
     const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
     console.log("Debug Mode Value", isDebugMode);
     let currentPriorityGroup: number | undefined = undefined;
@@ -178,7 +178,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
                 if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                     (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
                     console.log("storing data in memcached");
-                    const reqCapabilities = data["capabilities"] as String[];
+                    const reqCapabilities = data["capabilities"] as string[];
                     const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
                     const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode":isDebugMode};
                     const hashedKey = hash(cacheKeyData);
