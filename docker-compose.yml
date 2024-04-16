@@ -66,6 +66,7 @@ services:
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 0
 
   content-categoriser:
       profiles: [production, test, default]
@@ -74,6 +75,7 @@ services:
       labels:
         ca.mcgill.a11y.image.preprocessor: 1
         ca.mcgill.a11y.image.port: 5000
+        ca.mcgill.a11y.image.cacheTimeout: 100
       deploy:
         resources:
           limits:

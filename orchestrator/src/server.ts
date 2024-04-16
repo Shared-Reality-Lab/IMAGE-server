@@ -31,12 +31,12 @@ import definitionsJSON from "./schemas/definitions.json";
 import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
 
 const app = express();
-const memcached = Client.create();
+const memjsClient = Client.create();
 
 console.log("env Variable Memcachier services", process.env.MEMCACHE_SERVERS)
 console.log("env Variable store image data", process.env.STORE_IMAGE_DATA)
 
-console.log("memcached server", memcached.servers);
+console.log("memcached server", memjsClient.servers);
 
 
 const port = 8080;
@@ -71,13 +71,6 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                     const json = await resp.json();
                     if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                         (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
-                        // set data in memcached
-                        console.log("storing data in memcached");
-                        
-                        const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode":isDebugMode};
-                        const hashedKey = hash(cacheKeyData);
-                        await memcached.set(hashedKey, JSON.stringify(json["data"]), {expires: 1000});
-                        console.log("cache key", hashedKey);
 
                     } else {
                         console.error("Preprocessor response failed validation!");
@@ -112,27 +105,44 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             console.log("Now on priority group " + currentPriorityGroup);
         }
 
-        const promise = new Promise<Response | void>((resolve) => {
+        const promise = new Promise<Response | void>(async (resolve) => {
             const controller = new AbortController();
             const timeout = setTimeout(() => {
                 controller.abort();
             }, PREPROCESSOR_TIME_MS);
-            console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
-            fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
-                "method": "POST",
-                "headers": {
-                    "Content-Type": "application/json"
-                },
-                "body": JSON.stringify(data),
-                "signal": controller.signal
-            }).then(r => {
-                clearTimeout(timeout);
-                resolve(r);
-            }).catch(err => {
-                console.error("Error occured fetching from " + preprocessor[0]);
-                console.error(err);
-                resolve();
-            });
+            /** Preprocessor Data*/
+            const preprocessorName = preprocessor[0];
+            const preprocessorPort = preprocessor[1];
+            const preprocessorPriority = preprocessor[2] 
+            const preprocessorCacheTimeout = preprocessor[3];
+            console.log(`Cache Timeout for preprocessor ${preprocessorName} is ${preprocessorCacheTimeout}`);
+            const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":preprocessor[0], "debugMode":isDebugMode};
+            const hashedKey = hash(cacheKeyData);
+            const cacheValue = await getResponseFromCache(hashedKey);
+            if(cacheValue){
+                console.log(`Response for preprocessor ${preprocessorName} served from cache `);
+                let cacheResponse = JSON.parse(cacheValue) as Response;
+                resolve(cacheResponse);
+            } else {
+                console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
+                fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "body": JSON.stringify(data),
+                    "signal": controller.signal
+                }).then(async r => {
+                    clearTimeout(timeout);
+                    console.log(`Saving Response for ${preprocessor[0]} in cache with key ${hashedKey}`);
+                    await setResponseInCache(hashedKey, JSON.stringify(r), 1000)
+                    resolve(r);
+                }).catch(err => {
+                    console.error("Error occured fetching from " + preprocessor[0]);
+                    console.error(err);
+                    resolve();
+                });
+            }
         });
         promises.push(promise);
     }
@@ -177,13 +187,6 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
                 const json = await resp.json();
                 if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                     (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
-                    console.log("storing data in memcached");
-                    const reqCapabilities = data["capabilities"] as string[];
-                    const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
-                    const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode":isDebugMode};
-                    const hashedKey = hash(cacheKeyData);
-                    await memcached.set(hashedKey, JSON.stringify(json["data"]), {expires: 1000});
-                    console.log("cache key", hashedKey);
                 } else {
                     console.error("Preprocessor response failed validation!");
                     console.error(JSON.stringify(ajv.errors));
@@ -384,6 +387,19 @@ app.get("/authenticate/:uuid/:check", async (req, res) => {
     }
 });
 
+async function getResponseFromCache(hashedKey: string){
+    const cacheResponse = await memjsClient.get(hashedKey);
+    return cacheResponse && cacheResponse.value?.toString(); 
+}
+
+async function setResponseInCache(hashedKey: string, value: string, timeout: number){
+    console.log(`storing data in memcache with key $`);
+    await memjsClient.set(hashedKey, value, {expires: timeout});
+    //await memcached.set(hashedKey, JSON.stringify(json["data"]), {expires: 1000});
+
+}
+
 app.listen(port, () => {
     console.log(`Started server on port ${port}`);
 });
+
