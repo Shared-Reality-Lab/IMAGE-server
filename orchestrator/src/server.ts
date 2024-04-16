@@ -68,8 +68,12 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                         (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
                         // set data in memcached
                         console.log("storing data in memcached");
-                        await memcached.set(json["name"], JSON.stringify(json["data"]), {expires: 1000});
-                        console.log("cache key", json["name"]);
+                        const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor": json["name"]};
+                        const hashedKey = hash(cacheKeyData);
+                        console.log("cacheKeyData", cacheKeyData);
+                        console.log("hashedKey", hashedKey);
+                        await memcached.set(hashedKey, JSON.stringify(json["data"]), {expires: 1000});
+                        console.log("cache key", hashedKey);
 
                     } else {
                         console.error("Preprocessor response failed validation!");
