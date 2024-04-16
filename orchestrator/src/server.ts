@@ -104,7 +104,8 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             currentPriorityGroup = Number(preprocessor[2]);
             console.log("Now on priority group " + currentPriorityGroup);
         }
-
+        /** temp: disable rule, fix later */
+        /*eslint no-async-promise-executor: "off"*/
         const promise = new Promise<Response | void>(async (resolve) => {
             const controller = new AbortController();
             const timeout = setTimeout(() => {
@@ -112,8 +113,8 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             }, PREPROCESSOR_TIME_MS);
             /** Preprocessor Data*/
             const preprocessorName = preprocessor[0];
-            const preprocessorPort = preprocessor[1];
-            const preprocessorPriority = preprocessor[2] 
+            const _preprocessorPort = preprocessor[1];
+            const _preprocessorPriority = preprocessor[2] 
             const preprocessorCacheTimeout = preprocessor[3];
             console.log(`Cache Timeout for preprocessor ${preprocessorName} is ${preprocessorCacheTimeout}`);
             const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":preprocessor[0], "debugMode":isDebugMode};
@@ -121,7 +122,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             const cacheValue = await getResponseFromCache(hashedKey);
             if(cacheValue){
                 console.log(`Response for preprocessor ${preprocessorName} served from cache `);
-                let cacheResponse = JSON.parse(cacheValue) as Response;
+                const cacheResponse = JSON.parse(cacheValue) as Response;
                 resolve(cacheResponse);
             } else {
                 console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
