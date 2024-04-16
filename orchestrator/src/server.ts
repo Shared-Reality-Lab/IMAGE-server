@@ -51,9 +51,14 @@ const BASE_LOG_PATH = path.join("/var", "log", "IMAGE");
 app.use(express.json({limit: process.env.MAX_BODY}));
 
 async function runPreprocessorsParallel(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
+    console.log("inside run preprocessorsParallel");
+    console.log("preprocessors data", preprocessors);
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
+    const reqCapabilities = data["capabilities"] as String[];
+    const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
+    console.log("Debug Mode Value", isDebugMode);
     let currentPriorityGroup: number | undefined = undefined;
     let promises: Promise<Response | void>[] = [];
     const awaitResponses = async () => {
@@ -68,10 +73,9 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                         (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
                         // set data in memcached
                         console.log("storing data in memcached");
-                        const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor": json["name"]};
+                        
+                        const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode":isDebugMode};
                         const hashedKey = hash(cacheKeyData);
-                        console.log("cacheKeyData", cacheKeyData);
-                        console.log("hashedKey", hashedKey);
                         await memcached.set(hashedKey, JSON.stringify(json["data"]), {expires: 1000});
                         console.log("cache key", hashedKey);
 
@@ -173,6 +177,13 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
                 const json = await resp.json();
                 if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                     (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+                    console.log("storing data in memcached");
+                    const reqCapabilities = data["capabilities"] as String[];
+                    const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
+                    const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode":isDebugMode};
+                    const hashedKey = hash(cacheKeyData);
+                    await memcached.set(hashedKey, JSON.stringify(json["data"]), {expires: 1000});
+                    console.log("cache key", hashedKey);
                 } else {
                     console.error("Preprocessor response failed validation!");
                     console.error(JSON.stringify(ajv.errors));
