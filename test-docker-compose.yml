@@ -28,7 +28,7 @@ services:
 
   goaccess:
     container_name: image-goaccess
-    image: allinurl/goaccess:1.6.1
+    image: allinurl/goaccess:1.9.2
     restart: unless-stopped
     command: /srv/logs/image-a11y-mcgill-ca-access.log --log-format=COMBINED --date-format='%d/%b/%Y' --time-format='%T' --no-global-config --real-time-html -o /srv/report/report.html --persist --restore
     volumes:
