@@ -1,5 +1,3 @@
-version: '3'
-
 services:
 # start - common services
   orchestrator:
@@ -103,7 +101,7 @@ services:
               devices:
               - driver: nvidia
                 capabilities: ["gpu", "utility", "compute"]
-                
+
 # object-detection service running for test profile - multiple GPU
   object-detection-test:
     profiles: [test]

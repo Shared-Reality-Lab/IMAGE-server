@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   image-pegasus-cim-mcgill-ca:
     image: nginx:latest
@@ -7,6 +5,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.atp-pegasus.rule=Host(`pegasus.cim.mcgill.ca`) && PathPrefix(`/image`)"
+      - "traefik.http.routers.atp-pegasus.tls.certresolver=myresolver"
       - "traefik.http.middlewares.peg-redirect.redirectregex.regex=^(https?)://pegasus.cim.mcgill.ca/image(/?.*)"
       - "traefik.http.middlewares.peg-redirect.redirectregex.replacement=$${1}://image.a11y.mcgill.ca$${2}"
       - "traefik.http.middlewares.peg-redirect.redirectregex.permanent=true"
@@ -42,3 +41,21 @@ services:
     volumes:
       - website-logs:/srv/logs:ro
       - ./goaccess_report:/srv/report
+
+  semantic-segmentation:
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0']
+            capabilities: ["gpu", "utility", "compute"]
+
+  depth-map-generator:
+    deploy:
+        resources:
+          reservations:
+             devices:
+             - driver: nvidia
+               device_ids: ['0']
+               capabilities: ["gpu", "utility", "compute"]
