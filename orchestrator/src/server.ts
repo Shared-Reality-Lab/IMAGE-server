@@ -104,7 +104,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                 controller.abort();
             }, PREPROCESSOR_TIME_MS);
             // get value from cache for each preprocessor if it exists
-            const cacheTimeOut = preprocessor[4] as number;
+            const cacheTimeOut = preprocessor[3] as number;
             const reqCapabilities = data["capabilities"] as string[];
             const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
             const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
@@ -179,7 +179,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
 
         let resp;
         // get value from cache for each preprocessor if it exists
-        const cacheTimeOut = preprocessor[4] as number;
+        const cacheTimeOut = preprocessor[3] as number;
         const reqCapabilities = data["capabilities"] as string[];
         const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
         const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
