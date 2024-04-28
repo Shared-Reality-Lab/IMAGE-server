@@ -129,21 +129,15 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                         "signal": controller.signal
                     }).then(r => {
                         clearTimeout(timeout);
-                        // store the value in cache
                         const response = r.clone();
                         if(response.status == 200){
                             response.json().then((json) => {
                                 if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
-                                    //(data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
                                     SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
                                     // store data in cache
-                                    // const reqCapabilities = data["capabilities"] as string[];
-                                    // const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
-                                    // const cacheKeyData = { "imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode": isDebugMode };
-                                    // const hashedKey = hash(cacheKeyData);
-                                    console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
                                     // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
                                     if(cacheTimeOut){
+                                        console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
                                         setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut).then(()=>{
                                             console.debug(`Saved Response for ${json["name"]} in cache with key ${hashedKey}`);
                                         });
@@ -441,8 +435,6 @@ async function getResponseFromCache(hashedKey: string){
 async function setResponseInCache(hashedKey: string, value: string, timeout: number){
     console.debug(`storing data in memcache with key ${hashedKey}`);
     await memjsClient.set(hashedKey, value, {expires: timeout});
-    //await memcached.set(hashedKey, JSON.stringify(json["data"]), {expires: 1000});
-
 }
 
 app.listen(port, () => {
