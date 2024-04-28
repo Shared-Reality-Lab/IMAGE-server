@@ -130,9 +130,8 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                     }).then(r => {
                         clearTimeout(timeout);
                         // store the value in cache
-                        // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
                         const response = r.clone();
-                        if(cacheTimeOut && response.status == 200){
+                        if(response.status == 200){
                             response.json().then((json) => {
                                 if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                                     //(data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
@@ -143,9 +142,12 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                                     // const cacheKeyData = { "imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode": isDebugMode };
                                     // const hashedKey = hash(cacheKeyData);
                                     console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
-                                    setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut).then(()=>{
-                                        console.debug(`Saved Response for ${json["name"]} in cache with key ${hashedKey}`);
-                                    });
+                                    // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
+                                    if(cacheTimeOut){
+                                        setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut).then(()=>{
+                                            console.debug(`Saved Response for ${json["name"]} in cache with key ${hashedKey}`);
+                                        });
+                                    }
                                 }
                             });
                         }
