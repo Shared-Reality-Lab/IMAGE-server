@@ -9,6 +9,7 @@ services:
     environment:
       - PARALLEL_PREPROCESSORS=ON
       - STORE_IMAGE_DATA=ON
+      - MEMCACHE_SERVERS=memcached
     env_file:
       - ./config/express-common.env
     group_add:
@@ -17,6 +18,13 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - user-logs:/var/log/IMAGE
+
+  memcached:
+    profiles: [test, default]
+    image: 'memcached'
+    ports:
+      - '11211:11211'
+    command: -m 4096
 
   espnet-tts:
     profiles: [production, test, default]
@@ -88,7 +96,6 @@ services:
     labels:
       ca.mcgill.a11y.image.preprocessor: 2
       ca.mcgill.a11y.image.port: 5000
-
 
 # object-detection service running for production and default profile - single GPU
   object-detection:
