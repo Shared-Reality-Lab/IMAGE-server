@@ -38,7 +38,7 @@ console.log("env Variable store image data", process.env.STORE_IMAGE_DATA)
 
 console.log("memcached server", memjsClient.servers);
 
-let SERVICE_PREPROCESSOR_MAP : Record<string, string> = {};
+const SERVICE_PREPROCESSOR_MAP : Record<string, string> = {};
 const port = 8080;
 const ajv = new Ajv2020({
     "schemas": [definitionsJSON, querySchemaJSON, responseSchemaJSON, handlerResponseSchemaJSON, preprocessorResponseSchemaJSON]
@@ -138,7 +138,9 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                                 const cacheKeyData = { "imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode": isDebugMode };
                                 const hashedKey = hash(cacheKeyData);
                                 console.log(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
-                                setResponseInCache(hashedKey, JSON.stringify(json["data"]), 1000).then(()=>{});
+                                setResponseInCache(hashedKey, JSON.stringify(json["data"]), 1000).then(()=>{
+                                    console.log(`Saved Response for ${json["name"]} in cache with key ${hashedKey}`);
+                                });
                             }
                         });
                         resolve(r);
