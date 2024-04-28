@@ -111,7 +111,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":preprocessorName, "debugMode":isDebugMode};
             const hashedKey = hash(cacheKeyData);
             getResponseFromCache(hashedKey).then((cacheValue)=>{
-                if(cacheValue){
+                if(cacheTimeOut && cacheValue){
                     // Return the value from cache if found
                     console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
                     const cacheResponse = JSON.parse(cacheValue) as Response;
