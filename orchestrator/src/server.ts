@@ -128,21 +128,23 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                     }).then(r => {
                         clearTimeout(timeout);
                         // store the value in cache
-                        r.json().then((json) => {
-                            if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
-                                //(data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
-                                SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
-                                // store data in cache
-                                const reqCapabilities = data["capabilities"] as string[];
-                                const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
-                                const cacheKeyData = { "imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode": isDebugMode };
-                                const hashedKey = hash(cacheKeyData);
-                                console.log(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
-                                setResponseInCache(hashedKey, JSON.stringify(json["data"]), 1000).then(()=>{
-                                    console.log(`Saved Response for ${json["name"]} in cache with key ${hashedKey}`);
-                                });
-                            }
-                        });
+                        if(r.status == 200){
+                            r.json().then((json) => {
+                                if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
+                                    //(data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+                                    SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
+                                    // store data in cache
+                                    const reqCapabilities = data["capabilities"] as string[];
+                                    const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
+                                    const cacheKeyData = { "imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode": isDebugMode };
+                                    const hashedKey = hash(cacheKeyData);
+                                    console.log(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
+                                    setResponseInCache(hashedKey, JSON.stringify(json["data"]), 1000).then(()=>{
+                                        console.log(`Saved Response for ${json["name"]} in cache with key ${hashedKey}`);
+                                    });
+                                }
+                            });
+                        }
                         resolve(r);
                     }).catch(err => {
                         console.error("Error occured fetching from " + preprocessor[0]);
@@ -427,7 +429,7 @@ async function getResponseFromCache(hashedKey: string){
 }
 
 async function setResponseInCache(hashedKey: string, value: string, timeout: number){
-    console.log(`storing data in memcache with key $`);
+    console.log(`storing data in memcache with key ${hashedKey}`);
     await memjsClient.set(hashedKey, value, {expires: timeout});
     //await memcached.set(hashedKey, JSON.stringify(json["data"]), {expires: 1000});
 
