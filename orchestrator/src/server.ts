@@ -114,6 +114,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                     // Return the value from cache if found
                     console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
                     const cacheResponse = JSON.parse(cacheValue) as Response;
+                    (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse;
                     resolve(cacheResponse);
                 } else {
                     // Call the preprocessor endpoint to get response
