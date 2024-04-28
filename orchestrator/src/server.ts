@@ -112,7 +112,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             getResponseFromCache(hashedKey).then((cacheValue)=>{
                 if(cacheValue){
                     // Return the value from cache if found
-                    console.log(`Response for preprocessor ${preprocessorName} served from cache`);
+                    console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
                     const cacheResponse = JSON.parse(cacheValue) as Response;
                     resolve(cacheResponse);
                 } else {
@@ -128,8 +128,9 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                     }).then(r => {
                         clearTimeout(timeout);
                         // store the value in cache
-                        if(r.status == 200){
-                            r.json().then((json) => {
+                        const response = r.clone();
+                        if(response.status == 200){
+                            response.json().then((json) => {
                                 if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                                     //(data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
                                     SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
@@ -138,9 +139,9 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                                     const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
                                     const cacheKeyData = { "imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode": isDebugMode };
                                     const hashedKey = hash(cacheKeyData);
-                                    console.log(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
+                                    console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
                                     setResponseInCache(hashedKey, JSON.stringify(json["data"]), 1000).then(()=>{
-                                        console.log(`Saved Response for ${json["name"]} in cache with key ${hashedKey}`);
+                                        console.debug(`Saved Response for ${json["name"]} in cache with key ${hashedKey}`);
                                     });
                                 }
                             });
@@ -183,7 +184,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
         const cacheValue = await getResponseFromCache(hashedKey);
         if (cacheValue){
             // add cache value in response
-            console.log(`Response for preprocessor ${preprocessorName} served from cache`);
+            console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
             const cacheResponse = JSON.parse(cacheValue) as Response;
             (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse;
         }
@@ -220,7 +221,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
                         const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
                         const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":json["name"], "debugMode":isDebugMode};
                         const hashedKey = hash(cacheKeyData);
-                        console.log(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
+                        console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
                         await setResponseInCache(hashedKey, JSON.stringify(json["data"]), 1000)
                     } else {
                         console.error("Preprocessor response failed validation!");
@@ -429,7 +430,7 @@ async function getResponseFromCache(hashedKey: string){
 }
 
 async function setResponseInCache(hashedKey: string, value: string, timeout: number){
-    console.log(`storing data in memcache with key ${hashedKey}`);
+    console.debug(`storing data in memcache with key ${hashedKey}`);
     await memjsClient.set(hashedKey, value, {expires: timeout});
     //await memcached.set(hashedKey, JSON.stringify(json["data"]), {expires: 1000});
 
