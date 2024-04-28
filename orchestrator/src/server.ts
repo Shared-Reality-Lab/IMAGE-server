@@ -33,10 +33,7 @@ import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
 const app = express();
 const memjsClient = Client.create();
 
-console.log("env Variable Memcachier services", process.env.MEMCACHE_SERVERS)
-console.log("env Variable store image data", process.env.STORE_IMAGE_DATA)
-
-console.log("memcached server", memjsClient.servers);
+console.debug("memcached server", memjsClient.servers);
 
 const SERVICE_PREPROCESSOR_MAP : Record<string, string> = {};
 const port = 8080;

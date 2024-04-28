@@ -11,8 +11,6 @@ RUN npm run build && npm prune --production
 FROM node:alpine as final
 
 RUN apk add memcached
-# Remove telnet later
-RUN apk add busybox-extras
 # Set up for logging
 WORKDIR /var/log/IMAGE
 RUN apk add supercronic
