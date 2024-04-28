@@ -38,7 +38,7 @@ console.log("env Variable store image data", process.env.STORE_IMAGE_DATA)
 
 console.log("memcached server", memjsClient.servers);
 
-
+let SERVICE_PREPROCESSOR_MAP : Record<string, string> = {};
 const port = 8080;
 const ajv = new Ajv2020({
     "schemas": [definitionsJSON, querySchemaJSON, responseSchemaJSON, handlerResponseSchemaJSON, preprocessorResponseSchemaJSON]
@@ -51,14 +51,9 @@ const BASE_LOG_PATH = path.join("/var", "log", "IMAGE");
 app.use(express.json({limit: process.env.MAX_BODY}));
 
 async function runPreprocessorsParallel(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
-    console.log("inside run preprocessorsParallel");
-    console.log("preprocessors data", preprocessors);
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
-    const reqCapabilities = data["capabilities"] as string[];
-    const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
-    console.log("Debug Mode Value", isDebugMode);
     let currentPriorityGroup: number | undefined = undefined;
     let promises: Promise<Response | void>[] = [];
     const awaitResponses = async () => {
@@ -71,7 +66,6 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                     const json = await resp.json();
                     if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                         (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
-
                     } else {
                         console.error("Preprocessor response failed validation!");
                         console.error(JSON.stringify(ajv.errors));
@@ -104,48 +98,60 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             currentPriorityGroup = Number(preprocessor[2]);
             console.log("Now on priority group " + currentPriorityGroup);
         }
-        /** temp: disable rule, fix later */
-        /*eslint no-async-promise-executor: "off"*/
-        const promise = new Promise<Response | void>(async (resolve) => {
+        const promise = new Promise<Response | void>((resolve) => {
             const controller = new AbortController();
             const timeout = setTimeout(() => {
                 controller.abort();
             }, PREPROCESSOR_TIME_MS);
-            /** Preprocessor Data*/
-            const preprocessorName = preprocessor[0];
-            const _preprocessorPort = preprocessor[1];
-            const _preprocessorPriority = preprocessor[2] 
-            const preprocessorCacheTimeout = preprocessor[3];
-            console.log(`Cache Timeout for preprocessor ${preprocessorName} is ${preprocessorCacheTimeout}`);
-            const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":preprocessor[0], "debugMode":isDebugMode};
+            // get value from cache for each preprocessor if it exists
+            const reqCapabilities = data["capabilities"] as string[];
+            const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
+            const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
+            const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":preprocessorName, "debugMode":isDebugMode};
             const hashedKey = hash(cacheKeyData);
-            const cacheValue = await getResponseFromCache(hashedKey);
-            if(cacheValue){
-                console.log(`Response for preprocessor ${preprocessorName} served from cache `);
-                const cacheResponse = JSON.parse(cacheValue) as Response;
-                resolve(cacheResponse);
-            } else {
-                console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
-                fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
-                    "method": "POST",
-                    "headers": {
-                        "Content-Type": "application/json"
-                    },
-                    "body": JSON.stringify(data),
-                    "signal": controller.signal
-                }).then(async r => {
-                    clearTimeout(timeout);
-                    console.log(`Saving Response for ${preprocessor[0]} in cache with key ${hashedKey}`);
-                    await setResponseInCache(hashedKey, JSON.stringify(r), 1000)
-                    resolve(r);
-                }).catch(err => {
-                    console.error("Error occured fetching from " + preprocessor[0]);
-                    console.error(err);
-                    resolve();
-                });
-            }
+            getResponseFromCache(hashedKey).then((cacheValue)=>{
+                if(cacheValue){
+                    // Return the value from cache if found
+                    console.log(`Response for preprocessor ${preprocessorName} served from cache`);
+                    const cacheResponse = JSON.parse(cacheValue) as Response;
+                    resolve(cacheResponse);
+                } else {
+                    // Call the preprocessor endpoint to get response
+                    console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
+                    fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify(data),
+                        "signal": controller.signal
+                    }).then(r => {
+                        clearTimeout(timeout);
+                        // store the value in cache
+                        r.json().then((json) => {
+                            if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
+                                //(data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+                                SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
+                                // store data in cache
+                                const reqCapabilities = data["capabilities"] as string[];
+                                const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
+                                const cacheKeyData = { "imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode": isDebugMode };
+                                const hashedKey = hash(cacheKeyData);
+                                console.log(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
+                                setResponseInCache(hashedKey, JSON.stringify(json["data"]), 1000).then(()=>{});
+                            }
+                        });
+                        resolve(r);
+                    }).catch(err => {
+                        console.error("Error occured fetching from " + preprocessor[0]);
+                        console.error(err);
+                        resolve();
+                    });
+                }
+            });
         });
         promises.push(promise);
+
     }
     if (promises.length > 0) {
         await awaitResponses();
@@ -164,49 +170,74 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
         }, PREPROCESSOR_TIME_MS);
 
         let resp;
-        try {
-            console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
-            resp = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
-                "method": "POST",
-                "headers": {
-                    "Content-Type": "application/json"
-                },
-                "body": JSON.stringify(data),
-                "signal": controller.signal
-            });
-            clearTimeout(timeout);
-        } catch (err) {
-            // Most likely a timeout
-            console.error("Error occured fetching from " + preprocessor[0]);
-            console.error(err);
-            continue;
+        // get value from cache for each preprocessor if it exists
+        const reqCapabilities = data["capabilities"] as string[];
+        const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
+        const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
+        const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":SERVICE_PREPROCESSOR_MAP[preprocessor[0]], "debugMode":isDebugMode};
+        const hashedKey = hash(cacheKeyData);
+        const cacheValue = await getResponseFromCache(hashedKey);
+        if (cacheValue){
+            // add cache value in response
+            console.log(`Response for preprocessor ${preprocessorName} served from cache`);
+            const cacheResponse = JSON.parse(cacheValue) as Response;
+            (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse;
         }
-
-        // OK data returned
-        if (resp.status === 200) {
+        else {
+            // make fetch call to preprocessor since value not found in cache
             try {
-                const json = await resp.json();
-                if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
-                    (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
-                } else {
-                    console.error("Preprocessor response failed validation!");
-                    console.error(JSON.stringify(ajv.errors));
-                }
+                console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
+                resp = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "body": JSON.stringify(data),
+                    "signal": controller.signal
+                });
+                clearTimeout(timeout);
             } catch (err) {
-                console.error("Error occured on fetch from " + preprocessor[0]);
+                // Most likely a timeout
+                console.error("Error occured fetching from " + preprocessor[0]);
                 console.error(err);
+                continue;
             }
-        }
-        // No Content preprocessor not applicable
-        else if (resp.status === 204) {
-            continue;
-        } else {
-            try {
-                const result = await resp.json();
-                throw result;
-            } catch (err) {
-                console.error("Error occured on fetch from " + preprocessor[0]);
-                console.error(err);
+    
+            // OK data returned
+            if (resp.status === 200) {
+                try {
+                    const json = await resp.json();
+                    if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
+                        (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+                        
+                        SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
+                        // store data in cache
+                        const reqCapabilities = data["capabilities"] as string[];
+                        const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
+                        const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":json["name"], "debugMode":isDebugMode};
+                        const hashedKey = hash(cacheKeyData);
+                        console.log(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
+                        await setResponseInCache(hashedKey, JSON.stringify(json["data"]), 1000)
+                    } else {
+                        console.error("Preprocessor response failed validation!");
+                        console.error(JSON.stringify(ajv.errors));
+                    }
+                } catch (err) {
+                    console.error("Error occured on fetch from " + preprocessor[0]);
+                    console.error(err);
+                }
+            }
+            // No Content preprocessor not applicable
+            else if (resp.status === 204) {
+                continue;
+            } else {
+                try {
+                    const result = await resp.json();
+                    throw result;
+                } catch (err) {
+                    console.error("Error occured on fetch from " + preprocessor[0]);
+                    console.error(err);
+                }
             }
         }
     }
