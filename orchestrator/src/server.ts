@@ -104,6 +104,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                 controller.abort();
             }, PREPROCESSOR_TIME_MS);
             // get value from cache for each preprocessor if it exists
+            const cacheTimeOut = preprocessor[4] as number;
             const reqCapabilities = data["capabilities"] as string[];
             const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
             const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
@@ -129,19 +130,20 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                     }).then(r => {
                         clearTimeout(timeout);
                         // store the value in cache
+                        // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
                         const response = r.clone();
-                        if(response.status == 200){
+                        if(cacheTimeOut && response.status == 200){
                             response.json().then((json) => {
                                 if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                                     //(data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
                                     SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
                                     // store data in cache
-                                    const reqCapabilities = data["capabilities"] as string[];
-                                    const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
-                                    const cacheKeyData = { "imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode": isDebugMode };
-                                    const hashedKey = hash(cacheKeyData);
+                                    // const reqCapabilities = data["capabilities"] as string[];
+                                    // const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
+                                    // const cacheKeyData = { "imageBlob": data["graphic"], "preprocessor": json["name"], "debugMode": isDebugMode };
+                                    // const hashedKey = hash(cacheKeyData);
                                     console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
-                                    setResponseInCache(hashedKey, JSON.stringify(json["data"]), 1000).then(()=>{
+                                    setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut).then(()=>{
                                         console.debug(`Saved Response for ${json["name"]} in cache with key ${hashedKey}`);
                                     });
                                 }
@@ -177,6 +179,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
 
         let resp;
         // get value from cache for each preprocessor if it exists
+        const cacheTimeOut = preprocessor[4] as number;
         const reqCapabilities = data["capabilities"] as string[];
         const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
         const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
@@ -217,13 +220,16 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
                         (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
                         
                         SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
-                        // store data in cache
-                        const reqCapabilities = data["capabilities"] as string[];
-                        const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
-                        const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":json["name"], "debugMode":isDebugMode};
-                        const hashedKey = hash(cacheKeyData);
-                        console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
-                        await setResponseInCache(hashedKey, JSON.stringify(json["data"]), 1000)
+                        // store the value in cache
+                        // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
+                        if(cacheTimeOut){
+                            const reqCapabilities = data["capabilities"] as string[];
+                            const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
+                            const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":json["name"], "debugMode":isDebugMode};
+                            const hashedKey = hash(cacheKeyData);
+                            console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
+                            await setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut)
+                        }
                     } else {
                         console.error("Preprocessor response failed validation!");
                         console.error(JSON.stringify(ajv.errors));
