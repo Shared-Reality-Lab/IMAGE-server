@@ -1,6 +1,3 @@
-
-Alpha quality: Insufficiently refined to be tested by end-users.
-
 FROM python:3.9.5-alpine
 
 RUN adduser --disabled-password python
