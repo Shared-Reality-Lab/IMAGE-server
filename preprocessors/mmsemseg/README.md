@@ -1,5 +1,7 @@
 # Semantic Segmentation module
 
+Beta quality: Useful enough for testing by end-users.
+
 This preprocessor is used for semantically segmenting images. The code for this preprocessor heavily relies on the [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) framework.
 
 The code to use this module as an API can be found in `segment.py`, additional functions are located in `utils.py`. This module is fully versionned, the versions of the libraries used can be found in `requirements.txt` and in the `Dockerfile`.

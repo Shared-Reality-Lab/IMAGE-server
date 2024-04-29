@@ -1,5 +1,7 @@
 # Object Depth Calculator
 
+Beta quality: Useful enough for testing by end-users.
+
 This preprocessor aims at combining the outputs from the depth-map-generator preprocessor and the obejct-detection preprocessor. 
 It calculates the depth of an object by taking the median pixel depth value within the bounding box coordinates as seen in:
 

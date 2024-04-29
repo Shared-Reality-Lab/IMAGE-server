@@ -1,5 +1,7 @@
 <h1>Depth Estimation</h1>
 
+Beta quality: Useful enough for testing by end-users.
+
 This proprocessor will take any image as an input and output the estimated depth. The goal being that the model will allow for other preprocessors to associate depth
 to different components of the image, such as objects, and provide another dimension to the sound renderings. 
 

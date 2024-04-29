@@ -1,3 +1,5 @@
+Beta quality: Useful enough for testing by end-users.
+
 The grouping preprocessor tries to group in the objects detected by the Object Detection based on their type. The following libraries were used for creating the grouping preprocessor
 
 

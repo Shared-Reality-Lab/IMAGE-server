@@ -1,3 +1,5 @@
+Beta quality: Useful enough for testing by end-users.
+
 This preprocessor classifies whether the input image is a picture or a chart. The preprocessor is trained from scratch using transfer learning. The following datasets were used in training our preprocessor
 ## Datasets used 
 
