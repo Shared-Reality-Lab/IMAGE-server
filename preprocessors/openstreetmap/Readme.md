@@ -1,5 +1,7 @@
 # Description
 
+Alpha quality: Insufficiently refined to be tested by end-users.
+
 This service basically involves automatic communication with the openstreetmap (OSM), based on the user's orientation and location, to extract critical map information within an optimum user's radius. The extracted data would be transformed to a suitable data framework, for effective audio and haptic rendering.
 
 ## Environment setup
