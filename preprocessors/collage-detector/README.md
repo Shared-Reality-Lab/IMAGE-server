@@ -1,5 +1,7 @@
 # Per-image Classifier for Identifying Collages or Non-collages
 
+Alpha quality: Insufficiently refined to be tested by end-users.
+
 ## Overview
 
 This preprocessor classifies whether the input image is a collage or a non-collage. The Dockerfile builds a fully functioning IMAGE preprocessor.

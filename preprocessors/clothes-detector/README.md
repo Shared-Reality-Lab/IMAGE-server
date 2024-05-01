@@ -1,5 +1,7 @@
 # Clothes Detection Preprocessor
 
+Alpha quality: Insufficiently refined to be tested by end-users.
+
 This preprocessor detects the type of clothing of individual people in a photograph. The following are the steps performed by the preprocessor
 
 1. We first crop individual people from the image, then detect the clothes worn by each individual. We have used YOLOv3 in the backend to detect and localise the clothes worn by each individual. The weights were obtained from [https://github.com/simaiden/Clothing-Detection](https://github.com/simaiden/Clothing-Detection)

@@ -1,4 +1,7 @@
 # OCR Handler [DEMONSTRATION]
+
+Alpha quality: Insufficiently refined to be tested by end-users.
+
 ## What is OCR?
 OCR is an acronym for Optical Character Recognition which is the process of extracting machine-readable text pictured in graphics or documents.
 We expect that in the future the OCR preprocessor results will likely be rolled

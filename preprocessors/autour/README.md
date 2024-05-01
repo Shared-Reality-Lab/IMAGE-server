@@ -1,3 +1,5 @@
+Beta quality: Useful enough for testing by end-users.
+
 # Usage
 
 The autour preprocessor is used to analyze an embedded google map and return locations of interest around the maps locations. 

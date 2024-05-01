@@ -1,3 +1,5 @@
+Beta quality: Useful enough for testing by end-users.
+
 This preprocessor is used to determine if the image is an indoor or an outdoor image. This preprocessor could be used for getting more information about the image as well. This preprocessor has been outsourced to Azure and we access it using the API key.
 
 According to Azure documents the preprocessor can return [86 tags](https://docs.microsoft.com/en-us/azure/cognitive-services/computer-vision/category-taxonomy), but we have limited the images to just indoor and outdoor.

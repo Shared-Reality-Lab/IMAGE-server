@@ -1,5 +1,7 @@
 # Hello, Handler!
 
+Beta quality: Useful enough for testing by end-users.
+
 ## What is this?
 
 This is an extremely basic version of a [handler](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#handlers=) meant to illustrate its basic operation.

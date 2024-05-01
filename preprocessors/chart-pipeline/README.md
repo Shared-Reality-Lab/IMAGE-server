@@ -1,3 +1,5 @@
+Beta quality: Useful enough for testing by end-users.
+
 # Chart data extraction pipeline
 
 This pipeline is based on the DeepRule paper:
