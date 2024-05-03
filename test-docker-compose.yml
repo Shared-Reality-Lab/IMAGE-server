@@ -8,6 +8,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.image-unicorn.rule=Host(`unicorn.cim.mcgill.ca`) && PathPrefix(`/image`)"
+      - "traefik.http.routers.image-unicorn.tls.certresolver=myresolver"
       - "traefik.http.middlewares.image-unicorn.stripprefix.prefixes=/image"
       - "traefik.http.routers.image-unicorn.middlewares=image-unicorn@docker"
       - traefik.docker.network=traefik
