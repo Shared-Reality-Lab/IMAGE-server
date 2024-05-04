@@ -96,9 +96,8 @@ app.post("/handler", async (req, res) => {
     // This is variable depending on which preprocessor data is available.
     const ttsData: utils.TTSSegment[] = [];
 // Printing a disclaimer that the graphic may be a collage if the preprocessor identifies it as one
-    if (collageDetector.collage) {
-        ttsData.push({"value": "This may be a collage of multiple photos, so the results of this interpretation may be confusing.", "type": "text"});
-        
+    if (collageDetector && collageDetector.collage) {
+        ttsData.push({"value": "This may be a collage of multiple photos, so the results of this interpretation may be confusing.", "type": "text"});  
     }
 
     ttsData.push({"value": utils.generateIntro(secondCat), "type": "text"});
