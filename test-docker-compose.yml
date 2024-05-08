@@ -35,3 +35,40 @@ services:
     volumes:
       - website-logs:/srv/logs:ro
       - ./goaccess_report:/srv/report
+
+# override gpu selection on test environment
+  semantic-segmentation:
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['1']
+            capabilities: ["gpu", "utility", "compute"]
+
+  depth-map-generator:
+    deploy:
+      resources:
+        reservations:
+            devices:
+            - driver: nvidia
+              device_ids: ['1']
+              capabilities: ["gpu", "utility", "compute"]
+
+  action-recognition:
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['1']
+            capabilities: ["gpu", "utility", "compute"]
+
+  object-detection:
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['1']
+            capabilities: ["gpu", "utility", "compute"]

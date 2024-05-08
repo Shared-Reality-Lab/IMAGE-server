@@ -87,36 +87,19 @@ services:
       ca.mcgill.a11y.image.preprocessor: 2
       ca.mcgill.a11y.image.port: 5000
 
-# object-detection service running for production and default profile - single GPU
   object-detection:
-    profiles: [production, default]
+    profiles: [production, default, test]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
     deploy:
-          resources:
-            reservations:
-              devices:
-              - driver: nvidia
-                capabilities: ["gpu", "utility", "compute"]
-
-# object-detection service running for test profile - multiple GPU
-  object-detection-test:
-    profiles: [test]
-    image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:${REGISTRY_TAG}
-    restart: unless-stopped
-    labels:
-      ca.mcgill.a11y.image.preprocessor: 3
-      ca.mcgill.a11y.image.port: 5000
-    deploy:
-          resources:
-            reservations:
-              devices:
-              - driver: nvidia
-                device_ids: ['1']
-                capabilities: ["gpu", "utility", "compute"]
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu", "utility", "compute"]
 
   object-grouping:
     profiles: [production, test, default]
@@ -153,7 +136,6 @@ services:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['1']
             capabilities: ["gpu", "utility", "compute"]
     labels:
       ca.mcgill.a11y.image.preprocessor: 3
@@ -232,12 +214,11 @@ services:
     image: ghcr.io/shared-reality-lab/image-preprocessor-depth-map-generator:${REGISTRY_TAG}
     restart: unless-stopped
     deploy:
-        resources:
-          reservations:
-             devices:
-             - driver: nvidia
-               device_ids: ['1']
-               capabilities: ["gpu", "utility", "compute"]
+      resources:
+        reservations:
+            devices:
+            - driver: nvidia
+              capabilities: ["gpu", "utility", "compute"]
     labels:
         ca.mcgill.a11y.image.preprocessor: 3
         ca.mcgill.a11y.image.port: 5000
@@ -327,7 +308,6 @@ services:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['1']
             capabilities: ["gpu", "utility", "compute"]
 
   ocr-handler:
