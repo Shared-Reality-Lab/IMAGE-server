@@ -2,7 +2,7 @@ bs4==0.0.1
 imgkit==1.2.2
 nltk==3.7
 gunicorn==20.1.0
-pillow==9.4.0
+pillow==10.2.0
 torch==1.13.1
 tqdm==4.64.1
 torchvision==0.8.2

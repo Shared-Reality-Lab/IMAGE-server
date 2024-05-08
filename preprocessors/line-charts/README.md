@@ -1,4 +1,7 @@
 # Line-charts Preprocessor
+
+Beta quality: Useful enough for testing by end-users.
+
 ## The Line-charts preprocessor extracts useful information from the given graph. 
 This preprocessor is used to extract further insights from the given input graph (in the highcharts format). The additional keys added to the data include:
 *lowerPointsOnLeft: number of continous points lower than the current point, lying on the left side of current point

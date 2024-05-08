@@ -1,5 +1,7 @@
 # About
 
+Alpha quality: Insufficiently refined to be tested by end-users.
+
 This preprocessor is used for detecting human action from images. The preprocessor was trained using transfer learning with a pretrained DINOv2 model as a base and a linear head trained from scratch on action images. DINOv2 ViT-S/14 distilled was released by Meta AI Research (https://github.com/facebookresearch/dinov2). Output from object detection is used to find all instances of 'person' in a graphic and classify each instance individually
 
 ## Datasets Used

@@ -1,5 +1,5 @@
 Flask==2.2.5
 jsonschema==3.2.0
-Werkzeug==2.2.3
+Werkzeug==2.3.8
 requests==2.31.0
 gunicorn==20.1.0

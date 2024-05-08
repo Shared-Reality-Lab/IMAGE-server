@@ -1,3 +1,5 @@
+# [DEPRECATED]: This preprocessor is no longer used in production. IMAGE uses yolov8 preprocessor present [here](https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/yolov8)
+
 This preprocessor detects the objects present in the image. The entire code for this preprocessor has been refered from [YOLOv5 Repository](https://github.com/ultralytics/yolov5).
 
 In order to run this preprocessor we have used the [YOLOv5 image](https://hub.docker.com/r/ultralytics/yolov5) as a base docker image.The following commands import the base docker image:
