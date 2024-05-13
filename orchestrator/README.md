@@ -18,7 +18,7 @@ The orchestrator runs within the container on port 8080.
 
 ## Options
 
-Two environment variables are checked
+Three environment variables are checked
 - `STORE_IMAGE_DATA`: when set to `ON` or `on`, the request and response data associated with a request will be stored in a subdirectory
 of `/var/log/IMAGE` with the name of the UUID for that request *in the orchestrator container*. A volume should be
 mounted to this location if this option is used. A cron job will delete subdirectories older than 1 hour every 10 minutes
@@ -27,7 +27,7 @@ If left unset or set to any other value, request and response data will never be
 - `PARALLEL_PREPROCESSORS`: when set to `ON` or `on`, the preprocessors in a [priority group](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#docker-compose-configuration) will be run in parallel
 rather than serially. Note that this may result in higher resource usage which can cause instability if resources (e.g., GPU memory) are exhausted.
 If left unset or set to any other value, preprocessors within a group will run sequentially although in an undefined order.
-- `MEMCACHE_SERVERS`: this contains the server address of the memcache where memjs client will connect to. This should match with the service name of memcached docker container.
+- `MEMCACHE_SERVERS`: this contains the server and the port of the memcache where memjs client will connect to. Server should match with the service name of docker container (as specfied in docker-compose). Multiple servers are separated by a comma. If this value is missing, memjs client will try to connect to 'localhost:11211'.  Refer https://memjs.netlify.app/ for details 
 
 ## Endpoints
 

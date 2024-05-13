@@ -9,7 +9,7 @@ services:
     environment:
       - PARALLEL_PREPROCESSORS=ON
       - STORE_IMAGE_DATA=ON
-      - MEMCACHE_SERVERS=memcached
+      - MEMCACHE_SERVERS=memcached:11211
     env_file:
       - ./config/express-common.env
     group_add:
@@ -23,7 +23,7 @@ services:
     profiles: [test, default]
     image: 'memcached:1.6'
     ports:
-      - '11211:11211'
+      - '11211'
     # cache size - 4GB
     command: -m 4096
 
