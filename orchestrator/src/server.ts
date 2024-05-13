@@ -130,6 +130,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                         if(response.status == 200){
                             response.json().then((json) => {
                                 if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
+                                    // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP    
                                     SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
                                     // store data in cache
                                     // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
@@ -211,7 +212,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
                     const json = await resp.json();
                     if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                         (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
-                        
+                        // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP
                         SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
                         // store the value in cache
                         // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
