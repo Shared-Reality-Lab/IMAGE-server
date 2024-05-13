@@ -34,7 +34,7 @@ const app = express();
 const memjsClient = Client.create();
 
 console.debug("memcached server", memjsClient.servers);
-
+// variable to store mapping of service (as defined in docker-compose) and preprocessor-id (as returned in the reponse)
 const SERVICE_PREPROCESSOR_MAP : Record<string, string> = {};
 const port = 8080;
 const ajv = new Ajv2020({
