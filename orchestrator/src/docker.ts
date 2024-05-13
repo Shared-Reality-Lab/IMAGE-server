@@ -47,7 +47,7 @@ export function getPreprocessorServices(containers: Docker.ContainerInfo[]) {
     }).map(container => {
         const portLabel = container.Labels[_PORT_LABEL_];
         const priorityLabel = Number(container.Labels[_PREPROCESSOR_LABEL_]);
-        const cacheTimeout = container.Labels[_CACHE_TIMEOUT_LABEL] || 0;
+        const cacheTimeout = Number(container.Labels[_CACHE_TIMEOUT_LABEL] || 0);
 
         let port;
         if (portLabel !== undefined) {
