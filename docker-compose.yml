@@ -24,7 +24,7 @@ services:
     image: 'memcached:1.6'
     ports:
       - '11211'
-    # cache size - 4GB
+    # cache memory size - 4GB
     command: -m 4096
 
   espnet-tts:
