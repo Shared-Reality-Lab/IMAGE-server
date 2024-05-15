@@ -22,13 +22,13 @@ export class ServerCache {
         const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode");
         let reqData : string | object = "";
         if(data["graphic"]){
-            reqData = data["graphic"];
+            reqData = data["graphic"] as string;
         } else if (data["placeID"]) {
-            reqData = data["placeID"];
+            reqData = data["placeID"] as string;
         } else if (data["coordinates"]){
-            reqData = data["coordinates"];
+            reqData = data["coordinates"] as object;
         } else if(data["highChartsData"]){
-            reqData = data["highChartsData"];
+            reqData = data["highChartsData"] as object;
         }
         const cacheKeyData = {"reqData": reqData, "preprocessor": preprocessor, "debugMode":isDebugMode}
         return hash(cacheKeyData);
