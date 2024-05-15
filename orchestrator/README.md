@@ -87,9 +87,7 @@ IMAGE uses Memcached as in-memory data store. Cache is implemented using [MemJS]
 
 - Cache size is configured in the docker-compose in the commad attribute under memcached service `command: -m 4096` implies cache size of 4GB.
 
-- Cache timeout is configured at the preprocessor level, with the label `ca.mcgill.a11y.image.cacheTimeout` . A value of label is the timeout value in seconds. Timeout value of 0 indicates that Cache is disabled for a preprocessor.
-
-- Missing `ca.mcgill.a11y.image.cacheTimeout` label on the preprocessor will default to timeout value of 0.
+- Cache timeout is configured at the preprocessor level, with the label `ca.mcgill.a11y.image.cacheTimeout` . Label value is the timeout value in seconds. Timeout value of 0 indicates that Cache is disabled for a preprocessor. Missing `ca.mcgill.a11y.image.cacheTimeout` label on the preprocessor will default to timeout value of 0.
 
 - Cache key is generated using the following attributes:
   - `reqData` can have the following falues
