@@ -1,7 +1,7 @@
 import { Client } from "memjs";
 import hash from "object-hash";
 
-/** Server cache implementation for IMAGE based on memcached:  */
+/** Server cache implementation for IMAGE based on memjs :  https://memjs.netlify.app/ */
 export class ServerCache {
     memjsClient : Client;
     constructor(){

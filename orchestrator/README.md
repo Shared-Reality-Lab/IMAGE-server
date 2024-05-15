@@ -50,6 +50,7 @@ In that case, the orchestrator will check if a UUID matching `:uuid` is currentl
 request associated with it has the checksum provided in this GET request. If it does, the saved request/response pair
 will be marked for long-term storage and not deleted by the cron job when it is older than 1 hour.
 
+
 ## Configuration
 
 Here is a snippet of the service from our sample `docker-compose.yml`:
@@ -79,3 +80,24 @@ be omitted if the default behavior is desired.
 The orchestrator runs as a non-root user. As such, the container must be run with permissions of the `docker` group on the host
 in order to access the socket. The socket must also be mounted into the container (the bind mount `/var/run/docker.sock:/var/run/docker.sock:ro`).
 This docker group ID changes from system to system and needs to be checked manually using a command like `cat /etc/group | grep docker | awk -F: '{ print $3 }'`
+
+## Cache Implementation
+
+IMAGE uses Memcached as in-memory data store. Cache is implemented using [MemJS](https://www.npmjs.com/package/memjs). Following is the confugration to enable Cache for preprocessors:
+
+- Cache size is configured in the docker-compose in the commad attribute under memcached service `command: -m 4096` implies cache size of 4GB.
+
+- Cache timeout is configured at the preprocessor level, with the label `ca.mcgill.a11y.image.cacheTimeout` . A value of label is the timeout value in seconds. Timeout value of 0 indicates that Cache is disabled for a preprocessor.
+
+- Missing `ca.mcgill.a11y.image.cacheTimeout` label on the preprocessor will default to timeout value of 0.
+
+- Cache key is generated using the following attributes:
+  - `reqData` can have the following falues
+    - `request["data"]` (for graphics)
+    - `request["placeID"]`/`request["coordinates"]` (for maps)
+    - `request["highChartsData"]` (for charts)
+  - `preprocessor` - preprocessor id as returned in the response
+  - `debugMode` - true/false depending on if the debug mode is enabled or not.
+
+  cache key is the [object-hash](https://www.npmjs.com/package/object-hash) generated for the object `{reqData, preprocessor, debugMode}`
+
