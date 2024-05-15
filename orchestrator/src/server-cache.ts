@@ -30,7 +30,7 @@ export class ServerCache {
         } else if(data["highChartsData"]){
             reqData = data["highChartsData"];
         }
-        let cacheKeyData = {"reqData": reqData, "preprocessor": preprocessor, "debugMode":isDebugMode}
+        const cacheKeyData = {"reqData": reqData, "preprocessor": preprocessor, "debugMode":isDebugMode}
         return hash(cacheKeyData);
     }
 }
