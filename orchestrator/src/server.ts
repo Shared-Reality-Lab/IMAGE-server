@@ -21,7 +21,6 @@ import fs from "fs/promises";
 import path from "path";
 import hash from "object-hash";
 import { validate, version } from "uuid";
-import { Client } from "memjs";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
@@ -29,9 +28,11 @@ import preprocessorResponseSchemaJSON from "./schemas/preprocessor-response.sche
 import responseSchemaJSON from "./schemas/response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
+import { ServerCache } from "./server-cache";
 
 const app = express();
-const memjsClient = Client.create();
+const serverCache = new ServerCache();
+const memjsClient = serverCache.memjsClient;
 
 console.debug("memcached server", memjsClient.servers);
 // variable to store mapping of service (as defined in docker-compose) and preprocessor-id (as returned in the reponse)
@@ -102,12 +103,9 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             }, PREPROCESSOR_TIME_MS);
             // get value from cache for each preprocessor if it exists
             const cacheTimeOut = preprocessor[3] as number;
-            const reqCapabilities = data["capabilities"] as string[];
-            const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
             const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
-            const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":preprocessorName, "debugMode":isDebugMode};
-            const hashedKey = hash(cacheKeyData);
-            getResponseFromCache(hashedKey).then((cacheValue)=>{
+            const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
+            serverCache.getResponseFromCache(hashedKey).then((cacheValue)=>{
                 if(cacheTimeOut > 0 && cacheValue){
                     // Return the value from cache if found
                     console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
@@ -136,7 +134,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                                     // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
                                     if(cacheTimeOut > 0){
                                         console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
-                                        setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut).then(()=>{
+                                        serverCache.setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut).then(()=>{
                                             console.debug(`Saved Response for ${json["name"]} in cache with key ${hashedKey}`);
                                         });
                                     }
@@ -174,12 +172,9 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
         let resp;
         // get value from cache for each preprocessor if it exists
         const cacheTimeOut = preprocessor[3] as number;
-        const reqCapabilities = data["capabilities"] as string[];
-        const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
         const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
-        const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":SERVICE_PREPROCESSOR_MAP[preprocessor[0]], "debugMode":isDebugMode};
-        const hashedKey = hash(cacheKeyData);
-        const cacheValue = await getResponseFromCache(hashedKey);
+        const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
+        const cacheValue = await serverCache.getResponseFromCache(hashedKey);
         if (cacheValue){
             // add cache value in response
             console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
@@ -217,12 +212,9 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
                         // store the value in cache
                         // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
                         if(cacheTimeOut > 0){
-                            const reqCapabilities = data["capabilities"] as string[];
-                            const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode")
-                            const cacheKeyData = {"imageBlob": data["graphic"], "preprocessor":json["name"], "debugMode":isDebugMode};
-                            const hashedKey = hash(cacheKeyData);
+                            const hashedKey =  serverCache.constructCacheKey(data, json["name"]);
                             console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
-                            await setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut)
+                            await serverCache.setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut)
                         }
                     } else {
                         console.error("Preprocessor response failed validation!");
@@ -424,16 +416,6 @@ app.get("/authenticate/:uuid/:check", async (req, res) => {
         res.status(503).end();
     }
 });
-
-async function getResponseFromCache(hashedKey: string){
-    const cacheResponse = await memjsClient.get(hashedKey);
-    return cacheResponse && cacheResponse.value?.toString(); 
-}
-
-async function setResponseInCache(hashedKey: string, value: string, timeout: number){
-    console.debug(`storing data in memcache with key ${hashedKey}`);
-    await memjsClient.set(hashedKey, value, {expires: timeout});
-}
 
 app.listen(port, () => {
     console.log(`Started server on port ${port}`);

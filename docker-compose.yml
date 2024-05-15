@@ -22,8 +22,6 @@ services:
   memcached:
     profiles: [test, default]
     image: 'memcached:1.6'
-    ports:
-      - '11211'
     # cache memory size - 4GB
     command: -m 4096
 
