@@ -90,12 +90,11 @@ IMAGE uses Memcached as in-memory data store. Cache is implemented using [MemJS]
 - Cache timeout is configured at the preprocessor level, with the label `ca.mcgill.a11y.image.cacheTimeout` . Label value is the timeout value in seconds. Timeout value of 0 indicates that Cache is disabled for a preprocessor. Missing `ca.mcgill.a11y.image.cacheTimeout` label on the preprocessor will default to timeout value of 0.
 
 - Cache key is generated using the following attributes:
-  - `reqData` can have the following falues
+  - `reqData` can have the following values
     - `request["data"]` (for graphics)
     - `request["placeID"]`/`request["coordinates"]` (for maps)
     - `request["highChartsData"]` (for charts)
-  - `preprocessor` - preprocessor id as returned in the response
-  - `debugMode` - true/false depending on if the debug mode is enabled or not.
+  - `preprocessor` - preprocessor id (as returned in the response) identifying the data returned by the preprocessor 
 
-  cache key is the [object-hash](https://www.npmjs.com/package/object-hash) generated for the object `{reqData, preprocessor, debugMode}`
+  cache key is the [object-hash](https://www.npmjs.com/package/object-hash) generated for the object `{reqData, preprocessor}`
 
