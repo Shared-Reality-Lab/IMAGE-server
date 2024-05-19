@@ -7,6 +7,7 @@ services:
     environment:
       - PARALLEL_PREPROCESSORS=ON
       - STORE_IMAGE_DATA=ON
+      - MEMCACHE_SERVERS=memcached:11211
     env_file:
       - ./config/express-common.env
     group_add:
@@ -15,6 +16,12 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - user-logs:/var/log/IMAGE
+
+  memcached:
+    profiles: [test, default]
+    image: 'memcached:1.6'
+    # cache memory size - 4GB
+    command: -m 4096
 
   espnet-tts:
     profiles: [production, test, default]

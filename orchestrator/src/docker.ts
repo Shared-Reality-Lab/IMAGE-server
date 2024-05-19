@@ -20,6 +20,7 @@ export const docker = new Docker();
 const _PREPROCESSOR_LABEL_ = "ca.mcgill.a11y.image.preprocessor";
 const _HANDLER_LABEL_ = "ca.mcgill.a11y.image.handler";
 const _PORT_LABEL_ = "ca.mcgill.a11y.image.port";
+const _CACHE_TIMEOUT_LABEL = "ca.mcgill.a11y.image.cacheTimeout"; 
 const _ORCHESTRATOR_ID_ = process.env.HOSTNAME as string;
 
 function getOrchestratorNetworks(containers: Docker.ContainerInfo[]): string[] {
@@ -46,6 +47,8 @@ export function getPreprocessorServices(containers: Docker.ContainerInfo[]) {
     }).map(container => {
         const portLabel = container.Labels[_PORT_LABEL_];
         const priorityLabel = Number(container.Labels[_PREPROCESSOR_LABEL_]);
+        const cacheTimeout = Number(container.Labels[_CACHE_TIMEOUT_LABEL] || 0);
+
         let port;
         if (portLabel !== undefined) {
             port = parseInt(portLabel, 10);
@@ -55,7 +58,7 @@ export function getPreprocessorServices(containers: Docker.ContainerInfo[]) {
         } else {
             port = 80;
         }
-        return [container.Labels["com.docker.compose.service"], port, priorityLabel];
+        return [container.Labels["com.docker.compose.service"], port, priorityLabel, cacheTimeout];
     });
 }
 
