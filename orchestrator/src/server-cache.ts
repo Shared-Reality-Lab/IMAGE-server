@@ -25,13 +25,23 @@ export class ServerCache {
         this.memjsClient = Client.create();
     }
     async getResponseFromCache(hashedKey: string){
-        const cacheResponse = await this.memjsClient.get(hashedKey);
-        return cacheResponse && cacheResponse.value?.toString(); 
+        try{
+            const cacheResponse = await this.memjsClient.get(hashedKey);
+            return cacheResponse && cacheResponse.value?.toString(); 
+        } catch(error){
+            console.debug("Error getting response from the cache");
+            return undefined;
+        }
+
     }
     
     async setResponseInCache(hashedKey: string, value: string, timeout: number){
         console.debug(`storing data in memcache with key ${hashedKey}`);
-        await this.memjsClient.set(hashedKey, value, {expires: timeout});
+        try{
+            await this.memjsClient.set(hashedKey, value, {expires: timeout});
+        } catch(error){
+            console.debug("Error setting response in the cache");
+        }
     }
     
     constructCacheKey(data: Record<string, unknown>, preprocessor: string): string{
