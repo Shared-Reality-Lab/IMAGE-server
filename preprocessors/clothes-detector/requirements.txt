@@ -1,7 +1,7 @@
 Flask==2.2.5
 jsonschema==3.2.0
 requests==2.31.0
-Werkzeug==2.3.8
+Werkzeug==3.0.3
 gunicorn==20.1.0
 numpy==1.23
 opencv-python== 4.4.0.44
