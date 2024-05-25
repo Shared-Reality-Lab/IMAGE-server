@@ -23,7 +23,7 @@ WORKDIR /chart-pipeline
 
 
 RUN chmod +x boot.sh
-RUN pip install gunicorn==20.1.0
+RUN pip install gunicorn==22.0.0
 RUN wget https://image.a11y.mcgill.ca/models/chart/Chart-pipeline-models.zip
 
 RUN unzip Chart-pipeline-models.zip
