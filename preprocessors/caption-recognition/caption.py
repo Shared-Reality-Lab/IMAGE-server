@@ -87,7 +87,8 @@ def captions():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
-    logging.debug(data)
+    logging.debug("Caption Recoginition Response")
+    logging.debug(response)
     return response
 
 
