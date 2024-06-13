@@ -7,9 +7,11 @@ Please see https://image.a11y.mcgill.ca for general information about the projec
 If you wish to contribute to the project, the following wiki page is a good starting point, including for those on the IMAGE project team:
 https://github.com/Shared-Reality-Lab/IMAGE-server/wiki
 
-IMAGE as a whole is in beta. McGill operates a public server that the IMAGE browser extension uses by default, which runs various preprocessors and handlers that the IMAGE team deems ready for testing by end users. There are many additional components in the IMAGE code repositories, some of which are not considered ready for use. These are made available for researchers and others as alpha code that requires further refinement before it is likely usable in practice. Caveats are generally noted in the README for each component. If you are a researcher evaluating or building on IMAGE, we ask that you distinguish between beta and alpha code when referencing specific IMAGE components and functionality. As a general reference for the IMAGE server architecture, please use:
+IMAGE as a whole is in beta. McGill operates a public server that the IMAGE browser extension uses by default, which runs various preprocessors and handlers that the IMAGE team deems ready for testing by end users. There are many additional components in the IMAGE code repositories, some of which are not considered ready for use. These are made available for researchers and others as alpha code that requires further refinement before it is likely usable in practice. Caveats are generally noted in the README for each component. If you are a researcher evaluating or building on IMAGE, we ask that you distinguish between beta and alpha code when referencing specific IMAGE components and functionality. As a general reference for the IMAGE server architecture, please use the following papers:
 
 Juliette Regimbal, Jeffrey R. Blum, and Jeremy R. Cooperstock. 2022. IMAGE: a deployment framework for creating multimodal experiences of web graphics. In Proceedings of the 19th International Web for All Conference (W4A '22). Association for Computing Machinery, New York, NY, USA, Article 12, 1–5. https://doi.org/10.1145/3493612.3520460
+
+Juliette Regimbal, Jeffrey R. Blum, Cyan Kuo, and Jeremy R. Cooperstock. 2024. IMAGE: An Open-Source, Extensible Framework for Deploying Accessible Audio and Haptic Renderings of Web Graphics. ACM Trans. Access. Comput. Just Accepted (May 2024). https://doi.org/10.1145/3665223
 
 ## Set Up
 
