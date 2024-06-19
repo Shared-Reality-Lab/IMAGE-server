@@ -1,4 +1,4 @@
-Beta quality: Useful enough for testing by end-users.
+Alpha quality: Insufficiently refined to be tested by end-users.
 
 # Chart data extraction pipeline
 
