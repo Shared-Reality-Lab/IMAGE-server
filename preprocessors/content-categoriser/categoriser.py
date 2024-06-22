@@ -125,8 +125,7 @@ def categorise():
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
     torch.cuda.empty_cache()
-    logging.debug("Content Categoriser Response")
-    logging.debug(response)
+    logging.debug(type)
     return response
 
 

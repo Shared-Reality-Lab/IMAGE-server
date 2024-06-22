@@ -124,8 +124,7 @@ def readImage():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
-    logging.debug("Sorting Preprocessor Response")
-    logging.debug(response)
+    logging.debug("Sending response")
     return response
 
 
