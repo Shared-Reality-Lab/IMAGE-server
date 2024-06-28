@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:20.04
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 
@@ -18,7 +18,6 @@ COPY /preprocessors/ner/ /app
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y gcc git && rm -rf /var/lib/apt/lists/*
 
-RUN python3 --version
 RUN pip3 install -r requirements.txt
 
 EXPOSE 5000
