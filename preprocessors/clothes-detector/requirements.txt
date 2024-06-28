@@ -6,8 +6,8 @@ gunicorn==22.0.0
 numpy==1.23
 opencv-python== 4.4.0.44
 webcolors==1.12
-Pillow==10.2.0
+Pillow==10.3.0
 torch==1.13.1
 matplotlib==3.4.3
-scikit-learn==1.0.1
+scikit-learn==1.5.0
 colorthief

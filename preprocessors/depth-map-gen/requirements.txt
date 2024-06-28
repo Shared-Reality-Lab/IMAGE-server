@@ -4,7 +4,7 @@ pyyaml==6.0
 tensorboardX==2.6
 Flask==2.2.5
 flask_api==2.0.0
-numpy==1.21.6
+numpy==1.22
 jsonschema==4.17.3
 gunicorn==22.0.0
 torch==1.13.1
