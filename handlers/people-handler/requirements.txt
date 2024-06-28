@@ -3,7 +3,7 @@ Flask==2.2.5
 gunicorn==22.0.0
 numpy==1.22.0
 pillow==10.3.0
-requests==2.26.0
+requests==2.32.0
 Werkzeug==3.0.3
 opencv-python== 4.5.1.48
 spacy==3.5.2
