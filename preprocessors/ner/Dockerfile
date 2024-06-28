@@ -18,6 +18,7 @@ COPY /preprocessors/ner/ /app
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y gcc git && rm -rf /var/lib/apt/lists/*
 
+RUN python3 --version
 RUN pip3 install -r requirements.txt
 
 EXPOSE 5000
