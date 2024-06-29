@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
+FROM pytorch/pytorch:1.13.0-cuda11.6-cudnn8-runtime
 
 COPY /preprocessors/depth-map-gen/requirements.txt /app/requirements.txt
 
@@ -12,7 +12,7 @@ ENV PYTHONPATH "${PYTHONPATH}:./AdelaiDepth/LeReS/Minist_Test/"
 RUN git clone https://github.com/aim-uofa/AdelaiDepth
 RUN wget -O ./res101.pth https://huggingface.co/ffranchina/LeReS/resolve/main/res101.pth
 RUN pip3 install --upgrade pip
-RUN pip install -r /app/requirements.txt
+RUN pip3 install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
 COPY /preprocessors/depth-map-gen/ /app
