@@ -8,7 +8,7 @@ RUN adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
-RUN pip3 install pip==24.0
+RUN pip3 install --upgrade pip
 RUN pip3 install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
