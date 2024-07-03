@@ -186,7 +186,7 @@ def detect_objects(send,
                         "confidence": np.float64(label[-4:]),
                         "centroid": centre, "area": area
                     }
-                    logging.debug("Object Detected - " + dictionary["type"])
+                    logging.debug("Object Detected -" + dictionary["type"])
                     send.append(dictionary)
                     """"plot_one_box(xyxy, im0, label=label,
                     color=colors(c, True),
