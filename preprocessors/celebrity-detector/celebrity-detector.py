@@ -214,8 +214,8 @@ def categorise():
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Detected " + len(final_data) +
-                      "celebrities out of " + len(objects) + "objects")
+        logging.debug("Detected " + str(len(final_data)) +
+                      "celebrities out of " + str(len(objects)) + "objects")
         return response
 
 
