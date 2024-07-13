@@ -106,7 +106,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
             const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
             serverCache.getResponseFromCache(hashedKey).then((cacheValue)=>{
-                if(cacheTimeOut > 0 && cacheValue){
+                if(cacheTimeOut > 0 && cacheValue && preprocessorName){
                     // Return the value from cache if found
                     console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
                     const cacheResponse = JSON.parse(cacheValue) as Response;
@@ -175,7 +175,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
         const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
         const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
         const cacheValue = await serverCache.getResponseFromCache(hashedKey);
-        if (cacheValue){
+        if (cacheTimeOut && cacheValue && preprocessorName){
             // add cache value in response
             console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
             const cacheResponse = JSON.parse(cacheValue) as Response;
