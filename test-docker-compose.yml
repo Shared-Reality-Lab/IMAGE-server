@@ -147,7 +147,7 @@ services:
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
   
-  object-depth:
+  object-depth-calculator:
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
   
