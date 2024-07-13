@@ -80,3 +80,37 @@ services:
           - driver: nvidia
             device_ids: ['1']
             capabilities: ["gpu", "utility", "compute"]
+  
+  espnet-tts:
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+    deploy:
+      resources:
+        reservations:
+            devices:
+            - driver: nvidia
+              device_ids: ['1']
+              capabilities: ["gpu", "utility", "compute"]
+
+  espnet-tts-fr:
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+    deploy:
+      resources:
+        reservations:
+            devices:
+            - driver: nvidia
+              device_ids: ['1']
+              capabilities: ["gpu", "utility", "compute"]
+
+  multilang-support:
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+    deploy:
+      resources:
+        reservations:
+            devices:
+            - driver: nvidia
+              device_ids: ['1']
+              capabilities: ["gpu", "utility", "compute"]
+
