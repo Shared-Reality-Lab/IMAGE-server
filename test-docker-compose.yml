@@ -114,3 +114,47 @@ services:
               device_ids: ['1']
               capabilities: ["gpu", "utility", "compute"]
 
+# enable cache for all preprocessors on unicorn
+  autour-preprocessor:
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+  
+  content-categoriser:
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+  
+  graphic-tagger:
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+  
+  object-grouping:
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+
+  openstreetmap:
+    labels:
+        ca.mcgill.a11y.image.cacheTimeout: 3600
+  
+  object-sorting:
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+
+  nominatim-preprocessor:
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+  
+  ocr-clouds-preprocessor:
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+  
+  object-depth:
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+  
+  collage-detector-preprocessor:
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+
+
+
+  
