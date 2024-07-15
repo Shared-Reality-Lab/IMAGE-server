@@ -25,6 +25,7 @@ import logging
 import time
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 @app.route('/preprocessor', methods=['POST'])

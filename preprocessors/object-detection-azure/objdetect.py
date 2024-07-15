@@ -25,6 +25,7 @@ import os
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 # load the schema
 with open('./schemas/preprocessors/object-detection.schema.json') \

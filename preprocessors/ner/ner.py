@@ -33,6 +33,7 @@ from nltk.tag.stanford import StanfordNERTagger
 
 nltk.download('punkt')
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 # using python's tmp file to store the image and context json
 dir_prefix = 'ner_'

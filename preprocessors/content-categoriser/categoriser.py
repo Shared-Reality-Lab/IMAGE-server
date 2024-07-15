@@ -27,6 +27,7 @@ import logging
 import base64
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 class Net(pl.LightningModule):
