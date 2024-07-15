@@ -36,6 +36,7 @@ from ultralytics.yolo.utils.ops import scale_coords, non_max_suppression
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 c_thres = 0.75
 
