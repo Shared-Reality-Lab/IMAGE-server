@@ -1,6 +1,4 @@
 ## docker compose to run image website
-version: '3'
-
 services:
   image-unicorn-cim-mcgill-ca:
     image: nginx:latest
