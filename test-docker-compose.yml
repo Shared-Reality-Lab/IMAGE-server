@@ -43,7 +43,7 @@ services:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['1']
+            device_ids: ['0']
             capabilities: ["gpu", "utility", "compute"]
 
   depth-map-generator:
@@ -54,7 +54,7 @@ services:
         reservations:
             devices:
             - driver: nvidia
-              device_ids: ['1']
+              device_ids: ['0']
               capabilities: ["gpu", "utility", "compute"]
 
   action-recognition:
@@ -65,7 +65,7 @@ services:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['1']
+            device_ids: ['0']
             capabilities: ["gpu", "utility", "compute"]
 
   object-detection:
@@ -76,9 +76,9 @@ services:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['1']
+            device_ids: ['0']
             capabilities: ["gpu", "utility", "compute"]
-  
+
   espnet-tts:
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
@@ -87,7 +87,7 @@ services:
         reservations:
             devices:
             - driver: nvidia
-              device_ids: ['1']
+              device_ids: ['0']
               capabilities: ["gpu", "utility", "compute"]
 
   espnet-tts-fr:
@@ -98,7 +98,7 @@ services:
         reservations:
             devices:
             - driver: nvidia
-              device_ids: ['1']
+              device_ids: ['0']
               capabilities: ["gpu", "utility", "compute"]
 
   multilang-support:
@@ -109,30 +109,30 @@ services:
         reservations:
             devices:
             - driver: nvidia
-              device_ids: ['1']
+              device_ids: ['0']
               capabilities: ["gpu", "utility", "compute"]
 
 # enable cache for all preprocessors on unicorn
   autour-preprocessor:
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
-  
+
   content-categoriser:
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
-  
+
   graphic-tagger:
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
-  
+
   object-grouping:
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
 
   openstreetmap:
     labels:
-        ca.mcgill.a11y.image.cacheTimeout: 3600
-  
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+
   object-sorting:
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
@@ -140,19 +140,16 @@ services:
   nominatim-preprocessor:
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
-  
+
   ocr-clouds-preprocessor:
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
-  
+
   object-depth-calculator:
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
-  
+
   collage-detector-preprocessor:
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
 
-
-
-  
