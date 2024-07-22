@@ -112,6 +112,7 @@ def objectdepth():
     objects = o["objects"]
     print(dimensions[0], dimensions[1])
     obj_depth = []
+    obj_depth_output = {"objects": obj_depth}
 
     logging.debug("number of objects")
     if (len(objects) > 0):
