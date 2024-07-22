@@ -18,7 +18,7 @@ services:
       - user-logs:/var/log/IMAGE
 
   memcached:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: 'memcached:1.6'
     # cache memory size - 4GB
     command: -m 4096
