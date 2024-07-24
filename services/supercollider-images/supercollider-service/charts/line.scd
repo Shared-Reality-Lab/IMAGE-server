@@ -17,7 +17,7 @@
 var singleLineChart;
 "Single Line Chart".postln;
 singleLineChart = { |json, ttsData, outPath, addr|
-    var score, timing, order=5, baseGain=(-4.dbamp), audio, seriesData, miny, maxy;
+    var score, timing, order=5, baseGain=(-4.dbamp), audio, seriesData, miny, maxy, timediff;
     timing = 0;
     score = IMAGE.newScore(order);
     // Set up b-format decoder
@@ -62,6 +62,10 @@ singleLineChart = { |json, ttsData, outPath, addr|
     });
     miny = seriesData.flop[1].minItem;
     maxy = seriesData.flop[1].maxItem;
+    // Below defines a band where rendering duration will not increase
+    // but instead the time between pings will get shorter, sounding
+    // continuous to the listener. This may need to be adjusted further.
+    timediff = seriesData.size.linlin(20, 1000, 0.1, 0.001);
     seriesData.do({ |item, i|
         score.add([
             timing,
@@ -75,7 +79,7 @@ singleLineChart = { |json, ttsData, outPath, addr|
                 \gain, baseGain * 0.1
             ]
         ]);
-        timing = timing + 0.002;
+        timing = timing + timediff;
     });
     timing = timing + 0.1;
     score.add([timing, [0]]);
