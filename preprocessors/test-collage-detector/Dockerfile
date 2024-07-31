@@ -1,6 +1,6 @@
 FROM python:3
 
-COPY /preprocessors/collage-detector/requirements.txt /app/requirements.txt
+COPY /preprocessors/test-collage-detector/requirements.txt /app/requirements.txt
 
 RUN apt-get update && apt-get install -y python3-opencv wget && rm -rf /var/lib/apt/lists/*
 
@@ -12,7 +12,7 @@ RUN pip3 install --upgrade pip
 RUN pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
-COPY /preprocessors/collage-detector/ /app
+COPY /preprocessors/test-collage-detector/ /app
 
 EXPOSE 5000
 ENV FLASK_APP=detect.py
