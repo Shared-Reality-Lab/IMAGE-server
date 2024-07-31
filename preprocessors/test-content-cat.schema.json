@@ -1,0 +1,11 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/test-content-cat.schema.json",
+    "type": "object",
+    "title": "Test Content Categorizer",
+    "description": "Classifier for categorising the content into graphic, text, chart or other. Accessed as 'ca.mcgill.a11y.image.preprocessor.contentCategoriser'.",
+    "properties": {
+        "category": { "enum": ["chart", "photograph", "graph", "other","text"] }
+    },
+    "required": [ "category"]
+}
