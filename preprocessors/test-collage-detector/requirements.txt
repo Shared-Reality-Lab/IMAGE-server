@@ -1,0 +1,7 @@
+opencv-python~=4.7.0.68
+numpy~=1.26.4
+tqdm~=4.66.3
+Flask~=2.2.2
+flask_api==2.0.0
+jsonschema~=4.17.3
+gunicorn==22.0.0

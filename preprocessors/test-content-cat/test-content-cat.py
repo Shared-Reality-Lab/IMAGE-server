@@ -27,20 +27,18 @@ import logging
 import base64
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG)
 
 
 class Net(pl.LightningModule):
-    # initial initialisation if architecture. It  is needed to load the weights
-    def __init__(self, num_classes=10, lr=1e-3):
+
+    def __init__(self, num_classes=10, lr=1e-4):
         super().__init__()
         self.save_hyperparameters()
-        self.model = models.densenet121(pretrained=True)
+        self.model = models.densenet121(pretrained=False)
         for param in self.model.parameters():
             param.requires_grad = False
-        self.model.classifier = nn.Linear(self.model.classifier.in_features, 4)
+        self.model.classifier = nn.Linear(self.model.classifier.in_features, 5)
 
-    # the main loop used for prediction.
     def forward(self, x):
         logits = self.model(x)
         preds = torch.argmax(logits, 1)
@@ -53,8 +51,8 @@ class Net(pl.LightningModule):
 def categorise():
     logging.debug("Received request")
     # load the schema
-    labels_dict = {"0": "chart", "1": "photograph", "2": "other", "3": "text"}
-    with open('./schemas/preprocessors/content-categoriser.schema.json') \
+    labels_dict = {"0": "chart", "1": "photograph", "2": "graph", "3": "other", "4": "text"}
+    with open('./schemas/preprocessors/test-content-cat.schema.json') \
             as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') \
