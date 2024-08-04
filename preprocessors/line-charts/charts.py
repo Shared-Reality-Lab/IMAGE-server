@@ -25,6 +25,7 @@ from charts_utils import getLowerPointsOnLeft, getHigherPointsOnLeft
 from charts_utils import getLowerPointsOnRight, getHigherPointsOnRight
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 @app.route('/preprocessor', methods=['POST', 'GET'])
@@ -124,7 +125,7 @@ def get_chart_info():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")
-    # print(data)
+    logging.debug(data)
     return response
 
 
