@@ -324,6 +324,15 @@ services:
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
 
+  line-charts:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-line-charts:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 1
+      ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+
   action-recognition:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-action-recognition:${REGISTRY_TAG}
