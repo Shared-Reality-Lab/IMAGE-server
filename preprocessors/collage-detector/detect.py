@@ -68,7 +68,7 @@ def detect_collage():
     binary = base64.b64decode(image_b64)
     image = np.asarray(bytearray(binary), dtype="uint8")
     img = cv2.imdecode(image, cv2.IMREAD_COLOR)
-    model = SbRIF(t=0.75)
+    model = SbRIF(t=0.7)
     is_collage = model.inference(img)
     if is_collage:
         type = {"collage": True}
