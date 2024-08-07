@@ -21,7 +21,7 @@ import numpy as np
 
 class SbRIF:
 
-    def __init__(self, t=0.75, c=5, s=10, rescale_size=224):
+    def __init__(self, t=0.7, c=5, s=5, rescale_size=350):
         """
         Initialization of a model instance, t determines the confidence level,
         c and s are pixel-level constants (# of pixels) - c determines size of
@@ -49,7 +49,7 @@ class SbRIF:
         img = cv2.resize(img,
                          (self.rescale_size, self.rescale_size),
                          interpolation=cv2.INTER_AREA)
-        edges = cv2.Canny(img, 100, 200)
+        edges = cv2.Canny(img, 50, 200)
         gray_edges = cv2.bitwise_not(edges)
 
         return gray_edges
