@@ -13,13 +13,14 @@
 # and our Additional Terms along with this program.
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
-import torch
-from torch import nn
-import pytorch_lightning as pl
-from torchvision import models
+# import torch
+# from torch import nn
+# import pytorch_lightning as pl
+# from torchvision import models
 import numpy as np
 import cv2
 from flask import Flask, request, jsonify
+import requests
 import json
 import time
 import jsonschema
@@ -28,25 +29,6 @@ import base64
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
-
-
-class Net(pl.LightningModule):
-    # initial initialisation if architecture. It  is needed to load the weights
-    def __init__(self, num_classes=10, lr=1e-4):
-        super().__init__()
-        self.save_hyperparameters()
-        self.model = models.densenet121(pretrained=True)
-        for param in self.model.parameters():
-            param.requires_grad = False
-        self.model.classifier = nn.Linear(self.model.classifier.in_features, 4)
-
-    # the main loop used for prediction.
-    def forward(self, x):
-        logits = self.model(x)
-        preds = torch.argmax(logits, 1)
-        pred_int = preds.int()
-        pred_int = pred_int.detach().numpy()
-        return str(pred_int[0])
 
 
 @app.route("/preprocessor", methods=['POST', ])
@@ -98,15 +80,37 @@ def categorise():
     image = np.asarray(bytearray(binary), dtype="uint8")
     img = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
+    ### Ollama handler. use env later*
+    api_url = "https://ollama.unicorn.cim.mcgill.ca/ollama/api/generate"
+    api_key = "sk-1143403ca36641128dc95b182065de8f"
+
+    payload = {
+        "prompt": "Which one of these 4 categories does this photo belong: '0':'photograph', '1':'chart',  '2':'other', '3':'text'",
+        "image_prompt": binary
+    }
+
+    json_payload = json.dumps(payload)
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+
+    answer = requests.post(api_url, headers=headers, data=json_payload)
+
+    # if response.status_code == 200:
+    #     print("Request successful!")
+    # else:
+    #     print(f"Error: {response.text}")
+
     # download the weights and test the input image. The input image passed to
     # the "forward" function to get the predictions.
-    net = Net.load_from_checkpoint('./latest-0.ckpt')
-    img = cv2.resize(img, (224, 224))
-    image = img.reshape(1, 3, 224, 224)
-    inputs = torch.FloatTensor(image)
-    net.eval()
-    pred = net(inputs)
-    type = {"category": labels_dict[pred]}
+    # net = Net.load_from_checkpoint('./latest-0.ckpt')
+    # img = cv2.resize(img, (224, 224))
+    # image = img.reshape(1, 3, 224, 224)
+    # inputs = torch.FloatTensor(image)
+    # net.eval()
+    # pred = net(inputs)
+    # type = {"category": labels_dict[pred]}
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(type)
@@ -117,7 +121,7 @@ def categorise():
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": name,
-        "data": type
+        "data": answer['response']
     }
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
@@ -125,7 +129,7 @@ def categorise():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
-    torch.cuda.empty_cache()
+    # torch.cuda.empty_cache()
     logging.debug(type)
     return response
 
