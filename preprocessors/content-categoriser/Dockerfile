@@ -14,11 +14,6 @@ RUN pip3 install -r /app/requirements.txt
 COPY /schemas /app/schemas
 COPY /preprocessors/content-categoriser/ /app
 
-RUN wget https://image.a11y.mcgill.ca/models/categoriser/latest-0.ckpt
-RUN wget https://download.pytorch.org/models/densenet121-a639ec97.pth
-RUN mkdir -p /app/hub/checkpoints/
-RUN mv densenet121-a639ec97.pth /app/hub/checkpoints/
-
 EXPOSE 5000
 ENV FLASK_APP=categoriser.py
 ENV TORCH_HOME=/app
