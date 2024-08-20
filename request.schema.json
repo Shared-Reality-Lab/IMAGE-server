@@ -61,10 +61,12 @@
                     "type": "array",
                     "items": [
                         { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 },
                         { "type": "number", "minimum": 0, "maximum": 1 }
                     ],
                     "minItems": 4,
-                    "additionalItems": "false"
+                    "additionalItems": false
                 },
                 "previous": {
                     "description": "A field containing 2-length arrays where the first value represents the a previous query and the second value represents the response.",
@@ -73,10 +75,10 @@
                         "type": "array",
                         "items": [
                             { "type": "string", "description": "The query"},
-                            { "oneOf": [ { "type": "string" }, { "type": "object" } ] }
+                            { "description": "The response", "oneOf": [ { "type": "string" }, { "type": "object" } ] }
                         ],
                         "minItems": 2,
-                        "additionalItems": "false"
+                        "additionalItems": false
                     }
                 }
             }
