@@ -17,8 +17,6 @@
 # from torch import nn
 # import pytorch_lightning as pl
 # from torchvision import models
-import numpy as np
-import cv2
 from flask import Flask, request, jsonify
 import requests
 import re
@@ -88,7 +86,8 @@ def categorise():
 
     payload = {
         "model": "llava:7b",
-        "prompt": "Which one of these 4 categories does this photo belong: '0':'photograph', '1':'chart',  '2':'other', '3':'text'?",
+        "prompt": "Which one of these 4 categories does this photo belong: '0':'photograph', " \
+                "'1':'chart',  '2':'other', '3':'text'?",
         "images": [binary_img],
         "stream": False
     }
@@ -106,10 +105,9 @@ def categorise():
         response_text = response.text
         data = json.loads(response_text)
         answer = data['response']
-        print(f"Request successful!")
+        print("Request successful!")
     else:
-        print(f"Error: {response.text}")
-    
+        print("Error: {response.text}")
     pred = re.findall('"([^"]*)"', answer)[0]
     type = {"category": labels_dict[pred]}
 
