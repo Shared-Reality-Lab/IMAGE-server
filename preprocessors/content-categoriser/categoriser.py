@@ -78,7 +78,7 @@ def categorise():
     source = content["graphic"]
     image_b64 = source.split(",")[1]
     binary = base64.b64decode(image_b64)
-    binary_img = binary.decode('ascii')
+    binary_img = binary.decode('utf-8')
 
     logging.debug("Running LLaVa 7b")
 
@@ -89,7 +89,7 @@ def categorise():
     payload = {
         "model": "llava:7b",
         "prompt": "Which one of these 4 categories does this photo belong: '0':'photograph', '1':'chart',  '2':'other', '3':'text'?",
-        "image_prompt": binary_img,
+        "images": [binary_img],
         "stream": False
     }
 
