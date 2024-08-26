@@ -1,5 +1,4 @@
 # Hello, Preprocessor!
-# [DEPRECATED]: This preprocessor is no longer maintained. Please refer to any of the other examples of preprocessor present [here](https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors)
 
 ## What is this?
 
