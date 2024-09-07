@@ -86,8 +86,7 @@ def categorise():
 
     payload = {
         "model": "llava:7b",
-        "prompt": "Which one of these 4 categories does this photo belong: '0':'photograph', " \
-                "'1':'chart',  '2':'other', '3':'text'?",
+        "prompt": "Which one of these 4 categories does this photo belong: '0':'photograph', '1':'chart',  '2':'other', '3':'text'?",
         "images": [binary_img],
         "stream": False
     }
