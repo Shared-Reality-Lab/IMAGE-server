@@ -47,6 +47,42 @@
             "description": "The Google place ID of the location identified in a map.",
             "type": "string"
         },
+        "followup": {
+            "description": "Information related to follow-up queries from the user.",
+            "type": "object",
+            "required": [ "query" ],
+            "properties": {
+                "query": {
+                    "description": "The question posed by the user as plain text in the language. This should match the language key in the request.",
+                    "type": "string"
+                },
+                "focus": {
+                    "description": "A bounding box around a region of the graphic that is the focus of the user's attention in the query.",
+                    "type": "array",
+                    "items": [
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 },
+                        { "type": "number", "minimum": 0, "maximum": 1 }
+                    ],
+                    "minItems": 4,
+                    "additionalItems": false
+                },
+                "previous": {
+                    "description": "A field containing 2-length arrays where the first value represents the a previous query and the second value represents the response.",
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": [
+                            { "type": "string", "description": "The query"},
+                            { "description": "The response", "oneOf": [ { "type": "string" }, { "type": "object" } ] }
+                        ],
+                        "minItems": 2,
+                        "additionalItems": false
+                    }
+                }
+            }
+        },
         "context": {
             "description": "Serialized XML of the source node and possibly related nodes.",
             "type": "string"
