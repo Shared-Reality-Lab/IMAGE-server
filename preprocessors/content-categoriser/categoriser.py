@@ -84,9 +84,12 @@ def categorise():
     api_url = "https://ollama.unicorn.cim.mcgill.ca/ollama/api/generate"
     api_key = os.environ['ollama_api']
 
+    prompt_str = "Which one of these 4 catgories does this photo belong: "
+    prompt_options = "'0':'photograph', '1':'chart', '2':'other', '3':'text'?"
+
     payload = {
         "model": "llava:7b",
-        "prompt": "Which one of these 4 categories does this photo belong: '0':'photograph', '1':'chart',  '2':'other', '3':'text'?",
+        "prompt": prompt_str + prompt_options,
         "images": [binary_img],
         "stream": False
     }
