@@ -81,7 +81,7 @@ def categorise():
     logging.debug("Running LLaVa 7b")
 
     import os
-    api_url = "https://ollama.unicorn.cim.mcgill.ca/ollama/api/generate"
+    api_url = os.environ['OLLAMA_URL']
     api_key = os.environ['OLLAMA_API_KEY']
 
     payload = {
