@@ -84,11 +84,12 @@ def categorise():
     api_url = os.environ['OLLAMA_URL']
     api_key = os.environ['OLLAMA_API_KEY']
 
+    prompt = "Which one of these 4 catgories does this photo belong: "
+    cat = "'0':'photograph','1':'chart', '2':'other', '3':'text'?"
+
     payload = {
         "model": "llava:7b",
-        "prompt": "Which one of these 4 catgories does " \
-            "this photo belong: '0':'photograph'," \
-            "'1':'chart', '2':'other', '3':'text'?",
+        "prompt": prompt + cat,
         "images": [binary_img],
         "stream": False
     }
