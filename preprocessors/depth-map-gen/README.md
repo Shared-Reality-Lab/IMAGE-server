@@ -1,20 +1,22 @@
 <h1>Depth Estimation</h1>
 
+Beta quality: Useful enough for testing by end-users.
+
 This proprocessor will take any image as an input and output the estimated depth. The goal being that the model will allow for other preprocessors to associate depth
 to different components of the image, such as objects, and provide another dimension to the sound renderings. 
 
 The chosen model is AdelaiDepth: 
 
-[https://github.com/aim-uofa/AdelaiDepth](url)
+https://github.com/aim-uofa/AdelaiDepth
 
 With the assiciated paper: 
 
-[https://paperswithcode.com/paper/learning-to-recover-3d-scene-shape-from-a](url)
+https://paperswithcode.com/paper/learning-to-recover-3d-scene-shape-from-a
 
 
 <h2>Model research and choices</h2>
 
-Looking from among the best performing Monocular ML Depth Estimation algorithms from [https://paperswithcode.com/task/monocular-depth-estimation](url) I have settled on 4 candidates. All 4 candidates are from among the best currently available algorithms which meet the following criteria: 
+Looking from among the best performing Monocular ML Depth Estimation algorithms from https://paperswithcode.com/task/monocular-depth-estimation I have settled on 4 candidates. All 4 candidates are from among the best currently available algorithms which meet the following criteria: 
    1. Perform purely Monocular depth estimation (ie. Requires no additional components)
    2. Provides pretrained weights
    3. Non-prohibitive licencing 
@@ -22,16 +24,16 @@ Looking from among the best performing Monocular ML Depth Estimation algorithms 
 The 4 candidates can be found here: 
 
 **Adelai Depth:**
-[https://github.com/aim-uofa/AdelaiDepth](url)
+https://github.com/aim-uofa/AdelaiDepth
 
 **GCN Depth:**
-[https://github.com/arminmasoumian/gcndepth](url)
+https://github.com/arminmasoumian/gcndepth
 
 **Boosted Midas:**
-[https://github.com/compphoto/BoostingMonocularDepth](url)
+https://github.com/compphoto/BoostingMonocularDepth
 
 **Boosted LeRes:**
-[https://github.com/compphoto/BoostingMonocularDepth](url)
+https://github.com/compphoto/BoostingMonocularDepth
 
 In order for the depth estimator to mesh well with IMAGE, it must be able to complete its task within a reasonable amount of time (less than 3 seconds ideally) while simultaneously not overconsume available resources. After running all of the algorithms on the majority of the IMAGE test graphics available, the general resource consumption and time performance can be seen below:
 

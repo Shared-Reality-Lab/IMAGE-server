@@ -1,14 +1,14 @@
-FROM python:3.8
+FROM python:3.9
 
 RUN adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 RUN apt-get update && apt-get install -y python3-opencv wget && rm -rf /var/lib/apt/lists/*
-RUN pip install --upgrade pip
+RUN pip3 install --upgrade pip
 
 COPY /preprocessors/emotion-recognition/requirements.txt /app/requirements.txt
 #COPY ./requirements.txt /app/requirements.txt
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 COPY /schemas /app/schemas
 

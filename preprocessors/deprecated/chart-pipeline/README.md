@@ -1,3 +1,5 @@
+Alpha quality: Insufficiently refined to be tested by end-users.
+
 # Chart data extraction pipeline
 
 This pipeline is based on the DeepRule paper:

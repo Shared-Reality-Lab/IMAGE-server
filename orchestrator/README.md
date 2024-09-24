@@ -18,7 +18,7 @@ The orchestrator runs within the container on port 8080.
 
 ## Options
 
-Two environment variables are checked
+Three environment variables are checked
 - `STORE_IMAGE_DATA`: when set to `ON` or `on`, the request and response data associated with a request will be stored in a subdirectory
 of `/var/log/IMAGE` with the name of the UUID for that request *in the orchestrator container*. A volume should be
 mounted to this location if this option is used. A cron job will delete subdirectories older than 1 hour every 10 minutes
@@ -27,6 +27,7 @@ If left unset or set to any other value, request and response data will never be
 - `PARALLEL_PREPROCESSORS`: when set to `ON` or `on`, the preprocessors in a [priority group](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services#docker-compose-configuration) will be run in parallel
 rather than serially. Note that this may result in higher resource usage which can cause instability if resources (e.g., GPU memory) are exhausted.
 If left unset or set to any other value, preprocessors within a group will run sequentially although in an undefined order.
+- `MEMCACHE_SERVERS`: this contains the server and the port of the memcache where memjs client will connect to. Server should match with the service name of docker container (as specfied in docker-compose). Multiple servers are separated by a comma. If this value is missing, memjs client will try to connect to 'localhost:11211'.  Refer https://memjs.netlify.app/ for details 
 
 ## Endpoints
 
@@ -48,6 +49,7 @@ of the request JSON object. This is only available if `STORE_IMAGE_DATA` is on.
 In that case, the orchestrator will check if a UUID matching `:uuid` is currently saved and, if so, if the
 request associated with it has the checksum provided in this GET request. If it does, the saved request/response pair
 will be marked for long-term storage and not deleted by the cron job when it is older than 1 hour.
+
 
 ## Configuration
 
@@ -78,3 +80,21 @@ be omitted if the default behavior is desired.
 The orchestrator runs as a non-root user. As such, the container must be run with permissions of the `docker` group on the host
 in order to access the socket. The socket must also be mounted into the container (the bind mount `/var/run/docker.sock:/var/run/docker.sock:ro`).
 This docker group ID changes from system to system and needs to be checked manually using a command like `cat /etc/group | grep docker | awk -F: '{ print $3 }'`
+
+## Cache Implementation
+
+IMAGE uses Memcached as in-memory data store. Cache is implemented using [MemJS](https://www.npmjs.com/package/memjs). Following is the confugration to enable Cache for preprocessors:
+
+- Cache size is configured in the docker-compose in the commad attribute under memcached service `command: -m 4096` implies cache size of 4GB.
+
+- Cache timeout is configured at the preprocessor level, with the label `ca.mcgill.a11y.image.cacheTimeout` . Label value is the timeout value in seconds. Timeout value of 0 indicates that Cache is disabled for a preprocessor. Missing `ca.mcgill.a11y.image.cacheTimeout` label on the preprocessor will default to timeout value of 0.
+
+- Cache key is generated using the following attributes:
+  - `reqData` can have the following values
+    - `request["data"]` (for graphics)
+    - `request["placeID"]`/`request["coordinates"]` (for maps)
+    - `request["highChartsData"]` (for charts)
+  - `preprocessor` - preprocessor id (as returned in the response) identifying the data returned by the preprocessor 
+
+  cache key is the [object-hash](https://www.npmjs.com/package/object-hash) generated for the object `{reqData, preprocessor}`
+

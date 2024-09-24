@@ -61,6 +61,8 @@ app.post("/handler", async (req, res) => {
     const semseg = preprocessors["ca.mcgill.a11y.image.preprocessor.semanticSegmentation"];
     const objDet = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
     const objGroup = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
+    const action = preprocessors["ca.mcgill.a11y.image.preprocessor.actionRecognition"];
+    const collageDetector = preprocessors["ca.mcgill.a11y.image.preprocessor.collageDetector"]
     const targetLanguage = req.body["language"];
 
     // Ignore secondCat since it isn't useful on its own
@@ -93,6 +95,10 @@ app.post("/handler", async (req, res) => {
     // Begin forming text...
     // This is variable depending on which preprocessor data is available.
     const ttsData: utils.TTSSegment[] = [];
+// Printing a disclaimer that the graphic may be a collage if the preprocessor identifies it as one
+    if (collageDetector && collageDetector.collage) {
+        ttsData.push({"value": "This is likely a collage of multiple photos, so the following interpretation may be confusing.", "type": "text"});
+    }
 
     ttsData.push({"value": utils.generateIntro(secondCat), "type": "text"});
     if (semseg && semseg["segments"].length > 0) {
@@ -103,8 +109,9 @@ app.post("/handler", async (req, res) => {
             ttsData.push({"value": "It also", "type": "text"});
         }
     }
+   
     if (objDet && objGroup && objDet["objects"].length > 0) {
-        ttsData.push(...utils.generateObjDet(objDet, objGroup));
+        ttsData.push(...utils.generateObjDet(objDet, objGroup, action));
     }
 
     // Concatenate adjacent text entries

@@ -1,4 +1,7 @@
 # OCR Preprocessor
+
+Alpha quality: Insufficiently refined to be tested by end-users.
+
 ## What is OCR?
 OCR is an acronym for Optical Character Recognition which is the process of extracting machine-readable text pictured in graphics or documents.
 ## About this preprocessor
@@ -20,13 +23,25 @@ The desired cloud service is determined by an environment variable called `CLOUD
 
 The path to an environment file containing this variable should be provided in the `docker-compose.yml`, right in the `env_file` field of the `ocr-clouds-preprocessor` service.
 ## Environment setup
-The environment file should also include the necessary keys for using the desired cloud service(s). The format is provided since the specific variable names are used in the code.
+The environment file (apis-and-selection.env) should contain the desired cloud service to be used, and the corresponding api keys.
+
+Following is the sample format of apis-and-selection.env file:
+
 ```
 AZURE_API_KEY = [INSERT KEY STRING]
 FREEOCR_API_KEY = [INSERT KEY STRING]
 GOOGLE_APPLICATION_CREDENTIALS = [INSERT KEY FILE PATH AS STRING]
-CLOUD_SERVICE = [INSERT OPTION STRING (see options above)]
+CLOUD_SERVICE = [INSERT OPTION STRING (see options below)]
 ```
+* `CLOUD_SERVICE` determines the desired cloud service to be used. Its possible values are:
+    * `AZURE_OCR` (for [Microsoft Azure OCR API](https://westus.dev.cognitive.microsoft.com/docs/services/computer-vision-v3-2/operations/56f91f2e778daf14a499f20d))
+    * `AZURE_READ` (for [Microsoft Azure Read API](https://learn.microsoft.com/en-us/azure/cognitive-services/computer-vision/how-to/call-read-api))
+    * `GOOGLE_VISION` (for [Google Cloud Vision API](https://cloud.google.com/vision/docs/ocr))
+    * `FREE_OCR` (for [Free OCR API](https://ocr.space/OCRAPI))
+* `AZURE_API_KEY` is found in your [Azure portal](https://portal.azure.com)
+* `FREEOCR_API_KEY` can be obtained at [OCR API portal](https://ocr.space/ocrapi)
+* `GOOGLE_APPLICATION_CREDENTIALS` contains path to credentials file. Refer [documentation](https://cloud.google.com/docs/authentication/application-default-credentials#GAC) for details.
+
 ## Recommended API
 According to the tests, the best APIs for the preprocessor's needs are Microsoft Azure Read and Google Cloud Vision. However, the `Read API` has been selected as the default one because it gets the correct order of the words or lines of text, as opposed to Vision API. This matters because currently there is no structure that corrects the order of the recognized text; the output from the API is used as it is in the handler.
 

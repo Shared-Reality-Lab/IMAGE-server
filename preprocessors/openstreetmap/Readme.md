@@ -1,8 +1,16 @@
 # Description
 
+Alpha quality: Insufficiently refined to be tested by end-users.
+
 This service basically involves automatic communication with the openstreetmap (OSM), based on the user's orientation and location, to extract critical map information within an optimum user's radius. The extracted data would be transformed to a suitable data framework, for effective audio and haptic rendering.
 
+## Environment setup
+The environment file (maps.env) should contain the API key used to call Google Places API. [Here](https://developers.google.com/maps/documentation/places/web-service/get-api-key) is the documentation for how to obtain a valid API key.: 
 
+Following is the sample format of maps.env file:
+```
+GOOGLE_PLACES_KEY = [INSERT KEY STRING]
+```
 
 ## Instruction (Docker Setup) - Recommended
 

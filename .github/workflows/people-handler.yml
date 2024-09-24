@@ -1,12 +1,12 @@
-name: Semantic Segmentation
+name: People Handler
 on:
   push:
     branches: [ main ]
-    tags: [ "preprocessor-semantic-segmentation-[0-9]+.[0-9]+.[0-9]+" ]
-    paths: [ "preprocessors/semanticSeg/**" ]
+    tags: [ "people-handler-[0-9]+.[0-9]+.[0-9]+" ]
+    paths: [ "handlers/people-handler/**" ]
   pull_request:
     branches: [ main ]
-    paths: [ "preprocessors/semanticSeg/**" ]
+    paths: [ "handlers/people-handler/**" ]
   workflow_run:
     workflows: [ "Schemas (Trigger)" ]
     types:
@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: shared-reality-lab/image-preprocessor-semantic-segmentation
+  IMAGE_NAME: shared-reality-lab/image-handler-people
 jobs:
   lint:
     name: PEP 8 style check.
@@ -27,7 +27,7 @@ jobs:
       - name: Install flake8
         run: pip install flake8
       - name: Check with flake8
-        run: python -m flake8 ./preprocessors/semanticSeg --show-source
+        run: python -m flake8 ./handlers/people-handler --show-source
   build-and-push-image:
     name: Build and Push to Registry
     needs: lint
@@ -48,7 +48,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Get Correct Tags
         run: |
-          if [[ ${{ github.ref }} =~ ^refs/tags/preprocessor-semantic-segmentation-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ ${{ github.ref }} =~ ^refs/tags/people-handler-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "TAGGED=true" >> $GITHUB_ENV
           else
             echo "TAGGED=false" >> $GITHUB_ENV
@@ -63,21 +63,21 @@ jobs:
           flavor: |
             latest=${{ env.TAGGED }}
           tags: |
-            type=match,enable=${{ env.TAGGED }},priority=300,pattern=preprocessor-semantic-segmentation-(\d+.\d+.\d+),group=1
+            type=match,enable=${{ env.TAGGED }},priority=300,pattern=handler-people-handler-(\d+.\d+.\d+),group=1
             type=raw,priority=200,value=unstable
             type=raw,priority=100,value=${{ env.timestamp }}
           labels: |
-            org.opencontainers.image.title=IMAGE Preprocessor Semantic Segmentation
-            org.opencontainers.image.description=Semantic segmentation preprocessor for IMAGE.
+            org.opencontainers.image.title=IMAGE Handler for generating captions.
+            org.opencontainers.image.description= Handler generates detailed descriptions for images containing people.
             org.opencontainers.image.authors=IMAGE Project <image@cim.mcgill.ca>
-            org.opencontainers.image.documentation=https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/semanticSeg/README.md
+            org.opencontainers.image.documentation=https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/handlers/people-handler/README.md
             org.opencontainers.image.licenses=AGPL-3.0-or-later
             maintainer=IMAGE Project <image@cim.mcgill.ca>
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./preprocessors/semanticSeg/Dockerfile
+          file: ./handlers/people-handler/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

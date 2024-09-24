@@ -27,11 +27,12 @@ import logging
 import base64
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 class Net(pl.LightningModule):
     # initial initialisation if architecture. It  is needed to load the weights
-    def __init__(self, num_classes=10, lr=1e-3):
+    def __init__(self, num_classes=10, lr=1e-4):
         super().__init__()
         self.save_hyperparameters()
         self.model = models.densenet121(pretrained=True)
@@ -125,7 +126,7 @@ def categorise():
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
     torch.cuda.empty_cache()
-    logging.debug("Sending response")
+    logging.debug(type)
     return response
 
 

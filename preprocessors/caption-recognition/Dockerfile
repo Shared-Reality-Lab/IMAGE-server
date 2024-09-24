@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
+FROM pytorch/pytorch:1.13.0-cuda11.6-cudnn8-runtime
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv wget git gcc mono-mcs && rm -rf /var/lib/apt/lists/*
 
@@ -14,7 +14,7 @@ COPY --chown=python:python . $HOME/app
 COPY /preprocessors/caption-recognition/requirements.txt /app/requirements.txt
 
 RUN pip3 install --upgrade pip
-RUN pip install -r /app/requirements.txt
+RUN pip3 install -r /app/requirements.txt
 
 
 COPY /schemas /app/schemas

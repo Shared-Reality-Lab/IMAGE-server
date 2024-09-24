@@ -155,12 +155,15 @@ def handle():
         # Loop through the object groups and generate a layer for each
         for group in grouped:
             ids = group["IDs"]
+            obj_tag = objects[ids[0]]["type"]
             # Pluralize names of layers with more than 1 object
-            category = form.plural(objects[ids[0]]["type"]).strip()
+            category = form.plural(obj_tag).strip()
             obj_list.append(str(len(ids)) + " " + category)
             layer += 1
             g = draw.Group(data_image_layer="Layer " +
                            str(layer), aria_label=category)
+            # Loop through the individual items
+            # Draw a rectangle for each and tag objects
             for i, id in enumerate(ids):
                 x1 = objects[id]['dimensions'][0] * dimensions[0]
                 x2 = objects[id]['dimensions'][2] * dimensions[0]
@@ -178,7 +181,7 @@ def handle():
                         stroke="#ff4477",
                         stroke_width=2.5,
                         fill="none",
-                        aria_label=category+" "+str(i+1)))
+                        aria_label=obj_tag+" "+str(i+1)))
 
             svg.append(g)
 

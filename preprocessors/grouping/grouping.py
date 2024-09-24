@@ -25,6 +25,7 @@ from operator import itemgetter
 
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def calculate_diagonal(x1, y1, x2, y2):
@@ -99,6 +100,7 @@ def readImage():
     for i in range(len(group)):
         for j in range(len(group[i])):
             dummy[i].append(group[i][j][0])
+        logging.debug("Number of Objects in group - " + str(len(dummy[i])))
         final_group.append({"IDs": dummy[i]})
 
     for i in range(len(check_group)):
@@ -107,6 +109,8 @@ def readImage():
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.grouping"
+    logging.debug("Number of groups " + str(len(final_group)))
+    logging.debug("Number of ungrouped objects " + str(len(ungrouped)))
     data = {"grouped": final_group, "ungrouped": ungrouped}
     try:
         validator = jsonschema.Draft7Validator(data_schema)

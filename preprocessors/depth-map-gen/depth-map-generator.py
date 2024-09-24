@@ -32,6 +32,7 @@ import base64
 from lib.multi_depth_model_woauxi import RelDepthModel
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def parse_args():

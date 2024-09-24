@@ -28,6 +28,7 @@ import os
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 # extract the required results from the API returned values
 
@@ -186,7 +187,7 @@ def categorise():
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Sending response")
+        logging.debug(type)
         return response
 
 

@@ -187,6 +187,7 @@ def detect_objects(send,
                         "confidence": np.float64(label[-4:]),
                         "centroid": centre, "area": area
                     }
+                    logging.debug("Object Detected -" + dictionary["type"])
                     send.append(dictionary)
                     """"plot_one_box(xyxy, im0, label=label,
                     color=colors(c, True),
@@ -367,6 +368,8 @@ def run(weights='yolov8x.pt',
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 500
+        logging.debug("Total number of Objects Detected - " +
+                      str(len(things["objects"])))
         logging.debug("Sending response")
         return response
 

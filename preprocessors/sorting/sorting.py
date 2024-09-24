@@ -23,6 +23,7 @@ from math import sqrt
 
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 # this function determines the size of bounding box
 
