@@ -21,13 +21,13 @@ import json
 import time
 import jsonschema
 import logging
-import base64
 import os
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 @app.route("/preprocessor", methods=['POST', ])
+
 def categorise():
     logging.debug("Received request")
 
@@ -80,9 +80,9 @@ def categorise():
     logging.debug("OLLAMA_URL " + api_url)
     if api_key.startswith("sk-"):
         logging.debug("OLLAMA_API_KEY looks properly formatted: " +
-                       api_key[:3] + "[redacted]")
+                      api_key[:3] + "[redacted]")
     else:
-        logging.warn("OLLAMA_API_KEY usually starts with sk-, " \
+        logging.warn("OLLAMA_API_KEY usually starts with sk-, "
                      "but this one starts with: " + api_key[:3])
 
     prompt = "Answer with only one word. " \
@@ -113,13 +113,13 @@ def categorise():
         data = json.loads(response_text)
         # remove whitespace and force lowercase
         # regex from https://stackoverflow.com/questions/5799090
-        graphic_category = re.sub('\s+','',data['response']).lower()
-        if graphic_category in possible_categories: 
+        graphic_category = re.sub(r'\s+', '', data['response']).lower()
+        if graphic_category in possible_categories:
             logging.debug("ollama request successful: " + graphic_category)
-        else: # llamas are not to be trusted to pay attention to instructions...
-            logging.warn(f"ollama request successful, " \
-                         f"but [{graphic_category}] is not a valid option. " \
-                         f"Setting to \"other\"")
+        else:  # llamas are not to be trusted to pay attention to instructions
+            logging.warn("ollama request successful, "
+                         f"but [{graphic_category}] is not a valid option. "
+                         "Setting to \"other\"")
             graphic_category = "other"
     else:
         logging.error("Error: {response.text}")
