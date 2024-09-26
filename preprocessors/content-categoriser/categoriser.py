@@ -26,8 +26,8 @@ import os
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
-@app.route("/preprocessor", methods=['POST', ])
 
+@app.route("/preprocessor", methods=['POST', ])
 def categorise():
     logging.debug("Received request")
 
