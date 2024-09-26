@@ -378,7 +378,7 @@ services:
         ca.mcgill.a11y.image.port: 5000
 
   collage-detector-preprocessor:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-collage-detector:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
