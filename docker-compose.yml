@@ -16,7 +16,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - user-logs:/var/log/IMAGE
-
   memcached:
     profiles: [production, test, default]
     image: 'memcached:1.6'
