@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if [ -z "$1" ]; then
   echo "<container_name> Health Check"
@@ -7,7 +7,8 @@ fi
 
 CONTAINER_NAME=$1
 
-source ./config/preprocessors-slack-webhook.env # loading environment variables (slack webhook url) from the preprocessors-slack-webhook.env 
+#loading the slack webhook
+. ./config/preprocessors-slack-webhook.env
 
 SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-""}
 echo "Using Slack Webhook: $SLACK_WEBHOOK_URL"
@@ -34,10 +35,8 @@ fi
 
 response=$(curl -X POST --data-urlencode "payload={\"channel\": \"#preprocessors\", \"username\": \"docker-health-check\", \"text\": \"$message\"}" $SLACK_WEBHOOK_URL 2>/dev/null)
 
-if [ "$response" == "ok" ]; then
+if [ "$response" = "ok" ]; then
     echo "Message successfully posted to Slack."
 else
     echo "Failed to post message to Slack: $response"
 fi
-
-## how could this fail?
