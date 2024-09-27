@@ -13,7 +13,7 @@ RUN pip3 install -r requirements.txt
 COPY /schemas /app/schemas
 COPY /preprocessors/grouping/ /app
 
-COPY /preprocessors/grouping/healthcheck.sh /app/healthcheck.sh
+COPY /preprocessors/healthcheck.sh /app/healthcheck.sh
 RUN chmod +x /app/healthcheck.sh
 
 EXPOSE 5000

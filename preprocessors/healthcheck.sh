@@ -30,3 +30,6 @@ if [ "$health_status" != "\"healthy\"" ]; then
 else
   curl -X POST --data-urlencode "payload={\"channel\": \"#preprocessors\", \"username\": \"docker-health-check\", \"text\": \"Container *$CONTAINER_NAME* is healthy.\"}" $SLACK_WEBHOOK_URL
 fi
+
+
+## how could tjos fial?
