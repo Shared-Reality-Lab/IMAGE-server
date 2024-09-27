@@ -7,7 +7,7 @@ fi
 
 CONTAINER_NAME=$1
 
-source ./config/preprocessors-slack-webhook.env
+source ./config/preprocessors-slack-webhook.env # loading environment variables (slack webhook url) from the preprocessors-slack-webhook.env 
 
 SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-""}
 echo "Using Slack Webhook: $SLACK_WEBHOOK_URL"
