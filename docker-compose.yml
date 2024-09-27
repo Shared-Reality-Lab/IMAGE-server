@@ -122,6 +122,8 @@ services:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:${REGISTRY_TAG}
     restart: unless-stopped
+    env_file:
+      - ./config/preprocessors-slack-webhook.env
     labels:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000

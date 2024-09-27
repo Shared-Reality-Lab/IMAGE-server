@@ -7,7 +7,11 @@ fi
 
 CONTAINER_NAME=$1
 
+source ./config/preprocessors-slack-webhook.env
+
 SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-""}
+echo "Using Slack Webhook: $SLACK_WEBHOOK_URL"
+
 if [ -z "$SLACK_WEBHOOK_URL" ]; then
   echo "Slack webhook URL is not configured correctly. Exiting."
   exit 1
