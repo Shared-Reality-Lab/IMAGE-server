@@ -1,11 +1,12 @@
 FROM python:3.8-alpine
 
-RUN adduser --disabled-password python
+RUN adduser --disabled-password python && \
+    apk add --no-cache curl && \
+    pip3 install --upgrade pip
+
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
-RUN pip3 install --upgrade pip
-RUN apk add --no-cache curl
 
 COPY /preprocessors/grouping/requirements.txt /app/requirements.txt
 RUN pip3 install -r requirements.txt
@@ -13,15 +14,13 @@ RUN pip3 install -r requirements.txt
 COPY /schemas /app/schemas
 COPY /preprocessors/grouping/ /app
 
-COPY /preprocessors/healthcheck.sh /app/healthcheck.sh
-RUN chmod +x /app/healthcheck.sh
-
 EXPOSE 5000
 
 ENV FLASK_APP=grouping.py
 USER python
 
 # Healthcheck: Run the healthcheck.sh script every 30 seconds
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD /app/healthcheck.sh 
-
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:5000/health || exit 1
+  
 CMD [ "gunicorn", "grouping:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
