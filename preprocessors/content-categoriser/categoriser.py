@@ -16,7 +16,6 @@
 
 from flask import Flask, request, jsonify
 import requests
-import re
 import json
 import time
 import jsonschema
