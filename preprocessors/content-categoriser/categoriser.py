@@ -95,7 +95,7 @@ def categorise():
         "prompt": prompt + possible_categories,
         "images": [graphic_b64],
         "stream": False,
-        "keep_alive": -1  #keep model loaded in memory indefinitely
+        "keep_alive": -1  # keep model loaded in memory indefinitely
     }
     logging.debug("serializing json from request_data dictionary")
     request_data_json = json.dumps(request_data)
