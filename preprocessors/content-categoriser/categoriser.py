@@ -90,7 +90,6 @@ def categorise():
     possible_categories = "photograph, chart, text, other"
 
     request_data = {
-        #"model": "llava:7b",
         "model": "llava:latest",
         "prompt": prompt + possible_categories,
         "images": [graphic_b64],
