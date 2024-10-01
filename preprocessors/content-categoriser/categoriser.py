@@ -90,10 +90,12 @@ def categorise():
     possible_categories = "photograph, chart, text, other"
 
     request_data = {
-        "model": "llava:7b",
+        #"model": "llava:7b",
+        "model": "llava:latest",
         "prompt": prompt + possible_categories,
         "images": [graphic_b64],
-        "stream": False
+        "stream": False,
+        "keep_alive": -1  #keep model loaded in memory indefinitely
     }
     logging.debug("serializing json from request_data dictionary")
     request_data_json = json.dumps(request_data)
@@ -112,9 +114,8 @@ def categorise():
         response_text = response.text
         data = json.loads(response_text)
         # remove whitespace and force lowercase
-        # regex from https://stackoverflow.com/questions/5799090
-        graphic_category = re.sub(r'\s+', '', data['response']).lower()
-        if graphic_category in possible_categories:
+        graphic_category = data['response'].strip().lower()
+        if graphic_category in possible_categories.split(", "):
             logging.debug("ollama request successful: " + graphic_category)
         else:  # llamas are not to be trusted to pay attention to instructions
             logging.warn("ollama request successful, "
