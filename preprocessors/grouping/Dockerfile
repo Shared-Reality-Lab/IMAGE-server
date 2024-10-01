@@ -19,8 +19,7 @@ EXPOSE 5000
 ENV FLASK_APP=grouping.py
 USER python
 
-# Healthcheck: Run the healthcheck.sh script every 30 seconds
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:5000/health || exit 1
+HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=1 \
+  CMD curl -f http://localhost:5000/fake || exit 1
   
 CMD [ "gunicorn", "grouping:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
