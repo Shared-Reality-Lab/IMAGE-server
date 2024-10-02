@@ -377,6 +377,10 @@ app.post("/render/preprocess", (req, res) => {
     }
 });
 
+app.get("/health", (req, res) => {
+    res.status(200).send("Healthy");
+});
+
 app.get("/authenticate/:uuid/:check", async (req, res) => {
     if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {
         // Check for valid uuidv4 path
@@ -416,6 +420,8 @@ app.get("/authenticate/:uuid/:check", async (req, res) => {
         res.status(503).end();
     }
 });
+
+
 
 app.listen(port, () => {
     console.log(`Started server on port ${port}`);
