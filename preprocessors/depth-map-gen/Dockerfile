@@ -2,6 +2,7 @@ FROM pytorch/pytorch:1.13.0-cuda11.6-cudnn8-runtime
 
 COPY /preprocessors/depth-map-gen/requirements.txt /app/requirements.txt
 
+# Install required packages as root
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv wget git curl && \
     rm -rf /var/lib/apt/lists/*

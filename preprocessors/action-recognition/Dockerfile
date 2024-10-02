@@ -6,10 +6,9 @@ FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-runtime
 ENV PYTHONUNBUFFERED=TRUE
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Install wget and curl as root
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y \
-    wget \
-    curl && \
+    apt-get install --no-install-recommends -y wget curl && \
     rm -rf /var/lib/apt/lists/*
 
 RUN adduser --disabled-password python
@@ -25,7 +24,6 @@ COPY --chown=python:python /preprocessors/action-recognition/requirements.txt /a
 RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
 COPY --chown=python:python /schemas /app/schemas
-
 COPY --chown=python:python /preprocessors/action-recognition /app
 
 EXPOSE 5000

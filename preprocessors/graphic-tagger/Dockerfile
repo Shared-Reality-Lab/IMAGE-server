@@ -1,5 +1,6 @@
 FROM python:3.9-alpine
 
+# Install curl as the root user
 RUN apk add --no-cache curl && \
     adduser --disabled-password python
 WORKDIR /app
@@ -11,11 +12,12 @@ RUN pip3 install --upgrade pip
 RUN pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
-WORKDIR /app
 COPY /preprocessors/graphic-tagger /app
-
 
 EXPOSE 5000
 ENV FLASK_APP=azure_api.py
+
+# Switch to the python user
 USER python
+
 CMD [ "gunicorn", "azure_api:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]

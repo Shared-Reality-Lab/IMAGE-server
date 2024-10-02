@@ -1,18 +1,18 @@
 FROM python:3
 
-COPY /preprocessors/collage-detector/requirements.txt /app/requirements.txt
-
+# Install required packages as root
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
     wget \
-    curl \  # Add curl to the installation
-    && rm -rf /var/lib/apt/lists/*
+    curl && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip3 install --upgrade pip
+COPY /preprocessors/collage-detector/requirements.txt /app/requirements.txt
 RUN pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas

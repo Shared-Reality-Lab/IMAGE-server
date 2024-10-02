@@ -1,20 +1,19 @@
 FROM python:3.9.5-alpine
 
+# Install curl as root
 RUN apk add --no-cache curl && \
     adduser --disabled-password python
+
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip3 install --upgrade pip
 
-COPY /preprocessors/autour/requirements.txt /app/requirements.txt
+COPY --chown=python:python /preprocessors/autour/requirements.txt /app/requirements.txt
+RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
-
-RUN pip3 install -r requirements.txt
-
-COPY /schemas /app/schemas
-
-COPY /preprocessors/autour/ /app
+COPY --chown=python:python /schemas /app/schemas
+COPY --chown=python:python /preprocessors/autour/ /app
 
 EXPOSE 5000
 
