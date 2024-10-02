@@ -137,6 +137,9 @@ def readImage():
 
 @app.route('/health', methods=['GET'])
 def health():
+    """
+    health check endpoint to verify if the service is up.
+    """
     return jsonify({"status": "healthy"}), 200
 
 if __name__ == "__main__":
