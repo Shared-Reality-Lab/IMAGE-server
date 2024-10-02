@@ -1,6 +1,8 @@
 FROM python:3.10
 
-RUN apk add --no-cache curl && \
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/* && \
     adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"

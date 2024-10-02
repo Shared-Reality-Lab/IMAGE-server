@@ -1,7 +1,8 @@
 FROM python:3.9.5-alpine
 
 RUN apk add --no-cache curl && \
-    adduser --disabled-password pythonWORKDIR /app
+    adduser --disabled-password python
+WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip3 install --upgrade pip
