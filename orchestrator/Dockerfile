@@ -10,6 +10,8 @@ RUN npm run build && npm prune --production
 
 FROM node:alpine as final
 
+RUN apk add --no-cache curl
+
 RUN apk add memcached
 # Set up for logging
 WORKDIR /var/log/IMAGE

@@ -2,7 +2,7 @@ FROM pytorch/pytorch:1.13.0-cuda11.6-cudnn8-runtime
 
 COPY /preprocessors/content-categoriser/requirements.txt /app/requirements.txt
 
-RUN apt-get update && apt-get install -y python3-opencv wget && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y python3-opencv wget curl && rm -rf /var/lib/apt/lists/*
 
 RUN adduser --disabled-password python
 WORKDIR /app
