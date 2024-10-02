@@ -19,9 +19,9 @@ RUN apt-get update && \
     g++ \
     openjdk-11-jre-headless \
     wget \
-    # MMDet Requirements
     ffmpeg libsm6 libxext6 git ninja-build libglib2.0-0 libsm6 libxrender-dev libxext6 \
-    && rm -rf /var/lib/apt/lists/*
+    curl && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/opt/conda/bin:$PATH"
 RUN export FORCE_CUDA=1

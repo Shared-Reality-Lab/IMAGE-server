@@ -2,7 +2,10 @@ FROM python:3.10
 
 COPY /preprocessors/object-depth-calculator/requirements.txt /app/requirements.txt
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv wget git curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    python3-opencv wget git curl && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN adduser --disabled-password python
 WORKDIR /app
