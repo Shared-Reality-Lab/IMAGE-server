@@ -1,6 +1,7 @@
 FROM python:3.10
 
-RUN adduser --disabled-password python
+RUN apk add --no-cache curl && \
+    adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 

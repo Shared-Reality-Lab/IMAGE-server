@@ -1,6 +1,7 @@
 FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-runtime
 
-RUN adduser --disabled-password python
+RUN apk add --no-cache curl && \
+    adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
