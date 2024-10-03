@@ -75,6 +75,7 @@ def categorise():
     # prepare ollama request
     api_url = os.environ['OLLAMA_URL']
     api_key = os.environ['OLLAMA_API_KEY']
+    ollama_model = os.environ['OLLAMA_MODEL']
 
     logging.debug("OLLAMA_URL " + api_url)
     if api_key.startswith("sk-"):
@@ -89,10 +90,11 @@ def categorise():
     possible_categories = "photograph, chart, text, other"
 
     request_data = {
-        "model": "llava:latest",
+        "model": ollama_model,
         "prompt": prompt + possible_categories,
         "images": [graphic_b64],
         "stream": False,
+        "temperature": 0.0,
         "keep_alive": -1  # keep model loaded in memory indefinitely
     }
     logging.debug("serializing json from request_data dictionary")
@@ -103,7 +105,7 @@ def categorise():
         "Authorization": f"Bearer {api_key}"
     }
 
-    logging.debug("About to post request to ollama.")
+    logging.debug("Posting request to ollama model " + ollama_model)
     response = requests.post(api_url, headers=request_headers,
                              data=request_data_json)
     logging.debug("ollama request response code: " + str(response.status_code))
