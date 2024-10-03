@@ -1,0 +1,1 @@
+This is the app used to connect IMAGE-TactileAuthoring to IMAGE-Monarch. 
