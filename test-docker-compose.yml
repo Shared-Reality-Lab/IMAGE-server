@@ -14,9 +14,9 @@ services:
       - SERVER_NAME=unicorn.cim.mcgill.ca
     volumes:
       # Following volume mounts are used only by the IMAGE project's website, not required for IMAGE server 
-      - ./auditory-haptic-graphics-website/html:/var/www/html:ro
-      - ./auditory-haptic-graphics-website/image.conf:/etc/nginx/templates/image.conf.template:ro
-      - ./auditory-haptic-graphics-website/passwords:/etc/nginx/passwords
+      - ./IMAGE-website/html:/var/www/html:ro
+      - ./IMAGE-website/image.conf:/etc/nginx/templates/image.conf.template:ro
+      - ./IMAGE-website/passwords:/etc/nginx/passwords
       - ./resources/current:/var/www/resources:ro
       - website-logs:/var/log/nginx
     depends_on:
