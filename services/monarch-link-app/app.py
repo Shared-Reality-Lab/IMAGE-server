@@ -56,14 +56,16 @@ def render(id):
         if id in svgData:
             if (svgData[id])["secret"] == req_data["secret"]:
                 svgData[id] = {"secret": req_data["secret"],
-                               "data": req_data["data"], "layer": req_data["layer"]}
+                               "data": req_data["data"],
+                               "layer": req_data["layer"]}
                 write_data(svgData)
                 return jsonify("Graphic in channel "+id+" has been updated!")
             else:
                 return jsonify("Unauthorized access to existing channel!")
         else:
             svgData[id] = {"secret": req_data["secret"],
-                           "data": req_data["data"], "layer": req_data["layer"]}
+                           "data": req_data["data"],
+                           "layer": req_data["layer"]}
             write_data(svgData)
             return jsonify("New channel created with code "+id)
 
@@ -77,7 +79,8 @@ def display(id):
             response = Response()
             response.mimetype = "application/json"
             response.set_data(json.dumps({"renderings": [
-                              {"data": {"graphic": svgData[id]["data"], "layer": svgData[id]["layer"]}}]}))
+                              {"data": {"graphic": svgData[id]["data"],
+                                        "layer": svgData[id]["layer"]}}]}))
             response.add_etag(hashlib.md5(
                 (svgData[id]["data"]+svgData[id]["layer"]).encode()))
             response.make_conditional(request)
