@@ -12,6 +12,8 @@ RUN pip install -r requirements.txt
 
 COPY /services/monarch-link-app/ /usr/src/app
 
+RUN chown -R python:python /usr/src/app
+
 EXPOSE 80
 USER python
 CMD ["gunicorn", "app:app", "-b", "0.0.0.0:80", "--capture-output", "--log-level=debug" ]

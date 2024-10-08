@@ -5,7 +5,6 @@ import hashlib
 import json
 
 app = Flask(__name__)
-app.config.from_pyfile('config.py')
 logging.basicConfig(level=logging.DEBUG)
 
 CORS(

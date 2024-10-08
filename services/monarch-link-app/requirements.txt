@@ -12,3 +12,4 @@ six==1.16.0
 SQLAlchemy==1.4.43
 SQLAlchemy-Utils==0.38.3
 Werkzeug==2.2.2
+gunicorn==22.0.0
