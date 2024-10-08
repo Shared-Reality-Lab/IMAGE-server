@@ -391,7 +391,23 @@ services:
     image: ghcr.io/shared-reality-lab/image-handler-svg-action-recognition:${REGISTRY_TAG}
     labels:
         ca.mcgill.a11y.image.handler: enable
-
+ 
+  monarch-link-app:
+    profiles: [test, default]
+    image: "monarch-link-app:test"
+    build:
+      context: /home/venicq/IMAGE-server
+      dockerfile: /home/venicq/IMAGE-server/services/monarch-link-app/Dockerfile
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.monarch-link-app.rule=Host(`monarch.unicorn.cim.mcgill.ca`)"
+      - "traefik.http.routers.monarch-link-app.tls.certresolver=myresolver"
+      - traefik.docker.network=traefik
+    environment:
+      - SERVER_NAME=unicorn.cim.mcgill.ca
+    networks:
+      - traefik
 # end - unicorn exclusive services        
 volumes:
   sc-store:
