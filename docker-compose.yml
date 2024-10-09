@@ -394,10 +394,7 @@ services:
  
   monarch-link-app:
     profiles: [test, default]
-    image: "monarch-link-app:test"
-    build:
-      context: /home/venicq/IMAGE-server
-      dockerfile: /home/venicq/IMAGE-server/services/monarch-link-app/Dockerfile
+    image: "ghcr.io/shared-reality-lab/image-service-monarch-link-app:${REGISTRY_TAG}"
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
