@@ -1,4 +1,3 @@
-# Dockerfile partially and adapted from the official MMsegmentation Dockerfile at https://github.com/open-mmlab/mmsegmentation/blob/master/docker/serve/Dockerfile
 ARG PYTORCH="1.11.0"
 ARG CUDA="11.3"
 ARG CUDNN="8"
@@ -13,6 +12,7 @@ ENV PYTHONUNBUFFERED TRUE
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64/7fa2af80.pub
 
+# Install required packages as root
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
     ca-certificates \
