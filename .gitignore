@@ -6,6 +6,6 @@ config/azure-api.env
 config/chart.env
 config/apis-and-selection.env
 config/vision_api_key.json
-config/preprocessors-slack-webhook.env
+config/ollama.env
 *.sh
 docker-compose.override.yml

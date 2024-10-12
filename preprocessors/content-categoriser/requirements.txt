@@ -1,9 +1,6 @@
-Flask==2.2.5
-flask_api==2.0.0
-numpy==1.21.0
-pillow==10.3.0
+Flask==3.0.3
+flask_api==3.1
 jsonschema==3.2.0
-Werkzeug==3.0.3
-pytorch_lightning==1.9.0
-opencv-python== 4.5.1.48
-gunicorn==22.0.0
+Werkzeug==3.0.4
+gunicorn==23.0.0
+requests==2.32.3
