@@ -7,8 +7,8 @@ ENV PATH="/usr/src/app/.local/bin:${PATH}"
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
     wget \
-    curl \  # Add curl to the installation
-    && rm -rf /var/lib/apt/lists/*
+    curl && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN wget https://image.a11y.mcgill.ca/models/objectDetectionWeights/yolov8x.pt
 

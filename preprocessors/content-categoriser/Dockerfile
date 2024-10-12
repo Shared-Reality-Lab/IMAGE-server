@@ -2,7 +2,7 @@ FROM python:alpine3.20
 
 COPY /preprocessors/content-categoriser/requirements.txt /app/requirements.txt
 
-RUN apk add --no-cache python3-opencv wget curl
+RUN apk add --no-cache wget curl
 
 RUN adduser --disabled-password python
 WORKDIR /app
