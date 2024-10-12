@@ -195,6 +195,7 @@ def categorise():
         logging.debug("Sending response")
         return response
 
+
 @app.route('/health', methods=['GET'])
 def health():
     """

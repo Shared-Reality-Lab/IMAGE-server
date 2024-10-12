@@ -135,12 +135,14 @@ def readImage():
     logging.debug("Sending response")
     return response
 
+
 @app.route('/health', methods=['GET'])
 def health():
     """
     health check endpoint to verify if the service is up.
     """
     return jsonify({"status": "healthy"}), 200
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
