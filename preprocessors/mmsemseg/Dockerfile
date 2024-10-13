@@ -1,3 +1,4 @@
+# Dockerfile partially and adapted from the official MMsegmentation Dockerfile at https://github.com/open-mmlab/mmsegmentation/blob/master/docker/serve/Dockerfile
 ARG PYTORCH="1.11.0"
 ARG CUDA="11.3"
 ARG CUDNN="8"
