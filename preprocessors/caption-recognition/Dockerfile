@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.13.0-cuda11.6-cudnn8-runtime
+FROM pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv wget git gcc mono-mcs && rm -rf /var/lib/apt/lists/*
 
