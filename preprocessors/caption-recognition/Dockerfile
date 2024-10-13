@@ -11,6 +11,7 @@ ENV PATH="/home/python/.local/bin:${PATH}"
 RUN wget https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP/blip_coco_caption_base.pth -P /home/python/.cache/torch/hub/checkpoints
 WORKDIR /app
 
+COPY --chown=python:python . $HOME/app
 COPY --chown=python:python /preprocessors/caption-recognition/huggingface /home/python/.cache/huggingface/
 COPY --chown=python:python /preprocessors/caption-recognition/requirements.txt /app/requirements.txt
 
