@@ -10,7 +10,7 @@ ENV PATH="/home/python/.local/bin:${PATH}"
 RUN pip3 install --upgrade pip
 
 COPY --chown=python:python /preprocessors/autour/requirements.txt /app/requirements.txt
-RUN pip3 install --no-cache-dir -r /app/requirements.txt
+RUN pip3 install -r /app/requirements.txt
 
 COPY --chown=python:python /schemas /app/schemas
 COPY --chown=python:python /preprocessors/autour/ /app
