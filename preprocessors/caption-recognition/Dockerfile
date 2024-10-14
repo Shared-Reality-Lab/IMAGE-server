@@ -1,26 +1,27 @@
 FROM pytorch/pytorch:1.13.0-cuda11.6-cudnn8-runtime
 
-# Install required packages as root
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv wget git gcc mono-mcs curl && rm -rf /var/lib/apt/lists/*
 
-RUN adduser --disabled-password python
-ENV PATH="/home/python/.local/bin:${PATH}"
-
+#COPY /preprocessors/caption-recognition/huggingface /home/python/.cache/huggingface/
 RUN wget https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP/blip_coco_caption_base.pth -P /home/python/.cache/torch/hub/checkpoints
 WORKDIR /app
+RUN adduser --disabled-password python
+ENV PATH="/home/python/.local/bin:${PATH}"
+COPY --chown=python:python /preprocessors/caption-recognition/huggingface /home/python/.cache/huggingface/
+
 
 COPY --chown=python:python . $HOME/app
-COPY --chown=python:python /preprocessors/caption-recognition/huggingface /home/python/.cache/huggingface/
-COPY --chown=python:python /preprocessors/caption-recognition/requirements.txt /app/requirements.txt
+COPY /preprocessors/caption-recognition/requirements.txt /app/requirements.txt
 
 RUN pip3 install --upgrade pip
 RUN pip3 install -r /app/requirements.txt
 
+
 COPY /schemas /app/schemas
 COPY /preprocessors/caption-recognition/ /app
-COPY --chown=python:python /preprocessors/caption-recognition/huggingface/hub /home/python/.cache/
+COPY /preprocessors/caption-recognition/huggingface/hub /home/python/.cache/
+COPY --chown=python:python . $HOME/app
 RUN chmod 777 /home/python/.cache/huggingface/hub/models--bert-base-uncased/
-
 EXPOSE 5000
 ENV FLASK_APP=caption.py
 USER python
