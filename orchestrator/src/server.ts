@@ -27,7 +27,7 @@ import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
 import preprocessorResponseSchemaJSON from "./schemas/preprocessor-response.schema.json";
 import responseSchemaJSON from "./schemas/response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
-import { docker, getPreprocessorServices, getHandlerServices } from "./docker";
+import { docker, getPreprocessorServices, getHandlerServices, DEFAULT_ROUTE_NAME } from "./docker";
 import { ServerCache } from "./server-cache";
 
 const app = express();
@@ -242,16 +242,28 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
     return data;
 }
 
+function getRoute(data: Record<string, any>): string {
+    if (data["route"] === undefined) {
+        console.debug("No route defined in request. Setting default value.");
+        return DEFAULT_ROUTE_NAME;
+    } else {
+        console.debug("Route for request set to " + data["route"]);
+        return data["route"] as string;
+    }
+}
+
 app.post("/render", (req, res) => {
     console.debug("Received request");
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
+        // get route variable or set to default
+        let data = JSON.parse(JSON.stringify(req.body));
+        const route = getRoute(data);
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
-            const preprocessors = getPreprocessorServices(containers);
-            const handlers = getHandlerServices(containers);
+            const preprocessors = getPreprocessorServices(containers, route);
+            const handlers = getHandlerServices(containers, route);
 
             // Preprocessors
-            let data = JSON.parse(JSON.stringify(req.body));
             if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
                 console.debug("Running preprocessors in parallel...");
                 data = await runPreprocessorsParallel(data, preprocessors);
@@ -349,10 +361,11 @@ app.post("/render", (req, res) => {
 
 app.post("/render/preprocess", (req, res) => {
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
+        const data = req.body;
+        const route = getRoute(data);
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
-            const preprocessors = getPreprocessorServices(containers);
-            const data = req.body;
+            const preprocessors = getPreprocessorServices(containers, route);
             if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
                 console.debug("Running preprocessors in parallel...");
                 return runPreprocessorsParallel(data, preprocessors);
