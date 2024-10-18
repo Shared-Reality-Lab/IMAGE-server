@@ -63,7 +63,7 @@ def generate_code(svgData):
     return code
 
 
-# custom converter to validate that the id 
+# custom converter to validate that the id
 # in the url is a valid id
 class CodeConverter(BaseConverter):
     def to_python(self, value):
