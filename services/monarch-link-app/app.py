@@ -66,7 +66,8 @@ def create(title):
         svgData = read_data()
         id = generate_code(svgData)
         secret = uuid.uuid4().hex
-        svgData[id] = {"secret": bcrypt.generate_password_hash(secret).decode('utf-8'),
+        svgData[id] = {"secret": bcrypt.generate_password_hash(secret)
+                       .decode('utf-8'),
                        "data": req_data["data"],
                        "layer": req_data["layer"]}
         write_data(svgData)
@@ -80,7 +81,8 @@ def update(id):
         req_data = request.get_json()
         svgData = read_data()
         if id in svgData:
-            if bcrypt.check_password_hash((svgData[id])["secret"], req_data["secret"]):
+            if bcrypt.check_password_hash((svgData[id])["secret"],
+                                          req_data["secret"]):
                 svgData[id] = {"secret":
                                bcrypt.generate_password_hash(
                                    req_data["secret"]).decode('utf-8'),
@@ -98,7 +100,8 @@ def update(id):
                            "layer": req_data["layer"]}
             write_data(svgData)
             return ("New channel created with code "+id +
-                    ". Creating new ids using update is only intended for testing!")
+                    ". Creating new ids using update is" +
+                    "only intended for testing!")
 
 
 @app.route("/display/<id>", methods=["GET"])
