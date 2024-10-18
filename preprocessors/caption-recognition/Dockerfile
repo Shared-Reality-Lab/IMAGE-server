@@ -4,7 +4,10 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-
 
 #COPY /preprocessors/caption-recognition/huggingface /home/python/.cache/huggingface/
 # old url: https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP/blip_coco_caption_base.pth
-RUN wget https://pegasus.cim.mcgill.ca/image/models/caption-recognition/blip_coco_caption_base.pth -P /home/python/.cache/torch/hub/checkpoints
+RUN mkdir -p /home/python/.cache/torch/hub/checkpoints && \
+    if [ ! -f /home/python/.cache/torch/hub/checkpoints/blip_coco_caption_base.pth ]; then \
+        wget https://pegasus.cim.mcgill.ca/image/models/caption-recognition/blip_coco_caption_base.pth -P /home/python/.cache/torch/hub/checkpoints; \
+    fi
 WORKDIR /app
 RUN adduser --disabled-password python
 ENV PATH="/home/python/.local/bin:${PATH}"
