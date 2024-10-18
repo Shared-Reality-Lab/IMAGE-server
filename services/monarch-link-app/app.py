@@ -14,13 +14,17 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
-from flask import Flask, request, jsonify, abort, Response
+from flask import Flask, request, abort, Response
+from flask_bcrypt import Bcrypt
 from flask_cors import CORS, cross_origin
 import logging
 import hashlib
 import json
+import random
+import uuid
 
 app = Flask(__name__)
+bcrypt = Bcrypt(app)
 logging.basicConfig(level=logging.DEBUG)
 
 CORS(
@@ -47,27 +51,54 @@ def read_data():
             return dict()
 
 
-@app.route("/create/<id>", methods=["POST"])
+def generate_code(svgData):
+    code = ''.join([str(random.randint(1, 9)) for i in range(6)])
+    while code in svgData:
+        code = generate_code(svgData)
+    return code
+
+
+@app.route("/create/<title>", methods=["POST"])
 @cross_origin()
-def render(id):
+def create(title):
+    if request.method == "POST":
+        req_data = request.get_json()
+        svgData = read_data()
+        id = generate_code(svgData)
+        secret = uuid.uuid4().hex
+        svgData[id] = {"secret": bcrypt.generate_password_hash(secret).decode('utf-8'),
+                       "data": req_data["data"],
+                       "layer": req_data["layer"]}
+        write_data(svgData)
+        return {"id": id, "secret": secret}
+
+
+@app.route("/update/<id>", methods=["POST"])
+@cross_origin()
+def update(id):
     if request.method == "POST":
         req_data = request.get_json()
         svgData = read_data()
         if id in svgData:
-            if (svgData[id])["secret"] == req_data["secret"]:
-                svgData[id] = {"secret": req_data["secret"],
+            if bcrypt.check_password_hash((svgData[id])["secret"], req_data["secret"]):
+                svgData[id] = {"secret":
+                               bcrypt.generate_password_hash(
+                                   req_data["secret"]).decode('utf-8'),
                                "data": req_data["data"],
                                "layer": req_data["layer"]}
                 write_data(svgData)
-                return jsonify("Graphic in channel "+id+" has been updated!")
+                return "Graphic in channel "+id+" has been updated!"
             else:
-                return jsonify("Unauthorized access to existing channel!")
+                return "Unauthorized access to existing channel!", 401
         else:
-            svgData[id] = {"secret": req_data["secret"],
+            svgData[id] = {"secret":
+                           bcrypt.generate_password_hash(
+                               req_data["secret"]).decode('utf-8'),
                            "data": req_data["data"],
                            "layer": req_data["layer"]}
             write_data(svgData)
-            return jsonify("New channel created with code "+id)
+            return ("New channel created with code "+id +
+                    ". Creating new ids using update is only intended for testing!")
 
 
 @app.route("/display/<id>", methods=["GET"])
