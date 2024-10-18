@@ -18,19 +18,16 @@ RUN  apt-get update -y && \
      apt-get dist-upgrade -y && \
      apt-get -y autoremove && \
      apt-get clean
-RUN apt-get install -y p7zip \
-    p7zip-full \
-    unace \
-    zip \
-    unzip
-RUN pip3 install --upgrade pip
-RUN pip3 install -r /app/requirements.txt
-RUN wget https://image.a11y.mcgill.ca/models/clothesDetector/yolo.zip
-RUN unzip yolo.zip
+RUN apt-get install -y p7zip p7zip-full unace zip unzip
+
+RUN pip3 install --upgrade pip && \
+    pip3 install -r /app/requirements.txt
+
+RUN wget https://image.a11y.mcgill.ca/models/clothesDetector/yolo.zip && \
+    unzip yolo.zip
 
 COPY /schemas /app/schemas
 # COPY ./schemas /app/schemas
-WORKDIR /app
 COPY /preprocessors/clothes-detector /app
 # COPY ./ /app
 
