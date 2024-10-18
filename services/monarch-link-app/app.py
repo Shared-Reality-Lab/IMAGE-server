@@ -21,11 +21,14 @@ import logging
 import hashlib
 import json
 import random
+import re
 import uuid
+from werkzeug.routing import BaseConverter, ValidationError
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 logging.basicConfig(level=logging.DEBUG)
+
 
 CORS(
     app, resources={r"/*": {"origins": "*"}}
@@ -48,9 +51,11 @@ def read_data():
         try:
             return json.load(openfile)
         except Exception:
+            # return a dict if the file is empty
             return dict()
 
 
+# generate an id that does not already exist
 def generate_code(svgData):
     code = ''.join([str(random.randint(1, 9)) for i in range(6)])
     while code in svgData:
@@ -58,69 +63,115 @@ def generate_code(svgData):
     return code
 
 
-@app.route("/create/<title>", methods=["POST"])
+# custom converter to validate that the id 
+# in the url is a valid id
+class CodeConverter(BaseConverter):
+    def to_python(self, value):
+        # has six digits between 1 and 8
+        pattern = re.compile("[1-8]{6}")
+        # also has a length of six
+        if not pattern.match(value) or len(value) != 6:
+            logging.debug('Received request with invalid ID value')
+            raise ValidationError('Invalid id value')
+        return value
+
+    def to_url(self, value):
+        return value
+
+
+app.url_map.converters['code'] = CodeConverter
+
+
+@app.route("/create/<string:title>", methods=["POST"])
 @cross_origin()
 def create(title):
     if request.method == "POST":
-        req_data = request.get_json()
-        svgData = read_data()
-        id = generate_code(svgData)
-        secret = uuid.uuid4().hex
-        svgData[id] = {"secret": bcrypt.generate_password_hash(secret)
-                       .decode('utf-8'),
-                       "data": req_data["data"],
-                       "layer": req_data["layer"]}
-        write_data(svgData)
-        return {"id": id, "secret": secret}
-
-
-@app.route("/update/<id>", methods=["POST"])
-@cross_origin()
-def update(id):
-    if request.method == "POST":
-        req_data = request.get_json()
-        svgData = read_data()
-        if id in svgData:
-            if bcrypt.check_password_hash((svgData[id])["secret"],
-                                          req_data["secret"]):
-                svgData[id] = {"secret":
-                               bcrypt.generate_password_hash(
-                                   req_data["secret"]).decode('utf-8'),
-                               "data": req_data["data"],
-                               "layer": req_data["layer"]}
-                write_data(svgData)
-                return "Graphic in channel "+id+" has been updated!"
-            else:
-                return "Unauthorized access to existing channel!", 401
-        else:
-            svgData[id] = {"secret":
-                           bcrypt.generate_password_hash(
-                               req_data["secret"]).decode('utf-8'),
+        logging.debug('Create request received')
+        try:
+            req_data = request.get_json()
+            svgData = read_data()
+            id = generate_code(svgData)
+            secret = uuid.uuid4().hex
+            svgData[id] = {"secret": bcrypt.generate_password_hash(secret)
+                           .decode('utf-8'),
                            "data": req_data["data"],
                            "layer": req_data["layer"]}
             write_data(svgData)
-            return ("New channel created with code "+id +
-                    ". Creating new ids using update is" +
-                    "only intended for testing!")
+            logging.debug('Created new channel with code '+id)
+            return {"id": id, "secret": secret}
+        except KeyError:
+            logging.debug("Unexpected JSON format. Returning 400")
+            return "Unexpected JSON format", 400
+        except Exception as e:
+            logging.debug(e)
+            abort(Response(response=e))
 
 
-@app.route("/display/<id>", methods=["GET"])
+@app.route("/update/<code:id>", methods=["POST"])
+@cross_origin()
+def update(id):
+    if request.method == "POST":
+        try:
+            logging.debug('Update request received')
+            req_data = request.get_json()
+            svgData = read_data()
+            if id in svgData:
+                if bcrypt.check_password_hash((svgData[id])["secret"],
+                                              req_data["secret"]):
+                    svgData[id] = {"secret":
+                                   bcrypt.generate_password_hash(
+                                    req_data["secret"]).decode('utf-8'),
+                                   "data": req_data["data"],
+                                   "layer": req_data["layer"]}
+                    write_data(svgData)
+                    logging.debug('Updated graphic')
+                    return "Graphic in channel "+id+" has been updated!"
+                else:
+                    logging.debug('Unauthorized access to existing channel!')
+                    return "Unauthorized access to existing channel!", 401
+            else:
+                svgData[id] = {"secret":
+                               bcrypt.generate_password_hash(
+                                req_data["secret"]).decode('utf-8'),
+                               "data": req_data["data"],
+                               "layer": req_data["layer"]}
+                write_data(svgData)
+                logging.debug('TEMP: Created new channel using update!')
+                return ("New channel created with code "+id +
+                        ". Creating new ids using update is" +
+                        " only intended for testing!")
+        except KeyError:
+            logging.debug("Unexpected JSON format. Returning 400")
+            return "Unexpected JSON format", 400
+        except Exception as e:
+            logging.debug(e)
+            abort(Response(response=e))
+
+
+@app.route("/display/<code:id>", methods=["GET"])
 @cross_origin()
 def display(id):
     if request.method == "GET":
-        svgData = read_data()
-        if id in svgData:
-            response = Response()
-            response.mimetype = "application/json"
-            response.set_data(json.dumps({"renderings": [
-                              {"data": {"graphic": svgData[id]["data"],
-                                        "layer": svgData[id]["layer"]}}]}))
-            response.add_etag(hashlib.md5(
-                (svgData[id]["data"]+svgData[id]["layer"]).encode()))
-            response.make_conditional(request)
-            return response
-        else:
-            return abort(404)
+        logging.debug('Display request received')
+        try:
+            svgData = read_data()
+            if id in svgData:
+                response = Response()
+                response.mimetype = "application/json"
+                response.set_data(json.dumps({"renderings": [
+                                {"data": {"graphic": svgData[id]["data"],
+                                          "layer": svgData[id]["layer"]}}]}))
+                response.add_etag(hashlib.md5(
+                    (svgData[id]["data"]+svgData[id]["layer"]).encode()))
+                response.make_conditional(request)
+                logging.debug('Sending tactile response')
+                return response
+            else:
+                logging.debug('ID does not exist')
+                return abort(404)
+        except Exception as e:
+            logging.debug(e)
+            abort(Response(response=e))
 
 
 @app.route("/", methods=["POST", "GET"])
