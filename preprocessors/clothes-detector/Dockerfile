@@ -4,7 +4,11 @@ RUN adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
-RUN apt-get update && apt-get install -y python3-opencv wget && rm -rf /var/lib/apt/lists/*
+#install system dependencies
+RUN apt-get update && \
+    apt-get install -y python3-opencv wget && \
+    apt-get install -y libfreetype6-dev libpng-dev libharfbuzz-dev libcairo2-dev python3-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY /preprocessors/clothes-detector/requirements.txt /app/requirements.txt
 # COPY ./requirements.txt /app/requirements.txt
