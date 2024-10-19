@@ -1019,8 +1019,8 @@ def get_coordinates(content):
     google_api_key = os.environ["GOOGLE_PLACES_KEY"]
 
     # Query google places API to find latitude longitude
-    request = f"https://maps.googleapis.com/maps/api/place/details/json?\
-            place_id={content['placeID']}&\
+    request = f"https://maps.googleapis.com/maps/api/place/textsearch/json?\
+            query={content['placeID']}&\
             key={google_api_key}"
     request = request.replace(" ", "")
     place_response = requests.get(request).json()
@@ -1029,7 +1029,7 @@ def get_coordinates(content):
         LOGGER.debug("Zero or Incomplete results returned for place ID")
         return jsonify(""), 500
 
-    location = place_response['result']['geometry']['location']
+    location = place_response['results'][0]['geometry']['location']
     coordinates = {
         'latitude': location['lat'],
         'longitude': location['lng']
@@ -1049,12 +1049,12 @@ def check_google_response(place_response):
     Returns:
         bool: True if valid, False otherwise
     """
-    if 'result' not in place_response or len(place_response['result']) == 0:
+    if 'results' not in place_response or len(place_response['results']) == 0:
         LOGGER.error("No results found for placeID")
         LOGGER.error(place_response)
         return False
 
-    result = place_response['result']
+    result = place_response['results'][0]
 
     if 'geometry' not in result:
         LOGGER.error("No geometry found for placeID")
