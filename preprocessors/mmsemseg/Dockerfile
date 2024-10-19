@@ -13,6 +13,7 @@ ENV PYTHONUNBUFFERED TRUE
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64/7fa2af80.pub
 
+# Install required packages as root
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
     ca-certificates \
@@ -21,7 +22,8 @@ RUN apt-get update && \
     wget \
     # MMDet Requirements
     ffmpeg libsm6 libxext6 git ninja-build libglib2.0-0 libsm6 libxrender-dev libxext6 \
-    && rm -rf /var/lib/apt/lists/*
+    curl && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/opt/conda/bin:$PATH"
 RUN export FORCE_CUDA=1
