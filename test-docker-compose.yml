@@ -1,6 +1,4 @@
 ## docker compose to run image website
-version: '3'
-
 services:
   image-unicorn-cim-mcgill-ca:
     image: nginx:latest
@@ -16,9 +14,9 @@ services:
       - SERVER_NAME=unicorn.cim.mcgill.ca
     volumes:
       # Following volume mounts are used only by the IMAGE project's website, not required for IMAGE server 
-      - ./auditory-haptic-graphics-website/html:/var/www/html:ro
-      - ./auditory-haptic-graphics-website/image.conf:/etc/nginx/templates/image.conf.template:ro
-      - ./auditory-haptic-graphics-website/passwords:/etc/nginx/passwords
+      - ./IMAGE-website/html:/var/www/html:ro
+      - ./IMAGE-website/image.conf:/etc/nginx/templates/image.conf.template:ro
+      - ./IMAGE-website/passwords:/etc/nginx/passwords
       - ./resources/current:/var/www/resources:ro
       - website-logs:/var/log/nginx
     depends_on:
@@ -38,45 +36,86 @@ services:
 
 # override gpu selection on test environment
   semantic-segmentation:
-    labels:
-      ca.mcgill.a11y.image.cacheTimeout: 3600
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
     deploy:
       resources:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['1']
+            device_ids: ['0']
             capabilities: ["gpu", "utility", "compute"]
 
   depth-map-generator:
-    labels:
-      ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
       resources:
         reservations:
             devices:
             - driver: nvidia
-              device_ids: ['1']
+              device_ids: ['0']
               capabilities: ["gpu", "utility", "compute"]
 
   action-recognition:
-    labels:
-      ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
       resources:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['1']
+            device_ids: ['0']
             capabilities: ["gpu", "utility", "compute"]
 
   object-detection:
-    labels:
-      ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
       resources:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['1']
+            device_ids: ['0']
             capabilities: ["gpu", "utility", "compute"]
+
+  espnet-tts:
+    deploy:
+      resources:
+        reservations:
+            devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: ["gpu", "utility", "compute"]
+
+  espnet-tts-fr:
+    deploy:
+      resources:
+        reservations:
+            devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: ["gpu", "utility", "compute"]
+
+  multilang-support:
+    deploy:
+      resources:
+        reservations:
+            devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: ["gpu", "utility", "compute"]
+
+  object-grouping:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  ocr-clouds-preprocessor:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 120s

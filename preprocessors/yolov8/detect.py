@@ -1,4 +1,4 @@
-# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# YOLOv8 🚀 by Ultralytics, GPL-3.0 license
 # Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
 #
 # This program is free software: you can redistribute it and/or modify
@@ -36,6 +36,7 @@ from ultralytics.yolo.utils.ops import scale_coords, non_max_suppression
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 c_thres = 0.75
 
@@ -256,7 +257,7 @@ def run(weights='yolov8x.pt',
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 400
         if "graphic" not in content:
-            logging.info("No image content. Skipping...")
+            logging.info("No graphic content. Skipping...")
             return "", 204
         preprocess_output = content["preprocessors"]
         request_uuid = content["request_uuid"]
@@ -276,13 +277,13 @@ def run(weights='yolov8x.pt',
             classifier_1_output = preprocess_output[classifier_1]
             classifier_1_label = classifier_1_output["category"]
             if classifier_1_label != "photograph":
-                logging.info("Not image content. Skipping...")
+                logging.info("Not photograph content. Skipping...")
                 return "", 204
             if classifier_2 in preprocess_output:
                 # classifier_2_output = preprocess_output[classifier_2]
                 # classifier_2_label = classifier_2_output["category"]
                 # if classifier_2_label == "other":
-                #     logging.info("Cannot process image")
+                #     logging.info("Category other: cannot process photo")
                 #     return "", 204
                 things = detect_objects(send,
                                         device,
@@ -367,7 +368,8 @@ def run(weights='yolov8x.pt',
         except jsonschema.exceptions.ValidationError as e:
             logging.error(e)
             return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Total number of Objects Detected - " + str(len(things)))
+        logging.debug("Total number of Objects Detected - " +
+                      str(len(things["objects"])))
         logging.debug("Sending response")
         return response
 

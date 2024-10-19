@@ -18,7 +18,7 @@ services:
       - user-logs:/var/log/IMAGE
 
   memcached:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: 'memcached:1.6'
     # cache memory size - 4GB
     command: -m 4096
@@ -31,6 +31,8 @@ services:
       - TORCH_DEVICE=cuda
     ports:
       - "8001:80"
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
       resources:
         reservations:
@@ -44,6 +46,8 @@ services:
     restart: unless-stopped
     environment:
       - TORCH_DEVICE=cuda
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
       resources:
         reservations:
@@ -55,6 +59,8 @@ services:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-translation:${REGISTRY_TAG}
     restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
       resources:
         reservations:
@@ -71,6 +77,8 @@ services:
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+
 
   content-categoriser:
       profiles: [production, test, default]
@@ -79,10 +87,10 @@ services:
       labels:
         ca.mcgill.a11y.image.preprocessor: 1
         ca.mcgill.a11y.image.port: 5000
-      deploy:
-        resources:
-          limits:
-            memory: 2g
+        ca.mcgill.a11y.image.cacheTimeout: 3600
+      env_file:
+        ./config/ollama.env
+
 
   graphic-tagger:
     profiles: [production, test, default]
@@ -93,6 +101,7 @@ services:
     labels:
       ca.mcgill.a11y.image.preprocessor: 2
       ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
 
   object-detection:
     profiles: [production, default, test]
@@ -101,6 +110,7 @@ services:
     labels:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
       resources:
         reservations:
@@ -115,6 +125,7 @@ services:
     labels:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
 
   openstreetmap:
     profiles: [production, test, default]
@@ -125,6 +136,8 @@ services:
     labels:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+
 
   object-sorting:
     profiles: [production, test, default]
@@ -133,6 +146,8 @@ services:
     labels:
       ca.mcgill.a11y.image.preprocessor: 5
       ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+
 
   semantic-segmentation:
     profiles: [production, test, default]
@@ -147,6 +162,7 @@ services:
     labels:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
 
   supercollider:
     profiles: [production, test, default]
@@ -229,6 +245,7 @@ services:
     labels:
         ca.mcgill.a11y.image.preprocessor: 3
         ca.mcgill.a11y.image.port: 5000
+        ca.mcgill.a11y.image.cacheTimeout: 3600
 
   svg-depth-map:
     profiles: [production, test, default]
@@ -245,6 +262,7 @@ services:
         - ./config/express-common.env
     labels:
         ca.mcgill.a11y.image.preprocessor: 2
+        ca.mcgill.a11y.image.cacheTimeout: 3600
 
   photo-tactile-svg-handler:
     profiles: [production, test, default]
@@ -294,6 +312,7 @@ services:
     labels:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
 
   object-depth-calculator:
     profiles: [test, default]
@@ -302,6 +321,16 @@ services:
     labels:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+
+  line-charts:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-line-charts:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 1
+      ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
 
   action-recognition:
     profiles: [test, default]
@@ -310,6 +339,7 @@ services:
     labels:
         ca.mcgill.a11y.image.preprocessor: 4
         ca.mcgill.a11y.image.port: 5000
+        ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
       resources:
         reservations:
@@ -347,12 +377,13 @@ services:
         ca.mcgill.a11y.image.port: 5000
 
   collage-detector-preprocessor:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-collage-detector:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
         ca.mcgill.a11y.image.preprocessor: 1
         ca.mcgill.a11y.image.port: 5000
+        ca.mcgill.a11y.image.cacheTimeout: 3600
 
   svg-action-recognition-handler:
     profiles: [test, default]

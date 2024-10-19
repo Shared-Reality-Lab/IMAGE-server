@@ -25,6 +25,7 @@ from operator import itemgetter
 
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def calculate_diagonal(x1, y1, x2, y2):
@@ -133,6 +134,14 @@ def readImage():
         return jsonify("Invalid Preprocessor JSON format"), 500
     logging.debug("Sending response")
     return response
+
+
+@app.route('/health', methods=['GET'])
+def health():
+    """
+    health check endpoint to verify if the service is up.
+    """
+    return jsonify({"status": "healthy"}), 200
 
 
 if __name__ == "__main__":
