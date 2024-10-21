@@ -57,7 +57,7 @@ def read_data():
 
 # generate an id that does not already exist
 def generate_code(svgData):
-    code = ''.join([str(random.randint(1, 9)) for i in range(6)])
+    code = ''.join([str(random.randint(1, 8)) for i in range(6)])
     while code in svgData:
         code = generate_code(svgData)
     return code
@@ -68,9 +68,9 @@ def generate_code(svgData):
 class CodeConverter(BaseConverter):
     def to_python(self, value):
         # has six digits between 1 and 8
-        pattern = re.compile("[1-8]{6}")
+        pattern = re.compile("^[1-8]{6}$")
         # also has a length of six
-        if not pattern.match(value) or len(value) != 6:
+        if not pattern.match(value):
             logging.debug('Received request with invalid ID value')
             raise ValidationError('Invalid id value')
         return value
@@ -82,9 +82,9 @@ class CodeConverter(BaseConverter):
 app.url_map.converters['code'] = CodeConverter
 
 
-@app.route("/create/<string:title>", methods=["POST"])
+@app.route("/create", methods=["POST"])
 @cross_origin()
-def create(title):
+def create():
     if request.method == "POST":
         logging.debug('Create request received')
         try:
@@ -95,6 +95,7 @@ def create(title):
             svgData[id] = {"secret": bcrypt.generate_password_hash(secret)
                            .decode('utf-8'),
                            "data": req_data["data"],
+                           "title": req_data["title"],
                            "layer": req_data["layer"]}
             write_data(svgData)
             logging.debug('Created new channel with code '+id)
@@ -122,6 +123,7 @@ def update(id):
                                    bcrypt.generate_password_hash(
                                     req_data["secret"]).decode('utf-8'),
                                    "data": req_data["data"],
+                                   "title": req_data["title"],
                                    "layer": req_data["layer"]}
                     write_data(svgData)
                     logging.debug('Updated graphic')
@@ -134,6 +136,7 @@ def update(id):
                                bcrypt.generate_password_hash(
                                 req_data["secret"]).decode('utf-8'),
                                "data": req_data["data"],
+                               "title": req_data["title"],
                                "layer": req_data["layer"]}
                 write_data(svgData)
                 logging.debug('TEMP: Created new channel using update!')
@@ -153,9 +156,9 @@ def update(id):
 def display(id):
     if request.method == "GET":
         logging.debug('Display request received')
-        try:
-            svgData = read_data()
-            if id in svgData:
+        svgData = read_data()
+        if id in svgData:
+            try:
                 response = Response()
                 response.mimetype = "application/json"
                 response.set_data(json.dumps({"renderings": [
@@ -166,12 +169,12 @@ def display(id):
                 response.make_conditional(request)
                 logging.debug('Sending tactile response')
                 return response
-            else:
-                logging.debug('ID does not exist')
-                return abort(404)
-        except Exception as e:
-            logging.debug(e)
-            abort(Response(response=e))
+            except Exception as e:
+                logging.debug(e)
+                abort(Response(response=e))
+        else:
+            logging.debug('ID does not exist')
+            return abort(404)
 
 
 @app.route("/", methods=["POST", "GET"])
