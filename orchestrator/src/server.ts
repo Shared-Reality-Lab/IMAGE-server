@@ -56,7 +56,8 @@ async function measureExecutionTime<T>(label:string, fn: () => Promise<T>): Prom
         return result;
     } finally {
         const end = performance.now();
-        console.log(`[Timing] ${label} took ${end - start}.toFixed(3)} ms`)
+        const duration = (end - start).toFixed(3)
+        console.log(`[Timing] ${label} took ${duration} ms`)
     }
 }
 
