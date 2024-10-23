@@ -390,7 +390,13 @@ services:
     image: ghcr.io/shared-reality-lab/image-handler-svg-action-recognition:${REGISTRY_TAG}
     labels:
         ca.mcgill.a11y.image.handler: enable
-
+ 
+  monarch-link-app:
+    profiles: [test, default]
+    image: "ghcr.io/shared-reality-lab/image-service-monarch-link-app:${REGISTRY_TAG}"
+    restart: unless-stopped
+    networks:
+      - traefik
 # end - unicorn exclusive services        
 volumes:
   sc-store:

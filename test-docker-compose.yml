@@ -104,6 +104,15 @@ services:
               device_ids: ['0']
               capabilities: ["gpu", "utility", "compute"]
 
+monarch-link-app:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.monarch-link-app.rule=Host(`monarch.unicorn.cim.mcgill.ca`)"
+      - "traefik.http.routers.monarch-link-app.tls.certresolver=myresolver"
+      - traefik.docker.network=traefik
+    environment:
+      - SERVER_NAME=unicorn.cim.mcgill.ca
+      
   object-grouping:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
