@@ -98,3 +98,12 @@ IMAGE uses Memcached as in-memory data store. Cache is implemented using [MemJS]
 
   cache key is the [object-hash](https://www.npmjs.com/package/object-hash) generated for the object `{reqData, preprocessor}`
 
+## Supported Labels
+
+The orchestrator recognizes and configures preprocessors and handlers through the use of different labels applied to docker services. The supported labels are:
+
+* `ca.mcgill.a11y.image.preprocessor` - A number indicating that the service is a preprocessor and the [priority group](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-Handlers,-Preprocessors-and-Services) it belongs to.
+* `ca.mcgill.a11y.image.handler` - The string `enable` to indicate the service is a handler.
+* `ca.mcgill.a11y.image.port` - If the service does not run on port 80, the port number requests should be directed to.
+* `ca.mcgill.a11y.image.cacheTimeout` - The number of seconds before cache values expire for a service. A value of 0 (the default) disables the cache.
+* `ca.mcgill.a11y.image.route` - A comma (not space) delimited list of "routes" that a service belongs to. If unset, this defaults to "default". Client requests can specify a route to use (e.g., "followup") and the orchestrator will only call components that use that route. See [the specification in this comment](https://github.com/Shared-Reality-Lab/IMAGE-server/issues/862#issuecomment-2297296192) for context.
