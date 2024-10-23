@@ -396,13 +396,6 @@ services:
     profiles: [test, default]
     image: "ghcr.io/shared-reality-lab/image-service-monarch-link-app:${REGISTRY_TAG}"
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.monarch-link-app.rule=Host(`monarch.unicorn.cim.mcgill.ca`)"
-      - "traefik.http.routers.monarch-link-app.tls.certresolver=myresolver"
-      - traefik.docker.network=traefik
-    environment:
-      - SERVER_NAME=unicorn.cim.mcgill.ca
     networks:
       - traefik
 # end - unicorn exclusive services        
