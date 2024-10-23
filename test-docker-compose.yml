@@ -14,9 +14,9 @@ services:
       - SERVER_NAME=unicorn.cim.mcgill.ca
     volumes:
       # Following volume mounts are used only by the IMAGE project's website, not required for IMAGE server 
-      - ./auditory-haptic-graphics-website/html:/var/www/html:ro
-      - ./auditory-haptic-graphics-website/image.conf:/etc/nginx/templates/image.conf.template:ro
-      - ./auditory-haptic-graphics-website/passwords:/etc/nginx/passwords
+      - ./IMAGE-website/html:/var/www/html:ro
+      - ./IMAGE-website/image.conf:/etc/nginx/templates/image.conf.template:ro
+      - ./IMAGE-website/passwords:/etc/nginx/passwords
       - ./resources/current:/var/www/resources:ro
       - website-logs:/var/log/nginx
     depends_on:
@@ -36,6 +36,12 @@ services:
 
 # override gpu selection on test environment
   semantic-segmentation:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
     deploy:
       resources:
         reservations:
@@ -98,7 +104,7 @@ services:
               device_ids: ['0']
               capabilities: ["gpu", "utility", "compute"]
 
-  monarch-link-app:
+monarch-link-app:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.monarch-link-app.rule=Host(`monarch.unicorn.cim.mcgill.ca`)"
@@ -106,3 +112,19 @@ services:
       - traefik.docker.network=traefik
     environment:
       - SERVER_NAME=unicorn.cim.mcgill.ca
+      
+  object-grouping:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  ocr-clouds-preprocessor:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 120s

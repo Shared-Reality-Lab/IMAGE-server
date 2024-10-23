@@ -1,6 +1,35 @@
 Beta quality: Useful enough for testing by end-users.
 
-This preprocessor classifies whether the input image is a picture or a chart. The preprocessor is trained from scratch using transfer learning. The following datasets were used in training our preprocessor
+This preprocessor classifies whether the input image is a photograph, chart, text, or other.
+It uses an LLM model running via ollama fronted by open-webui.
+There are several mandatory environment variables you must set.
+Example ollama.env file:
+
+```
+OLLAMA_URL=https://ollama.myserver.com/ollama/api/generate
+OLLAMA_API_KEY=sk-[YOUR_OLLAMA_SECRET KEY]
+OLLAMA_MODEL=llava:latest
+```
+
+## Libraries Used
+
+| Library | Link | Distribution License |
+| ------------- | ------------- | -------------|
+| Requests  | [Link](https://pypi.org/project/requests/)  | Apache 2.0|
+| Flask | [Link](https://pypi.org/project/Flask/)  | BSD-3-Clause License|
+| Jsonschema | [Link](https://pypi.org/project/jsonschema/)  | MIT License|
+| Werkzeug | [Link](https://pypi.org/project/Werkzeug/) | BSD-3 |
+| Gunicorn | [Link](https://github.com/benoitc/gunicorn) | MIT License(MIT) |
+
+The versions for each of these libraries is specified `requirements.txt`
+
+
+
+# Deprecated self-trained categoriser
+An earlier version of this preprocessor used a self-trained model, but the accuracy was limited compared to current LLM technology.
+For reference, the documentation is being preserved since this earlier version can be used by going back in git history.
+
+The preprocessor is trained from scratch using transfer learning. The following datasets were used in training our preprocessor
 ## Datasets used 
 
 
