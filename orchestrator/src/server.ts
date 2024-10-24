@@ -75,7 +75,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             // OK data returned
             if (resp.status === 200) {
                 try {
-                    const json = await resp.json();
+                    const json = await resp.clone().json(); // clone response before reading
                     if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                         (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
                     } else {
@@ -90,13 +90,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             } else if (resp.status === 204) {
                 continue;
             } else {
-                try {
-                    const result = await resp.json();
-                    throw result;
-                } catch (err) {
-                    console.error("Error occurred on fetch from " + resp.url);
-                    console.error(err);
-                }
+                console.error(`Preprocessor returned unexpected status: ${resp.status}`);
             }
         }
         promises = [];
@@ -144,9 +138,9 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                     clearTimeout(timeout);
 
                     if (response.status == 200) {
-                        const json = await response.json();
+                        const json = await response.clone().json(); // clone the response before reading
                         if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
-                            // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP  
+                            // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP 
                             SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
                             // store data in cache
                             // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
@@ -177,6 +171,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
 
     return data;
 }
+
 
 async function runPreprocessors(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
     if (data["preprocessors"] === undefined) {
