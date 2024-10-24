@@ -47,17 +47,17 @@ services:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['0']
+            device_ids: ['1']
             capabilities: ["gpu", "utility", "compute"]
 
   depth-map-generator:
     deploy:
       resources:
         reservations:
-            devices:
-            - driver: nvidia
-              device_ids: ['0']
-              capabilities: ["gpu", "utility", "compute"]
+          devices:
+          - driver: nvidia
+            device_ids: ['1']
+            capabilities: ["gpu", "utility", "compute"]
 
   action-recognition:
     deploy:
@@ -65,7 +65,7 @@ services:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['0']
+            device_ids: ['1']
             capabilities: ["gpu", "utility", "compute"]
 
   object-detection:
@@ -74,7 +74,7 @@ services:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['0']
+            device_ids: ['1']
             capabilities: ["gpu", "utility", "compute"]
 
   espnet-tts:
@@ -83,7 +83,7 @@ services:
         reservations:
             devices:
             - driver: nvidia
-              device_ids: ['0']
+              device_ids: ['1']
               capabilities: ["gpu", "utility", "compute"]
 
   espnet-tts-fr:
@@ -92,7 +92,7 @@ services:
         reservations:
             devices:
             - driver: nvidia
-              device_ids: ['0']
+              device_ids: ['1']
               capabilities: ["gpu", "utility", "compute"]
 
   multilang-support:
@@ -101,7 +101,7 @@ services:
         reservations:
             devices:
             - driver: nvidia
-              device_ids: ['0']
+              device_ids: ['1']
               capabilities: ["gpu", "utility", "compute"]
 
   monarch-link-app:
@@ -112,7 +112,7 @@ services:
       - traefik.docker.network=traefik
     environment:
       - SERVER_NAME=unicorn.cim.mcgill.ca
-      
+
   object-grouping:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
