@@ -75,7 +75,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             // OK data returned
             if (resp.status === 200) {
                 try {
-                    const json = await resp.clone().json(); // clone response before reading
+                    const json = await resp.json();
                     if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                         (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
                     } else {
@@ -90,7 +90,13 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             } else if (resp.status === 204) {
                 continue;
             } else {
-                console.error(`Preprocessor returned unexpected status: ${resp.status}`);
+                try {
+                    const result = await resp.json();
+                    throw result;
+                } catch (err) {
+                    console.error("Error occurred on fetch from " + resp.url);
+                    console.error(err);
+                }
             }
         }
         promises = [];
@@ -104,74 +110,72 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
             currentPriorityGroup = Number(preprocessor[2]);
             console.log("Now on priority group " + currentPriorityGroup);
         }
-        // promise creation is wrapped in a measureExecutionTime call, which logs how long it taks to execute each preprocessor
-        const promise = measureExecutionTime(`Preprocessor "${preprocessor[0]}"`, async () => {
+        const promise = new Promise<Response | void>((resolve) => {
             const controller = new AbortController();
             const timeout = setTimeout(() => {
                 controller.abort();
             }, PREPROCESSOR_TIME_MS);
-
             // get value from cache for each preprocessor if it exists
             const cacheTimeOut = preprocessor[3] as number;
             const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
             const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
             
-            try { // attempt to retrieve the response from the cache first; wrapped in a try-catch for better error handling
-                const cacheValue = await serverCache.getResponseFromCache(hashedKey);
+            serverCache.getResponseFromCache(hashedKey).then((cacheValue) => {
                 if (cacheTimeOut > 0 && cacheValue && preprocessorName) {
+                    // Return the value from cache if found
                     console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
                     const cacheResponse = JSON.parse(cacheValue) as Response;
                     (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse;
-                    clearTimeout(timeout); // clear the timeout if cache is used
-                    return cacheResponse;
+                    resolve(cacheResponse);
                 } else {
                     // Call the preprocessor endpoint to get response
                     console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
-                    const response = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
-                        "method": "POST",
-                        "headers": {
-                            "Content-Type": "application/json"
-                        },
-                        "body": JSON.stringify(data),
-                        "signal": controller.signal
-                    });
-                    clearTimeout(timeout);
-
-                    if (response.status == 200) {
-                        const json = await response.clone().json(); // clone the response before reading
-                        if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
-                            // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP 
-                            SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
-                            // store data in cache
-                            // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
-                            if (cacheTimeOut > 0) {
-                                console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
-                                await serverCache.setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut);
-                                console.debug(`Saved Response for ${json["name"]} in cache with key ${hashedKey}`);
+                     // profile the fetch request
+                     measureExecutionTime(`Preprocessor "${preprocessor[0]}"`, async () => {
+                        fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify(data),
+                            "signal": controller.signal
+                        }).then(r => {
+                            clearTimeout(timeout);
+                            const response = r.clone();
+                            if (response.status === 200) {
+                                response.json().then((json) => {
+                                    if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
+                                        // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP    
+                                        SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
+                                        // store data in cache
+                                        // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
+                                        if (cacheTimeOut > 0) {
+                                            console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
+                                            serverCache.setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut).then(() => {
+                                                console.debug(`Saved Response for ${json["name"]} in cache with key ${hashedKey}`);
+                                            });
+                                        }
+                                    }
+                                });
                             }
-                        }
-                        return response;
-                    } else {
-                        return response;
-                    }
+                            resolve(r);
+                        }).catch(err => {
+                            console.error(`Error occurred fetching from ${preprocessor[0]}`);
+                            console.error(err);
+                            resolve();
+                        });
+                    });
                 }
-            } catch (err) {
-                console.error(`Error occurred fetching from ${preprocessor[0]}`);
-                console.error(err);
-                clearTimeout(timeout);
-            }
+            });
         });
-
         promises.push(promise);
     }
 
     if (promises.length > 0) {
         await awaitResponses();
     }
-
     return data;
 }
-
 
 async function runPreprocessors(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
     if (data["preprocessors"] === undefined) {
