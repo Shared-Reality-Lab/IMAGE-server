@@ -203,14 +203,16 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
             // make fetch call to preprocessor since value not found in cache
             try {
                 console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
-                resp = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
-                    "method": "POST",
-                    "headers": {
-                        "Content-Type": "application/json"
-                    },
-                    "body": JSON.stringify(data),
-                    "signal": controller.signal
-                });
+                resp = await measureExecutionTime(`Preprocessor "${preprocessor[0]}"`, async () =>
+                    fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify(data),
+                        "signal": controller.signal
+                    })
+                );
                 clearTimeout(timeout);
             } catch (err) {
                 // Most likely a timeout
