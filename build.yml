@@ -21,6 +21,11 @@ services:
             context: .
             dockerfile: services/espnet-tts-fr/Dockerfile
         image: "espnet-tts-fr:latest"
+    monarch-link-app-service:
+        build:
+            context: .
+            dockerfile: services/monarch-link-app/Dockerfile
+        image: "monarch-link-app:latest"
     line-charts-preprocessor:
         build:
             context: .
