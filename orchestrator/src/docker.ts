@@ -20,8 +20,10 @@ export const docker = new Docker();
 const _PREPROCESSOR_LABEL_ = "ca.mcgill.a11y.image.preprocessor";
 const _HANDLER_LABEL_ = "ca.mcgill.a11y.image.handler";
 const _PORT_LABEL_ = "ca.mcgill.a11y.image.port";
-const _CACHE_TIMEOUT_LABEL = "ca.mcgill.a11y.image.cacheTimeout"; 
+const _CACHE_TIMEOUT_LABEL = "ca.mcgill.a11y.image.cacheTimeout";
 const _ORCHESTRATOR_ID_ = process.env.HOSTNAME as string;
+export const DEFAULT_ROUTE_NAME = "default";
+const _ROUTE_LABEL_ = "ca.mcgill.a11y.image.route";
 
 function getOrchestratorNetworks(containers: Docker.ContainerInfo[]): string[] {
     const container = containers.filter(c => c.Id.startsWith(_ORCHESTRATOR_ID_)).shift();
@@ -33,12 +35,28 @@ function getOrchestratorNetworks(containers: Docker.ContainerInfo[]): string[] {
     }
 }
 
-export function getPreprocessorServices(containers: Docker.ContainerInfo[]) {
+function isPartOfRoute(container: Docker.ContainerInfo, route: string) {
+    const containerName = container.Labels["com.docker.compose.service"];
+    if (container.Labels[_ROUTE_LABEL_] !== undefined) {
+        const routeString = container.Labels[_ROUTE_LABEL_];
+        if (/^\w+(,\w+)*$/.test(routeString)) {
+            const routes = container.Labels[_ROUTE_LABEL_].split(",");
+            console.debug(containerName + " has routes " + routes);
+            return routes.includes(route);
+        }
+        console.warn("String " + routeString + " is not a valid route label (" + containerName + ")");
+    }
+    // Fallback case - should not be reached when a valid route label is set
+    console.info("Using default route (\"" + DEFAULT_ROUTE_NAME + "\") for " + containerName);
+    return route === DEFAULT_ROUTE_NAME;
+}
+
+export function getPreprocessorServices(containers: Docker.ContainerInfo[], route: string) {
     const orchestratorNetworks = getOrchestratorNetworks(containers);
     const activePreprocessors = containers.filter(container => {
         const matchingNetworks = Object.values(container.NetworkSettings.Networks)
                                     .filter(network => orchestratorNetworks.includes(network.NetworkID));
-        return (container.State === "running") && (container.Labels[_PREPROCESSOR_LABEL_]) && (matchingNetworks.length > 0);
+        return (container.State === "running") && (container.Labels[_PREPROCESSOR_LABEL_]) && (matchingNetworks.length > 0) && isPartOfRoute(container, route);
     });
     return activePreprocessors.sort((first, second) => {
         const firstNum = Number(first.Labels[_PREPROCESSOR_LABEL_]);
@@ -62,12 +80,12 @@ export function getPreprocessorServices(containers: Docker.ContainerInfo[]) {
     });
 }
 
-export function getHandlerServices(containers: Docker.ContainerInfo[]) {
+export function getHandlerServices(containers: Docker.ContainerInfo[], route: string) {
     const orchestratorNetworks = getOrchestratorNetworks(containers);
     const activeHandlers = containers.filter(container => {
         const matchingNetworks = Object.values(container.NetworkSettings.Networks)
                                     .filter(network => orchestratorNetworks.includes(network.NetworkID));
-        return (container.State === "running") && (container.Labels[_HANDLER_LABEL_]) && (container.Labels[_HANDLER_LABEL_] === "enable") && (matchingNetworks.length > 0);
+        return (container.State === "running") && (container.Labels[_HANDLER_LABEL_]) && (container.Labels[_HANDLER_LABEL_] === "enable") && (matchingNetworks.length > 0) && isPartOfRoute(container, route);
     });
     return activeHandlers.map(container => {
         const portLabel = container.Labels[_PORT_LABEL_];
