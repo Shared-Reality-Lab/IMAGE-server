@@ -31,14 +31,6 @@ import definitionsJSON from "./schemas/definitions.json";
 import { docker, getPreprocessorServices, getHandlerServices, DEFAULT_ROUTE_NAME } from "./docker";
 import { ServerCache } from "./server-cache";
 
-// define the PerformanceObserver
-const obs = new PerformanceObserver((list) => {
-    list.getEntries().forEach(entry => {
-        console.log(`[PerformanceObserver] ${entry.name}: Duration: ${entry.duration.toFixed(3)} ms`);
-    });
-});
-obs.observe({ entryTypes: ['measure'] }); // Only observe 'measure' entries
-
 const app = express();
 const serverCache = new ServerCache();
 const memjsClient = serverCache.memjsClient;
