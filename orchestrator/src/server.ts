@@ -57,8 +57,6 @@ const BASE_LOG_PATH = path.join("/var", "log", "IMAGE");
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
-const performanceLogs = [];
-
 async function measureExecutionTime<T>(label:string, fn: () => Promise<T>): Promise<T> {
     /*
     Metrics Logged:
@@ -92,7 +90,6 @@ async function measureExecutionTime<T>(label:string, fn: () => Promise<T>): Prom
             timestamp: new Date().toISOString()
         };
         console.log(`[Timing] ${label}: Execution Time: ${logEntry.executionTimeMs} ms, CPU Time: ${logEntry.cpuTimeMs} ms, Normalized CPU Usage: ${logEntry.normalizedCpuUsagePercent}%`);
-        performanceLogs.push(logEntry); // Add to array for later extraction
     }
 }
 
