@@ -21,8 +21,8 @@ import fs from "fs/promises";
 import path from "path";
 import hash from "object-hash";
 import { validate, version } from "uuid";
-import { performance } from "perf_hooks"; // https://nodejs.org/api/perf_hooks.html
-
+import { performance, PerformanceObserver } from "perf_hooks"; // https://nodejs.org/api/perf_hooks.html
+import os from "os"; // Import 'os' to get the number of CPU cores
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
 import preprocessorResponseSchemaJSON from "./schemas/preprocessor-response.schema.json";
@@ -30,6 +30,14 @@ import responseSchemaJSON from "./schemas/response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 import { docker, getPreprocessorServices, getHandlerServices, DEFAULT_ROUTE_NAME } from "./docker";
 import { ServerCache } from "./server-cache";
+
+// define the PerformanceObserver
+const obs = new PerformanceObserver((list) => {
+    list.getEntries().forEach(entry => {
+        console.log(`[PerformanceObserver] ${entry.name}: Duration: ${entry.duration.toFixed(3)} ms`);
+    });
+});
+obs.observe({ entryTypes: ['measure'] }); // Only observe 'measure' entries
 
 const app = express();
 const serverCache = new ServerCache();
@@ -49,15 +57,42 @@ const BASE_LOG_PATH = path.join("/var", "log", "IMAGE");
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
+const performanceLogs = [];
+
 async function measureExecutionTime<T>(label:string, fn: () => Promise<T>): Promise<T> {
-    const start = performance.now()
+    /*
+    Metrics Logged:
+    - Execution Time: The total wall-clock time (in milliseconds) taken to complete the task.
+    - CPU Time: The cumulative CPU time (in milliseconds) consumed by the task across all CPU cores.
+    - Normalized CPU Usage: The CPU usage as a percentage, normalized based on the number of CPU cores available.
+    
+    sample output:
+    "[Timing] {label}: Execution Time: {duration} ms, CPU Time: {cpuTime} ms, Normalized CPU Usage: {cpuUsagePercentage}%"
+     */
+
+    const startTime = performance.now();
+    const startCpuUsage = process.cpuUsage();
+    const coreCount = os.cpus().length; // number of CPU cores
+
     try {
         const result = await fn();
         return result;
     } finally {
-        const end = performance.now();
-        const duration = (end - start).toFixed(3)
-        console.log(`[Timing] ${label} took ${duration} ms`)
+        const endTime = performance.now();
+        const duration = parseFloat((endTime - startTime).toFixed(3)); // wall-clock duration in milliseconds
+        const endCpuUsage = process.cpuUsage(startCpuUsage);
+        const cpuTime = parseFloat(((endCpuUsage.user + endCpuUsage.system) / 1000).toFixed(3)); // CPU time in milliseconds
+        // Normalize CPU Usage as a percentage of wall-clock duration and number of cores -- https://stackoverflow.com/questions/74776323/trying-to-get-normalized-cpu-usage-for-node-process
+        const cpuUsagePercentage = parseFloat(((cpuTime / (duration * coreCount)) * 100).toFixed(3));
+        const logEntry = {
+            label: label,
+            executionTimeMs: duration,
+            cpuTimeMs: cpuTime,
+            normalizedCpuUsagePercent: cpuUsagePercentage,
+            timestamp: new Date().toISOString()
+        };
+        console.log(`[Timing] ${label}: Execution Time: ${logEntry.executionTimeMs} ms, CPU Time: ${logEntry.cpuTimeMs} ms, Normalized CPU Usage: ${logEntry.normalizedCpuUsagePercent}%`);
+        performanceLogs.push(logEntry); // Add to array for later extraction
     }
 }
 
