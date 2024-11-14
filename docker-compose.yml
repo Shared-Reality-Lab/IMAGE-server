@@ -92,6 +92,18 @@ services:
         ./config/ollama.env
 
 
+  graphic-caption:
+      profiles: [production, test, default]
+      image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-caption:${REGISTRY_TAG}
+      restart: unless-stopped
+      labels:
+        ca.mcgill.a11y.image.preprocessor: 1
+        ca.mcgill.a11y.image.port: 5000
+        ca.mcgill.a11y.image.cacheTimeout: 3600
+      env_file:
+        ./config/ollama.env
+
+
   graphic-tagger:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:${REGISTRY_TAG}
