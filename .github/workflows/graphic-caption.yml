@@ -1,7 +1,7 @@
 name: Graphic Caption
 on:
   push:
-    branches: [ main ]
+    branches: [ main, graphic-caption ]
     tags: [ "preprocessor-graphic-caption-[0-9]+.[0-9]+.[0-9]+" ]
     paths: [ "preprocessors/graphic-caption/**" ]
   pull_request:
