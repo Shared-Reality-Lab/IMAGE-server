@@ -254,23 +254,24 @@ def handle():
                             dimensions[1] - coords[i][1] * dimensions[1])
                 svg.append(p)
 
-        # Checking if graphic-caption preprocessor is present
-        if ("ca.mcgill.a11y.image.preprocessor.graphic-caption"
-                in preprocessors):
-            logging.debug("Adding title from "
-                          "graphic-caption")
-            caption = preprocessors["ca.mcgill.a11y.image."
-                                    "preprocessor.graphic-caption"][
-                              "caption"]
-        else:
-            logging.debug("graphic-caption not found. "
-                          "Adding default title.")
-            if len(obj_list) > 0:
-                if len(obj_list) > 1:
-                    obj_list[-1] = "and " + obj_list[-1] + "."
-                    caption += ", ".join(obj_list)
-                else:
-                    caption += obj_list[0] + "."
+        if len(obj_list) > 0:
+            if len(obj_list) > 1:
+                obj_list[-1] = "and " + obj_list[-1] + "."
+                caption += ", ".join(obj_list)
+            else:
+                caption += obj_list[0] + "."
+
+    # Checking if graphic-caption preprocessor is present
+    if ("ca.mcgill.a11y.image.preprocessor.graphic-caption"
+            in preprocessors):
+        logging.debug("Adding title from "
+                      "graphic-caption")
+        caption = preprocessors["ca.mcgill.a11y.image."
+                                "preprocessor.graphic-caption"][
+                            "caption"]
+    else:
+        logging.debug("graphic-caption not found. "
+                      "Adding default title.")
 
     title = draw.Title(caption)
     svg.append(title)
