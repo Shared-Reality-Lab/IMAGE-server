@@ -135,7 +135,7 @@ def handle():
 
     # Initialize svg if either object detection
     # or semantic segmentation is present
-    svg = draw.Drawing(dimensions[0], dimensions[1], 
+    svg = draw.Drawing(dimensions[0], dimensions[1],
                        origin=(0, -dimensions[1]))
     form = inflect.engine()
     caption = ""
