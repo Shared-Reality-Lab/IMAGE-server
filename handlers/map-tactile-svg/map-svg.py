@@ -114,7 +114,8 @@ def handle():
     # List of minor street types ('footway', 'crossing' and 'steps')
     # to be filtered out to simplify the resulting rendering
     remove_streets = ["footway", "crossing", "steps", "elevator"]
-    svg = draw.Drawing(dimensions[0], dimensions[1])
+    svg = draw.Drawing(dimensions[0], dimensions[1],
+                       origin=(0, -dimensions[1]))
 
     data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
     if "streets" in data:
@@ -185,14 +186,14 @@ def handle():
                         (node_coordinates[index][0] -
                          lon_min), scaled_latitude *
                         (node_coordinates[index][1] -
-                         lat_min))
+                         lat_min) - dimensions[1])
                     p.L(scaled_longitude *
                         (node_coordinates[index +
                                           1][0] -
                          lon_min), scaled_latitude *
                         (node_coordinates[index +
                                           1][1] -
-                         lat_min))
+                         lat_min) - dimensions[1])
 
                 g.append(p)
         svg.append(g)
@@ -203,7 +204,7 @@ def handle():
         targetData = preprocessor[
                                  "ca.mcgill.a11y.image.preprocessor.nominatim"]
         try:
-            latitude = (
+            latitude = (-dimensions[1] +
                         (float(targetData["lat"]) - lat_min)
                         * scaled_latitude)
             longitude = (
@@ -283,7 +284,7 @@ def handle():
             if POI["id"] in checkPOIs:
                 label, drawPOI = getNodeDescription(POI)
                 if drawPOI:
-                    latitude = (
+                    latitude = (-dimensions[1] +
                                 (POI["lat"] - lat_min)
                                 * scaled_latitude)
                     longitude = (
