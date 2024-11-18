@@ -135,7 +135,8 @@ def handle():
 
     # Initialize svg if either object detection
     # or semantic segmentation is present
-    svg = draw.Drawing(dimensions[0], dimensions[1])
+    svg = draw.Drawing(dimensions[0], dimensions[1],
+                       origin=(0, -dimensions[1]))
     form = inflect.engine()
     caption = ""
 
@@ -171,7 +172,7 @@ def handle():
                 y2 = objects[id]['dimensions'][3] * dimensions[1]
                 width = abs(x2 - x1)
                 height = abs(y2 - y1)
-                start_y1 = abs(dimensions[1] - y1 - height)
+                start_y1 = -(y1 + height)
                 g.append(
                     draw.Rectangle(
                         x1,
@@ -201,7 +202,7 @@ def handle():
                   ['dimensions'][3] * dimensions[1])
             width = abs(x2 - x1)
             height = abs(y2 - y1)
-            start_y1 = abs(dimensions[1] - y1 - height)
+            start_y1 = -(y1 + height)
             svg.append(
                 draw.Rectangle(
                     x1,
@@ -249,9 +250,9 @@ def handle():
                     for i in range(1, len(coords), 5):
                         if (i == 1):
                             p.M(coords[i][0] * dimensions[0],
-                                (dimensions[1] - coords[i][1] * dimensions[1]))
+                                (- coords[i][1] * dimensions[1]))
                         p.L(coords[i][0] * dimensions[0],
-                            dimensions[1] - coords[i][1] * dimensions[1])
+                            (- coords[i][1] * dimensions[1]))
                 svg.append(p)
 
         if len(obj_list) > 0:
