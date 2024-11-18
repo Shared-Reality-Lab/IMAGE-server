@@ -109,7 +109,6 @@ def depthgenerator():
     except jsonschema.exceptions.ValidationError as e:
         logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
-    
     # check content category from contentCategoriser
     preprocess_output = content.get("preprocessors", {})
     classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
@@ -122,12 +121,11 @@ def depthgenerator():
     else:
         logging.info("Content categorizer output missing. Skipping...")
         return "", 204
-    
+
     # check for image
     if "graphic" not in content:
         logging.info("Request is not a graphic. Skipping...")
         return "", 204  # No content
-    
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.depth-map-gen"
