@@ -261,6 +261,18 @@ def handle():
             else:
                 caption += obj_list[0] + "."
 
+    # Checking if graphic-caption preprocessor is present
+    if ("ca.mcgill.a11y.image.preprocessor.graphic-caption"
+            in preprocessors):
+        logging.debug("Adding title from "
+                      "graphic-caption")
+        caption = preprocessors["ca.mcgill.a11y.image."
+                                "preprocessor.graphic-caption"][
+                            "caption"]
+    else:
+        logging.debug("graphic-caption not found. "
+                      "Adding default title.")
+
     title = draw.Title(caption)
     svg.append(title)
     logging.debug("Generating final rendering")
