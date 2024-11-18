@@ -86,6 +86,11 @@ services:
             context: .
             dockerfile: ./preprocessors/graphic-tagger/Dockerfile
         image: "graphic-tagger:latest"
+    graphic-caption:
+        build:
+            context: .
+            dockerfile: ./preprocessors/graphic-caption/Dockerfile
+        image: "graphic-caption:latest"
     emotion-recognition:
         build:
             context: .
