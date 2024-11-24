@@ -10,9 +10,7 @@ RUN pip3 install --upgrade pip
 RUN pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
-WORKDIR /app
 COPY /preprocessors/object-detection-azure /app
-
 
 EXPOSE 5000
 ENV FLASK_APP=objdetect.py

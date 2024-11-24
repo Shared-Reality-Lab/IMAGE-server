@@ -1,19 +1,19 @@
 FROM node:alpine as builder
 
-
 WORKDIR /usr/src/app
 COPY orchestrator/*.js* ./
 RUN npm ci
-COPY orchestrator/src ./src
+
 COPY schemas src/schemas
+COPY orchestrator/src ./src
 RUN npm run build && npm prune --production
 
 FROM node:alpine as final
 
-RUN apk add memcached
+RUN apk add memcached supercronic
 # Set up for logging
 WORKDIR /var/log/IMAGE
-RUN apk add supercronic
+
 RUN chmod o+wx .
 
 WORKDIR /usr/src/app
