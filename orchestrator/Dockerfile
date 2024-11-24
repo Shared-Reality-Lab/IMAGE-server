@@ -18,8 +18,7 @@ RUN chmod o+wx .
 
 WORKDIR /usr/src/app
 COPY orchestrator/clean-cron ./clean-cron
-RUN chown node:node clean-cron
-RUN chmod 644 clean-cron
+RUN chown node:node clean-cron && chmod 644 clean-cron
 
 COPY --from=builder --chown=node:node /usr/src/app/*.js* ./
 COPY --from=builder --chown=node:node /usr/src/app/dist ./dist
