@@ -15,14 +15,8 @@ RUN pip3 install --upgrade pip && \
 
 COPY /schemas /usr/src/app/schemas
 
-#check if the model exists; download it if not
-RUN mkdir -p /usr/src/app/models && \
-    if [ ! -f "/usr/src/app/models/yolov8x.pt" ]; then \
-    echo "Model not found. Downloading..."; \
-    wget -O /usr/src/app/models/yolov8x.pt https://image.a11y.mcgill.ca/models/objectDetectionWeights/yolov8x.pt; \
-    else \
-    echo "Model already exists. Skipping download."; \
-    fi
+RUN wget https://image.a11y.mcgill.ca/models/objectDetectionWeights/yolov8x.pt
+
 COPY /preprocessors/yolov8 /usr/src/app 
 
 EXPOSE 5000
