@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y python3-opencv wget && rm -rf /var/lib/
 COPY /preprocessors/celebrity-detector/requirements.txt /app/requirements.txt
 
 RUN pip3 install --upgrade pip && \
-    pip install -r /app/requirements.txt
+    pip3 install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
 COPY /preprocessors/celebrity-detector /app

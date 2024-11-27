@@ -4,12 +4,11 @@ RUN adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
-RUN pip3 install --upgrade pip
 COPY /preprocessors/autour/requirements.txt /app/requirements.txt
-RUN pip3 install -r requirements.txt
+RUN pip3 install --upgrade pip && \
+    pip3 install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
-
 COPY /preprocessors/autour/ /app
 
 EXPOSE 5000

@@ -20,13 +20,14 @@ RUN pip3 install --upgrade pip && \
     pip3 install -r /app/requirements.txt
 # COPY ./requirements.txt /app/requirements.txt
 
+COPY /schemas /app/schemas
+# COPY ./schemas /app/schemas
+
 # good practice to remove the archive 
 RUN wget https://image.a11y.mcgill.ca/models/clothesDetector/yolo.zip && \
     unzip yolo.zip && \
     rm yolo.zip 
 
-COPY /schemas /app/schemas
-# COPY ./schemas /app/schemas
 COPY /preprocessors/clothes-detector /app
 # COPY ./ /app
 
