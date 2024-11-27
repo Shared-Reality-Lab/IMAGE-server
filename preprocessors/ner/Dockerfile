@@ -2,23 +2,25 @@ FROM ubuntu:20.04
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 
-RUN apt-get update -y \
-        && apt-get install openjdk-8-jdk -y \
-        && apt-get install python3-pip -y \
-        && export JAVA_HOME \
-        && apt-get clean \
-        && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    openjdk-8-jdk \
+    python3-pip \
+    gcc \
+    git \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 RUN adduser --disabled-password python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
+COPY /preprocessors/ner/requirements.txt /app/requirements.txt
+RUN pip3 install --upgrade pip && \
+    pip3 install -r /app/requirements.txt
+
 COPY /schemas /app/schemas
 COPY /preprocessors/ner/ /app
-
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y gcc git && rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install -r requirements.txt
 
 EXPOSE 5000
 ENV FLASK_APP=ner.py
