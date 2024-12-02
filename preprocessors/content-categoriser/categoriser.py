@@ -85,7 +85,7 @@ def categorise():
         logging.warn("OLLAMA_API_KEY usually starts with sk-, "
                      "but this one starts with: " + api_key[:3])
 
-    prompt = "Answer with only one word. " \
+    prompt = "Answer with only one word, and without punctuation. " \
              "Which of the following categories best describes this photo? "
     possible_categories = "photograph, chart, text, other"
 
