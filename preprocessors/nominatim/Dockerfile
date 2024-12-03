@@ -1,9 +1,10 @@
 FROM node:alpine as builder
 
 WORKDIR /usr/src/app
-COPY /preprocessors/nominatim/ /usr/src/app
+COPY /preprocessors/nominatim/package*.json ./
 RUN npm ci
 COPY /schemas src/schemas
+COPY /preprocessors/nominatim/ /usr/src/app
 RUN npm run build && npm prune --production
 
 FROM node:alpine as final

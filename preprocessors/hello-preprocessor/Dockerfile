@@ -6,8 +6,8 @@ WORKDIR /usr/src/app
 # Docker images are onions
 COPY /preprocessors/hello-preprocessor/package*.json ./
 RUN npm ci
-COPY /preprocessors/hello-preprocessor/ .
 COPY /schemas src/schemas
+COPY /preprocessors/hello-preprocessor/ .
 RUN npm run build
 
 ENV NODE_ENV=production
