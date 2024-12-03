@@ -1,12 +1,12 @@
-FROM python:3.9.5-alpine
+FROM python:3.11-alpine3.20
 
 RUN adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 COPY /preprocessors/autour/requirements.txt /app/requirements.txt
-RUN pip3 install --upgrade pip && \
-    pip3 install -r /app/requirements.txt
+RUN pip3 install --no-cache-dir --upgrade pip && \
+    pip3 install --no-cache-dir -r /app/requirements.txt
 
 COPY /schemas /app/schemas
 COPY /preprocessors/autour/ /app

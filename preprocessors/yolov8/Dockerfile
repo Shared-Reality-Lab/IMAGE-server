@@ -1,7 +1,7 @@
 FROM ultralytics/ultralytics:latest@sha256:af4572bf0df164d5708e4a1f50bddb5a74cb7d793fe46b7daf42b1768fbec608
 
 WORKDIR /usr/src/app
-RUN adduser --disabled-password python #
+RUN adduser --disabled-password python 
 ENV PATH="/usr/src/app/.local/bin:${PATH}"
 
 RUN apt-get update && \

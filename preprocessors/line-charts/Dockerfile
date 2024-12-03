@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.11-alpine3.20
 
 RUN adduser --disabled-password python
 WORKDIR /app
