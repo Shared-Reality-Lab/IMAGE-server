@@ -4,4 +4,4 @@ tqdm==4.67.1
 Flask==3.1.0
 flask_api==3.1
 jsonschema==4.23.0
-gunicorn==22.0.0
+gunicorn==23.0.0
