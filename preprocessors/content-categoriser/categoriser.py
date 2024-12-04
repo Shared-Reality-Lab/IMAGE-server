@@ -85,20 +85,24 @@ def categorise():
         logging.warn("OLLAMA_API_KEY usually starts with sk-, "
                      "but this one starts with: " + api_key[:3])
 
-    prompt = "Answer with only one word, and without punctuation. " \
-             "Which of the following categories best describes this photo? "
+    prompt = "Answer only in JSON with the format " \
+             '{"category": "YOUR_ANSWER"}. ' \
+             "Which of the following categories best " \
+             "describes this image, selecting from this enum: "
     possible_categories = "photograph, chart, text, other"
 
     request_data = {
         "model": ollama_model,
-        "prompt": prompt + possible_categories,
+        "prompt": prompt + "[" + possible_categories + "]",
         "images": [graphic_b64],
-        "stream": False,
+        "stream": "false",
+        # TODO: figure out if "format": json, should actually work
         "temperature": 0.0,
         "keep_alive": -1  # keep model loaded in memory indefinitely
     }
     logging.debug("serializing json from request_data dictionary")
     request_data_json = json.dumps(request_data)
+    logging.debug("serialization complete")
 
     request_headers = {
         "Content-Type": "application/json",
@@ -111,10 +115,27 @@ def categorise():
     logging.debug("ollama request response code: " + str(response.status_code))
 
     if response.status_code == 200:
-        response_text = response.text
-        data = json.loads(response_text)
-        # remove whitespace and force lowercase
-        graphic_category = data['response'].strip().lower()
+        data = json.loads(response.text)
+        graphic_category_json = data['response']
+
+        # extract the category value from the json returned by the LMM
+        try:
+            graphic_category = json.loads(graphic_category_json)['category']
+        except json.JSONDecodeError:
+            logging.warn("ollama request successful, "
+                         "but this does not look like json. "
+                         "Setting category to \"other\"")
+            logging.debug(f"raw response (pii) [{graphic_category_json}]")
+            graphic_category = "other"
+        except KeyError:
+            logging.warn("ollama request successful, "
+                         "but no category tag found in returned json. "
+                         "Setting category to \"other\"")
+            logging.debug(f"raw response (pii) [{graphic_category_json}]")
+            graphic_category = "other"
+
+        # is the found category  one of the ones we require?
+        graphic_category = graphic_category.strip().lower()  # fix minor
         if graphic_category in possible_categories.split(", "):
             logging.debug("ollama request successful: " + graphic_category)
         else:  # llamas are not to be trusted to pay attention to instructions
@@ -123,7 +144,7 @@ def categorise():
                          "Setting to \"other\"")
             graphic_category = "other"
     else:
-        logging.error("Error: {response.text}")
+        logging.error(f"Error: {response.text}")
         return jsonify("Invalid response from ollama"), 500
 
     # create data json and verify the content-categoriser schema is respected
