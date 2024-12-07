@@ -127,7 +127,7 @@ def categorise():
             ollama_error_msg = "no category tag found in returned json"
         except TypeError:  # have seen this when we just get a string back
             # TODO: investigate what is actually happening here!
-            ollama_error_msg = "unknown error decoding json. please investigate!"
+            ollama_error_msg = "unknown error decoding json. investigate!"
         finally:
             if ollama_error_msg is not None:
                 logging.error(ollama_error_msg)
