@@ -115,37 +115,35 @@ def categorise():
     logging.debug("ollama request response code: " + str(response.status_code))
 
     if response.status_code == 200:
-        data = json.loads(response.text)
-        graphic_category_json = data['response']
+        graphic_category_json = json.loads(response.text)['response']
 
         # extract the category value from the json returned by the LMM
+        ollama_error_msg = None
         try:
             graphic_category = json.loads(graphic_category_json)['category']
         except json.JSONDecodeError:
-            logging.warn("ollama request successful, "
-                         "but this does not look like json. "
-                         "Setting category to \"other\"")
-            logging.debug(f"raw response (pii) [{graphic_category_json}]")
-            graphic_category = "other"
+            ollama_error_msg = "this does not look like json"
         except KeyError:
-            logging.warn("ollama request successful, "
-                         "but no category tag found in returned json. "
-                         "Setting category to \"other\"")
-            logging.debug(f"raw response (pii) [{graphic_category_json}]")
-            graphic_category = "other"
+            ollama_error_msg = "no category tag found in returned json"
+        except TypeError:  # have seen this when we just get a string back
+            # TODO: investigate what is actually happening here!
+            ollama_error_msg = "unknown error decoding json. please investigate!"
+        finally:
+            if ollama_error_msg is not None:
+                logging.error(ollama_error_msg)
+                logging.debug(f"raw response (pii) [{graphic_category_json}]")
+                return jsonify("Invalid LLM results"), 204
 
         # is the found category  one of the ones we require?
-        graphic_category = graphic_category.strip().lower()  # fix minor
+        graphic_category = graphic_category.strip().lower()
         if graphic_category in possible_categories.split(", "):
-            logging.debug("ollama request successful: " + graphic_category)
+            logging.debug("category: " + graphic_category)
         else:  # llamas are not to be trusted to pay attention to instructions
-            logging.warn("ollama request successful, "
-                         f"but [{graphic_category}] is not a valid option. "
-                         "Setting to \"other\"")
-            graphic_category = "other"
+            logging.error(f"category [{graphic_category}] not a valid option")
+            return jsonify("Invalid LLM results"), 204
     else:
         logging.error(f"Error: {response.text}")
-        return jsonify("Invalid response from ollama"), 500
+        return jsonify("Invalid response from ollama"), 204
 
     # create data json and verify the content-categoriser schema is respected
     graphic_category_json = {"category": graphic_category}
