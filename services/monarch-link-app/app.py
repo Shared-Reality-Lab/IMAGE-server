@@ -97,6 +97,9 @@ def create():
                            "data": req_data["data"],
                            "title": req_data["title"],
                            "layer": req_data["layer"]}
+            # include source graphic if present
+            if "graphicBlob" in req_data:
+                svgData[id]["graphicBlob"] = req_data["graphicBlob"]
             write_data(svgData)
             logging.debug('Created new channel with code '+id)
             return {"id": id, "secret": secret}
@@ -125,6 +128,9 @@ def update(id):
                                    "data": req_data["data"],
                                    "title": req_data["title"],
                                    "layer": req_data["layer"]}
+                    # include source graphic if present
+                    if "graphicBlob" in req_data:
+                        svgData[id]["graphicBlob"] = req_data["graphicBlob"]
                     write_data(svgData)
                     logging.debug('Updated graphic')
                     return "Graphic in channel "+id+" has been updated!"
@@ -161,9 +167,12 @@ def display(id):
             try:
                 response = Response()
                 response.mimetype = "application/json"
-                response.set_data(json.dumps({"renderings": [
+                response_val = {"renderings": [
                                 {"data": {"graphic": svgData[id]["data"],
-                                          "layer": svgData[id]["layer"]}}]}))
+                                          "layer": svgData[id]["layer"]}}]}
+                if "graphicBlob" in svgData[id]:
+                    response_val["graphicBlob"] = svgData[id]["graphicBlob"]
+                response.set_data(json.dumps(response_val))
                 response.add_etag(hashlib.md5(
                     (svgData[id]["data"]+svgData[id]["layer"]).encode()))
                 response.make_conditional(request)
