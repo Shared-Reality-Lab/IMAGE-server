@@ -1,4 +1,7 @@
-FROM pytorch/pytorch:1.13.0-cuda11.6-cudnn8-runtime
+ARG PYTORCH="2.5.1"
+ARG CUDA="12.4"
+ARG CUDNN="9"
+FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-runtime
 
 #system dependencies
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv wget git && rm -rf /var/lib/apt/lists/*
