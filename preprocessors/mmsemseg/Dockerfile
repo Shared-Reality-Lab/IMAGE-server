@@ -21,12 +21,11 @@ RUN apt-get update && \
     openjdk-11-jre-headless \
     wget \
     # MMDet Requirements
-    ffmpeg libsm6 libxext6 git ninja-build libglib2.0-0 libsm6 libxrender-dev libxext6 \
-    curl && \
+    ffmpeg libsm6 libxext6 git ninja-build libglib2.0-0 libsm6 libxrender-dev libxext6 curl && \
     rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/opt/conda/bin:$PATH"
-RUN export FORCE_CUDA=1
+RUN export FORCE_CUDA=1 
 
 # MMLAB
 ARG PYTORCH
@@ -39,8 +38,8 @@ RUN adduser --disabled-password python
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 COPY /preprocessors/mmsemseg/requirements.txt /app/requirements.txt
-RUN pip install --upgrade pip
-RUN pip install -r /app/requirements.txt
+RUN pip install --upgrade pip && \
+    pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
 COPY /preprocessors/mmsemseg/ /app
