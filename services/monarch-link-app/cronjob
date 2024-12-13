@@ -1,0 +1,1 @@
+*/10 * * * * python3 /usr/src/app/clean_up.py >> /usr/src/app/cron.log 2>&1

@@ -1,6 +1,6 @@
-FROM python:3.13
+FROM python:3.11-alpine3.20
 
-RUN apt-get install libcairo2
+RUN apk add supercronic
 
 RUN adduser --disabled-password python
 WORKDIR /usr/src/app
@@ -16,4 +16,5 @@ RUN chown -R python:python /usr/src/app
 
 EXPOSE 80
 USER python
-CMD ["gunicorn", "app:app", "-b", "0.0.0.0:80", "--capture-output", "--log-level=debug" ]
+CMD supercronic -quiet /usr/src/app/cronjob \
+    & gunicorn app:app -b 0.0.0.0:80 --capture-output --log-level=debug
