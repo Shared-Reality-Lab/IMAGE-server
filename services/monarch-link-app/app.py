@@ -17,6 +17,7 @@
 from flask import Flask, request, abort, Response
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS, cross_origin
+from datetime import datetime
 import logging
 import hashlib
 import json
@@ -96,7 +97,8 @@ def create():
                            .decode('utf-8'),
                            "data": req_data["data"],
                            "title": req_data["title"],
-                           "layer": req_data["layer"]}
+                           "layer": req_data["layer"],
+                           "timestamp": datetime.timestamp(datetime.now())}
             # include source graphic if present
             if "graphicBlob" in req_data:
                 svgData[id]["graphicBlob"] = req_data["graphicBlob"]
@@ -127,7 +129,9 @@ def update(id):
                                     req_data["secret"]).decode('utf-8'),
                                    "data": req_data["data"],
                                    "title": req_data["title"],
-                                   "layer": req_data["layer"]}
+                                   "layer": req_data["layer"],
+                                   "timestamp": datetime.timestamp(
+                                       datetime.now())}
                     # include source graphic if present
                     if "graphicBlob" in req_data:
                         svgData[id]["graphicBlob"] = req_data["graphicBlob"]
@@ -143,7 +147,11 @@ def update(id):
                                 req_data["secret"]).decode('utf-8'),
                                "data": req_data["data"],
                                "title": req_data["title"],
-                               "layer": req_data["layer"]}
+                               "layer": req_data["layer"],
+                               "timestamp": datetime.timestamp(datetime.now())}
+                # include source graphic if present
+                if "graphicBlob" in req_data:
+                    svgData[id]["graphicBlob"] = req_data["graphicBlob"]
                 write_data(svgData)
                 logging.debug('TEMP: Created new channel using update!')
                 return ("New channel created with code "+id +
