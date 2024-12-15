@@ -26,6 +26,11 @@ services:
             context: .
             dockerfile: services/monarch-link-app/Dockerfile
         image: "monarch-link-app:latest"
+    tat-service:
+        build:
+            context: .
+            dockerfile: services/tat/Dockerfile
+        image: "tat:latest"
     line-charts-preprocessor:
         build:
             context: .
