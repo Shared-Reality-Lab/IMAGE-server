@@ -4,15 +4,10 @@ FROM node:20-alpine as build
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy the package.json and package-lock.json to install dependencies
-# COPY /services/tat/IMAGE-TactileAuthoring/package*.json ./
-
-# Copy complete application code
-COPY /services/tat/IMAGE-TactileAuthoring/ .
-
-# Install only production dependencies
-#ENV NODE_ENV=production
-#RUN npm install
+# Clone git repo into app dir
+RUN apk add git
+RUN git clone https://github.com/Shared-Reality-Lab/IMAGE-TactileAuthoring.git \
+    --depth 1 --single-branch .
 
 # Install dependencies
 RUN npm install
