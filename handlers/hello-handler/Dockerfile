@@ -8,8 +8,8 @@ COPY /handlers/hello-handler/package*.json ./
 RUN npm ci
 COPY /handlers/hello-handler/*.json ./
 COPY /handlers/hello-handler/.eslintrc.js ./
-COPY /handlers/hello-handler/src ./src
 COPY /schemas src/schemas
+COPY /handlers/hello-handler/src ./src
 RUN npm run build
 
 ENV NODE_ENV=production

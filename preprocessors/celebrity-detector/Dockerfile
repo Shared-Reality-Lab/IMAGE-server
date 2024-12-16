@@ -8,13 +8,11 @@ RUN apt-get update && apt-get install -y python3-opencv wget && rm -rf /var/lib/
 
 COPY /preprocessors/celebrity-detector/requirements.txt /app/requirements.txt
 
-RUN pip3 install --upgrade pip
-RUN pip install -r /app/requirements.txt
+RUN pip3 install --upgrade pip && \
+    pip3 install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
-WORKDIR /app
 COPY /preprocessors/celebrity-detector /app
-
 
 EXPOSE 5000
 ENV FLASK_APP=celebrity-detector.py
