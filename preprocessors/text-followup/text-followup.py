@@ -82,7 +82,7 @@ def followup():
               "Answer in JSON with two keys. "
               "The first key is \"response_brief\" and is a single sentence "
               "that can stand on its own. "
-              "The second key is \"response full\" and provides maximum "
+              "The second key is \"response_full\" and provides maximum "
               "three sentences of additional detail, "
               "without repeating the information in the first key. "
               "If there is no more detail you can provide, say, "
@@ -127,23 +127,29 @@ def followup():
     logging.debug("ollama request response code: " + str(response.status_code))
 
     if response.status_code == 200:
-        response_text = response.text
-        data = json.loads(response_text)
-
-        # break response into two separate fields, brief and full
-        followup_response_split = data['response'].split("\n", 1)
-        followup_brief = followup_response_split[0]
-        if len(followup_response_split) > 1:
-            followup_full = followup_response_split[1]
-        else:
-            followup_full = "No more details."
+        ollama_error_msg = None
+        try:
+            followup_response_text = json.loads(response.text)['response']
+            # logging.debug("(pii)" + followup_response_text)
+            followup_response_json = json.loads(followup_response_text)
+            # logging.debug("(pii)" + followup_response_json)
+        except json.JSONDecodeError:
+            ollama_error_msg = "this does not look like json"
+        except KeyError:
+            ollama_error_msg = "no response tag found in returned json"
+        except TypeError:  # have seen this when we just get a string back
+            # TODO: investigate what is actually happening here!
+            ollama_error_msg = "unknown error decoding json. investigate!"
+        finally:
+            if ollama_error_msg is not None:
+                logging.error(ollama_error_msg)
+                logging.debug(f"raw response (pii) [{followup_response_json}]")
+                return jsonify("Invalid LLM results"), 204
     else:
         logging.error("Error: {response.text}")
         return jsonify("Invalid response from ollama"), 204
 
-    # create data json and verify the text-followup schema is respected
-    followup_response_json = {"response_brief": followup_brief,
-                              "response_full":  followup_full}
+    # check if ollama returned valid json that follows schema
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(followup_response_json)
@@ -168,6 +174,7 @@ def followup():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # all done; return to orchestrator
+    logging.debug(response)
     return response
 
 
