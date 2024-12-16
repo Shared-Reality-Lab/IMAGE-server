@@ -77,15 +77,19 @@ def followup():
 
     # TODO: add previous request history before new prompt
 
-    prompt = ("Answer with two paragraphs. "
-              "The first paragraph should be a single sentence "
+
+    prompt = ("I am blind so I cannot see this image. "
+              "Answer in JSON with two keys. "
+              "The first key is \"response_brief\" and is a single sentence "
               "that can stand on its own. "
-              "The second paragraph should be no more than 3 sentences, "
-              "and provide additional detail, without repeating the "
-              "information in the first sentence. "
+              "The second key is \"response full\" and provides maximum "
+              "three sentences of additional detail, "
+              "without repeating the information in the first key. "
               "If there is no more detail you can provide, say, "
-              "\"I don't have any more details.\" instead of saying nothing."
-              " Note I am blind so I cannot see this image. " +
+              "\"I don't have any more details\" for the second key "
+              "instead of saying nothing. "
+              "Remember to answer only in JSON, or I will be very angry! "
+              "Here is my request: " +
               content["followup"]["query"])
 
     # prepare ollama request
@@ -98,7 +102,7 @@ def followup():
         logging.debug("OLLAMA_API_KEY looks properly formatted: " +
                       api_key[:3] + "[redacted]")
     else:
-        logging.warn("OLLAMA_API_KEY usually starts with sk-, "
+        logging.warning("OLLAMA_API_KEY usually starts with sk-, "
                      "but this one starts with: " + api_key[:3])
 
     request_data = {
@@ -135,7 +139,7 @@ def followup():
             followup_full = "No more details."
     else:
         logging.error("Error: {response.text}")
-        return jsonify("Invalid response from ollama"), 500
+        return jsonify("Invalid response from ollama"), 204
 
     # create data json and verify the text-followup schema is respected
     followup_response_json = {"response_brief": followup_brief,
