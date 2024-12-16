@@ -13,6 +13,6 @@ COPY /schemas /app/schemas
 COPY /preprocessors/text-followup/ /app
 
 EXPOSE 5000
-ENV FLASK_APP=followup.py
+ENV FLASK_APP=text-followup.py
 USER python
-CMD [ "gunicorn", "followup:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
+CMD [ "gunicorn", "text-followup:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
