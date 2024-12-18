@@ -409,6 +409,13 @@ services:
     restart: unless-stopped
     networks:
       - traefik
+  
+  tat:
+    profiles: [test, default]
+    image: "ghcr.io/shared-reality-lab/image-service-tat:${REGISTRY_TAG}"
+    restart: unless-stopped
+    networks:
+      - traefik
 # end - unicorn exclusive services        
 volumes:
   sc-store:
