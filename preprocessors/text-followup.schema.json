@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/text-followup.schema.json",
+    "type": "object",
+    "title": "Text Followup",
+    "description": "Text-only response to a followup query containing a graphic and prompt from the user.",
+    "properties": {
+        "response_brief": {
+            "description": "A single sentence text followup response that is generated for the input graphic",
+            "type": "string",
+            "minLength": 0
+        },
+        "response_full": {
+            "description": "A few additional sentences of followup response that is generated for the input graphic",
+            "type": "string",
+            "minLength": 0
+        }
+    },
+    "required": ["response_brief"]
+}
