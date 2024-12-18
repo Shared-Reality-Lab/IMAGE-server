@@ -1,0 +1,1 @@
+*/10 * * * * python3 /usr/src/app/clean_up.py >> /proc/1/fd/1 2>&1
