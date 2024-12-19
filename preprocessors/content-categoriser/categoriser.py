@@ -131,7 +131,8 @@ def categorise():
         finally:
             if ollama_error_msg is not None:
                 logging.error(ollama_error_msg)
-                logging.debug(f"raw response (pii) [{graphic_category_json}]")
+                # TODO: add back next line once IMAGE-server #912 is complete
+                # logging.debug(f"response (pii) [{graphic_category_json}]")
                 return jsonify("Invalid LLM results"), 204
 
         # is the found category  one of the ones we require?
