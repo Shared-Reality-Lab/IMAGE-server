@@ -113,6 +113,15 @@ services:
     environment:
       - SERVER_NAME=unicorn.cim.mcgill.ca
 
+  tat:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tat.rule=Host(`tat.unicorn.cim.mcgill.ca`)"
+      - "traefik.http.routers.tat.tls.certresolver=myresolver"
+      - traefik.docker.network=traefik
+    environment:
+      - SERVER_NAME=unicorn.cim.mcgill.ca
+
   object-grouping:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]

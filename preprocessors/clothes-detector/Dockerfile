@@ -7,6 +7,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"

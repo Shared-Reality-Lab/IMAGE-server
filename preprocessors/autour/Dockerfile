@@ -5,7 +5,6 @@ WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 COPY /preprocessors/autour/requirements.txt /app/requirements.txt
-
 RUN pip3 install --upgrade pip && \
     pip3 install -r /app/requirements.txt
 
