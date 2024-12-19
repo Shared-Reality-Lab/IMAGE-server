@@ -125,7 +125,8 @@ def categorise():
         validator.validate(graphic_caption_json)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
-        logging.debug(e)  # print full error only in debug, due to PII
+        # TODO: add back next line once IMAGE-server #941 is complete
+        # logging.debug(e)  # print full error only in debug, due to PII
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # create full response & check meets overall preprocessor response schema
@@ -140,7 +141,8 @@ def categorise():
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
-        logging.debug(e)  # print full error only in debug, due to PII
+        # TODO: add back next line once IMAGE-server #912 is complete
+        # logging.debug(e)  # print full error only in debug, due to PII
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # all done; return to orchestrator
