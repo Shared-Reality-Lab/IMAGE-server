@@ -85,11 +85,10 @@ def categorise():
         logging.warn("OLLAMA_API_KEY usually starts with sk-, "
                      "but this one starts with: " + api_key[:3])
 
-    prompt = "Answer with no more than one sentence. " \
-             "I am blind, so I cannot see this image. " \
+    prompt = "I am blind, so I cannot see this image. " \
              "Tell me the most important aspects of it, including " \
-             "style, content, and the most significant aspect of the image."
-
+             "style, content, and the most significant aspect of the image." \
+             "Answer with maximum one sentence. "
     request_data = {
         "model": ollama_model,
         "prompt": prompt,
