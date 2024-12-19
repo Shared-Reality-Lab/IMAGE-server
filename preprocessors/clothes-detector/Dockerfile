@@ -1,4 +1,11 @@
-FROM pytorch/pytorch:2.4.1-cuda11.8-cudnn9-runtime
+ARG PYTORCH="2.5.1"
+ARG CUDA="12.4"
+ARG CUDNN="9"
+FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 ENV DEBIAN_FRONTEND=noninteractive
 
