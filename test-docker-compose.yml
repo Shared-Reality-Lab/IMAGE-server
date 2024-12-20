@@ -36,12 +36,6 @@ services:
 
 # override gpu selection on test environment
   semantic-segmentation:
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 60s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
     deploy:
       resources:
         reservations:
@@ -121,19 +115,3 @@ services:
       - traefik.docker.network=traefik
     environment:
       - SERVER_NAME=unicorn.cim.mcgill.ca
-
-  object-grouping:
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 60s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
-
-  ocr-clouds-preprocessor:
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 60s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
