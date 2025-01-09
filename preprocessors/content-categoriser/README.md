@@ -1,6 +1,7 @@
 Beta quality: Useful enough for testing by end-users.
 
 This preprocessor classifies whether the input image is a photograph, chart, text, or other.
+Currently, the IMAGE reference server is <a href="https://www.llama.com/">Built with Llama</a> (and is subject to their <a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/USE_POLICY.md">Acceptable Use Policy</a> and <a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE">License</a>), but any other ollama-compatible model can be chosen.
 It uses an LLM model running via ollama fronted by open-webui.
 There are several mandatory environment variables you must set.
 Example ollama.env file:
