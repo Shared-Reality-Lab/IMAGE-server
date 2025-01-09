@@ -109,10 +109,10 @@ async function executePreprocessor(preprocessor: (string | number)[],data: Recor
   
         // fetch from the preprocessor
         const response = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-          signal: controller.signal,
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+            signal: controller.signal,
         });
   
         clearTimeout(timeout);
@@ -155,25 +155,25 @@ async function executePreprocessor(preprocessor: (string | number)[],data: Recor
     let promises: Promise<Response | void>[] = [];
   
     const awaitResponses = async () => {
-      await Promise.all(promises);
-      promises = [];
+        await Promise.all(promises);
+        promises = [];
     };
   
     for (const preprocessor of preprocessors) {
-      if (preprocessor[2] !== currentPriorityGroup) {
-        if (promises.length > 0) {
-          await awaitResponses();
+        if (preprocessor[2] !== currentPriorityGroup) {
+            if (promises.length > 0) {
+            await awaitResponses();
+            }
+            currentPriorityGroup = Number(preprocessor[2]);
+            console.debug(`Now on priority group ${currentPriorityGroup}`);
         }
-        currentPriorityGroup = Number(preprocessor[2]);
-        console.debug(`Now on priority group ${currentPriorityGroup}`);
-      }
   
-      // add the preprocessor lifecycle as a promise
-      promises.push(executePreprocessor(preprocessor, data));
+        // add the preprocessor lifecycle as a promise
+        promises.push(executePreprocessor(preprocessor, data));
     }
   
     if (promises.length > 0) {
-      await awaitResponses();
+        await awaitResponses();
     }
   
     return data;
