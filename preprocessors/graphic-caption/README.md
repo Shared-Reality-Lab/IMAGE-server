@@ -1,5 +1,5 @@
 Beta quality: Useful enough for testing by end-users.
-Currently, the IMAGE reference server is <a href="https://www.llama.com/">Built with Llama</a> (and is subject to their <a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/USE_POLICY.md">Acceptable Use Policy</a> and <a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE">License</a>), but any other ollama-compatible model can be chosen.
+
 This preprocessor generates a brief caption for the graphic.
 Currently, the IMAGE reference server is <a href="https://www.llama.com/">Built with Llama</a> (and is subject to their <a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/USE_POLICY.md">Acceptable Use Policy</a> and <a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE">License</a>), but any other ollama-compatible model can be chosen.
 It uses an LLM model running via ollama fronted by open-webui.
