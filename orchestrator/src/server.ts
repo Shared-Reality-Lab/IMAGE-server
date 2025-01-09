@@ -85,110 +85,100 @@ async function measureExecutionTime<T>(label:string, fn: () => Promise<T>): Prom
     }
 }
 
-// handles the entire lifecycle of fetching and processing a preprocessor's response
-async function fetchPreprocessorResponse(
-    preprocessor: (string | number)[],
-    data: Record<string, unknown>
-): Promise<void> {
-    // profile the fetch request
-    await measureExecutionTime(`Preprocessor "${preprocessor[0]}"`, async () => {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), PREPROCESSOR_TIME_MS);
-
-        try {
-            const cacheTimeOut = preprocessor[3] as number;
-            const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
-            const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
-
-            // get value from cache for each preprocessor if it exists
-            const cacheValue = await serverCache.getResponseFromCache(hashedKey);
-            if (cacheTimeOut > 0 && cacheValue && preprocessorName) {
-                // Call the preprocessor endpoint to get response
-                console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
-                const cacheResponse = JSON.parse(cacheValue) as Response;
-                (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse;
-                return;
-            }
-
-            // fetch from preprocessor
-            console.debug(`Sending to preprocessor "${preprocessor[0]}"`);
-            const resp = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
-                signal: controller.signal,
-            });
-
-            clearTimeout(timeout);
-
-            if (resp.status === 200) {
-                const json = await resp.json();
-                // calls validateAndCacheResponse to validate the response schema and cache data
-                await validateAndCacheResponse(json, preprocessorName, hashedKey, cacheTimeOut, data);
-            } else if (resp.status !== 204) {
-                console.error(`Preprocessor "${preprocessor[0]}" responded with status ${resp.status}`);
-            }
-        } catch (err) {
-            console.error(`Error occurred fetching from ${preprocessor[0]}`);
-            console.error(err);
+async function executePreprocessor(preprocessor: (string | number)[],data: Record<string, unknown>): Promise<void> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+        controller.abort();
+    }, PREPROCESSOR_TIME_MS);
+    const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
+    const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
+    // get value from cache for each preprocessor if it exists
+    const cacheTimeOut = preprocessor[3] as number;
+  
+    try {
+      await measureExecutionTime(`Preprocessor "${preprocessor[0]}"`, async () => {
+        // check cache first
+        const cacheValue = await serverCache.getResponseFromCache(hashedKey);
+        if (cacheTimeOut > 0 && cacheValue && preprocessorName) {
+            // Return the value from cache if found
+            console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
+            const cacheResponse = JSON.parse(cacheValue) as Response;
+            (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse;
+            return; // skip fetch if cache is valid
         }
-    });
-}
-
-// validating and caching the response
-async function validateAndCacheResponse(
-    response: any,
-    preprocessorName: string,
-    hashedKey: string,
-    cacheTimeOut: number,
-    data: Record<string, unknown>
-): Promise<void> {
-    if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", response)) {
-        (data["preprocessors"] as Record<string, unknown>)[response["name"]] = response["data"];
-        // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP    
-        SERVICE_PREPROCESSOR_MAP[preprocessorName] = response["name"];
-        // store data in cache
-        // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
-        if (cacheTimeOut > 0) {
-            console.debug(`Saving Response for ${response["name"]} in cache with key ${hashedKey}`);
-            await serverCache.setResponseInCache(hashedKey, JSON.stringify(response["data"]), cacheTimeOut);
+  
+        // fetch from the preprocessor
+        const response = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+          signal: controller.signal,
+        });
+  
+        clearTimeout(timeout);
+  
+        // Process the response
+        if (response.status === 200) {
+          const jsonResponse = await response.json();
+          if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", jsonResponse)) {
+            (data["preprocessors"] as Record<string, unknown>)[jsonResponse["name"]] = jsonResponse["data"];
+            // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP
+            SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = jsonResponse["name"];
+            // store data in cache
+            // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
+            if (cacheTimeOut > 0) {
+                console.debug(`Saving Response for ${jsonResponse["name"]} in cache with key ${hashedKey}`);
+                await serverCache.setResponseInCache(hashedKey, JSON.stringify(jsonResponse["data"]), cacheTimeOut);
+            }
+          } else {
+            console.error("Preprocessor response failed validation!");
+            console.error(JSON.stringify(ajv.errors));
+          }
+        } else if (response.status === 204) {
+          console.debug(`Preprocessor "${preprocessor[0]}" not applicable`);
+          return;
+        } else {
+          console.error(`Preprocessor "${preprocessor[0]}" responded with status ${response.status}`);
         }
-    } else {
-        console.error("Preprocessor response failed validation!");
-        console.error(JSON.stringify(ajv.errors));
+      });
+    } catch (err) {
+      console.error(`Error occurred fetching from preprocessor "${preprocessor[0]}"`);
+      console.error(err);
     }
-}
-
-async function runPreprocessorsParallel(
-    data: Record<string, unknown>,
-    preprocessors: (string | number)[][]
-): Promise<Record<string, unknown>> {
-    if (!data["preprocessors"]) {
+  }
+  
+  async function runPreprocessorsParallel(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
+    if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
-
-    let currentPriorityGroup: number | undefined;
-    let promises: Promise<void>[] = [];
-
+    let currentPriorityGroup: number | undefined = undefined;
+    let promises: Promise<Response | void>[] = [];
+  
+    const awaitResponses = async () => {
+      await Promise.all(promises);
+      promises = [];
+    };
+  
     for (const preprocessor of preprocessors) {
-        if (preprocessor[2] !== currentPriorityGroup) {
-            if (promises.length > 0) {
-                await Promise.all(promises);
-                promises = [];
-            }
-            currentPriorityGroup = Number(preprocessor[2]);
-            console.log(`Now on priority group ${currentPriorityGroup}`);
+      if (preprocessor[2] !== currentPriorityGroup) {
+        if (promises.length > 0) {
+          await awaitResponses();
         }
-
-        promises.push(fetchPreprocessorResponse(preprocessor, data));
+        currentPriorityGroup = Number(preprocessor[2]);
+        console.debug(`Now on priority group ${currentPriorityGroup}`);
+      }
+  
+      // add the preprocessor lifecycle as a promise
+      promises.push(executePreprocessor(preprocessor, data));
     }
-
+  
     if (promises.length > 0) {
-        await Promise.all(promises);
+      await awaitResponses();
     }
-
+  
     return data;
-}
+  }
+  
 
 async function runPreprocessors(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
     if (data["preprocessors"] === undefined) {
@@ -466,4 +456,3 @@ app.get("/authenticate/:uuid/:check", async (req, res) => {
 app.listen(port, () => {
     console.log(`Started server on port ${port}`);
 });
-
