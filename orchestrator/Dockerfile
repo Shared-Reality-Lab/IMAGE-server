@@ -1,4 +1,4 @@
-FROM node:alpine as builder
+FROM node:alpine AS builder
 
 
 WORKDIR /usr/src/app
@@ -8,7 +8,7 @@ COPY orchestrator/src ./src
 COPY schemas src/schemas
 RUN npm run build && npm prune --production
 
-FROM node:alpine as final
+FROM node:alpine AS final
 
 RUN apk add memcached
 # Set up for logging

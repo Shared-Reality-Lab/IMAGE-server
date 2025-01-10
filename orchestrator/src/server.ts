@@ -71,14 +71,14 @@ async function measureExecutionTime<T>(label: string, fn: () => Promise<T>): Pro
         return result;
     } finally {
         const endTime = performance.now();
-        const duration = parseFloat((endTime - startTime).toFixed(3)); // wall-clock duration in ms
+        const duration = parseFloat((endTime - startTime).toFixed(2)); // wall-clock duration in ms
         const endCpuUsage = process.cpuUsage(startCpuUsage);
-        const cpuTime = parseFloat(((endCpuUsage.user + endCpuUsage.system) / 1000).toFixed(3)); // CPU time in ms
+        const cpuTime = parseFloat(((endCpuUsage.user + endCpuUsage.system) / 1000).toFixed(2)); // CPU time in ms
         // Normalize CPU Usage as a percentage of wall-clock duration and number of cores -- https://stackoverflow.com/questions/74776323/trying-to-get-normalized-cpu-usage-for-node-process
-        const normalizedCpuUsage = parseFloat(((cpuTime / (duration * coreCount)) * 100).toFixed(3)); // normalized CPU usage
+        const normalizedCpuUsage = parseFloat(((cpuTime / (duration * coreCount)) * 100).toFixed(2)); // normalized CPU usage
 
         console.log(`timestamp=${new Date().toISOString()} label=${label} execution_time_ms=${duration}ms cpu_time_ms=${cpuTime}ms normalized_cpu_usage_percent=${normalizedCpuUsage}%`);
-        // To extract the log into a dictionary --> log_dict = {item.split('=')[0]: item.split('=')[1] for item in log.split(' ')} to store 
+        // To extract the log and store into a dictionary --> log_dict = {item.split('=')[0]: item.split('=')[1] for item in log.split(' ')}  
     }
 }
 
