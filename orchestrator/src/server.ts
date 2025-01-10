@@ -49,39 +49,36 @@ const BASE_LOG_PATH = path.join("/var", "log", "IMAGE");
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
-async function measureExecutionTime<T>(label:string, fn: () => Promise<T>): Promise<T> {
+async function measureExecutionTime<T>(label: string, fn: () => Promise<T>): Promise<T> {
     /*
-    Metrics Logged:
-    - Execution Time: The total wall-clock time (in milliseconds) taken to complete the task.
-    - CPU Time: The cumulative CPU time (in milliseconds) consumed by the task across all CPU cores.
-    - Normalized CPU Usage: The CPU usage as a percentage, normalized based on the number of CPU cores available.
-    
-    sample output:
-    "[Timing] {label}: Execution Time: {duration} ms, CPU Time: {cpuTime} ms, Normalized CPU Usage: {cpuUsagePercentage}%"
-     */
+    Organized Metrics Logged with Units:
+    - timestamp:  timestamp of the log entry
+    - label: label (in preprocessor's case, this would be 'preprocessor')
+    - execution_time_ms: Wall-clock time in milliseconds (ms)
+    - cpu_time_ms: CPU time in milliseconds (ms)
+    - normalized_cpu_usage_percent: CPU usage as a percentage (%)
+
+    Sample log output:
+    timestamp=2025-01-10T08:30:00.123Z label=cache_check execution_time_ms=7.69ms cpu_time_ms=7.23ms normalized_cpu_usage_percent=95.62%
+    */
 
     const startTime = performance.now();
     const startCpuUsage = process.cpuUsage();
-    const coreCount = os.cpus().length; // number of CPU cores
+    const coreCount = os.cpus().length; // Number of CPU cores
 
     try {
         const result = await fn();
         return result;
     } finally {
         const endTime = performance.now();
-        const duration = parseFloat((endTime - startTime).toFixed(3)); // wall-clock duration in milliseconds
+        const duration = parseFloat((endTime - startTime).toFixed(3)); // wall-clock duration in ms
         const endCpuUsage = process.cpuUsage(startCpuUsage);
-        const cpuTime = parseFloat(((endCpuUsage.user + endCpuUsage.system) / 1000).toFixed(3)); // CPU time in milliseconds
+        const cpuTime = parseFloat(((endCpuUsage.user + endCpuUsage.system) / 1000).toFixed(3)); // CPU time in ms
         // Normalize CPU Usage as a percentage of wall-clock duration and number of cores -- https://stackoverflow.com/questions/74776323/trying-to-get-normalized-cpu-usage-for-node-process
-        const cpuUsagePercentage = parseFloat(((cpuTime / (duration * coreCount)) * 100).toFixed(3));
-        const logEntry = {
-            label: label,
-            executionTimeMs: duration,
-            cpuTimeMs: cpuTime,
-            normalizedCpuUsagePercent: cpuUsagePercentage,
-            timestamp: new Date().toISOString()
-        };
-        console.log(`[Timing] ${label}: Execution Time: ${logEntry.executionTimeMs} ms, CPU Time: ${logEntry.cpuTimeMs} ms, Normalized CPU Usage: ${logEntry.normalizedCpuUsagePercent}%`);
+        const normalizedCpuUsage = parseFloat(((cpuTime / (duration * coreCount)) * 100).toFixed(3)); // normalized CPU usage
+
+        console.log(`timestamp=${new Date().toISOString()} label=${label} execution_time_ms=${duration}ms cpu_time_ms=${cpuTime}ms normalized_cpu_usage_percent=${normalizedCpuUsage}%`);
+        // To extract the log into a dictionary --> log_dict = {item.split('=')[0]: item.split('=')[1] for item in log.split(' ')} to store 
     }
 }
 
