@@ -20,6 +20,7 @@ services:
   memcached:
     profiles: [production, test, default]
     image: 'memcached:1.6'
+    restart: unless-stopped
     # cache memory size - 4GB
     command: -m 4096
 
