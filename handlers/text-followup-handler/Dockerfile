@@ -7,11 +7,11 @@ WORKDIR /usr/src/app
 ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip install --upgrade pip
-COPY /handlers/followup-handler/requirements.txt /usr/src/app/requirements.txt
+COPY /handlers/text-followup-handler/requirements.txt /usr/src/app/requirements.txt
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
-COPY /handlers/followup-handler/ /usr/src/app
+COPY /handlers/text-followup-handler/ /usr/src/app
 
 EXPOSE 80
 USER python
