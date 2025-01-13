@@ -106,7 +106,7 @@ app.post("/handler", async (req, res) => {
     if (graphicCaption && graphicCaption["caption"]) {
         ttsData.push(...utils.generateCaption(graphicCaption));
         if ((semseg && semseg["segments"].length > 0) || (objDet && objGroup && objDet["objects"].length > 0)) {
-            ttsData.push({"value": "It also", "type", "text"});
+            ttsData.push({"value": "It also", "type": "text"});
         }
     }
 
