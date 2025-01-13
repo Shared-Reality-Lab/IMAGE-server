@@ -74,7 +74,9 @@ app.post("/handler", async (req, res) => {
         return;
     }
     // Filter objects
-    utils.filterObjectsBySize(objDet, objGroup);
+    if (objDet) {
+        utils.filterObjectsBySize(objDet, objGroup);
+    }
 
     if (semseg?.segments.length === 0 && objDet?.objects.length === 0 && !graphicCaption) {
         console.debug("No segments, objects or caption detected! Can't render.");
@@ -118,7 +120,7 @@ app.post("/handler", async (req, res) => {
             ttsData.push({"value": "It also", "type": "text"});
         }
     }
-   
+
     if (objDet && objGroup && objDet["objects"].length > 0) {
         ttsData.push(...utils.generateObjDet(objDet, objGroup, action));
     }
@@ -143,7 +145,7 @@ app.post("/handler", async (req, res) => {
                 targetLanguage
             );
             console.debug("Mapping translated values to ttsData")
-                
+
             for (let i = 0; i < ttsData.length; i++) {
                 ttsData[i]["value"] = translatedValues[i];
             }
@@ -171,7 +173,7 @@ app.post("/handler", async (req, res) => {
     } else {
         console.debug("Skipped text rendering.");
     }
-    
+
 
     // Construct SimpleAudio (if requested)
     if (hasSimple || hasSegment) {
@@ -283,7 +285,7 @@ app.post("/handler", async (req, res) => {
         }
     }
 
-	// Translate renderings' description before sending response
+    // Translate renderings' description before sending response
 	if (targetLanguage !== "en") {
 		try {
 			console.debug("Translating renderings description to " + targetLanguage);
