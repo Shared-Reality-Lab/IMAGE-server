@@ -247,6 +247,17 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup, actionRec: Ac
     return objects;
 }
 
+export function generateCaption(capObj: {caption: string}): TTSSegment[] {
+    return [{
+        "type": "text",
+        "value": "has the following description:"
+    }, {
+        "type": "text",
+        "value": capObj["caption"],
+        "label": "Generated caption"
+    }];
+}
+
 /**
  * Get translation from multilang-support service
  * @param inputSegment array of text to be translated
