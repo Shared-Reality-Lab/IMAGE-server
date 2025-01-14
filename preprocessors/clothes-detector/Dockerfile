@@ -15,8 +15,7 @@ ENV PATH="/home/python/.local/bin:${PATH}"
 
 #install system dependencies in one layer
 RUN apt-get update && \
-    apt-get install -y \
-    python3-opencv wget build-essential \
+    apt-get install -y curl python3-opencv wget build-essential \
     libfreetype6-dev libpng-dev libharfbuzz-dev \
     libcairo2-dev python3-dev p7zip p7zip-full \
     unace zip unzip && \

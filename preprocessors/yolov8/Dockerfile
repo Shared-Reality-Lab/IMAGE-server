@@ -1,7 +1,8 @@
 FROM ultralytics/ultralytics:latest@sha256:af4572bf0df164d5708e4a1f50bddb5a74cb7d793fe46b7daf42b1768fbec608
 
+RUN apk add --no-cache curl && \
+    adduser --disabled-password python
 WORKDIR /usr/src/app
-RUN adduser --disabled-password python 
 ENV PATH="/usr/src/app/.local/bin:${PATH}"
 
 RUN apt-get update && \
@@ -24,4 +25,7 @@ EXPOSE 5000
 ENV FLASK_APP=detect.py 
 
 USER python
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:5000/health || exit 1
+
 CMD [ "gunicorn", "detect:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]

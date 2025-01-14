@@ -374,6 +374,14 @@ def run(weights='yolov8x.pt',
         return response
 
 
+@app.route('/health', methods=['GET'])
+def health():
+    """
+    health check endpoint to verify if the service is up.
+    """
+    return jsonify({"status": "healthy"}), 200
+
+
 def main():
     run()
 
