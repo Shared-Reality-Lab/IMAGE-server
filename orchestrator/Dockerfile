@@ -1,4 +1,4 @@
-FROM node:alpine as builder
+FROM node:alpine AS builder
 
 WORKDIR /usr/src/app
 COPY orchestrator/*.js* ./
@@ -8,9 +8,9 @@ COPY schemas src/schemas
 COPY orchestrator/src ./src
 RUN npm run build && npm prune --production
 
-FROM node:alpine as final
+FROM node:alpine AS final
 
-RUN apk add memcached supercronic
+RUN apk add memcached supercronic curl
 # Set up for logging
 WORKDIR /var/log/IMAGE
 
@@ -29,4 +29,7 @@ ENV NODE_ENV=production
 EXPOSE 8080
 
 USER node
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:5000/health || exit 1
+
 CMD supercronic -quiet clean-cron & node dist/server.js

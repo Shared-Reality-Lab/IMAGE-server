@@ -474,6 +474,11 @@ app.get("/authenticate/:uuid/:check", async (req, res) => {
     }
 });
 
+// Healthcheck endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
 app.listen(port, () => {
     console.log(`Started server on port ${port}`);
 });
