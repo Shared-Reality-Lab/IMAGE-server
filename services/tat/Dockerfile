@@ -31,6 +31,9 @@ FROM nginx:alpine
 # Copy the build output from the previous stage to the Nginx HTML directory
 COPY --from=build /app/dist/editor/ /usr/share/nginx/html
 
+# Add a static health check file
+COPY healthcheck.html /usr/share/nginx/html/
+
 # Copy a custom Nginx configuration file, if needed (optional)
 # COPY nginx.conf /etc/nginx/nginx.conf
 
@@ -38,7 +41,7 @@ COPY --from=build /app/dist/editor/ /usr/share/nginx/html
 EXPOSE 80
 
 # Healthcheck
-HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost/health.html || exit 1
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost/healthcheck.html || exit 1
 
 # Start the Nginx server
 CMD ["nginx", "-g", "daemon off;"]
