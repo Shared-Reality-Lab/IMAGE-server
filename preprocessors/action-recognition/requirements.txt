@@ -1,5 +1,5 @@
-jsonschema==3.2.0
-gunicorn==22.0.0
-flask==2.2.5
-xformers==0.0.21
+jsonschema==4.23.0
+gunicorn==23.0.0
+Flask==3.1.0
+xformers==0.0.28.post3
 

@@ -17,6 +17,7 @@
 from flask import Flask, request, abort, Response
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS, cross_origin
+from datetime import datetime
 import logging
 import hashlib
 import json
@@ -96,7 +97,11 @@ def create():
                            .decode('utf-8'),
                            "data": req_data["data"],
                            "title": req_data["title"],
-                           "layer": req_data["layer"]}
+                           "layer": req_data["layer"],
+                           "timestamp": datetime.timestamp(datetime.now())}
+            # include source graphic if present
+            if "graphicBlob" in req_data:
+                svgData[id]["graphicBlob"] = req_data["graphicBlob"]
             write_data(svgData)
             logging.debug('Created new channel with code '+id)
             return {"id": id, "secret": secret}
@@ -124,7 +129,12 @@ def update(id):
                                     req_data["secret"]).decode('utf-8'),
                                    "data": req_data["data"],
                                    "title": req_data["title"],
-                                   "layer": req_data["layer"]}
+                                   "layer": req_data["layer"],
+                                   "timestamp": datetime.timestamp(
+                                       datetime.now())}
+                    # include source graphic if present
+                    if "graphicBlob" in req_data:
+                        svgData[id]["graphicBlob"] = req_data["graphicBlob"]
                     write_data(svgData)
                     logging.debug('Updated graphic')
                     return "Graphic in channel "+id+" has been updated!"
@@ -137,7 +147,11 @@ def update(id):
                                 req_data["secret"]).decode('utf-8'),
                                "data": req_data["data"],
                                "title": req_data["title"],
-                               "layer": req_data["layer"]}
+                               "layer": req_data["layer"],
+                               "timestamp": datetime.timestamp(datetime.now())}
+                # include source graphic if present
+                if "graphicBlob" in req_data:
+                    svgData[id]["graphicBlob"] = req_data["graphicBlob"]
                 write_data(svgData)
                 logging.debug('TEMP: Created new channel using update!')
                 return ("New channel created with code "+id +
@@ -161,9 +175,12 @@ def display(id):
             try:
                 response = Response()
                 response.mimetype = "application/json"
-                response.set_data(json.dumps({"renderings": [
+                response_val = {"renderings": [
                                 {"data": {"graphic": svgData[id]["data"],
-                                          "layer": svgData[id]["layer"]}}]}))
+                                          "layer": svgData[id]["layer"]}}]}
+                if "graphicBlob" in svgData[id]:
+                    response_val["graphicBlob"] = svgData[id]["graphicBlob"]
+                response.set_data(json.dumps(response_val))
                 response.add_etag(hashlib.md5(
                     (svgData[id]["data"]+svgData[id]["layer"]).encode()))
                 response.make_conditional(request)

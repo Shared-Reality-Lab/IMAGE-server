@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.11-slim
 
 RUN adduser --disabled-password python
 WORKDIR /app
