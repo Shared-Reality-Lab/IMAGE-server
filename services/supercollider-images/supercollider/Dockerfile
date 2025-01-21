@@ -1,7 +1,7 @@
 FROM fedora:38
 ARG VERSION=Version-3.13.0
 
-RUN dnf install -q -y pipewire git cmake gcc-c++ pipewire-jack-audio-connection-kit-devel fftw-devel libsndfile-devel avahi-devel readline-devel libatomic && \
+RUN dnf install -q -y pipewire git cmake gcc-c++ pipewire-jack-audio-connection-kit-devel fftw-devel libsndfile-devel avahi-devel readline-devel libatomic curl nc && \
     rm -rf /var/cache/dnf
 
 # Despite the files being present, the cmake script fails to find them without this
@@ -32,5 +32,7 @@ RUN chmod +x /run/entrypoint && \
     chown -R sclang:audio /tmp/sc
 
 USER sclang
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:57110/health || exit 1
 
 ENTRYPOINT ["/run/entrypoint"]

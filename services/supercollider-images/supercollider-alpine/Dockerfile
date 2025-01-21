@@ -2,7 +2,7 @@ FROM alpine:latest
 # Default to latest version of supercollider
 ARG VERSION=develop
 
-RUN apk add --no-cache git g++ cmake make pipewire pipewire-jack libsndfile-dev fftw-dev jack-dev avahi-dev readline-dev linux-headers
+RUN apk add --no-cache git g++ cmake make pipewire pipewire-jack libsndfile-dev fftw-dev jack-dev avahi-dev readline-dev linux-headers curl
 
 # Despite the files being present, the cmake script fails to find them without this
 RUN ln -sf /usr/lib/pipewire-0.3/jack/libjack.* /usr/lib

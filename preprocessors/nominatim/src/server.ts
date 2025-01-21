@@ -16,8 +16,7 @@
  */
 
 import Ajv from "ajv";
-import express from "express";
-
+import express, { Request, Response } from "express";
 import querySchemaJSON from "./schemas/request.schema.json";
 import preprocessorResponseJSON from "./schemas/preprocessor-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";

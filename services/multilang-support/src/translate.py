@@ -91,3 +91,11 @@ def translate_request():
     LOGGER.debug(f"- Response SENT! Time taken: {elapsed_time} ms -")
     # Return response
     return jsonify(response), 200
+
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({"status": "healthy", "timestamp": request.date}), 200

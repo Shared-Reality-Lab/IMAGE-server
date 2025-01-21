@@ -30,6 +30,6 @@ EXPOSE 8080
 
 USER node
 
-HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:5000/health || exit 1
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:8080/health || exit 1
 
 CMD supercronic -quiet clean-cron & node dist/server.js

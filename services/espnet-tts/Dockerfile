@@ -1,6 +1,6 @@
 FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
 
-RUN apt-get update && apt-get install -y libsndfile1 build-essential wget && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y libsndfile1 build-essential wget curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /run/tts
 RUN adduser --disabled-password python && chown python:python .
@@ -21,5 +21,7 @@ COPY /services/espnet-tts/src/* ./
 COPY /schemas/services/tts/* ./
 ENV TORCH_DEVICE="cpu"
 EXPOSE 80
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:80/health || exit 1
 
 CMD ["gunicorn", "app:app", "-b", "0.0.0.0:80", "--capture-output", "--log-level=debug"]

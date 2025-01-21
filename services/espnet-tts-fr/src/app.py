@@ -21,7 +21,7 @@ import logging
 import numpy as np
 import soundfile as sf
 from espnet_util import tts, fs
-from flask import Flask, Response, request
+from flask import Flask, Response, request, jsonify
 from io import BytesIO
 from jsonschema import validate
 from torch.cuda import empty_cache
@@ -169,3 +169,11 @@ def segment_tts():
         }, 500
     finally:
         empty_cache()
+
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({"status": "healthy", "timestamp": request.date}), 200

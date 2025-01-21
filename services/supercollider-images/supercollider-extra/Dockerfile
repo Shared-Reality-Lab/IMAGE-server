@@ -4,7 +4,7 @@ ARG VERSION=Version-3.13.0
 USER root
 
 # Wanted by MP3
-RUN dnf install -q -y lame vorbis-tools unzip which && \
+RUN dnf install -q -y lame vorbis-tools unzip which curl && \
     rm -rf /var/cache/dnf
 
 # Install sc3-plugins
@@ -33,5 +33,6 @@ RUN rm -rf ~/.local/share/SuperCollider/downloaded-quarks/PointView \
 COPY atk_install.scd /tmp/sc/atk_install.scd
 RUN sclang atk_install.scd
 RUN rm atk_install.scd
+
 
 ENTRYPOINT ["/run/entrypoint"]

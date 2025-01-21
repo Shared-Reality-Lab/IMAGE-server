@@ -14,7 +14,7 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
-from flask import Flask, request, abort, Response
+from flask import Flask, request, abort, Response, jsonify
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS, cross_origin
 from datetime import datetime
@@ -198,6 +198,14 @@ def display(id):
 @cross_origin()
 def home():
     return "Hi"
+
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({"status": "healthy", "timestamp": request.date}), 200
 
 
 if __name__ == "__main__":

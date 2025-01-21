@@ -37,5 +37,8 @@ COPY --from=build /app/dist/editor/ /usr/share/nginx/html
 # Expose the default Nginx port
 EXPOSE 80
 
+# Healthcheck
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost/health.html || exit 1
+
 # Start the Nginx server
 CMD ["nginx", "-g", "daemon off;"]
