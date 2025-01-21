@@ -82,15 +82,19 @@ async function measureExecutionTime<T>(label: string, fn: () => Promise<T>): Pro
     }
 }
 
-async function checkAndGetCache(preprocessorName: string, hashedKey: string, cacheTimeOut: number): Promise<Response | null> {
-    if (cacheTimeOut <= 0) return null; // if caching is disabled, skip lookup
-    const cacheValue = await serverCache.getResponseFromCache(hashedKey);
-    if (cacheValue) {
-        // Return the value from cache if found
-        console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
-        return JSON.parse(cacheValue) as Response; // return the cache response
+async function checkCache(preprocessorName: string, hashedKey: string, cacheTimeOut: number): Promise<Response | null> {
+    if (cacheTimeOut <= 0) {
+        return null; // no caching if timeout is 0, skip lookup
     }
-    return null; // no cache hit
+
+    const cacheValue = await serverCache.getResponseFromCache(hashedKey);
+    if (cacheValue && preprocessorName) {
+        // Return the value from cache if found
+        console.debug(`Response for preprocessor "${preprocessorName}" served from cache`);
+        return JSON.parse(cacheValue) as Response;
+    }
+
+    return null; // cache miss
 }
 
 async function fetchPreprocessorResponse(preprocessor: (string | number)[], data: Record<string, unknown>): Promise<Response> {
@@ -116,7 +120,7 @@ async function processResponse(response: Response, preprocessor: (string | numbe
         const jsonResponse = await response.json();
         if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", jsonResponse)) {
             const preprocessorName = jsonResponse["name"];
-            (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = jsonResponse["data"];
+            (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = jsonResponse["data"]; 
             // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP 
             SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = preprocessorName;
             // store data in cache
@@ -144,14 +148,16 @@ async function executePreprocessor(preprocessor: (string | number)[], data: Reco
     // profile preprocessor lifecycle performance
     await measureExecutionTime(`Preprocessor "${preprocessor[0]}"`, async () => {
         // check if a cached response exists for the current preprocessor
-        const cacheResponse = await checkAndGetCache(preprocessorName, hashedKey, cacheTimeOut);
-        if (cacheResponse) {
-            (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse; // update 'data'
+        const cacheResponse = await checkCache(preprocessorName, hashedKey, cacheTimeOut);
+        if (cacheResponse) {  // if the response is found in cache, update `data` directly without making any calls
+            (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse;
             return; // cache hit, no further processing is needed
         }
+
         // fetch the preprocessor response from its endpoint
         const response = await fetchPreprocessorResponse(preprocessor, data);
-        // attempt to process the response, validate it, and update data and the cache (if enabled)
+
+        // Delegate response handling to `processResponse` - attempt to process the response, validate it, and update data and the cache (if enabled) 
         await processResponse(response, preprocessor, data, hashedKey, cacheTimeOut);
     });
 }
@@ -161,13 +167,13 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
         data["preprocessors"] = {};
     }
     let currentPriorityGroup: number | undefined = undefined;
-    let promises: Promise<Response | void>[] = []; // array to hold promises for preprocessor executions within the current priority group
+    let promises: Promise<void>[] = []; // array to hold promises for preprocessor executions within the current priority group
 
     for (const preprocessor of preprocessors) {
         // check if priority group changes - if so, wait for the current promises to finish
         if (preprocessor[2] !== currentPriorityGroup) {
             if (promises.length > 0) {
-                await Promise.all(promises);
+                await Promise.all(promises); // wait for all preprocessors in the current group
                 promises = []; // reset promises for the new priority group
             }
             currentPriorityGroup = Number(preprocessor[2]);
@@ -177,7 +183,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
         promises.push(executePreprocessor(preprocessor, data));
     }
     if (promises.length > 0) {
-        await Promise.all(promises);
+        await Promise.all(promises); // wait for remaining promises
     }
 
     return data;
