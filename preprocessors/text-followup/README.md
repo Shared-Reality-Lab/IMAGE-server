@@ -32,9 +32,9 @@ the LLM. Example:
     environment:
       LOG_PII: "true"
       TEXT_FOLLOWUP_PROMPT_OVERRIDE: |-
-              I am blind so I cannot see this image.
               The prompt I really want to use is...
               Here is my request:
+              [user followup query will be added here]
 ```
 
 ## Libraries Used
