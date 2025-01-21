@@ -156,10 +156,10 @@ def followup():
         ollama_error_msg = None
         try:
             # strip() at end since llama often puts a newline before json
-            followup_response_text = json.loads(response.text)['response'].strip()
+            response_text = json.loads(response.text)['response'].strip()
             if log_pii:
-                logging.debug("raw ollama response: " + followup_response_text)
-            followup_response_json = json.loads(followup_response_text)
+                logging.debug("raw ollama response: " + response_text)
+            followup_response_json = json.loads(response_text)
         except json.JSONDecodeError:
             ollama_error_msg = "raw response does not look like json"
         except KeyError:
