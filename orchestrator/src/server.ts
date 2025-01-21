@@ -82,16 +82,15 @@ async function measureExecutionTime<T>(label: string, fn: () => Promise<T>): Pro
     }
 }
 
-async function checkCache(preprocessorName: string, hashedKey: string, cacheTimeOut: number, data: Record<string, unknown>): Promise<boolean> {
+async function checkAndGetCache(preprocessorName: string, hashedKey: string, cacheTimeOut: number): Promise<Response | null> {
+    if (cacheTimeOut <= 0) return null; // if caching is disabled, skip lookup
     const cacheValue = await serverCache.getResponseFromCache(hashedKey);
-    if (cacheTimeOut > 0 && cacheValue && preprocessorName) {
+    if (cacheValue) {
         // Return the value from cache if found
         console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
-        const cacheResponse = JSON.parse(cacheValue) as Response;
-        (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse;
-        return true; // cache hit
+        return JSON.parse(cacheValue) as Response; // return the cache response
     }
-    return false; // cache miss
+    return null; // no cache hit
 }
 
 async function fetchPreprocessorResponse(preprocessor: (string | number)[], data: Record<string, unknown>): Promise<Response> {
@@ -140,18 +139,19 @@ async function processResponse(response: Response, preprocessor: (string | numbe
 async function executePreprocessor(preprocessor: (string | number)[], data: Record<string, unknown>): Promise<void> {
     const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
     const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
-    // get value from cache for each preprocessor if it exists
     const cacheTimeOut = preprocessor[3] as number;
 
     // profile preprocessor lifecycle performance
     await measureExecutionTime(`Preprocessor "${preprocessor[0]}"`, async () => {
         // check if a cached response exists for the current preprocessor
-        const cacheHit = await checkCache(preprocessorName, hashedKey, cacheTimeOut, data);
-        if (cacheHit) return; // if cache hit, no further processing is needed
-
+        const cacheResponse = await checkAndGetCache(preprocessorName, hashedKey, cacheTimeOut);
+        if (cacheResponse) {
+            (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse; // update 'data'
+            return; // cache hit, no further processing is needed
+        }
         // fetch the preprocessor response from its endpoint
         const response = await fetchPreprocessorResponse(preprocessor, data);
-        // process the response, validate it, and update the cache if applicable
+        // attempt to process the response, validate it, and update data and the cache (if enabled)
         await processResponse(response, preprocessor, data, hashedKey, cacheTimeOut);
     });
 }
