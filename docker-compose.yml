@@ -103,6 +103,17 @@ services:
       env_file:
         ./config/ollama.env
 
+  text-followup:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-text-followup:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 1
+      ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 0
+      ca.mcgill.a11y.image.route: "followup"
+    env_file:
+      ./config/ollama.env
 
   graphic-tagger:
     profiles: [production, test, default]

@@ -66,31 +66,57 @@ def followup():
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.text-followup"
 
+    # debugging this preprocessor is really difficult without seeing what
+    # ollama is returning, but this can contain PII. Until we have a safe
+    # way of logging PII, using manually set LOG_PII env variable
+    # to say whether or not we should go ahead and log potential PII
+    log_pii = os.getenv('LOG_PII', "false").lower() == "true"
+    if log_pii:
+        logging.warning("LOG_PII is True: potential PII will be logged!")
+
     # convert the uri to processable image
     # source.split code referred from
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
     source = content["graphic"]
-
-    # TODO: crop graphic if the user has specified a region of interest
-
     graphic_b64 = source.split(",")[1]
 
+    # TODO: crop graphic if the user has specified a region of interest
     # TODO: add previous request history before new prompt
 
-
-    prompt = ("I am blind so I cannot see this image. "
-              "Answer in JSON with two keys. "
-              "The first key is \"response_brief\" and is a single sentence "
-              "that can stand on its own. "
-              "The second key is \"response_full\" and provides maximum "
-              "three sentences of additional detail, "
-              "without repeating the information in the first key. "
-              "If there is no more detail you can provide, say, "
-              "\"I don't have any more details\" for the second key "
-              "instead of saying nothing. "
-              "Remember to answer only in JSON, or I will be very angry! "
-              "Here is my request: " +
-              content["followup"]["query"])
+    # default prompt, which can be overriden by env var just after
+    general_prompt = ("""
+              I am blind so I cannot see this image.
+              Answer in a single JSON object containing two keys.
+              The first key is "response_brief" and is a single sentence
+              that can stand on its own that directly answers the specific
+              request at the end of this prompt.
+              The second key is "response_full" and provides maximum
+              three sentences of additional detail,
+              without repeating the information in the first key.
+              If there is no more detail you can provide,
+              omit the second key instead of having an empty key.
+              Remember to answer only in JSON, or I will be very angry!
+              Do not put anything before or after the JSON,
+              and make sure the entire response is only a single JSON block,
+              with both keys in the same JSON object.
+              Here is an example of the output JSON in the format you
+              are REQUIRED to follow:
+              {
+                "response_brief": "One sentence response to the user request",
+                "response_full": "Further details."
+              }
+              Note that the first character of output MUST be "{".
+              Remove all whitespace before and after the JSON.
+              Here is my request:
+              """)
+    # override with prompt from environment variable only if it exists
+    general_prompt = os.getenv('TEXT_FOLLOWUP_PROMPT_OVERRIDE', general_prompt)
+    user_prompt = content["followup"]["query"]
+    prompt = general_prompt + ' ' + user_prompt
+    if log_pii:
+        logging.debug("user followup prompt: " + prompt)
+    else:
+        logging.debug("user followup prompt: {general_prompt} [redacted]")
 
     # prepare ollama request
     api_url = os.environ['OLLAMA_URL']
@@ -100,10 +126,9 @@ def followup():
     logging.debug("OLLAMA_URL " + api_url)
     if api_key.startswith("sk-"):
         logging.debug("OLLAMA_API_KEY looks properly formatted: " +
-                      api_key[:3] + "[redacted]")
+                      "sk-[redacted]")
     else:
-        logging.warning("OLLAMA_API_KEY usually starts with sk-, "
-                     "but this one starts with: " + api_key[:3])
+        logging.warning("OLLAMA_API_KEY does not start with sk-")
 
     request_data = {
         "model": ollama_model,
@@ -111,6 +136,7 @@ def followup():
         "images": [graphic_b64],
         "stream": False,
         "temperature": 0.0,
+        "format": "json",
         "keep_alive": -1  # keep model loaded in memory indefinitely
     }
     logging.debug("serializing json from request_data dictionary")
@@ -129,12 +155,13 @@ def followup():
     if response.status_code == 200:
         ollama_error_msg = None
         try:
-            followup_response_text = json.loads(response.text)['response']
-            # logging.debug("(pii)" + followup_response_text)
+            # strip() at end since llama often puts a newline before json
+            followup_response_text = json.loads(response.text)['response'].strip()
+            if log_pii:
+                logging.debug("raw ollama response: " + followup_response_text)
             followup_response_json = json.loads(followup_response_text)
-            # logging.debug("(pii)" + followup_response_json)
         except json.JSONDecodeError:
-            ollama_error_msg = "this does not look like json"
+            ollama_error_msg = "raw response does not look like json"
         except KeyError:
             ollama_error_msg = "no response tag found in returned json"
         except TypeError:  # have seen this when we just get a string back
@@ -142,11 +169,14 @@ def followup():
             ollama_error_msg = "unknown error decoding json. investigate!"
         finally:
             if ollama_error_msg is not None:
-                logging.error(ollama_error_msg)
-                logging.debug(f"raw response (pii) [{followup_response_json}]")
+                logging.error(ollama_error_msg + " returning 204")
                 return jsonify("Invalid LLM results"), 204
     else:
-        logging.error("Error: {response.text}")
+        if log_pii:
+            logging.error("Error {response.status_code}: {response.text}")
+        else:
+            logging.error("Error {response.status_code}: "
+                          "[response text redacted]")
         return jsonify("Invalid response from ollama"), 204
 
     # check if ollama returned valid json that follows schema
@@ -155,7 +185,8 @@ def followup():
         validator.validate(followup_response_json)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
-        logging.debug(e)  # print full error only in debug, due to PII
+        if log_pii:
+            logging.debug(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # create full response & check meets overall preprocessor response schema
@@ -170,11 +201,15 @@ def followup():
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
-        logging.debug(e)  # print full error only in debug, due to PII
+        if log_pii:
+            logging.debug(e)  # print full error only in debug, due to PII
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # all done; return to orchestrator
-    logging.debug(response)
+    logging.debug("full response length: " + str(len(response)))
+    if log_pii:
+        logging.debug(response)
+
     return response
 
 

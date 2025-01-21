@@ -20,6 +20,23 @@ GPU memory limitations, we assume that all preprocessors
 will use the same ollama model, to prevent them swapping
 in and out of memory.
 
+Logging personal information should only be done on test
+servers. The environment variable LOG_PII can be set
+to allow this information to be logged.
+In addition, you can override the prompt used by
+the LLM. Example:
+
+```
+  text-followup:
+    ...
+    environment:
+      LOG_PII: "true"
+      TEXT_FOLLOWUP_PROMPT_OVERRIDE: |-
+              I am blind so I cannot see this image.
+              The prompt I really want to use is...
+              Here is my request:
+```
+
 ## Libraries Used
 
 | Library | Link | Distribution License |
