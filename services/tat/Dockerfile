@@ -32,7 +32,7 @@ FROM nginx:alpine
 COPY --from=build /app/dist/editor/ /usr/share/nginx/html
 
 # Add a static health check file
-COPY healthcheck.html /usr/share/nginx/html/
+COPY ./healthcheck.html /usr/share/nginx/html/
 
 # Copy a custom Nginx configuration file, if needed (optional)
 # COPY nginx.conf /etc/nginx/nginx.conf

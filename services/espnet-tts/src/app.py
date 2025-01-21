@@ -120,4 +120,3 @@ def health_check():
     Health check endpoint to verify if the service is running
     """
     return jsonify({"status": "healthy", "timestamp": request.date}), 200
-

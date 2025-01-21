@@ -1,13 +1,12 @@
 FROM ultralytics/ultralytics:latest@sha256:af4572bf0df164d5708e4a1f50bddb5a74cb7d793fe46b7daf42b1768fbec608
 
-RUN apk add --no-cache curl && \
-    adduser --disabled-password python
 WORKDIR /usr/src/app
+RUN adduser --disabled-password python 
 ENV PATH="/usr/src/app/.local/bin:${PATH}"
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-    wget && \
+    wget curl && \
     rm -rf /var/lib/apt/lists/*
 
 COPY /preprocessors/yolov8/requirements.txt /usr/src/app/requirements.txt
