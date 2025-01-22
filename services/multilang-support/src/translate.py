@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 from .utils import LOGGER, Translator, SUPPORTED_LANGS
 import json
 import jsonschema
+import time
 
 app = Flask(__name__)
 
@@ -94,8 +95,8 @@ def translate_request():
 
 
 @app.route("/health", methods=["GET"])
-def health_check():
+def health():
     """
     Health check endpoint to verify if the service is running
     """
-    return jsonify({"status": "healthy", "timestamp": request.date}), 200
+    return jsonify({"status": "healthy", "timestamp": int(time.time())}), 200
