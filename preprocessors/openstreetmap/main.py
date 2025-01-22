@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 import jsonschema
 import json
 import logging
+import time
 from osm_service import (
     get_streets,
     get_timestamp,
@@ -167,12 +168,12 @@ def get_map_data():
     return response
 
 
-@app.route('/health', methods=['GET'])
+@app.route("/health", methods=["GET"])
 def health():
     """
-    health check endpoint to verify if the service is up.
+    Health check endpoint to verify if the service is running
     """
-    return jsonify({"status": "healthy"}), 200
+    return jsonify({"status": "healthy", "timestamp": int(time.time())}), 200
 
 
 if __name__ == "__main__":
