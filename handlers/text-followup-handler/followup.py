@@ -145,7 +145,6 @@ def handle():
         logging.debug("Sending response")
         return response
 
-    # Placeholder stuff to mock follow up responses here
     data = {"text": (preprocessors["ca.mcgill.a11y.image.preprocessor.text"
                                    "-followup"]["response_brief"])}
 

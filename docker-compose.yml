@@ -291,6 +291,13 @@ services:
     labels:
         ca.mcgill.a11y.image.handler: enable
 
+  text-followup-handler:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-text-followup:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+        ca.mcgill.a11y.image.handler: enable
+
 # end - common services
 
 # start - unicorn exclusive services
