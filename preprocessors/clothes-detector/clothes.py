@@ -34,6 +34,7 @@ from scipy.spatial import KDTree
 from colorthief import ColorThief
 from yolo.utils.utils import load_classes
 from predictors.YOLOv3 import YOLOv3Predictor
+from datetime import datetime
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.NOTSET)
@@ -200,7 +201,10 @@ def health():
     """
     Health check endpoint to verify if the service is running
     """
-    return jsonify({"status": "healthy", "timestamp": int(time.time())}), 200
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":

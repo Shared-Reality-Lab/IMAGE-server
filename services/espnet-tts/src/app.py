@@ -26,6 +26,7 @@ from io import BytesIO
 from jsonschema import validate
 from torch.cuda import empty_cache
 from werkzeug.wsgi import FileWrapper
+from datetime import datetime
 
 logging.basicConfig(format="%(asctime)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -115,8 +116,11 @@ def segment_tts():
 
 
 @app.route("/health", methods=["GET"])
-def health_check():
+def health():
     """
     Health check endpoint to verify if the service is running
     """
-    return jsonify({"status": "healthy", "timestamp": request.date}), 200
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200

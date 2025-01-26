@@ -28,7 +28,7 @@ from torch.cuda import empty_cache
 from werkzeug.wsgi import FileWrapper
 from num2words import num2words
 import re  # for regular expression processing
-import time
+from datetime import datetime
 
 logging.basicConfig(format="%(asctime)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -177,4 +177,7 @@ def health():
     """
     Health check endpoint to verify if the service is running
     """
-    return jsonify({"status": "healthy", "timestamp": int(time.time())}), 200
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200

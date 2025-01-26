@@ -27,6 +27,7 @@ from torchvision import transforms
 import torch
 from PIL import Image
 from io import BytesIO
+from datetime import datetime
 
 from utils import detect, Classifier
 
@@ -193,7 +194,10 @@ def health():
     """
     Health check endpoint to verify if the service is running
     """
-    return jsonify({"status": "healthy", "timestamp": int(time.time())}), 200
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":

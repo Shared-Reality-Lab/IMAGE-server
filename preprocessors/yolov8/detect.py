@@ -28,6 +28,7 @@ import json
 import logging
 import os
 
+from datetime import datetime
 from ultralytics.nn.tasks import attempt_load_weights
 from ultralytics.yolo.utils import plt_settings
 from ultralytics.yolo.utils.torch_utils import select_device
@@ -379,7 +380,10 @@ def health():
     """
     Health check endpoint to verify if the service is running
     """
-    return jsonify({"status": "healthy", "timestamp": int(time.time())}), 200
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 def main():

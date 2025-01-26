@@ -22,6 +22,7 @@ import logging
 import time
 import drawSvg as draw
 import inflect
+from datetime import datetime
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -318,7 +319,10 @@ def health():
     """
     Health check endpoint to verify if the service is running
     """
-    return jsonify({"status": "healthy", "timestamp": int(time.time())}), 200
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":
