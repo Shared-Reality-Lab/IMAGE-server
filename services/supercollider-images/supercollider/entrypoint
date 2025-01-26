@@ -4,7 +4,7 @@
 
 #healthcheck 
 while :; do
-    echo -e "HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\"status\": \"healthy\"}" | nc -l -p 57110
+    echo -e "HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\"status\": \"healthy\"}" | nc -l -p 57110 || break
 done &
 
 exec "$@"
