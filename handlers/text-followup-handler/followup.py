@@ -1,4 +1,4 @@
-# Copyright (c) 2023 IMAGE Project, Shared Reality Lab, McGill University
+# Copyright (c) 2025 IMAGE Project, Shared Reality Lab, McGill University
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -63,7 +63,7 @@ def handle():
 
     logging.debug("Checking whether renderer is supported")
     if ("ca.mcgill.a11y.image.renderer.Text" not in contents["renderers"]):
-        logging.debug("Neither Text nor TactileSVG Renderer are supported")
+        logging.debug("Text Renderer is not supported")
         response = {
             "request_uuid": contents["request_uuid"],
             "timestamp": int(time.time()),
