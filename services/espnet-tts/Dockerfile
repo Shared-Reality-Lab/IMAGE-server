@@ -12,8 +12,8 @@ COPY /services/espnet-tts/requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY /services/espnet-tts/src/predownload.py .
-RUN python predownload.py
-RUN mkdir -p /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2 && \
+RUN python predownload.py && \
+    mkdir -p /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2 && \
     wget https://image.a11y.mcgill.ca/models/espnet/train_nodev_ljspeech_full_band_melgan.v2.tar.gz -O /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2.tar.gz && \
     tar xzvf /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2.tar.gz -C /home/python/.cache/parallel_wavegan/ljspeech_full_band_melgan.v2/
 
