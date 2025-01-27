@@ -22,10 +22,12 @@ import logging
 import collections
 from math import sqrt
 from operator import itemgetter
+# import the centralized logging utility
+from config.logging_utils import configure_logging
 
+configure_logging()
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG)
 
 
 def calculate_diagonal(x1, y1, x2, y2):
@@ -37,7 +39,7 @@ def calculate_diagonal(x1, y1, x2, y2):
 
 @app.route("/preprocessor", methods=['POST', 'GET'])
 def readImage():
-    logging.debug("Received request")
+    logging.pii("Received request")
     object_type = []
     dimensions = []
     ungrouped = []
@@ -59,12 +61,15 @@ def readImage():
     resolver = jsonschema.RefResolver.from_schema(
         schema, store=schema_store)
     content = request.get_json()
+    logging.pii(f"Request content: {content}")
+
     try:
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.pii(f"Validation error: {e.message} | Data: {content}")
         return jsonify("Invalid Preprocessor JSON format"), 400
+
     preprocessor = content["preprocessors"]
     if "ca.mcgill.a11y.image.preprocessor.objectDetection" \
             not in preprocessor:
@@ -74,6 +79,8 @@ def readImage():
     oDpreprocessor = \
         preprocessor["ca.mcgill.a11y.image.preprocessor.objectDetection"]
     objects = oDpreprocessor["objects"]
+    logging.pii(f"Object detection data: {objects}")
+
     for i in range(len(objects)):
         object_type.append(objects[i]["type"])
         dimensions.append(objects[i]["dimensions"])
@@ -112,12 +119,14 @@ def readImage():
     logging.debug("Number of groups " + str(len(final_group)))
     logging.debug("Number of ungrouped objects " + str(len(ungrouped)))
     data = {"grouped": final_group, "ungrouped": ungrouped}
+
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(data)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.pii(f"Validation error: {e.message} | Data: {data}")
         return jsonify("Invalid Preprocessor JSON format"), 500
+
     response = {
         "title": "Grouping Data",
         "description": "Grouped data for objects",
@@ -126,13 +135,15 @@ def readImage():
         "name": name,
         "data": data
     }
+
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.pii(f"Validation error: {e.message} | Data: {data}")
         return jsonify("Invalid Preprocessor JSON format"), 500
-    logging.debug("Sending response")
+
+    logging.pii(f"Sending response: {response}")
     return response
 
 

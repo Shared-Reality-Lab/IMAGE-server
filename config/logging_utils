@@ -1,0 +1,40 @@
+import logging
+import os
+
+# Define a PII log level
+PII_LOG_LEVEL = 5
+logging.addLevelName(PII_LOG_LEVEL, "PII")
+
+
+def pii(self, message, *args, **kwargs):
+    if self.isEnabledFor(PII_LOG_LEVEL):
+        self._log(PII_LOG_LEVEL, message, args, **kwargs)
+
+
+logging.Logger.pii = pii
+logging.pii = lambda msg, *args, **kwargs: logging.log(
+    PII_LOG_LEVEL, msg, *args, **kwargs)
+
+
+def configure_logging():
+    """
+    Configures logging based on environment variables.
+    """
+    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+    pii_logging_enabled = os.getenv("PII_LOGGING_ENABLED", "false").lower() == "true"
+    level = getattr(logging, log_level, logging.INFO)
+    logging.basicConfig(level=level)
+
+    # remove later - debug statements to verify log level
+    logging.info(f"LOG_LEVEL: {log_level}")
+    logging.info(f"PII_LOGGING_ENABLED: {pii_logging_enabled}")
+    # logging.info(f"Effective log level before PII:"
+    # f"{logging.getLogger().getEffectiveLevel()}")
+
+    if pii_logging_enabled:
+        logging.warning("Environment Unicorn: PII logging enabled!")
+        logging.getLogger().setLevel(PII_LOG_LEVEL)  # lower log level to PII
+        logging.info(f"Effective log level after enabling PII:" 
+                     f"{logging.getLogger().getEffectiveLevel()}")
+    else:
+        logging.info("Environment Pegasus: PII logging is disabled.")

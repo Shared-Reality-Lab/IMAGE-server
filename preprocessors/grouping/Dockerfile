@@ -5,12 +5,14 @@ RUN apk add --no-cache curl && \
 
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
+ENV PYTHONPATH="/app"
 
 COPY /preprocessors/grouping/requirements.txt /app/requirements.txt
 RUN pip3 install --upgrade pip && \
     pip3 install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
+COPY /config /app/config
 COPY /preprocessors/grouping/ /app
 
 EXPOSE 5000
