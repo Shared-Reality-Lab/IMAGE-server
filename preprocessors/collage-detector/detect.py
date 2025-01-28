@@ -23,6 +23,7 @@ import json
 import jsonschema
 import logging
 import time
+from datetime import datetime
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -94,6 +95,17 @@ def detect_collage():
         return jsonify("Invalid Preprocessor JSON format"), 500
     logging.debug(type)
     return response
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":

@@ -24,7 +24,7 @@ import tempfile
 import jsonschema
 from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify
-
+from datetime import datetime
 
 import nltk
 import clipscore
@@ -253,6 +253,17 @@ def main():
 
     logging.debug("Sending response")
     return response
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == '__main__':

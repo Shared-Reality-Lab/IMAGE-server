@@ -1,6 +1,6 @@
 FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime
 
-RUN apt-get update && apt-get install -y libsndfile1 espeak-ng build-essential && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y libsndfile1 espeak-ng build-essential curl && rm -rf /var/lib/apt/lists/*
 
 
 ## phonemizedf
@@ -46,6 +46,8 @@ COPY /services/espnet-tts-fr/conf/model-conf/feats_stats.npz ./
 
 ENV TORCH_DEVICE="cpu"
 EXPOSE 80
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:80/health || exit 1
 
 CMD ["gunicorn", "app:app", "-b", "0.0.0.0:80", "--capture-output", "--log-level=debug"]
 

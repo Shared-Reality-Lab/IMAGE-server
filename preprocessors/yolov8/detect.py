@@ -28,6 +28,7 @@ import json
 import logging
 import os
 
+from datetime import datetime
 from ultralytics.nn.tasks import attempt_load_weights
 from ultralytics.yolo.utils import plt_settings
 from ultralytics.yolo.utils.torch_utils import select_device
@@ -372,6 +373,17 @@ def run(weights='yolov8x.pt',
                       str(len(things["objects"])))
         logging.debug("Sending response")
         return response
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 def main():

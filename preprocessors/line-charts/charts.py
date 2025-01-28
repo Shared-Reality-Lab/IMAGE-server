@@ -23,6 +23,7 @@ from flask import Flask, request, jsonify
 
 from charts_utils import getLowerPointsOnLeft, getHigherPointsOnLeft
 from charts_utils import getLowerPointsOnRight, getHigherPointsOnRight
+from datetime import datetime
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -127,6 +128,17 @@ def get_chart_info():
     logging.debug("Sending response")
     logging.debug(data)
     return response
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":

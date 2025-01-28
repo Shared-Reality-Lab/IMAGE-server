@@ -21,6 +21,7 @@ import time
 import jsonschema
 import logging
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -172,6 +173,17 @@ def categorise():
     # all done. give final category information and return to orchestrator
     logging.info(graphic_category_json)
     return response
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":

@@ -27,6 +27,7 @@ from torchvision import transforms
 import torch
 from PIL import Image
 from io import BytesIO
+from datetime import datetime
 
 from utils import detect, Classifier
 
@@ -186,6 +187,17 @@ def run():
         logging.info("Schema validated")
         logging.info("Returning response")
         return response
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":
