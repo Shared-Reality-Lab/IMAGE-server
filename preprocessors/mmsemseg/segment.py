@@ -34,7 +34,9 @@ from utils import visualize_result, findContour
 
 from time import time
 import logging
+from config.logging_utils import configure_logging
 
+configure_logging()
 # configuration and checkpoint files
 BEIT_CONFIG = "/app/config/upernet_beit-base_8x2_640x640_160k_ade20k.py"
 BEIT_CHECKPOINT = "/app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth"
@@ -53,22 +55,24 @@ def run_segmentation(url, model, dictionary):
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
     logging.info("converting base64 to numpy array")
 
-    image_b64 = url.split(",")[1]
-    binary = base64.b64decode(image_b64)
-    image = np.asarray(bytearray(binary), dtype="uint8")
-    image_np = cv2.imdecode(image, cv2.IMREAD_COLOR)
+    try:
+        image_b64 = url.split(",")[1]
+        binary = base64.b64decode(image_b64)
+        image = np.asarray(bytearray(binary), dtype="uint8")
+        image_np = cv2.imdecode(image, cv2.IMREAD_COLOR)       
+    except Exception as e:
+        logging.error("Error decoding base64 image: {}".format(e))
+        raise e
 
     # rescale the image
     height, width, channels = image_np.shape
     scale_factor = float(1500.0 / float(max(height, width)))
 
-    logging.info("graphic oiginal dimension {}".format(image_np.shape))
+    logging.info("graphic original dimension {}".format(image_np.shape))
 
     if scale_factor <= 1.0:
         logging.info("scaling down an image")
-
         image_np = mmcv.imrescale(image_np, scale_factor)
-
         logging.info("graphic scaled dimension: {}".format(image_np.shape))
 
     height, width, channels = image_np.shape
@@ -152,7 +156,8 @@ def segment():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(request_json)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(f"Request validation error: {e.message}")
+        logging.error("Request validation failed")
+        logging.pii(f"Validation error: {e.message} | Data: {request_json}")
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     if "graphic" not in request_json:
@@ -188,7 +193,8 @@ def segment():
             try:
                 segment = run_segmentation(
                     request_json["graphic"], model, dictionary)
-            except Exception:
+            except Exception as e:
+                logging.pii(f"Segmentation error: {e}")
                 return jsonify("Error while running segmentation"), 500
         else:
             """We are providing the user the ability to process an image
@@ -198,7 +204,8 @@ def segment():
             try:
                 segment = run_segmentation(
                     request_json["graphic"], model, dictionary)
-            except Exception:
+            except Exception as e:
+                logging.pii(f"Segmentation error: {e}")
                 return jsonify("Error while running the segmentation"), 500
     else:
         """We are providing the user the ability to process an image
@@ -208,7 +215,8 @@ def segment():
         try:
             segment = run_segmentation(
                 request_json["graphic"], model, dictionary)
-        except Exception:
+        except Exception as e:
+            logging.pii(f"Segmentation error: {e}")
             return jsonify("Error while running the segmentation"), 500
 
     torch.cuda.empty_cache()
@@ -218,7 +226,8 @@ def segment():
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(segment)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Data validation failed")
+        logging.pii(f"Validation error: {e.message} | Data: {segment}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {
@@ -233,7 +242,8 @@ def segment():
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Response validation failed")
+        logging.pii(f"Validation error: {e.message} | Response: {response}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.info("Valid response generated")
