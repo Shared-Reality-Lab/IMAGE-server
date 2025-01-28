@@ -308,6 +308,7 @@ services:
     restart: unless-stopped
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.route: "followup"
 
 # end - common services
 
