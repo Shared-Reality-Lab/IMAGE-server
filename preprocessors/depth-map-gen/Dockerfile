@@ -4,7 +4,7 @@ ARG CUDNN="9"
 FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-runtime
 
 #system dependencies
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv wget git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-opencv wget git curl && rm -rf /var/lib/apt/lists/*
 
 #user/environment setup
 RUN adduser --disabled-password python
@@ -28,6 +28,8 @@ RUN git clone https://github.com/aim-uofa/AdelaiDepth && \
 COPY /preprocessors/depth-map-gen/ /app
 
 EXPOSE 5000
-
 USER python
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:5000/health || exit 1
+
 CMD [ "gunicorn", "depth-map-generator:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]

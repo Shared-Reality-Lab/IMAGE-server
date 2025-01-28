@@ -2,7 +2,7 @@ FROM pytorch/pytorch:latest
 
 # See README.md#docker-image for visualisation of the directory structure
 WORKDIR /app
-RUN apt-get update && apt-get install python3 python3-pip git git-lfs -y
+RUN apt-get update && apt-get install python3 python3-pip git git-lfs curl -y
 
 # Copy requirements 
 COPY services/multilang-support/requirements.txt /app/
@@ -27,4 +27,7 @@ COPY services/multilang-support/src/*.py /app/src/
 
 EXPOSE 80
 ENV FLASK_APP=src/app.py
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:80/health || exit 1
+
 CMD [ "gunicorn", "src.translate:app", "--bind", "0.0.0.0:80", "--log-level=info", "--timeout=120"]

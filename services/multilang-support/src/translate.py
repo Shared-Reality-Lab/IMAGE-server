@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 from .utils import LOGGER, Translator, SUPPORTED_LANGS
 import json
 import jsonschema
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -91,3 +92,14 @@ def translate_request():
     LOGGER.debug(f"- Response SENT! Time taken: {elapsed_time} ms -")
     # Return response
     return jsonify(response), 200
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200

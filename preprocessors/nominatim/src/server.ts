@@ -16,8 +16,7 @@
  */
 
 import Ajv from "ajv";
-import express from "express";
-
+import express, { Request, Response } from "express";
 import querySchemaJSON from "./schemas/request.schema.json";
 import preprocessorResponseJSON from "./schemas/preprocessor-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
@@ -87,6 +86,10 @@ app.post("/preprocessor", async (req, res) => {
         console.error(e);
         res.status(500).json({"message": (e as Error).message});
     }
+});
+
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
 });
 
 app.listen(port, () => {

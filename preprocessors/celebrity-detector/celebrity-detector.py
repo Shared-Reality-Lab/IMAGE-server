@@ -27,6 +27,7 @@ import base64
 from flask import Flask, request, jsonify
 import cv2
 import numpy as np
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -217,6 +218,17 @@ def categorise():
         logging.debug("Detected " + str(len(final_data)) +
                       "celebrities out of " + str(len(objects)) + "objects")
         return response
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":

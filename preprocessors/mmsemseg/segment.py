@@ -34,6 +34,7 @@ from utils import visualize_result, findContour
 
 from time import time
 import logging
+from datetime import datetime
 
 # configuration and checkpoint files
 BEIT_CONFIG = "/app/config/upernet_beit-base_8x2_640x640_160k_ade20k.py"
@@ -241,12 +242,15 @@ def segment():
     return response
 
 
-@app.route('/health', methods=['GET'])
+@app.route("/health", methods=["GET"])
 def health():
     """
-    health check endpoint to verify if the service is up.
+    Health check endpoint to verify if the service is running
     """
-    return jsonify({"status": "healthy"}), 200
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":

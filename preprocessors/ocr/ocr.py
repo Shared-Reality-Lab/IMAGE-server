@@ -23,6 +23,7 @@ import os
 import io
 import base64
 from flask import Flask, request, jsonify
+from datetime import datetime
 from ocr_utils import (
     process_azure_read,
     process_azure_ocr,
@@ -151,12 +152,15 @@ def analyze_image(source, width, height, cld_srv_optn):
         return process_google_vision(image_b64, width, height)
 
 
-@app.route('/health', methods=['GET'])
+@app.route("/health", methods=["GET"])
 def health():
     """
-    health check endpoint to verify if the service is up.
+    Health check endpoint to verify if the service is running
     """
-    return jsonify({"status": "healthy"}), 200
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":
