@@ -96,6 +96,11 @@ services:
             context: .
             dockerfile: ./preprocessors/graphic-caption/Dockerfile
         image: "graphic-caption:latest"
+    text-followup:
+        build:
+            context: .
+            dockerfile: ./preprocessors/text-followup/Dockerfile
+        image: "text-followup:latest"
     emotion-recognition:
         build:
             context: .
