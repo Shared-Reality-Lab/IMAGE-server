@@ -22,6 +22,9 @@ from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes # noqa
 from msrest.authentication import CognitiveServicesCredentials
 from google.cloud import vision
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 # Pull key value and declare endpoint for Azure OCR API
 azure_subscr_key = os.environ["AZURE_API_KEY"]
@@ -72,132 +75,156 @@ def process_azure_read(stream, width, height):
         return ocr_results
     else:
         logging.error("OCR text: {}".format(read_result.status))
+        logging.pii(f"Azure Read OCR failure details: {read_result.status}")
         return None
 
 
 def process_azure_read_v4_preview(stream, width, height):
-    headers = {
-        'Content-Type': 'application/octet-stream',
-        'Ocp-Apim-Subscription-Key': azure_subscr_key,
-    }
+    try:
+        headers = {
+            'Content-Type': 'application/octet-stream',
+            'Ocp-Apim-Subscription-Key': azure_subscr_key,
+        }
 
-    param = "features=Read&model-version=latest&api-version=2022-10-12-preview"
-    ocr_url = azure_endpoint + "computervision/imageanalysis:analyze?" + param
+        param = \
+            "features=Read&model-version=latest&api-version=2022-10-12-preview"
+        ocr_url = azure_endpoint + "computervision/imageanalysis:analyze?" \
+            + param
 
-    response = requests.post(ocr_url, headers=headers, data=stream)
-    response.raise_for_status()
+        response = requests.post(ocr_url, headers=headers, data=stream)
+        response.raise_for_status()
 
-    read_result = response.json()
+        read_result = response.json()
 
-    # Check for success
-    if (len(read_result['readResult']) == 0):
-        logging.error("No READ response")
+        # Check for success
+        if (len(read_result['readResult']) == 0):
+            logging.error("No READ response")
+            return None
+        else:
+            ocr_results = []
+            for page in read_result['readResult']['pages']:
+                for line in page['lines']:
+                    line_text = line['content']
+                    # Get normalized bounding box for each line
+                    bbx = line['boundingBox']
+                    bg_bx = [bbx[0], bbx[1], bbx[4], bbx[5]]
+                    bounding_box = normalize_bdg_box(bg_bx, width, height)
+                    ocr_results.append({
+                        'text': line_text,
+                        'bounding_box': bounding_box
+                    })
+            return ocr_results
+
+    except requests.exceptions.RequestException as e:
+        logging.error("Request failed for Azure Read V4")
+        logging.pii(f"Azure Read V4 error details: {e}")
         return None
-    else:
-        ocr_results = []
-        for page in read_result['readResult']['pages']:
-            for line in page['lines']:
-                line_text = line['content']
-                # Get normalized bounding box for each line
-                bbx = line['boundingBox']
-                bg_bx = [bbx[0], bbx[1], bbx[4], bbx[5]]
-                bounding_box = normalize_bdg_box(bg_bx, width, height)
-                ocr_results.append({
-                    'text': line_text,
-                    'bounding_box': bounding_box
-                })
-        return ocr_results
 
 
 def process_azure_ocr(stream, width, height):
-    headers = {
-        'Content-Type': 'application/octet-stream',
-        'Ocp-Apim-Subscription-Key': azure_subscr_key,
-    }
+    try:
+        headers = {
+            'Content-Type': 'application/octet-stream',
+            'Ocp-Apim-Subscription-Key': azure_subscr_key,
+        }
 
-    ocr_url = azure_endpoint + "vision/v3.2/ocr"
+        ocr_url = azure_endpoint + "vision/v3.2/ocr"
 
-    response = requests.post(ocr_url, headers=headers, data=stream)
-    response.raise_for_status()
+        response = requests.post(ocr_url, headers=headers, data=stream)
+        response.raise_for_status()
 
-    read_result = response.json()
+        read_result = response.json()
 
-    ocr_results = []
-    for region in read_result['regions']:
-        region_text = ""
-        for line in region['lines']:
-            for word in line['words']:
-                region_text += word['text'] + " "
-        region_text = region_text[:-1]
-        # Get normalized bounding box for each region
-        bb = region['boundingBox'].split(",")
-        maxX = float(bb[0]) + float(bb[2])
-        maxY = float(bb[1]) + float(bb[3])
-        bndng_bx = [float(bb[0]), float(bb[1]), maxX, maxY]
-        bounding_box = normalize_bdg_box(bndng_bx, width, height)
-        ocr_results.append({
-            'text': region_text,
-            'bounding_box': bounding_box
-        })
-    if not ocr_results:
+        ocr_results = []
+        for region in read_result['regions']:
+            region_text = ""
+            for line in region['lines']:
+                for word in line['words']:
+                    region_text += word['text'] + " "
+            region_text = region_text[:-1]
+            # Get normalized bounding box for each region
+            bb = region['boundingBox'].split(",")
+            maxX = float(bb[0]) + float(bb[2])
+            maxY = float(bb[1]) + float(bb[3])
+            bndng_bx = [float(bb[0]), float(bb[1]), maxX, maxY]
+            bounding_box = normalize_bdg_box(bndng_bx, width, height)
+            ocr_results.append({
+                'text': region_text,
+                'bounding_box': bounding_box
+            })
+        if not ocr_results:
+            return None
+        return ocr_results
+    except Exception as e:
+        logging.error("Error in Azure OCR")
+        logging.pii(f"Azure OCR error details: {e}")
         return None
-    return ocr_results
 
 
 def process_free_ocr(source, width, height):
-    payload = {
-        'base64Image': source,
-        'apikey': freeocr_subscription_key,
-        'isOverlayRequired': True
-    }
-    response = requests.post(freeocr_endpoint, data=payload)
-    read_result = response.json()
+    try:
+        payload = {
+            'base64Image': source,
+            'apikey': freeocr_subscription_key,
+            'isOverlayRequired': True
+        }
+        response = requests.post(freeocr_endpoint, data=payload)
+        read_result = response.json()
 
-    # Check for success
-    if not read_result['ParsedResults']:
+        # Check for success
+        if not read_result['ParsedResults']:
+            return None
+
+        ocr_results = []
+        for line in read_result['ParsedResults'][0]['TextOverlay']['Lines']:
+            line_text = line['LineText']
+            # Get normalized bounding box for each line
+            maxY = line['MinTop'] + line['MaxHeight']
+            maxX = line['Words'][-1]['Left'] + line['Words'][-1]['Width']
+            bndng_bx = [line['Words'][0]['Left'], line['MinTop'],
+                        maxX, maxY]
+            bounding_box = normalize_bdg_box(bndng_bx, width, height)
+            ocr_results.append({
+                'text': line_text,
+                'bounding_box': bounding_box
+            })
+        return ocr_results
+    except Exception as e:
+        logging.error("Error in Free OCR processing")
+        logging.pii(f"Free OCR error details: {e}")
         return None
-
-    ocr_results = []
-    for line in read_result['ParsedResults'][0]['TextOverlay']['Lines']:
-        line_text = line['LineText']
-        # Get normalized bounding box for each line
-        maxY = line['MinTop'] + line['MaxHeight']
-        maxX = line['Words'][-1]['Left'] + line['Words'][-1]['Width']
-        bndng_bx = [line['Words'][0]['Left'], line['MinTop'],
-                    maxX, maxY]
-        bounding_box = normalize_bdg_box(bndng_bx, width, height)
-        ocr_results.append({
-            'text': line_text,
-            'bounding_box': bounding_box
-        })
-    return ocr_results
 
 
 def process_google_vision(image_b64, width, height):
-    client = vision.ImageAnnotatorClient()
-    image = vision.Image(content=image_b64)
-    response = client.text_detection(image=image)
+    try:
+        client = vision.ImageAnnotatorClient()
+        image = vision.Image(content=image_b64)
+        response = client.text_detection(image=image)
 
-    # Check for success
-    if response.error.message:
-        logging.error(response.error.message)
+        # Check for success
+        if response.error.message:
+            logging.error(response.error.message)
+            return None
+
+        ocr_results = []
+
+        for word in response.text_annotations[1:]:
+            text = word.description
+            # Get normalized bounding box for each word
+            bndng_bx = [word.bounding_poly.vertices[0].x,
+                        word.bounding_poly.vertices[0].y,
+                        word.bounding_poly.vertices[2].x,
+                        word.bounding_poly.vertices[2].y]
+            bounding_box = normalize_bdg_box(bndng_bx, width, height)
+            ocr_results.append({
+                'text': text,
+                'bounding_box': bounding_box
+            })
+        return ocr_results
+    except Exception as e:
+        logging.error("Error in Google Vision processing")
+        logging.pii(f"Google Vision error details: {e}")
         return None
-
-    ocr_results = []
-
-    for word in response.text_annotations[1:]:
-        text = word.description
-        # Get normalized bounding box for each word
-        bndng_bx = [word.bounding_poly.vertices[0].x,
-                    word.bounding_poly.vertices[0].y,
-                    word.bounding_poly.vertices[2].x,
-                    word.bounding_poly.vertices[2].y]
-        bounding_box = normalize_bdg_box(bndng_bx, width, height)
-        ocr_results.append({
-            'text': text,
-            'bounding_box': bounding_box
-        })
-    return ocr_results
 
 
 def normalize_bdg_box(bndng_bx, width, height):

@@ -58,8 +58,10 @@ def objectdepth():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 400
+
     # check for depth-map
     if ("ca.mcgill.a11y.image.preprocessor.depth-map-gen"
             not in content["preprocessors"]):
@@ -90,7 +92,8 @@ def objectdepth():
                 schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
+            logging.error("Validation failed for response without dimensions")
+            logging.pii(f"Validation error: {error.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
@@ -146,7 +149,8 @@ def objectdepth():
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(obj_depth_output)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for object depth output")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
     response = {
         "request_uuid": request_uuid,
@@ -158,9 +162,9 @@ def objectdepth():
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for final response")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
-    logging.debug("Sending response")
     return response
 
 
