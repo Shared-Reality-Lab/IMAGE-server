@@ -62,21 +62,24 @@ app.post("/handler", async (req, res) => {
     const objDet = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
     const objGroup = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
     const action = preprocessors["ca.mcgill.a11y.image.preprocessor.actionRecognition"];
-    const collageDetector = preprocessors["ca.mcgill.a11y.image.preprocessor.collageDetector"]
+    const collageDetector = preprocessors["ca.mcgill.a11y.image.preprocessor.collageDetector"];
+    const graphicCaption = preprocessors["ca.mcgill.a11y.image.preprocessor.graphic-caption"];
     const targetLanguage = req.body["language"];
 
     // Ignore secondCat since it isn't useful on its own
-    if (!(semseg && semseg?.segments) && !(objDet && objDet?.objects) && !objGroup) {
+    if (!(semseg && semseg?.segments) && !(objDet && objDet?.objects) && !objGroup && !graphicCaption) {
         console.debug("No usable preprocessor data! Can't render.");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
         res.json(response);
         return;
     }
     // Filter objects
-    utils.filterObjectsBySize(objDet, objGroup);
+    if (objDet) {
+        utils.filterObjectsBySize(objDet, objGroup);
+    }
 
-    if (semseg?.segments.length === 0 && objDet?.objects.length === 0) {
-        console.debug("No segments or objects detected! Can't render.");
+    if (semseg?.segments.length === 0 && objDet?.objects.length === 0 && !graphicCaption) {
+        console.debug("No segments, objects or caption detected! Can't render.");
         const response = utils.generateEmptyResponse(req.body["request_uuid"]);
         res.json(response);
         return;
@@ -101,6 +104,14 @@ app.post("/handler", async (req, res) => {
     }
 
     ttsData.push({"value": utils.generateIntro(secondCat), "type": "text"});
+
+    if (graphicCaption && graphicCaption["caption"]) {
+        ttsData.push(...utils.generateCaption(graphicCaption));
+        if ((semseg && semseg["segments"].length > 0) || (objDet && objGroup && objDet["objects"].length > 0)) {
+            ttsData.push({"value": "It also", "type": "text"});
+        }
+    }
+
     if (semseg && semseg["segments"].length > 0) {
         // Use all segments returned for now.
         // Filtering may be helpful later.
@@ -109,7 +120,7 @@ app.post("/handler", async (req, res) => {
             ttsData.push({"value": "It also", "type": "text"});
         }
     }
-   
+
     if (objDet && objGroup && objDet["objects"].length > 0) {
         ttsData.push(...utils.generateObjDet(objDet, objGroup, action));
     }
@@ -134,7 +145,7 @@ app.post("/handler", async (req, res) => {
                 targetLanguage
             );
             console.debug("Mapping translated values to ttsData")
-                
+
             for (let i = 0; i < ttsData.length; i++) {
                 ttsData[i]["value"] = translatedValues[i];
             }
@@ -162,7 +173,7 @@ app.post("/handler", async (req, res) => {
     } else {
         console.debug("Skipped text rendering.");
     }
-    
+
 
     // Construct SimpleAudio (if requested)
     if (hasSimple || hasSegment) {
@@ -274,7 +285,7 @@ app.post("/handler", async (req, res) => {
         }
     }
 
-	// Translate renderings' description before sending response
+    // Translate renderings' description before sending response
 	if (targetLanguage !== "en") {
 		try {
 			console.debug("Translating renderings description to " + targetLanguage);

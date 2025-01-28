@@ -90,31 +90,44 @@ export function generateSemSeg(semSeg: { "segments": Record<string, unknown>[] }
 }
 
 export function filterObjectsBySize(objDet: ObjDet, objGroup: ObjGroup) {
-    const groupsToDelete: number[] = [];
-    for (const group of objGroup["grouped"]) {
-        const objs = objDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"])) as Obj[];
-        const totalArea = objs.map(a => a.area).reduce((a, b) => a+ b, 0);
-        if (totalArea < MIN_OBJ_AREA) {
-            groupsToDelete.push(objGroup["grouped"].indexOf(group));
-        }
-    }
-    for (const idx of groupsToDelete) {
-        for (const objId of objGroup["grouped"][idx]["IDs"]) {
-            objDet["objects"].splice(objDet["objects"].findIndex(obj => obj["ID"] === objId), 1);
-        }
-        delete objGroup["grouped"][idx];
-    }
+    if (objGroup) {
+        const groupsToDelete: number[] = [];
 
-    const ungroupedToDelete: number[] = [];
-    for (const idx of objGroup["ungrouped"]) {
-        const obj = objDet["objects"].find((x: { "ID": number }) => x["ID"] === idx);
-        if (obj && obj.area < MIN_OBJ_AREA) {
-            ungroupedToDelete.push(idx);
+        for (const group of objGroup["grouped"]) {
+            const objs = objDet["objects"].filter((x: { "ID": number }) => group["IDs"].includes(x["ID"])) as Obj[];
+            const totalArea = objs.map(a => a.area).reduce((a, b) => a+ b, 0);
+            if (totalArea < MIN_OBJ_AREA) {
+                groupsToDelete.push(objGroup["grouped"].indexOf(group));
+            }
         }
-    }
-    for (const idx of ungroupedToDelete) {
-        objDet["objects"].splice(objDet["objects"].findIndex(obj => obj["ID"] === idx), 1);
-        objGroup["ungrouped"].splice(objGroup["ungrouped"].indexOf(idx), 1);
+        for (const idx of groupsToDelete) {
+            for (const objId of objGroup["grouped"][idx]["IDs"]) {
+                objDet["objects"].splice(objDet["objects"].findIndex(obj => obj["ID"] === objId), 1);
+            }
+            delete objGroup["grouped"][idx];
+        }
+
+        const ungroupedToDelete: number[] = [];
+        for (const idx of objGroup["ungrouped"]) {
+            const obj = objDet["objects"].find((x: { "ID": number }) => x["ID"] === idx);
+            if (obj && obj.area < MIN_OBJ_AREA) {
+                ungroupedToDelete.push(idx);
+            }
+        }
+        for (const idx of ungroupedToDelete) {
+            objDet["objects"].splice(objDet["objects"].findIndex(obj => obj["ID"] === idx), 1);
+            objGroup["ungrouped"].splice(objGroup["ungrouped"].indexOf(idx), 1);
+        }
+    } else {
+        const objectsToDelete: number[] = [];
+        for (const idx in objDet["objects"]) {
+            if (objDet["objects"][idx].area < MIN_OBJ_AREA) {
+                objectsToDelete.push(objDet["objects"][idx]["ID"]);
+            }
+        }
+        for (const idx of objectsToDelete) {
+            objDet["objects"].splice(objDet["objects"].findIndex(obj => obj["ID"] === idx), 1);
+        }
     }
 }
 
@@ -245,6 +258,17 @@ export function generateObjDet(objDet: ObjDet, objGroup: ObjGroup, actionRec: Ac
         objects[objects.length-1]["value"] = "and " + objects[objects.length-1]["value"];
     }
     return objects;
+}
+
+export function generateCaption(capObj: {caption: string}): TTSSegment[] {
+    return [{
+        "type": "text",
+        "value": "has the following description:"
+    }, {
+        "type": "text",
+        "value": capObj["caption"],
+        "label": "Generated caption"
+    }];
 }
 
 /**
