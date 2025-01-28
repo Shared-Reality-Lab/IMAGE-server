@@ -24,12 +24,13 @@ import tempfile
 import jsonschema
 from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify
-
+from config.logging_utils import configure_logging
 
 import nltk
 import clipscore
 from nltk.tag.stanford import StanfordNERTagger
 
+configure_logging()
 
 nltk.download('punkt')
 app = Flask(__name__)
@@ -167,7 +168,8 @@ def main():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     # ------ START COMPUTATION ------ #
@@ -241,14 +243,16 @@ def main():
         validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
         validator.validate(response['data'])
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for response data")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for response")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")

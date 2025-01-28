@@ -124,7 +124,7 @@ def readImage():
         validator.validate(data)
     except jsonschema.exceptions.ValidationError as e:
         logging.error("Validation failed for grouped data")
-        logging.pii(f"Validation error: {e.message} | Data: {data}")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {

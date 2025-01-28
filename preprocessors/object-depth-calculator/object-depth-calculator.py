@@ -22,6 +22,9 @@ import time
 import jsonschema
 import base64
 import logging
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
