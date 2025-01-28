@@ -7,6 +7,7 @@ WORKDIR /usr/src/app
 COPY /preprocessors/hello-preprocessor/package*.json ./
 RUN npm ci
 COPY /schemas src/schemas
+COPY /config /app/config
 COPY /preprocessors/hello-preprocessor/ .
 RUN npm run build
 

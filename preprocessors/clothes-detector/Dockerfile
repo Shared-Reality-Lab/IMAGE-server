@@ -5,10 +5,6 @@ FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-runtime
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-ENV DEBIAN_FRONTEND=noninteractive
-
 RUN adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
@@ -30,7 +26,7 @@ RUN pip3 install --upgrade pip && \
 # COPY ./requirements.txt /app/requirements.txt
 
 COPY /schemas /app/schemas
-# COPY ./schemas /app/schemas
+COPY /config /app/config
 
 # good practice to remove the archive 
 RUN wget https://image.a11y.mcgill.ca/models/clothesDetector/yolo.zip && \
@@ -38,7 +34,6 @@ RUN wget https://image.a11y.mcgill.ca/models/clothesDetector/yolo.zip && \
     rm yolo.zip 
 
 COPY /preprocessors/clothes-detector /app
-# COPY ./ /app
 
 EXPOSE 5000
 ENV FLASK_APP=clothes.py

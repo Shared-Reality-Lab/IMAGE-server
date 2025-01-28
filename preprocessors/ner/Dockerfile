@@ -20,6 +20,7 @@ RUN pip3 install --upgrade pip && \
     pip3 install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
+COPY /config /app/config
 COPY /preprocessors/ner/ /app
 
 EXPOSE 5000

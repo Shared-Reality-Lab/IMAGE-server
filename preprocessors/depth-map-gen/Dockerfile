@@ -21,6 +21,7 @@ RUN pip3 install --upgrade pip && \
 
 #schema
 COPY /schemas /app/schemas
+COPY /config /app/config
 
 #model download, app code
 RUN git clone https://github.com/aim-uofa/AdelaiDepth && \

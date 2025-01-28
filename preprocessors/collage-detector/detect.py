@@ -23,6 +23,9 @@ import json
 import jsonschema
 import logging
 import time
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -53,9 +56,11 @@ def detect_collage():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 400
-        # check for image
+
+    # check for image
     if "graphic" not in content:
         logging.info("Request is not a graphic. Skipping...")
         return "", 204  # No content
@@ -78,8 +83,10 @@ def detect_collage():
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(type)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for model output")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
+
     response = {
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
@@ -90,8 +97,10 @@ def detect_collage():
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for response")
+        logging.pii(f"Validation error: {e.message} | Response: {response}")
         return jsonify("Invalid Preprocessor JSON format"), 500
+
     logging.debug(type)
     return response
 

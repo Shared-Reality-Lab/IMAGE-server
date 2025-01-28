@@ -11,6 +11,7 @@ RUN pip3 install --upgrade pip && \
     pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
+COPY /config /app/config
 COPY /preprocessors/collage-detector/ /app
 
 EXPOSE 5000
