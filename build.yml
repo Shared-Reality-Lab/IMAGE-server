@@ -268,6 +268,11 @@ services:
             context: .
             dockerfile: ./handlers/svg-action-recognition/Dockerfile
         image: "svg-action-recognition:latest"
+    text-followup-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/text-followup-handler/Dockerfile
+        image: "text-followup-handler:latest"
     # Supercollider on Fedora 34
     supercollider-base:
         build:
