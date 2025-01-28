@@ -21,20 +21,14 @@ def configure_logging():
     Configures logging based on environment variables.
     """
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-    pii_logging_enabled = os.getenv("PII_LOGGING_ENABLED", "false").lower() == "true"
+    pii_logging_enabled = os.getenv("PII_LOGGING_ENABLED",
+                                    "false").lower() == "true"
+
     level = getattr(logging, log_level, logging.INFO)
     logging.basicConfig(level=level)
 
-    # remove later - debug statements to verify log level
-    logging.info(f"LOG_LEVEL: {log_level}")
-    logging.info(f"PII_LOGGING_ENABLED: {pii_logging_enabled}")
-    # logging.info(f"Effective log level before PII:"
-    # f"{logging.getLogger().getEffectiveLevel()}")
-
     if pii_logging_enabled:
         logging.warning("Environment Unicorn: PII logging enabled!")
-        logging.getLogger().setLevel(PII_LOG_LEVEL)  # lower log level to PII
-        logging.info(f"Effective log level after enabling PII:" 
-                     f"{logging.getLogger().getEffectiveLevel()}")
+        logging.getLogger().setLevel(PII_LOG_LEVEL)  # Lower log level to PII
     else:
         logging.info("Environment Pegasus: PII logging is disabled.")
