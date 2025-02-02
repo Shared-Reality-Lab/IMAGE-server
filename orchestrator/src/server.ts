@@ -167,23 +167,43 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
         data["preprocessors"] = {};
     }
     let currentPriorityGroup: number | undefined = undefined;
-    let promises: Promise<void>[] = []; // array to hold promises for preprocessor executions within the current priority group
+    const queue: (string | number)[][] = []; //Microservice queue for preprocessors and handlers
+
+    const processQueue = async (): Promise<void> => {
+        const promises: Promise<void>[] = [];   //store promises of each preprocessor 
+
+        while (queue.length > 0) {
+            const preprocessor = queue.shift() as (string | number)[];  //dequeue preprocessor 
+            if (preprocessor) { //ensure preprocessor is defined
+                //Wait for the preprocessor to complete execution before moving to the next
+                promises.push(executePreprocessor(preprocessor, data));
+            }
+        }
+        try {
+            await Promise.all(promises);    //wait for all promises in the current priority group to finish
+        } catch (error) {
+            console.error(`One or more of the promises failed at ${currentPriorityGroup} priority group.`, error);
+        }
+          
+    };
 
     for (const preprocessor of preprocessors) {
-        // check if priority group changes - if so, wait for the current promises to finish
+        //If the priority group changes, process the queue and move to the next group
         if (preprocessor[2] !== currentPriorityGroup) {
-            if (promises.length > 0) {
-                await Promise.all(promises); // wait for all preprocessors in the current group
-                promises = []; // reset promises for the new priority group
+            if (queue.length > 0) {
+                await processQueue(); //Process everything in the queue
             }
             currentPriorityGroup = Number(preprocessor[2]);
             console.debug(`Now on priority group ${currentPriorityGroup}`);
         }
-        // add the execution of the current preprocessor to the promises array
-        promises.push(executePreprocessor(preprocessor, data));
+
+        //Add the preprocessor to the queue
+        queue.push(preprocessor);
     }
-    if (promises.length > 0) {
-        await Promise.all(promises); // wait for remaining promises
+
+    //Process any remaining items in the queue
+    if (queue.length > 0) {
+        await processQueue();
     }
 
     return data;
