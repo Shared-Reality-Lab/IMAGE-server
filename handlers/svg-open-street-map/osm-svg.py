@@ -21,31 +21,31 @@ from jsonschema.exceptions import ValidationError
 import logging
 import time
 import drawSvg as draw
+from config.logging_utils import configure_logging
+
+configure_logging()
+
 app = Flask(__name__)
-
-# Configure the logging settings
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s]: %(message)s",
-    datefmt="%y-%m-%d %H:%M %Z",
-)
-
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.DEBUG)
 
 
 @app.route("/handler", methods=["POST"])
 def handle():
-    LOGGER.debug("Received request")
-    # Load necessary schema files
-    with open("./schemas/definitions.json") as f:
-        definitions_schema = json.load(f)
-    with open("./schemas/request.schema.json") as f:
-        request_schema = json.load(f)
-    with open("./schemas/handler-response.schema.json") as f:
-        response_schema = json.load(f)
-    with open("./schemas/renderers/svglayers.schema.json") as f:
-        renderer_schema = json.load(f)
+    logging.debug("Received request")
+    try:
+        # Load necessary schema files
+        with open("./schemas/definitions.json") as f:
+            definitions_schema = json.load(f)
+        with open("./schemas/request.schema.json") as f:
+            request_schema = json.load(f)
+        with open("./schemas/handler-response.schema.json") as f:
+            response_schema = json.load(f)
+        with open("./schemas/renderers/svglayers.schema.json") as f:
+            renderer_schema = json.load(f)
+    except Exception as e:
+        logging.error("Error loading schema files")
+        logging.pii(f"Schema loading error: {e}")
+        return jsonify("Schema files could not be loaded"), 500
+
     store = {
         definitions_schema["$id"]: definitions_schema,
         request_schema["$id"]: request_schema,
@@ -58,18 +58,19 @@ def handle():
     # Get and validate the request contents
     contents = request.get_json()
     try:
-        LOGGER.debug("Validating request")
+        logging.debug("Validating request")
         validator = jsonschema.Draft7Validator(
             request_schema, resolver=resolver
         )
         validator.validate(contents)
     except ValidationError as e:
-        LOGGER.error(e)
+        logging.error("Validation error in request schema")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid request received!"), 400
 
     # Check preprocessor data
     if "preprocessors" not in contents:
-        LOGGER.debug(" Missing preprocessor key. OSM SVG can't handle this")
+        logging.debug(" Missing preprocessor key. OSM SVG can't handle this")
         response = {
             "request_uuid": contents["request_uuid"],
             "timestamp": int(time.time()),
@@ -80,19 +81,19 @@ def handle():
                 response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-            LOGGER.error(error)
+            logging.pii(f"Renderer validation error: {error}")
             return jsonify("Invalid Preprocessor JSON format"), 500
-        LOGGER.debug("Sending response")
+        logging.debug("Sending response")
         return response
 
     else:
         preprocessor = contents['preprocessors']
 
         # Check if renderer is supported
-        LOGGER.debug("Checking whether renderer is supported")
+        logging.debug("Checking whether renderer is supported")
         if ("ca.mcgill.a11y.image.renderer.SVGLayers"
                 not in contents["renderers"]):
-            LOGGER.debug("OpenStreetMap SVG renderer not supported!")
+            logging.debug("OpenStreetMap SVG renderer not supported!")
             response = {
                 "request_uuid": contents["request_uuid"],
                 "timestamp": int(time.time()),
@@ -103,16 +104,16 @@ def handle():
                     response_schema, resolver=resolver)
                 validator.validate(response)
             except jsonschema.exceptions.ValidationError as error:
-                LOGGER.error(error)
+                logging.pii(f"Renderer validation error: {error}")
                 return jsonify("Invalid Preprocessor JSON format"), 500
-            LOGGER.debug("Sending response")
+            logging.debug("Sending response")
             return response
 
         # Check if DebugMode is enabled
         if ("ca.mcgill.a11y.image.capability.DebugMode"
                 not in contents['capabilities']):
 
-            LOGGER.debug("DebugMode not enabled. Can't process further!")
+            logging.debug("DebugMode not enabled. Can't process further!")
             response = {
                 "request_uuid": contents["request_uuid"],
                 "timestamp": int(time.time()),
@@ -123,15 +124,15 @@ def handle():
                     response_schema, resolver=resolver)
                 validator.validate(response)
             except jsonschema.exceptions.ValidationError as error:
-                LOGGER.error(error)
+                logging.pii(f"Renderer validation error: {error}")
                 return jsonify("Invalid Preprocessor JSON format"), 500
-            LOGGER.debug("Sending response")
+            logging.debug("Sending response")
             return response
 
-        LOGGER.debug("Checking for OpenStreetMap map data ")
+        logging.debug("Checking for OpenStreetMap map data ")
         if "ca.mcgill.a11y.image.preprocessor.openstreetmap"\
                 not in preprocessor:
-            LOGGER.info("OSM map data not present. Skipping ...")
+            logging.info("OSM map data not present. Skipping ...")
             response = {
                 "request_uuid": contents["request_uuid"],
                 "timestamp": int(time.time()),
@@ -142,13 +143,13 @@ def handle():
                     response_schema, resolver=resolver)
                 validator.validate(response)
             except jsonschema.exceptions.ValidationError as error:
-                LOGGER.error(error)
+                logging.pii(f"Renderer validation error: {error}")
                 return jsonify("Invalid Preprocessor JSON format"), 500
-            LOGGER.debug("Sending response")
+            logging.debug("Sending response")
             return response
 
         else:
-            LOGGER.debug("Map data found! Processing data!")
+            logging.debug("Map data found! Processing data!")
 
             svg_layers = []
             dimensions = 700, 700
@@ -284,7 +285,7 @@ def handle():
                 svg_layers.append(
                     {"label": "AllLayers",
                      "svg": all_svg.asDataUri()})
-                LOGGER.debug("Providing final result!")
+                logging.debug("Providing final result!")
                 data = {
                     "layers": svg_layers
 
@@ -300,13 +301,13 @@ def handle():
                     )
                     validator.validate(data)
                 except ValidationError as e:
-                    LOGGER.debug(
+                    logging.debug(
                         "Failed to produce a valid renderer response!")
-                    LOGGER.error(e)
+                    logging.pii(f"Renderer validation error: {e}")
                     return jsonify(
                         "Failed to produce a valid renderer response!"), 500
             else:
-                LOGGER.info("No data for streets rendering. Skipping ...")
+                logging.info("No data for streets rendering. Skipping ...")
                 response = {
                     "request_uuid": contents["request_uuid"],
                     "timestamp": int(time.time()),
@@ -324,10 +325,10 @@ def handle():
                 )
                 validator.validate(response)
             except ValidationError as e:
-                LOGGER.debug("Failed to generate a valid response")
-                LOGGER.error(e)
-                return jsonify("Failed to generate a valid response"), 500
-            LOGGER.debug("Sending final response")
+                logging.debug("Failed to generate a valid response")
+                logging.pii(f"Response validation error: {e}")
+                return jsonify("Failed to generate a valid response"), 500           
+            logging.debug("Sending final response")
             return response
 
 

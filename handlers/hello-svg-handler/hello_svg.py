@@ -21,22 +21,30 @@ from jsonschema.exceptions import ValidationError
 import logging
 import time
 import drawSvg as draw
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 
 
 @app.route("/handler", methods=["POST"])
 def handle():
-    logging.debug("Received request")
-    # Load necessary schema files
-    with open("./schemas/definitions.json") as f:
-        definitions_schema = json.load(f)
-    with open("./schemas/request.schema.json") as f:
-        request_schema = json.load(f)
-    with open("./schemas/handler-response.schema.json") as f:
-        response_schema = json.load(f)
-    with open("./schemas/renderers/svglayers.schema.json") as f:
-        renderer_schema = json.load(f)
+    try:
+        logging.debug("Received request")
+        # Load necessary schema files
+        with open("./schemas/definitions.json") as f:
+            definitions_schema = json.load(f)
+        with open("./schemas/request.schema.json") as f:
+            request_schema = json.load(f)
+        with open("./schemas/handler-response.schema.json") as f:
+            response_schema = json.load(f)
+        with open("./schemas/renderers/svglayers.schema.json") as f:
+            renderer_schema = json.load(f)
+    except Exception as e:
+        logging.error("Error loading schema files")
+        logging.pii(f"Schema loading error: {e}")
+        return jsonify("Schema files could not be loaded"), 500
     store = {
             definitions_schema["$id"]: definitions_schema,
             request_schema["$id"]: request_schema,
@@ -54,7 +62,8 @@ def handle():
         )
         validator.validate(contents)
     except ValidationError as e:
-        logging.error(e)
+        logging.error("Validation error occurred")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid request received!"), 400
 
     # Check for dimensions
@@ -93,8 +102,8 @@ def handle():
         )
         validator.validate(data)
     except ValidationError as e:
-        logging.error(e)
         logging.error("Failed to validate the response renderer!")
+        logging.pii(f"Renderer validation error: {e.message}")
         return jsonify("Failed to validate the response renderer"), 500
     response = {
             "request_uuid": contents["request_uuid"],
@@ -108,8 +117,9 @@ def handle():
         validator.validate(response)
     except ValidationError as e:
         logging.error("Failed to generate a valid response")
-        logging.error(e)
+        logging.pii(f"Response validation error: {e.message}")
         return jsonify("Failed to generate a valid response"), 500
+
     logging.debug("Sending response")
     return response
 
