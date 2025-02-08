@@ -1,14 +1,14 @@
-FROM node:alpine as builder
+FROM node:alpine AS builder
 
 WORKDIR /usr/src/app
 COPY /preprocessors/nominatim/package*.json ./
 RUN npm ci
 COPY /schemas src/schemas
-COPY /config /app/config
+COPY /config ./src/config
 COPY /preprocessors/nominatim/ /usr/src/app
 RUN npm run build && npm prune --production
 
-FROM node:alpine as final
+FROM node:alpine AS final
 
 WORKDIR /usr/src/app
 COPY --from=builder --chown=node:node /usr/src/app/dist ./dist

@@ -1,46 +1,49 @@
 // https://medium.com/@jaiprajapati3/masking-of-sensitive-data-in-logs-700850e233f5
 import winston from "winston";
-import * as dotenv from "dotenv";
 
-dotenv.config(); 
 const PII_LOG_LEVEL = 5;
-
-const levels = {
+const levels: Record<string, number> = {
     error: 0,
     warn: 1,
     info: 2,
     debug: 3,
-    pii: PII_LOG_LEVEL 
+    pii: PII_LOG_LEVEL
 };
 
-// log format (timestamp + message)
-const logFormat = winston.format.printf(({ timestamp, level, message }) => {
-    return `${timestamp} [${level.toUpperCase()}]: ${message}`;
-});
+// extend Winston Logger Type to Include "pii"
+interface ExtendedLogger extends winston.Logger {
+    pii: (message: string) => void;
+}
 
 // create the logger instance
-const logger = winston.createLogger({
+const logger: ExtendedLogger = winston.createLogger({
     levels,
     format: winston.format.combine(
-        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-        logFormat
+        winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+        winston.format.printf(({ timestamp, level, message }) => {
+            return `${timestamp ?? new Date().toISOString()} [${level.toUpperCase()}]: ${message}`;
+        })
     ),
     transports: [new winston.transports.Console()]
-});
+}) as ExtendedLogger;
 
-// custom PII log-level method, only log when enabled
 logger.pii = (message: string) => {
     if (process.env.PII_LOGGING_ENABLED === "true") {
-        logger.log("pii", message);
+        logger.log({
+            level: "pii",
+            message: message
+        });
     }
 };
 
 export function configureLogging(): void {
     const logLevel = process.env.LOG_LEVEL?.toLowerCase() || "info";
     const piiLoggingEnabled = process.env.PII_LOGGING_ENABLED === "true";
-
-    // set the base logging level
-    logger.level = levels.hasOwnProperty(logLevel) ? logLevel : "info";
+    if (logLevel in levels) { // ensure levels exists
+        logger.level = logLevel;
+    } else {
+        logger.level = "info"; // default if logLevel is invalid
+    }
 
     if (piiLoggingEnabled) {
         logger.warn("Environment Unicorn: PII logging enabled!");
