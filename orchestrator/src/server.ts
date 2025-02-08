@@ -169,22 +169,17 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
     let currentPriorityGroup: number | undefined = undefined;
     const queue: (string | number)[][] = []; //Microservice queue for preprocessors and handlers
 
-    const processQueue = async (): Promise<void> => {
-        const promises: Promise<void>[] = [];   //store promises of each preprocessor 
 
-        while (queue.length > 0) {
-            const preprocessor = queue.shift() as (string | number)[];  //dequeue preprocessor 
-            if (preprocessor) { //ensure preprocessor is defined
-                //Wait for the preprocessor to complete execution before moving to the next
-                promises.push(executePreprocessor(preprocessor, data));
-            }
-        }
+    //function that dequeues everything in the queue at once, executes them and waits for them to finish processing
+    const processQueue = async (): Promise<void> => {
         try {
-            await Promise.all(promises);    //wait for all promises in the current priority group to finish
+            await Promise.all(queue.map(preprocessor => executePreprocessor(preprocessor, data)));
         } catch (error) {
-            console.error(`One or more of the promises failed at ${currentPriorityGroup} priority group.`, error);
+            console.error(`One or more of the promises failed at priority group ${currentPriorityGroup}.`, error);
         }
-          
+        finally {   //empty the queue 
+            queue.length = 0;
+        }
     };
 
     for (const preprocessor of preprocessors) {
