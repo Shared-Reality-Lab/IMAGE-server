@@ -1,8 +1,7 @@
 // https://medium.com/@jaiprajapati3/masking-of-sensitive-data-in-logs-700850e233f5
 import winston from "winston";
-
 const PII_LOG_LEVEL = 5;
-const levels: Record<string, number> = {
+const levels: winston.LoggerOptions["levels"] = {
     error: 0,
     warn: 1,
     info: 2,
@@ -20,26 +19,26 @@ const logger: ExtendedLogger = winston.createLogger({
     levels,
     format: winston.format.combine(
         winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-        winston.format.printf(({ timestamp, level, message }) => {
-            return `${timestamp ?? new Date().toISOString()} [${level.toUpperCase()}]: ${message}`;
+        winston.format.printf((info) => {
+            return `${info.timestamp ?? new Date().toISOString()} [${info.level.toUpperCase()}]: ${info.message}`;
         })
     ),
     transports: [new winston.transports.Console()]
 }) as ExtendedLogger;
 
+// ensure Winston correctly recognizes "pii" as a valid log level
 logger.pii = (message: string) => {
     if (process.env.PII_LOGGING_ENABLED === "true") {
-        logger.log({
-            level: "pii",
-            message: message
-        });
+        logger.log("pii", message);
     }
 };
 
 export function configureLogging(): void {
     const logLevel = process.env.LOG_LEVEL?.toLowerCase() || "info";
     const piiLoggingEnabled = process.env.PII_LOGGING_ENABLED === "true";
-    if (logLevel in levels) { // ensure levels exists
+    
+    // ensure levels exist before using
+    if (Object.prototype.hasOwnProperty.call(levels, logLevel)) {
         logger.level = logLevel;
     } else {
         logger.level = "info"; // default if logLevel is invalid
