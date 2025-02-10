@@ -5,6 +5,7 @@ WORKDIR /usr/src/app
 COPY /handlers/osm-streets-handler/ /usr/src/app
 RUN npm ci
 COPY /schemas src/schemas
+COPY /config /app/config
 RUN npm run build && npm prune --production
 
 FROM node:alpine as final

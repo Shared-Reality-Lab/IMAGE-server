@@ -11,7 +11,7 @@ COPY /handlers/svg-action-recognition/requirements.txt /usr/src/app/requirements
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
-COPY /config /app/config
+COPY /config /usr/src/app/config
 COPY /handlers/svg-action-recognition/ /usr/src/app
 
 EXPOSE 80

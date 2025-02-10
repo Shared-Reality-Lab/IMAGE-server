@@ -9,6 +9,7 @@ RUN npm ci
 COPY /handlers/hello-handler/*.json ./
 COPY /handlers/hello-handler/.eslintrc.js ./
 COPY /schemas src/schemas
+COPY /config ./src/config
 COPY /handlers/hello-handler/src ./src
 RUN npm run build
 

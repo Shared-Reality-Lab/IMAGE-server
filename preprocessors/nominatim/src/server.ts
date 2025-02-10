@@ -17,15 +17,12 @@
 
 import Ajv from "ajv";
 import express from "express";
-import logger, { configureLogging } from "./config/logging_utils";
-import fetch from "node-fetch";
+import { piiLogger } from "./config/logging_utils";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import preprocessorResponseJSON from "./schemas/preprocessor-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 import nominatimJSON from "./schemas/preprocessors/nominatim.schema.json";
-
-configureLogging();
 
 const ajv = new Ajv({
     "schemas": [ querySchemaJSON, preprocessorResponseJSON, definitionsJSON, nominatimJSON ]
@@ -37,17 +34,17 @@ const port = 80;
 app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/preprocessor", async (req, res) => {
-    logger.debug("Received request");
+    console.debug("Received request");
     // Validate the request data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
-        logger.warn("Request did not pass the schema!");
-        logger.pii(`Validation errors: ${JSON.stringify(ajv.errors)}`);
+        console.warn("Request did not pass the schema!");
+        piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)}`);
         res.status(400).json(ajv.errors);
         return;
     }
 
     if (!("coordinates" in req.body)) {
-        logger.debug("Coordinates not available, cannot make a request for reverse geocode.");
+        console.debug("Coordinates not available, cannot make a request for reverse geocode.");
         res.sendStatus(204);
         return;
     }
@@ -57,7 +54,7 @@ app.post("/preprocessor", async (req, res) => {
     const nominatimServer = ("NOMINATIM_SERVER" in process.env) ? process.env.NOMINATIM_SERVER : "https://nominatim.openstreetmap.org";
 
     const requestUrl = new URL(`./reverse?lat=${coordinates["latitude"]}&lon=${coordinates["longitude"]}&format=jsonv2`, nominatimServer);
-    logger.debug("Sending request to " + requestUrl.href);
+    console.debug("Sending request to " + requestUrl.href);
 
     try {
         const json = await fetch(requestUrl.href)
@@ -77,26 +74,25 @@ app.post("/preprocessor", async (req, res) => {
         };
         if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", response)) {
             if (ajv.validate("https://image.a11y.mcgill.ca/preprocessors/nominatim.schema.json", response["data"])) {
-                logger.error("Preprocessor response validation failed.");
-                logger.pii(`Validation errors: ${JSON.stringify(ajv.errors)}`);
-                return res.status(500).json(ajv.errors);
+                console.debug("Valid response generated.");
+                res.json(response);
             } else {
-                logger.error("Nominatim preprocessor data failed validation (possibly not an object?)");
-                logger.pii(`Validation errors: ${JSON.stringify(ajv.errors)}`);
-                return res.status(500).json(ajv.errors);
+                console.error("Nominatim preprocessor data failed validation (possibly not an object?)");
+                piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)}`);
+                res.status(500).json(ajv.errors);
             }
         } else {
-            logger.error("Failed to generate a valid response");
+            console.error("Failed to generate a valid response");
+            piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)} | Response: ${JSON.stringify(response)}`);
             res.status(500).json(ajv.errors);
         }
     } catch (e) {
-        const errorMessage = (e as Error).message;
-        logger.error("Failed to fetch Nominatim data.");
-        logger.pii(`Error details: ${errorMessage}`);
-        return res.status(500).json({ message: errorMessage });
+        console.error("Unexpected error occured.");
+        piiLogger.pii(`${(e as Error).message}`);
+        res.status(500).json({"message": (e as Error).message});
     }
 });
 
 app.listen(port, () => {
-    logger.log("Started server on port " + port);
+    console.log("Started server on port " + port);
 });

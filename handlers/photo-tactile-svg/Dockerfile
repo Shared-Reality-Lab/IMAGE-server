@@ -8,10 +8,11 @@ ENV PATH="/home/python/.local/bin:${PATH}"
 
 RUN pip install --upgrade pip
 COPY /handlers/photo-tactile-svg/requirements.txt /usr/src/app/requirements.txt
+
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
-COPY /config /app/config
+COPY /config /usr/src/app/config
 COPY /handlers/photo-tactile-svg/ /usr/src/app
 
 EXPOSE 80

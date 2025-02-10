@@ -27,6 +27,7 @@ import descriptionJSON from "./schemas/services/supercollider/tts-description.sc
 import segmentJSON from "./schemas/services/supercollider/tts-segment.schema.json";
 import rendererDefJSON from "./schemas/renderers/definitions.json";
 import photoAudioHapticsJSON from "./schemas/renderers/photoaudiohaptics.schema.json";
+import { piiLogger } from "./config/logging_utils";
 
 import * as utils from "./utils";
 
@@ -54,6 +55,7 @@ app.post("/handler", async (req, res) => {
     // Validate the request data (just in case)
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
+        piiLogger.pii(`Schema validation failed: ${JSON.stringify(ajv.errors)}`);
         res.status(400).json(ajv.errors);
         return;
     }
@@ -77,7 +79,7 @@ app.post("/handler", async (req, res) => {
             res.json(response);
         } else {
             console.error("Failed to generate a valid empty response!");
-            console.error(ajv.errors);
+            piiLogger.pii(`Empty response validation error: ${JSON.stringify(ajv.errors)}`);
             res.status(500).json(ajv.errors);
         }
         return;
@@ -94,7 +96,7 @@ app.post("/handler", async (req, res) => {
             res.json(response);
         } else {
             console.error("Failed to generate a valid empty response!");
-            console.error(ajv.errors);
+            piiLogger.pii(`Renderer availability check failed: ${JSON.stringify(ajv.errors)}`);
             res.status(500).json(ajv.errors);
         }
         return;
@@ -232,7 +234,7 @@ app.post("/handler", async (req, res) => {
                         renderings.push(rendering);
                         console.log("finished forming audio-haptics rendering");
                     } else {
-                        console.error(ajv.errors);
+                        piiLogger.pii(`PhotoAudioHaptics validation error: ${JSON.stringify(ajv.errors)}`);
                     }
                 }
             }).finally(() => {
@@ -249,7 +251,7 @@ app.post("/handler", async (req, res) => {
             });
         } catch (e) {
             console.error("Failed to generate audio!");
-            console.error(e);
+            piiLogger.pii(`Audio generation error: ${(e as Error).message}`);
         }
     }
 
@@ -260,7 +262,7 @@ app.post("/handler", async (req, res) => {
         res.json(response);
     } else {
         console.error("Failed to generate a valid response.");
-        console.error(ajv.errors);
+        piiLogger.pii(`Final response validation error: ${JSON.stringify(ajv.errors)}`);
         res.status(500).json(ajv.errors);
     }
 });

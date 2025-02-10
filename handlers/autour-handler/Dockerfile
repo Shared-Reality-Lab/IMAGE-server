@@ -1,4 +1,4 @@
-FROM node:alpine as builder
+FROM node:alpine AS builder
 
 RUN addgroup -g 4322 storage && addgroup node storage
 
@@ -7,11 +7,13 @@ WORKDIR /usr/src/app
 COPY /handlers/autour-handler/*.js* ./
 RUN npm ci
 COPY /handlers/autour-handler/src ./src
+COPY /config ./src/config
 COPY /handlers/autour-handler/types ./types
 COPY /schemas src/schemas
+COPY /config ./src/config
 RUN npm run build && npm prune --production
 
-FROM node:alpine as final
+FROM node:alpine AS final
 
 WORKDIR /usr/src/app
 COPY --from=builder --chown=node:node /usr/src/app/package*.json ./

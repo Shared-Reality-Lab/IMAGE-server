@@ -1,55 +1,47 @@
 // https://medium.com/@jaiprajapati3/masking-of-sensitive-data-in-logs-700850e233f5
-import winston from "winston";
-const PII_LOG_LEVEL = 5;
-const levels: winston.LoggerOptions["levels"] = {
-    error: 0,
-    warn: 1,
-    info: 2,
-    debug: 3,
-    pii: PII_LOG_LEVEL
-};
+// https://github.com/winstonjs/winston/blob/c69cdb0cec15a138e0b6e374501e027d1c39606c/index.d.ts
 
-// extend Winston Logger Type to Include "pii"
-interface ExtendedLogger extends winston.Logger {
+import winston, { LogMethod, LogEntry, Logger } from 'winston';
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [
+        new winston.transports.Console({
+            format: winston.format.simple(),
+        }),
+    ],
+});
+
+interface PIILogger extends LogMethod {
     pii: (message: string) => void;
 }
 
-// create the logger instance
-const logger: ExtendedLogger = winston.createLogger({
-    levels,
-    format: winston.format.combine(
-        winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-        winston.format.printf((info) => {
-            return `${info.timestamp ?? new Date().toISOString()} [${info.level.toUpperCase()}]: ${info.message}`;
-        })
-    ),
-    transports: [new winston.transports.Console()]
-}) as ExtendedLogger;
+const piiLoggingEnabled = process.env.PII_LOGGING_ENABLED === 'true';
 
-// ensure Winston correctly recognizes "pii" as a valid log level
-logger.pii = (message: string) => {
-    if (process.env.PII_LOGGING_ENABLED === "true") {
-        logger.log("pii", message);
+if (piiLoggingEnabled) {
+    logger.warn("Environment Unicorn: PII logging enabled!");
+} else {
+    logger.info("Environment Pegasus: PII logging is disabled.");
+}
+
+// PII Logger Function
+const piiLogger: PIILogger = ((arg1: string | LogEntry, arg2?: any) => {
+    if (typeof arg1 === 'string' && arg2 !== undefined) { // log when both level and message are provided
+        logger.log(arg1, arg2);
+    } else if (typeof arg1 === 'object') { // log when an object is provided
+        logger.log(arg1);
+    } else {
+        throw new Error('Invalid log format');
+    }
+}) as PIILogger;
+
+// Function for logging PII-related errors
+piiLogger.pii = (message: string) => {
+    if (piiLoggingEnabled) {
+        logger.error(`[PII] ${message}`);
+    } else {
+        logger.warn("PII logging attempted but is DISABLED.");
     }
 };
 
-export function configureLogging(): void {
-    const logLevel = process.env.LOG_LEVEL?.toLowerCase() || "info";
-    const piiLoggingEnabled = process.env.PII_LOGGING_ENABLED === "true";
-    
-    // ensure levels exist before using
-    if (Object.prototype.hasOwnProperty.call(levels, logLevel)) {
-        logger.level = logLevel;
-    } else {
-        logger.level = "info"; // default if logLevel is invalid
-    }
-
-    if (piiLoggingEnabled) {
-        logger.warn("Environment Unicorn: PII logging enabled!");
-        logger.level = "pii";
-    } else {
-        logger.info("Environment Pegasus: PII logging is disabled.");
-    }
-}
-
-export default logger;
+export { piiLogger };
