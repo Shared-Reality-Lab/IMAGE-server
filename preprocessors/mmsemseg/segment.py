@@ -60,7 +60,7 @@ def run_segmentation(url, model, dictionary):
         image_b64 = url.split(",")[1]
         binary = base64.b64decode(image_b64)
         image = np.asarray(bytearray(binary), dtype="uint8")
-        image_np = cv2.imdecode(image, cv2.IMREAD_COLOR)       
+        image_np = cv2.imdecode(image, cv2.IMREAD_COLOR)
     except Exception as e:
         logging.error("Error decoding base64 image: {}".format(e))
         raise e

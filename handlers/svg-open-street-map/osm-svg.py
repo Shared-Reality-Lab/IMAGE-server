@@ -328,7 +328,7 @@ def handle():
             except ValidationError as e:
                 logging.debug("Failed to generate a valid response")
                 logging.pii(f"Response validation error: {e}")
-                return jsonify("Failed to generate a valid response"), 500           
+                return jsonify("Failed to generate a valid response"), 500
             logging.debug("Sending final response")
             return response
 

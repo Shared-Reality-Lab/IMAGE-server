@@ -7,7 +7,6 @@ WORKDIR /usr/src/app
 COPY /handlers/autour-handler/*.js* ./
 RUN npm ci
 COPY /handlers/autour-handler/src ./src
-COPY /config ./src/config
 COPY /handlers/autour-handler/types ./types
 COPY /schemas src/schemas
 COPY /config ./src/config

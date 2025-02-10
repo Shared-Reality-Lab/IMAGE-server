@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 COPY /handlers/photo-audio-haptics-handler/ /usr/src/app
 RUN npm ci
 COPY /schemas src/schemas
-COPY /config /usr/src/app/config
+COPY /config ./src/config
 RUN npm run build && npm prune --production
 
 FROM node:alpine as final

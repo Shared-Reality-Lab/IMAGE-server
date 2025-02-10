@@ -2,9 +2,9 @@ FROM node:alpine as builder
 
 WORKDIR /usr/src/app
 COPY /handlers/motd/ /usr/src/app
+COPY /config /usr/src/app/config/ 
 RUN npm ci
 COPY /schemas src/schemas
-COPY /config /usr/src/app/config/ 
 
 RUN npm run build && npm prune --production
 
