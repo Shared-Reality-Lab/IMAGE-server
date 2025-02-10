@@ -1,4 +1,4 @@
-# Copyright (c) 2023 IMAGE Project, Shared Reality Lab, McGill University
+# Copyright (c) 2025 IMAGE Project, Shared Reality Lab, McGill University
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -20,19 +20,17 @@ import jsonschema
 from jsonschema.exceptions import ValidationError
 import logging
 import time
-import drawSvg as draw
-from config.logging_utils import configure_logging
 from datetime import datetime
-
+from config.logging_utils import configure_logging
 
 configure_logging()
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 @app.route("/handler", methods=["POST"])
 def handle():
-    logging.debug("Received request")
     try:
         # Load necessary schema files
         with open("./schemas/definitions.json") as f:
@@ -41,17 +39,18 @@ def handle():
             request_schema = json.load(f)
         with open("./schemas/handler-response.schema.json") as f:
             response_schema = json.load(f)
-        with open("./schemas/renderers/svglayers.schema.json") as f:
+        with open("./schemas/renderers/text.schema.json") as f:
             renderer_schema = json.load(f)
     except Exception as e:
         logging.error("Error loading schema files")
         logging.pii(f"Schema loading error: {e}")
         return jsonify("Schema files could not be loaded"), 500
+
     store = {
         definitions_schema["$id"]: definitions_schema,
         request_schema["$id"]: request_schema,
         response_schema["$id"]: response_schema,
-        renderer_schema["$id"]: renderer_schema,
+        renderer_schema["$id"]: renderer_schema
     }
     resolver = jsonschema.RefResolver.from_schema(
         request_schema, store=store
@@ -59,23 +58,21 @@ def handle():
     # Get and validate request contents
     contents = request.get_json()
     try:
+        logging.debug("Validating request schema")
         validator = jsonschema.Draft7Validator(
             request_schema, resolver=resolver
         )
         validator.validate(contents)
     except ValidationError as e:
-        logging.error("Validation error in request schema")
+        logging.error("Request validation failed")
         logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid request received!"), 400
 
-    # Check preprocessor data
     preprocessors = contents['preprocessors']
-    if ("ca.mcgill.a11y.image.capability.DebugMode"
-        not in contents['capabilities']
-            or "ca.mcgill.a11y.image.renderer.SVGLayers"
-            not in contents["renderers"]):
-        logging.debug("Debug mode inactive")
-        print("debug inactive")
+
+    logging.debug("Checking whether renderer is supported")
+    if ("ca.mcgill.a11y.image.renderer.Text" not in contents["renderers"]):
+        logging.debug("Text Renderer is not supported")
         response = {
             "request_uuid": contents["request_uuid"],
             "timestamp": int(time.time()),
@@ -86,17 +83,18 @@ def handle():
                 response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-            logging.error("Response validation failed")
+            logging.error("Response schema validation failed")
             logging.pii(f"Validation error: {error.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
-
         logging.debug("Sending response")
         return response
 
-    # No Object Detector found
-    if "ca.mcgill.a11y.image.preprocessor.objectDetection"\
-            not in preprocessors:
-        logging.debug("No Object Detector found")
+    # Throws error when text-followup preprocessor is not found
+    logging.debug("Checking for text-followup "
+                  "preprocessor responses")
+    if not ("ca.mcgill.a11y.image.preprocessor.text-followup"
+            in preprocessors):
+        logging.debug("Text-followup preprocessor not found")
         response = {
             "request_uuid": contents["request_uuid"],
             "timestamp": int(time.time()),
@@ -107,40 +105,24 @@ def handle():
                 response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-            logging.error("Response validation failed")
+            logging.error("Response validation failed for \
+                                missing text-followup")
             logging.pii(f"Validation error: {error.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
 
-    # No Action recognition output found
-    if "ca.mcgill.a11y.image.preprocessor.actionRecognition"\
-            not in preprocessors:
-        logging.debug("No Action Recognition Output")
-        response = {
-            "request_uuid": contents["request_uuid"],
-            "timestamp": int(time.time()),
-            "renderings": []
-        }
-        try:
-            validator = jsonschema.Draft7Validator(
-                response_schema, resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as error:
-            logging.error("Response validation failed")
-            logging.pii(f"Validation error: {error.message}")
-            return jsonify("Invalid Preprocessor JSON format"), 500
-        logging.debug("Sending response")
-        return response
-
-    if "dimensions" in contents:
+    # Checking for graphic and dimensions
+    logging.debug("Checking whether graphic and"
+                  " dimensions are available")
+    if "graphic" in contents and "dimensions" in contents:
         # If an existing graphic exists, often it is
         # best to use that for convenience.
         # see the following for SVG coordinate info:
         # developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Positions
-        dimensions = contents["dimensions"]
+        logging.debug("Graphic has dimensions defined")
     else:
-        logging.debug("Dimensions are not defined")
+        logging.debug("Graphic and/or dimensions are not defined")
         response = {
             "request_uuid": contents["request_uuid"],
             "timestamp": int(time.time()),
@@ -151,22 +133,17 @@ def handle():
                 response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-            logging.error("Response validation failed")
+            logging.error("Response validation failed for \
+                           missing graphic/dimensions")
             logging.pii(f"Validation error: {error.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
-
-    a = preprocessors["ca.mcgill.a11y.image.preprocessor.actionRecognition"]
-    o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
-    actions = a["actions"]
-    objects = o["objects"]
-    svg = draw.Drawing(dimensions[0], dimensions[1])
-    print(dimensions[0], dimensions[1])
-    svg_layers = []
-
-    if len(actions) < 1:
-        logging.debug("No Action Recognition Output")
+    # Checking whether this is an actual follow up query
+    logging.debug("Checking whether this is "
+                  "an actual follow up query")
+    if "followup" not in contents:
+        logging.debug("Follow-up query is not defined")
         response = {
             "request_uuid": contents["request_uuid"],
             "timestamp": int(time.time()),
@@ -177,64 +154,29 @@ def handle():
                 response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-            logging.error("Response validation failed")
+            logging.error("Response validation failed for \
+                           missing follow-up query")
             logging.pii(f"Validation error: {error.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
-    actionlist = []
-    for i in range(len(actions)):
-        category = actions[i]['action']
-        if category in actionlist:
-            continue
-        actionlist.append(category)
-        for j in range(i, len(actions)):
-            if actions[j]['action'] == category:
-                objID = actions[j]['personID']
-                x1 = int(objects[objID]['dimensions'][0] * dimensions[0])
-                x2 = int(objects[objID]['dimensions'][2] * dimensions[0])
-                y1 = int(objects[objID]['dimensions'][1] * dimensions[1])
-                y2 = int(objects[objID]['dimensions'][3] * dimensions[1])
-                width = abs(x2 - x1)
-                height = abs(y2 - y1)
-                start_y1 = abs(dimensions[1] - y1 - height)
-                svg.append(
-                    draw.Rectangle(
-                        x1,
-                        start_y1,
-                        width,
-                        height,
-                        stroke="#ff4477",
-                        stroke_width=2.5,
-                        fill_opacity=0))
-                x = int(objects[objID]['centroid'][0] * dimensions[0])
-                y = int(objects[objID]['centroid'][1] * dimensions[1])
-                y = abs(dimensions[1] - y)
-                # draw.Text(actions[j]['confidence'], 30, x, y, fill="#ff4477")
-                conf_str = str(round(actions[j]['confidence'], 2))
-                svg.append(
-                    draw.Text(conf_str, 30, x, y, fill="#ff4477")
-                )
 
-        svg_layers.append({"label": category, "svg": svg.asDataUri()})
-        svg = draw.Drawing(dimensions[0], dimensions[1])
-        # break
+    data = {"text": (preprocessors["ca.mcgill.a11y.image.preprocessor.text"
+                                   "-followup"]["response_brief"])}
 
-    data = {
-        "layers": svg_layers
-    }
     rendering = {
-        "type_id": "ca.mcgill.a11y.image.renderer.SVGLayers",
-        "description": "Action SVG visualization",
+        "type_id": "ca.mcgill.a11y.image.renderer.Text",
+        "description": "Response to a follow-up query",
         "data": data
     }
+
     try:
         validator = jsonschema.Draft7Validator(
             renderer_schema, resolver=resolver
         )
         validator.validate(data)
     except ValidationError as e:
-        logging.error("Failed to validate the response renderer")
+        logging.error("Renderer validation failed")
         logging.pii(f"Validation error: {e.message}")
         return jsonify("Failed to validate the response renderer"), 500
     response = {
@@ -248,7 +190,7 @@ def handle():
         )
         validator.validate(response)
     except ValidationError as e:
-        logging.error("Failed to generate a valid response")
+        logging.debug("Failed to generate a valid response")
         logging.pii(f"Validation error: {e.message}")
         return jsonify("Failed to generate a valid response"), 500
     logging.debug("Sending response")

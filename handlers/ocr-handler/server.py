@@ -20,6 +20,7 @@ import time
 import logging
 import jsonschema
 from flask import Flask, request, jsonify
+from datetime import datetime
 from config.logging_utils import configure_logging
 
 configure_logging()
@@ -190,6 +191,17 @@ def get_article(word):
     if word[0] in ['a', 'e', 'i', 'o', 'u']:
         return 'an '
     return 'a '
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ import logging
 import base64
 import os
 from flask import Flask, request, jsonify
+from datetime import datetime
 from config.logging_utils import configure_logging
 
 configure_logging()
@@ -201,6 +202,17 @@ def categorise():
 
         logging.debug(type)
         return response
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED=TRUE
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install --no-install-recommends wget -y && \
+    apt-get install --no-install-recommends wget curl -y && \
     rm -rf /var/lib/apt/lists/* && \
     adduser --disabled-password python
 
@@ -27,4 +27,7 @@ COPY --chown=python:python /preprocessors/action-recognition /app
 
 EXPOSE 5000
 USER python
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:5000/health || exit 1
+
 ENTRYPOINT [ "gunicorn", "action-recognition:app", "-b", "0.0.0.0:5000","--capture-output" ]

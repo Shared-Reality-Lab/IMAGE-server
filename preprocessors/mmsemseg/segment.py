@@ -35,6 +35,7 @@ from utils import visualize_result, findContour
 from time import time
 import logging
 from config.logging_utils import configure_logging
+from datetime import datetime
 
 configure_logging()
 # configuration and checkpoint files
@@ -251,12 +252,15 @@ def segment():
     return response
 
 
-@app.route('/health', methods=['GET'])
+@app.route("/health", methods=["GET"])
 def health():
     """
-    health check endpoint to verify if the service is up.
+    Health check endpoint to verify if the service is running
     """
-    return jsonify({"status": "healthy"}), 200
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":

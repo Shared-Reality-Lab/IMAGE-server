@@ -6,7 +6,7 @@ ENV PATH="/usr/src/app/.local/bin:${PATH}"
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-    wget && \
+    wget curl && \
     rm -rf /var/lib/apt/lists/*
 
 COPY /preprocessors/yolov8/requirements.txt /usr/src/app/requirements.txt
@@ -25,4 +25,7 @@ EXPOSE 5000
 ENV FLASK_APP=detect.py 
 
 USER python
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:5000/health || exit 1
+
 CMD [ "gunicorn", "detect:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]

@@ -20,6 +20,7 @@ import time
 import jsonschema
 import logging
 from math import sqrt
+from datetime import datetime
 from config.logging_utils import configure_logging
 
 configure_logging()
@@ -136,6 +137,17 @@ def readImage():
 
     logging.debug("Sending response")
     return response
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """
+    Health check endpoint to verify if the service is running
+    """
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }), 200
 
 
 if __name__ == "__main__":

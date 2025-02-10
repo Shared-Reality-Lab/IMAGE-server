@@ -93,6 +93,10 @@ app.post("/preprocessor", async (req, res) => {
     }
 });
 
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
+});
+
 app.listen(port, () => {
     console.log("Started server on port " + port);
 });

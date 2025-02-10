@@ -28,11 +28,11 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @app.route("/preprocessor", methods=['POST', ])
-def categorise():
+def followup():
     logging.debug("Received request")
 
     # load the schemas and verify incoming data
-    with open('./schemas/preprocessors/content-categoriser.schema.json') \
+    with open('./schemas/preprocessors/text-followup.schema.json') \
             as jsonfile:
         data_schema = json.load(jsonfile)
     with open('./schemas/preprocessor-response.schema.json') \
@@ -55,8 +55,7 @@ def categorise():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {e.message}")
+        logging.error(e)
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     # check we received a graphic (e.g., not a map or chart request)
@@ -66,13 +65,59 @@ def categorise():
 
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    name = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
+    name = "ca.mcgill.a11y.image.preprocessor.text-followup"
+
+    # debugging this preprocessor is really difficult without seeing what
+    # ollama is returning, but this can contain PII. Until we have a safe
+    # way of logging PII, using manually set LOG_PII env variable
+    # to say whether or not we should go ahead and log potential PII
+    log_pii = os.getenv('LOG_PII', "false").lower() == "true"
+    if log_pii:
+        logging.warning("LOG_PII is True: potential PII will be logged!")
 
     # convert the uri to processable image
     # source.split code referred from
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
     source = content["graphic"]
     graphic_b64 = source.split(",")[1]
+
+    # TODO: crop graphic if the user has specified a region of interest
+    # TODO: add previous request history before new prompt
+
+    # default prompt, which can be overriden by env var just after
+    general_prompt = ("""
+              I am blind so I cannot see this image.
+              Answer in a single JSON object containing two keys.
+              The first key is "response_brief" and is a single sentence
+              that can stand on its own that directly answers the specific
+              request at the end of this prompt.
+              The second key is "response_full" and provides maximum
+              three sentences of additional detail,
+              without repeating the information in the first key.
+              If there is no more detail you can provide,
+              omit the second key instead of having an empty key.
+              Remember to answer only in JSON, or I will be very angry!
+              Do not put anything before or after the JSON,
+              and make sure the entire response is only a single JSON block,
+              with both keys in the same JSON object.
+              Here is an example of the output JSON in the format you
+              are REQUIRED to follow:
+              {
+                "response_brief": "One sentence response to the user request",
+                "response_full": "Further details."
+              }
+              Note that the first character of output MUST be "{".
+              Remove all whitespace before and after the JSON.
+              Here is my request:
+              """)
+    # override with prompt from environment variable only if it exists
+    general_prompt = os.getenv('TEXT_FOLLOWUP_PROMPT_OVERRIDE', general_prompt)
+    user_prompt = content["followup"]["query"]
+    prompt = general_prompt + ' ' + user_prompt
+    if log_pii:
+        logging.debug("user followup prompt: " + prompt)
+    else:
+        logging.debug("user followup prompt: {general_prompt} [redacted]")
 
     # prepare ollama request
     api_url = os.environ['OLLAMA_URL']
@@ -82,29 +127,21 @@ def categorise():
     logging.debug("OLLAMA_URL " + api_url)
     if api_key.startswith("sk-"):
         logging.debug("OLLAMA_API_KEY looks properly formatted: " +
-                      api_key[:3] + "[redacted]")
+                      "sk-[redacted]")
     else:
-        logging.warn("OLLAMA_API_KEY usually starts with sk-, "
-                     "but this one starts with: " + api_key[:3])
-
-    prompt = "Answer only in JSON with the format " \
-             '{"category": "YOUR_ANSWER"}. ' \
-             "Which of the following categories best " \
-             "describes this image, selecting from this enum: "
-    possible_categories = "photograph, chart, text, other"
+        logging.warning("OLLAMA_API_KEY does not start with sk-")
 
     request_data = {
         "model": ollama_model,
-        "prompt": prompt + "[" + possible_categories + "]",
+        "prompt": prompt,
         "images": [graphic_b64],
-        "stream": "false",
-        # TODO: figure out if "format": json, should actually work
+        "stream": False,
         "temperature": 0.0,
+        "format": "json",
         "keep_alive": -1  # keep model loaded in memory indefinitely
     }
     logging.debug("serializing json from request_data dictionary")
     request_data_json = json.dumps(request_data)
-    logging.debug("serialization complete")
 
     request_headers = {
         "Content-Type": "application/json",
@@ -117,45 +154,40 @@ def categorise():
     logging.debug("ollama request response code: " + str(response.status_code))
 
     if response.status_code == 200:
-        graphic_category_json = json.loads(response.text)['response']
-
-        # extract the category value from the json returned by the LMM
         ollama_error_msg = None
         try:
-            graphic_category = json.loads(graphic_category_json)['category']
+            # strip() at end since llama often puts a newline before json
+            response_text = json.loads(response.text)['response'].strip()
+            if log_pii:
+                logging.debug("raw ollama response: " + response_text)
+            followup_response_json = json.loads(response_text)
         except json.JSONDecodeError:
-            ollama_error_msg = "this does not look like json"
+            ollama_error_msg = "raw response does not look like json"
         except KeyError:
-            ollama_error_msg = "no category tag found in returned json"
+            ollama_error_msg = "no response tag found in returned json"
         except TypeError:  # have seen this when we just get a string back
             # TODO: investigate what is actually happening here!
             ollama_error_msg = "unknown error decoding json. investigate!"
         finally:
             if ollama_error_msg is not None:
-                logging.error(ollama_error_msg)
-                # TODO: add back next line once IMAGE-server #912 is complete
-                # logging.debug(f"response (pii) [{graphic_category_json}]")
+                logging.error(ollama_error_msg + " returning 204")
                 return jsonify("Invalid LLM results"), 204
-
-        # is the found category  one of the ones we require?
-        graphic_category = graphic_category.strip().lower()
-        if graphic_category in possible_categories.split(", "):
-            logging.debug("category: " + graphic_category)
-        else:  # llamas are not to be trusted to pay attention to instructions
-            logging.error(f"category [{graphic_category}] not a valid option")
-            return jsonify("Invalid LLM results"), 204
     else:
-        logging.error(f"Error: {response.text}")
+        if log_pii:
+            logging.error("Error {response.status_code}: {response.text}")
+        else:
+            logging.error("Error {response.status_code}: "
+                          "[response text redacted]")
         return jsonify("Invalid response from ollama"), 204
 
-    # create data json and verify the content-categoriser schema is respected
-    graphic_category_json = {"category": graphic_category}
+    # check if ollama returned valid json that follows schema
     try:
         validator = jsonschema.Draft7Validator(data_schema)
-        validator.validate(graphic_category_json)
+        validator.validate(followup_response_json)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for categorizer response")
-        logging.pii(f"Validation error: {e.message}")
+        logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
+        if log_pii:
+            logging.debug(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # create full response & check meets overall preprocessor response schema
@@ -163,18 +195,22 @@ def categorise():
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": name,
-        "data": graphic_category_json
+        "data": followup_response_json
     }
     try:
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for final response")
-        logging.pii(f"Validation error: {e.message}")
+        logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
+        if log_pii:
+            logging.debug(e)  # print full error only in debug, due to PII
         return jsonify("Invalid Preprocessor JSON format"), 500
 
-    # all done. give final category information and return to orchestrator
-    logging.info(graphic_category_json)
+    # all done; return to orchestrator
+    logging.debug("full response length: " + str(len(response)))
+    if log_pii:
+        logging.debug(response)
+
     return response
 
 
@@ -191,4 +227,4 @@ def health():
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
-    categorise()
+    followup()
