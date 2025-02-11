@@ -34,7 +34,7 @@ jobs:
         run: cp -R ../../config src/
       - name: Install dependencies
         working-directory: ./handlers/photo-audio-haptics-handler
-        run: npm c
+        run: npm ci
       - name: Check with tsc
         working-directory: ./handlers/photo-audio-haptics-handler
         run: npx tsc --noEmit
