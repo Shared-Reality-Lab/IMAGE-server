@@ -7,6 +7,8 @@ COPY /handlers/high-charts/package*.json ./
 
 COPY /config src/config/
 
+RUN npm install
+
 COPY /schemas src/schemas
 COPY /handlers/high-charts/ /usr/src/app
 
