@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Shows amount of GPU memory in use for each docker container using any of the GPUs in the system
+# questions go to jeffbl
+
+# TODO: Don't use the same basic command pipe twice, consolidate into something more elegant.
+
+nvidia-smi
+
+paste \
+  <(nvidia-smi | sed '1,/|\ Processes/d' | grep -vE "Xorg|gnome" | grep '[0-9]' | awk '{print $5, $8}') \
+  <(nvidia-smi | sed '1,/|\ Processes/d' | grep -vE "Xorg|gnome" | grep '[0-9]' | awk '{print $5}' | xargs -I {} sh -c 'cat /proc/{}/cgroup | cut -c 25-36' | xargs -I {} sh -c 'docker ps | grep {}')
+  

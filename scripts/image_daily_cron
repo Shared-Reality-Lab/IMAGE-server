@@ -1,0 +1,16 @@
+#!/usr/bin/sh
+
+# determine the script's directory dynamically
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+
+# Load environment variables from scripts.env
+ENV_FILE="$SCRIPT_DIR/../config/image_daily_cron.env"
+if [ -f "$ENV_FILE" ]; then
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+  echo "Error: Environment file not found at $ENV_FILE" >&2
+  exit 1
+fi
+
+# Run daily test
+"$SCRIPT_DIR/pp_daily_test"

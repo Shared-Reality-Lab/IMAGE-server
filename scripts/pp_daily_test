@@ -1,0 +1,44 @@
+#!/usr/bin/bash
+
+# Determine the script's directory dynamically
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+
+# lpad environment variables from scripts.env
+ENV_FILE="$SCRIPT_DIR/../config/pp_daily_test.env"
+if [ -f "$ENV_FILE" ]; then
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+  echo "Error: Environment file not found at $ENV_FILE" >&2
+  exit 1
+fi
+
+if [ -z "$LOG_DIR" ] || [ -z "$SLACK_WEBHOOK_URL" ] || [ -z "$TEST_DIR" ]; then
+  echo "Error: Required environment variables (LOG_DIR, SLACK_WEBHOOK_URL, TEST_DIR) are missing." >&2
+  exit 1
+fi
+
+now=$(date +"%m_%d_%Y")
+host=$(hostname)
+
+cd "$TEST_DIR" || {
+  echo "Error: Failed to change directory to $TEST_DIR"
+  exit 1
+}
+
+# Run the testset.py script and store output
+var=$(./testset.py -t daily -d --daily -s "$host")
+
+# Log test output
+log_file="${LOG_DIR}/daily_test_${now}.log"
+echo "Test run on $now from host $host" > "$log_file"
+echo "Output of testset.py:" >> "$log_file"
+echo "$var" >> "$log_file"
+
+# Check if there are changes in the output
+sub="Changes"
+if [[ $var == *"$sub"* ]]; then
+    echo "Changes occurred"
+
+    # Send a Slack notification if changes are detected
+    curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$host"': preprocessor output changed during automated testing."}' "$SLACK_WEBHOOK_URL"
+fi

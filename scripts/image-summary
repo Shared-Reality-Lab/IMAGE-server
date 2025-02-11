@@ -1,0 +1,68 @@
+#!/bin/bash
+# USAGE image-summary orchestrator_name
+
+set -e
+
+if [ $# -ne 1 ]; then
+    echo "One argument required"
+    echo "USAGE: image-summary orchestrator_name"
+    exit 1
+fi
+
+orchestrator_name=$1
+
+# Check for commands
+if ! command -v docker > /dev/null; then
+    echo "Docker is not installed or not on the path!"
+    exit 1
+fi
+if ! command -v jq > /dev/null; then
+    echo "jq is not installed or not on the path!"
+    exit 1
+fi
+
+# Determine networks connected to the orchestrator container
+orchestrator_networks=($(docker inspect $orchestrator_name | jq '.[0].NetworkSettings.Networks | to_entries | map(.value.NetworkID) | @sh' | tr -d \'\"))
+handlers=()
+preprocessors=()
+# For all networks, get the connected, running preprocessors and handlers
+for network in "${orchestrator_networks[@]}"; do
+    for id in "$(docker ps -f network=$network -f status=running -f label=ca.mcgill.a11y.image.preprocessor --format '{{.Label "ca.mcgill.a11y.image.preprocessor"}},{{.Names}} ({{.ID}}) using {{.Image}}')"; do
+        preprocessors+=("$id")
+    done
+    for id in "$(docker ps -f network=$network -f status=running -f label=ca.mcgill.a11y.image.handler=enable --format '{{.Names}} ({{.ID}}) using {{.Image}}')"; do
+        handlers+=("$id")
+    done
+done
+
+# Order preprocessors by priority group
+IFS=$'\n' sorted=($(sort <<<"${preprocessors[*]}"))
+handlers=($(sort <<<"${handlers[*]}"))
+unset IFS
+
+# Display information
+group=""
+echo "Containers connected to orchestrator \"$1\""
+echo "****************************************************"
+echo "Preprocessors:"
+
+
+for preprocessor in "${sorted[@]}"; do
+    IFS=','
+    read -rasplit<<< "$preprocessor"
+    unset IFS
+
+    if [[ $group -ne ${split[0]} ]]; then
+        group=${split[0]}
+        printf "\tPriority Group "$group":\n"
+    fi
+
+    printf "\t\t%s\n" "${split[1]}"
+done
+
+echo "****************************************************"
+echo "Handlers:"
+
+for handler in "${handlers[@]}"; do
+    printf '\t%s\n' "${handler}"
+done

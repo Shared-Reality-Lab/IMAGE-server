@@ -1,0 +1,20 @@
+#!/bin/bash
+# USAGE: sendimagereq [IMAGE file or stdin] [server]
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+ENV_FILE="$SCRIPT_DIR/../config/sendimagereq.env"
+if [ -f "$ENV_FILE" ]; then
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+  echo "Error: Environment file not found at $ENV_FILE" >&2
+  exit 1
+fi
+
+req_file=$1
+server=${2:-$SERVER} 
+
+if [ -z "$req_file" ]; then
+    echo "No input supplied!"
+    exit 1 
+fi
+
+curl -q -H "Content-Type: application/json" -d@"$req_file" "$server"

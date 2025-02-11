@@ -1,0 +1,5 @@
+#!/usr/bin/sh
+
+su - jeffbl -c '/var/docker/image/bin/restoreunstable' > /var/docker/image/testing/restore_unstable_cron_logs/restoreunstable.$(date "+%Y.%m.%d-%H.%M.%S") 2>&1
+
+/var/docker/image/bin/pp_daily_test

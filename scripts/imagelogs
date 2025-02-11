@@ -1,0 +1,24 @@
+#!/bin/bash
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+
+ENV_FILE="$SCRIPT_DIR/../config/imagelogs.env"
+if [ -f "$ENV_FILE" ]; then
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+  echo "Error: Environment file not found at $ENV_FILE" >&2
+  exit 1
+fi
+if [ -z "$DOCKER_DIR" ]; then
+  echo "Error: Required environment variable (DOCKER_DIR) is missing." >&2
+  exit 1
+fi
+
+cd "$DOCKER_DIR" || {
+  echo "Error: Failed to change directory to $DOCKER_DIR"
+  exit 1
+}
+
+docker compose logs -t | grep -ivE '^(supercollider-|.*GET /(health|healthcheck.html))' | sort -k3
+echo "====================== OLD LOGS COMPLETE, FOLLOWING NEW LOG OUTPUT STARTING HERE =========================================="
+docker compose logs -t -f --tail 0 | grep -ivE '^(supercollider-|.*GET /(health|healthcheck.html))'
+cd -
