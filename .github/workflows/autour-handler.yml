@@ -36,11 +36,15 @@ jobs:
         working-directory: ./handlers/autour-handler
         run: cp -R ../../schemas src/
       - name: Copy config
-        working-directory: ./preprocessors/nominatim
+        working-directory: ./handlers/autour-handler
         run: cp -R ../../config src/
       - name: Install dependencies
         working-directory: ./handlers/autour-handler
         run: npm ci
+      - name: Debug Build Context
+        run: |
+          echo "Checking src/config contents"
+          ls -R ./preprocessors/nominatim/src/config
       - name: Check with tsc
         working-directory: ./handlers/autour-handler
         run: npx tsc --noEmit

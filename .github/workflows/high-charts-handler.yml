@@ -30,7 +30,7 @@ jobs:
         working-directory: ./handlers/high-charts
         run: cp -R ../../schemas src/
       - name: Copy config
-        working-directory: ./preprocessors/nominatim
+        working-directory: ./handlers/high-charts
         run: cp -R ../../config src/
       - name: Install dependencies
         working-directory: ./handlers/high-charts
