@@ -83,13 +83,16 @@ def categorise():
         logging.debug("OLLAMA_API_KEY looks properly formatted: " +
                       api_key[:3] + "[redacted]")
     else:
-        logging.warn("OLLAMA_API_KEY usually starts with sk-, "
+        logging.warning("OLLAMA_API_KEY usually starts with sk-, "
                      "but this one starts with: " + api_key[:3])
 
     prompt = "I am blind, so I cannot see this image. " \
              "Tell me the most important aspects of it, including " \
              "style, content, and the most significant aspect of the image." \
              "Answer with maximum one sentence. "
+    prompt = os.getenv('GRAPHIC_CAPTION_PROMPT_OVERRIDE', prompt)
+    logging.debug("prompt: " + prompt)
+
     request_data = {
         "model": ollama_model,
         "prompt": prompt,
