@@ -3,7 +3,7 @@ FROM node:alpine AS builder
 WORKDIR /usr/src/app
 COPY /preprocessors/nominatim/package*.json ./
 COPY /schemas src/schemas
-COPY /config /usr/src/app/src/config 
+COPY ./config /usr/src/app/src/config
 RUN npm ci
 COPY /preprocessors/nominatim/ /usr/src/app
 RUN npm run build && npm prune --production
