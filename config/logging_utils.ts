@@ -1,7 +1,7 @@
 // https://medium.com/@jaiprajapati3/masking-of-sensitive-data-in-logs-700850e233f5
 // https://github.com/winstonjs/winston/blob/c69cdb0cec15a138e0b6e374501e027d1c39606c/index.d.ts
 
-import winston, { LogMethod, LogEntry, Logger } from 'winston';
+import winston, { LogMethod, LogEntry } from 'winston';
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),

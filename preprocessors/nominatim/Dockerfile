@@ -1,10 +1,13 @@
 FROM node:alpine AS builder
 
 WORKDIR /usr/src/app
+
 COPY /preprocessors/nominatim/package*.json ./
 COPY /schemas src/schemas
-COPY ./config /usr/src/app/src/config
+COPY /config /usr/src/app/src/config
+
 RUN npm ci
+
 COPY /preprocessors/nominatim/ /usr/src/app
 RUN npm run build && npm prune --production
 
@@ -16,7 +19,6 @@ WORKDIR /usr/src/app
 COPY --from=builder --chown=node:node /usr/src/app/dist ./dist
 COPY --from=builder --chown=node:node /usr/src/app/node_modules ./node_modules
 COPY --from=builder --chown=node:node /usr/src/app/package*.json ./
-COPY --from=builder --chown=node:node /usr/src/app/src/config ./src/config 
 
 ENV NODE_ENV=production
 EXPOSE 80

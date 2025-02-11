@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         working-directory: ./handlers/photo-audio-haptics-handler
         run: npm ci
+      - name: Copy config
+        working-directory: ./preprocessors/nominatim
+        run: cp -R ../../config src/
       - name: Check with tsc
         working-directory: ./handlers/photo-audio-haptics-handler
         run: npx tsc --noEmit

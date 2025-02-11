@@ -29,6 +29,9 @@ jobs:
       - name: Copy schemas
         working-directory: ./handlers/high-charts
         run: cp -R ../../schemas src/
+      - name: Copy config
+        working-directory: ./preprocessors/nominatim
+        run: cp -R ../../config src/
       - name: Install dependencies
         working-directory: ./handlers/high-charts
         run: npm ci
