@@ -26,6 +26,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
+      - name: Debug GitHub Actions Build Context
+        run: |
+          echo "### Current Directory:"
+          pwd
+          echo "### list of files:"
+          ls -R
       - name: Copy schemas
         working-directory: ./handlers/autour-handler
         run: cp -R ../../schemas src/
