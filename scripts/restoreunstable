@@ -89,3 +89,8 @@ fi
 # get rid of the image network so that if someone manually creates it, we get it back via compose
 echo "about to remove image network"
 docker network rm -f image
+
+# Bring all the containers back up
+docker compose up -d --force-recreate
+
+cd -

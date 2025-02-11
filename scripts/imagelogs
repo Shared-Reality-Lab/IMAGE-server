@@ -18,7 +18,7 @@ cd "$DOCKER_DIR" || {
   exit 1
 }
 
-docker compose logs -t | grep -ivE '^(supercollider-|.*GET /(health|healthcheck.html))' | sort -k3
+docker compose logs -t | grep -ivE 'GET /(health|healthcheck.html).*200' | sort -k3
 echo "====================== OLD LOGS COMPLETE, FOLLOWING NEW LOG OUTPUT STARTING HERE =========================================="
-docker compose logs -t -f --tail 0 | grep -ivE '^(supercollider-|.*GET /(health|healthcheck.html))'
+docker compose logs -t -f --tail 0 | grep -ivE 'GET /(health|healthcheck.html).*200'
 cd -
