@@ -2,7 +2,7 @@ FROM node:alpine as builder
 
 WORKDIR /usr/src/app
 COPY /handlers/motd/ /usr/src/app
-COPY /config /usr/src/app/config/ 
+COPY /config src/config/ 
 RUN npm ci
 COPY /schemas src/schemas
 

@@ -2,10 +2,14 @@ FROM node:alpine AS builder
 
 RUN addgroup -g 4322 storage && addgroup node storage
 WORKDIR /usr/src/app
-COPY /handlers/high-charts/ /usr/src/app
-COPY /config /usr/src/app/config/ 
-RUN npm ci
+
+COPY /handlers/high-charts/package*.json ./
+
+COPY /config src/config/
+
 COPY /schemas src/schemas
+COPY /handlers/high-charts/ /usr/src/app
+
 RUN npm run build && npm prune --production
 
 FROM node:alpine AS final
