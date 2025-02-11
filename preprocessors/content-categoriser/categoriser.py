@@ -96,7 +96,6 @@ def categorise():
     prompt += "[" + possible_categories + "]"
     logging.debug("prompt: " + prompt)
 
-
     request_data = {
         "model": ollama_model,
         "prompt": prompt,

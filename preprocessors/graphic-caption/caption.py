@@ -84,7 +84,7 @@ def categorise():
                       api_key[:3] + "[redacted]")
     else:
         logging.warning("OLLAMA_API_KEY usually starts with sk-, "
-                     "but this one starts with: " + api_key[:3])
+                        "but this one starts with: " + api_key[:3])
 
     prompt = "I am blind, so I cannot see this image. " \
              "Tell me the most important aspects of it, including " \
