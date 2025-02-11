@@ -26,12 +26,20 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
+      - name: Debug GitHub Actions Build Context
+        run: |
+          echo "### Current Directory:"
+          pwd
+          echo "### list of files:"
+          ls -R
       - name: Copy schemas
         working-directory: ./preprocessors/nominatim
         run: cp -R ../../schemas src/
       - name: Install dependencies
         working-directory: ./preprocessors/nominatim
         run: npm ci
+      - name: Debug Build Context
+        run: ls -R .
       - name: Check with tsc
         working-directory: ./preprocessors/nominatim
         run: npx tsc --noEmit
