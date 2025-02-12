@@ -91,13 +91,17 @@ def categorise():
              "Which of the following categories best " \
              "describes this image, selecting from this enum: "
     possible_categories = "photograph, chart, text, other"
+    # override with prompt from environment variable only if it exists
+    prompt = os.getenv('CONTENT_CATEGORISER_PROMPT_OVERRIDE', prompt)
+    prompt += "[" + possible_categories + "]"
+    logging.debug("prompt: " + prompt)
 
     request_data = {
         "model": ollama_model,
-        "prompt": prompt + "[" + possible_categories + "]",
+        "prompt": prompt,
         "images": [graphic_b64],
         "stream": "false",
-        # TODO: figure out if "format": json, should actually work
+        "format": "json",
         "temperature": 0.0,
         "keep_alive": -1  # keep model loaded in memory indefinitely
     }
