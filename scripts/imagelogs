@@ -1,4 +1,11 @@
 #!/bin/bash
+# 
+# A thin wrapper around `docker compose logs -f` that sorts older logs
+# by timestamp, and filters out some of the more verbose output.
+# Use to monitor requests as they come in, or see what went wrong with recent
+# requests that are already completed.
+
+
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
 ENV_FILE="$SCRIPT_DIR/../config/imagelogs.env"
@@ -18,6 +25,7 @@ cd "$DOCKER_DIR" || {
   exit 1
 }
 
+# TODO: new log output that arrives between the two `docker compose` lines below will be lost.
 docker compose logs -t | grep -ivE 'GET /(health|healthcheck.html).*200' | sort -k3
 echo "====================== OLD LOGS COMPLETE, FOLLOWING NEW LOG OUTPUT STARTING HERE =========================================="
 docker compose logs -t -f --tail 0 | grep -ivE 'GET /(health|healthcheck.html).*200'

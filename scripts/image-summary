@@ -1,5 +1,8 @@
 #!/bin/bash
 # USAGE image-summary orchestrator_name
+# 
+# Lists preprocessors by run group (priority) and all handlers
+# including git tag (e.g., unstable)
 
 set -e
 

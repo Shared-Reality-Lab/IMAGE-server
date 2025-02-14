@@ -1,5 +1,9 @@
 #!/bin/bash
-# USAGE: sendimagereq [IMAGE file or stdin] [server]
+# 
+# USAGE: sendimagereq [IMAGE request or stdin] [server]
+# 
+# Note that the make_request script can construct the request
+
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 ENV_FILE="$SCRIPT_DIR/../config/sendimagereq.env"
 if [ -f "$ENV_FILE" ]; then

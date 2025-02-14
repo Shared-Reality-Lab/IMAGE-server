@@ -1,5 +1,8 @@
 #!/bin/bash
-# USAGE: make_request [PATH_TO_IMAGE_FILE]
+# USAGE: make_request [PATH_TO_GRAPHIC_FILE]
+# example: make_request foo.jpg
+# Can be used in tandem with the sendimagereq script to send the request to an IMAGE server
+
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 ENV_FILE="$SCRIPT_DIR/../config/make_request.env"
 if [ -f "$ENV_FILE" ]; then
