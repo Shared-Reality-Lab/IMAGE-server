@@ -136,7 +136,7 @@ app.post("/handler", async (req, res) => {
             const translateSegments = []; // Combine map description with data to translate
             translateSegments.push(description);
             translateSegments.push(...segments);
-            
+
             const translated:string[] = await fetch( "http://multilang-support/service/translate", {
                 "method": "POST",
                 "headers": {
@@ -159,7 +159,6 @@ app.post("/handler", async (req, res) => {
             for(let i = 1; i < translated.length; i++) {
                 segments[i - 1] = translated[i];
             }
-            
         } catch (e) {
             console.error(e);
             console.debug(`Cannot translate to ${targetLanguage}`);
@@ -170,7 +169,7 @@ app.post("/handler", async (req, res) => {
             return;
         }
     }
-    
+
     // Forming Response
     let ttsResponse;
     try {
