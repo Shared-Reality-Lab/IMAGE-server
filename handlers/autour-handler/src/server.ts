@@ -55,7 +55,10 @@ app.post("/handler", async (req, res) => {
     }
 
     const autourData = preprocessors["ca.mcgill.a11y.image.preprocessor.autour"];
-    if (autourData["places"].length === 0) {
+
+    // Filter places we will not use before checking for non-zero length.
+    const places = autourData["places"].filter((p: { "cat": number }) => !filterCategories.includes(p["cat"]));
+    if (places.length === 0) {
         console.warn("No places detected despite running.");
         const response = {
             "request_uuid": req.body["request_uuid"],
@@ -89,9 +92,8 @@ app.post("/handler", async (req, res) => {
         return;
     }
 
-    // Sort and filter POIs
-    // Do this before since TTS is time consuming
-    const places = autourData["places"].filter((p: { "cat": number }) => !filterCategories.includes(p["cat"]));
+    // Sort and filter POIs by distance.
+    // Do this before TTS since it is time consuming
     const source = new LatLon(autourData["lat"], autourData["lon"]);
     for (const place of places) {
         const dest = new LatLon(place["ll"][0], place["ll"][1]);
