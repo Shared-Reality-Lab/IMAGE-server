@@ -137,3 +137,129 @@ networks:
 ```
 This connects to a preexisting network named "traefik" while also explicitly naming the default network created by this compose "image".
 Remember that non-default networks must be explicitly added to services.
+
+
+---------------------------
+
+
+Update system packages: sudo apt update && sudo apt upgrade -y
+Required software:
+Download docker: sudo apt install -y docker.io download docker
+Verify: docker --version
+Install Docker Compose: sudo apt install -y docker-compose
+Verify: docker-compose --version
+
+Add user to docker group: (so you don't have to keep running with sudo) 
+sudo usermod -aG docker $USER
+newgrp docker
+Verify: docker run hello-world
+
+Install NVIDIA drivers: sudo apt install -y nvidia-driver nvidia-container-runtime
+sudo reboot
+Verify: nvidia-smi
+
+ubuntu@ip-172-31-29-145:~$ cd ~
+ubuntu@ip-172-31-29-145:~$ git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git
+Cloning into 'IMAGE-server'...
+The authenticity of host 'github.com (140.82.113.3)' can't be established.
+ED25519 key fingerprint is SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+
+If it fails or you see permission errors:
+You might not have a SSH key: ls -la ~/.ssh
+
+
+ssh-keygen -t ed25519 -C *[email]*
+Generating public/private ed25519 key pair.
+Enter file in which to save the key (/home/ubuntu/.ssh/id_ed25519): 
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/ubuntu/.ssh/id_ed25519
+Your public key has been saved in /home/ubuntu/.ssh/id_ed25519.pub
+The key fingerprint is:
+SHA256:Boe/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx *[email]*
+The key's randomart image is:
++--[ED25519 256]--+
+|+.               |
+|+.  . ..         |
+|+... +oo.        |
+| =.   =+. .      |
+|  + .o.oS. E     |
+| . . ++=..       |
+|     .X.o+       |
+|    .==*=.+      |
+|   .. B%+o..     |
++----[SHA256]-----+
+
+Copy the public key: cat ~/.ssh/id_ed25519.pub
+Go to GitHub -> Settings -> SSH and GPG Keys -> New SSH Key
+Copy the content from ~/.ssh/id_ed25519.pub
+
+Test connection: 
+ubuntu@ip-172-31-29-145:~$ ssh -T git@github.com
+Hi shahdyousefak! You've successfully authenticated, but GitHub does not provide shell access.
+
+Then, retry cloning IMAGE-server: git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git
+Cloning into 'IMAGE-server'...
+remote: Enumerating objects: 17977, done.
+remote: Counting objects: 100% (2127/2127), done.
+remote: Compressing objects: 100% (564/564), done.
+remote: Total 17977 (delta 1846), reused 1608 (delta 1561), pack-reused 15850 (from 1)
+Receiving objects: 100% (17977/17977), 62.84 MiB | 28.97 MiB/s, done.
+Resolving deltas: 100% (11361/11361), done.
+Submodule 'docker/schemas' (git@github.com:Shared-Reality-Lab/IMAGE-server.git) registered for path 'schemas'
+Cloning into '/home/ubuntu/IMAGE-server/schemas'...
+remote: Enumerating objects: 17977, done.        
+remote: Counting objects: 100% (2127/2127), done.        
+remote: Compressing objects: 100% (564/564), done.        
+remote: Total 17977 (delta 1846), reused 1608 (delta 1561), pack-reused 15850 (from 1)        
+Receiving objects: 100% (17977/17977), 62.84 MiB | 35.61 MiB/s, done.
+Resolving deltas: 100% (11361/11361), done.
+Submodule path 'schemas': checked out 'b36c5d5fd2a7f223f996a54d01c84aeffe1b2610'
+
+
+Configure environment:
+ubuntu@ip-172-31-29-145:~$ grep docker /etc/group | awk -F: '{ print $3 }'
+122
+
+touch .env
+nano .env
+ubuntu@ip-172-31-29-145:~$ cat .env
+DOCKER_GID=122
+
+Navigate to IMAGE Server project directory
+ubuntu@ip-172-31-29-145:~/IMAGE-server$ pwd
+/home/ubuntu/IMAGE-server
+
+Before running ~/IMAGE-server$ docker-compose up -d,
+
+Ensure the necessary .env files are configured with the necessary API keys:
+/home/ubuntu/IMAGE-server/config/apis-and-selection.env
+/home/ubuntu/IMAGE-server/config/azure-api.env
+/home/ubuntu/IMAGE-server/config/ollama.env
+/home/ubuntu/IMAGE-server/config/maps.env
+
+If you see: ubuntu@ip-172-31-29-145:~/IMAGE-server$ docker-compose up -d
+ERROR: Network traefik declared as external, but could not be found. Please create the network manually using `docker network create traefik` and try again.
+
+Create the traefik betwork:
+ubuntu@ip-172-31-29-145:~/IMAGE-server/config$ docker network create traefik
+a850e29554fdb1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Then re-try:
+ubuntu@ip-172-31-29-145:~/IMAGE-server$ docker-compose up -d
+Creating volume "image-server_sc-store" with default driver
+Creating volume "image-server_user-logs" with default driver
+Creating volume "image-server_website-logs" with default driver
+Pulling orchestrator (ghcr.io/shared-reality-lab/image-orchestrator:unstable)...
+unstable: Pulling from shared-reality-lab/image-orchestrator
+....
+
+
+Please note that GPU-based services (espnet-tts, semantic-segmentation, object-detection, etc.) will require GPU, or else you might run into
+ERROR: for action-recognition  Cannot start service action-recognition: could not select device driver "nvidia" with capabilities: [[gpu utility compute]]
+
+
+Verify the containers are running :-
+docker ps
