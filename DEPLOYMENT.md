@@ -5,19 +5,19 @@ on their own so components can be used. It is based on what we've done for
 our testing and production environments, but by no means is this the only
 way to deploy. The general principles and concerns will likely be relevant.
 
-1. System Requirements & Dependencies
+## System Requirements & Dependencies
 
 The following is written with the assumption you are running a Debian-based Linux distribution (e.g., Ubuntu 22.04, Debian 11).
 Other distributions may work fine, but are not officially tested.
 
-1.1 Minimum System Requirements
+Minimum System Requirements
 OS: Any Linux distribution (Debian-based preferred)
 CPU: At least 4 cores recommended
 RAM: 16GB or more recommended
 Storage: 50GB free, 100GB+ recommended if using a GPU
 GPU: NVIDIA GPU required for certain services
 
-1.2 Required Software
+## Required Software
 You will need the following installed:
 
 - [Docker Engine](https://docs.docker.com/engine/) and [Docker Compose](https://docs.docker.com/compose/)
@@ -45,10 +45,7 @@ Our Docker images our tagged in four possible ways:
 Typically, we use *unstable* for testing and development and *latest* for production.
 We recommend you follow this if you are unsure which to use.
 
-## For Testing/Local Use
-
-
----------------------------
+## Installing Dependencies
 
 Update system packages: 
 `sudo apt update && sudo apt upgrade -y`
@@ -185,6 +182,14 @@ This can be brought up using `docker-compose up -d`.
 We recommend limiting the number of running services to fit the resource constraints
 of your particular system (i.e., available CPU, GPU, memory).
 
+
+## For Testing/Local Use
+
+The default compose file within there (docker-compose.yml) is a useful base for testing. Each image will be downloaded from the Github Container Registry using the "unstable" tag.
+
+This can be brought up using docker-compose up -d. We recommend limiting the number of running services to fit the resource constraints of your particular system (i.e., available CPU, GPU, memory).
+
+
 ## For Production
 
 For production, it is recommended to use "latest" and limit the number of running services for additional stability.
@@ -193,22 +198,6 @@ We also recommend running two instances of supercollider to allow for multiple a
 deploy:
     replicas: 2
 ```
-
-### Orchestrator
-
-In order to access the docker socket, the orchestrator must run as part of the docker group.
-Otherwise, it will not be able to find any preprocessors and handlers.
-
-Determine the GID for docker. One way to do this is to run
-`grep docker /etc/group | awk -F: '{ print $3 }'`.
-This number is the group ID.
-This must be set as the `DOCKER_GID` environment variable that gets used
-in `docker-compose.yml`.
-To do this, append the line
-```
-DOCKER_GID=NUM
-```
-to `.env` in the directory containing `docker-compose.yml` where `NUM` is replaced with the GID.
 
 ### API Keys
 
