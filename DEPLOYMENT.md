@@ -17,6 +17,17 @@ RAM: 16GB or more recommended
 Storage: 50GB free, 100GB+ recommended if using a GPU
 GPU: NVIDIA GPU required for certain services
 
+
+IMAGE Server was also successfully deployed on AWS EC2 using the below confiuratings:
+
+Instance Type:	[Preferred] g4dn.xlarge (GPU) or t3.large (CPU-only)
+OS:	Ubuntu 22.04 LTS
+CPU: 4 vCPUs
+RAM: 16GB
+Storage: 1000GB EBS (Elastic Block Store)
+Network: Default VPC with public IPv4
+Security Group: Open ports 22 (SSH), 80 (HTTP), 443 (HTTPS)
+
 ## Required Software
 You will need the following installed:
 
