@@ -69,8 +69,9 @@ Verify: `docker --version`
 Install Docker Compose: `sudo apt install -y docker-compose`
 Verify: `docker-compose --version`
 
-Add user to docker group: (so you don't have to keep running with sudo) 
+Add user to docker group: (so you don't have to keep running with sudo):
 `sudo usermod -aG docker $USER`
+
 `newgrp docker`
 (Verify with `docker run hello-world`)
 
@@ -79,9 +80,13 @@ Install NVIDIA drivers: `sudo apt install -y nvidia-driver nvidia-container-runt
 Verify: `nvidia-smi`
 
 
+
 Clone the repository
-ubuntu@ip-172-31-29-145:~$ cd ~
+
+ubuntu@ip-172-31-29-145:~$ `cd ~`
+
 ubuntu@ip-172-31-29-145:~$ `git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git`
+
 Cloning into 'IMAGE-server'...
 The authenticity of host 'github.com (140.82.113.3)' can't be established.
 ED25519 key fingerprint is SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU.
@@ -93,15 +98,25 @@ You might not have a SSH key: `ls -la ~/.ssh`
 
 
 `ssh-keygen -t ed25519 -C *[email]*`
+
 Generating public/private ed25519 key pair.
+
 Enter file in which to save the key (/home/ubuntu/.ssh/id_ed25519): 
+
 Enter passphrase (empty for no passphrase): 
+
 Enter same passphrase again: 
+
 Your identification has been saved in /home/ubuntu/.ssh/id_ed25519
+
 Your public key has been saved in /home/ubuntu/.ssh/id_ed25519.pub
+
 The key fingerprint is:
+
 SHA256:Boe/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx *[email]*
+
 The key's randomart image is:
+
 +--[ED25519 256]--+
 |+.               |
 |+.  . ..         |
@@ -114,15 +129,23 @@ The key's randomart image is:
 |   .. B%+o..     |
 +----[SHA256]-----+
 
-Copy the public key: cat ~/.ssh/id_ed25519.pub
+Copy the public key: `cat ~/.ssh/id_ed25519.pub`
+
 Go to GitHub -> Settings -> SSH and GPG Keys -> New SSH Key
+
 Copy the content from ~/.ssh/id_ed25519.pub
 
+
 Test connection: 
+
 ubuntu@ip-172-31-29-145:~$ `ssh -T git@github.com`
+
 Hi shahdyousefak! You've successfully authenticated, but GitHub does not provide shell access.
 
+
+
 Then, retry cloning IMAGE-server: `git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git`
+
 Cloning into 'IMAGE-server'...
 remote: Enumerating objects: 17977, done.
 remote: Counting objects: 100% (2127/2127), done.
@@ -142,25 +165,39 @@ Submodule path 'schemas': checked out 'b36c5d5fd2a7f223f996a54d01c84aeffe1b2610'
 
 
 Configure environment:
+
 ubuntu@ip-172-31-29-145:~$ `grep docker /etc/group | awk -F: '{ print $3 }'`
 122
 
-touch .env
-nano .env
+`touch .env`
+`nano .env` --> DOCKER_GID=122
+
 ubuntu@ip-172-31-29-145:~$ cat .env
 DOCKER_GID=122
 
-Navigate to IMAGE Server project directory
-ubuntu@ip-172-31-29-145:~/IMAGE-server$ pwd
+
+Navigate to IMAGE Server project directory:
+
+ubuntu@ip-172-31-29-145:~/IMAGE-server$ `pwd`
+
 /home/ubuntu/IMAGE-server
+
+
 
 Before running ~/IMAGE-server$ `docker-compose up -d`,
 
 Ensure the necessary .env files are configured with the necessary API keys:
+
 /home/ubuntu/IMAGE-server/config/apis-and-selection.env
+
 /home/ubuntu/IMAGE-server/config/azure-api.env
+
 /home/ubuntu/IMAGE-server/config/ollama.env
+
 /home/ubuntu/IMAGE-server/config/maps.env
+
+
+
 
 If you see: ubuntu@ip-172-31-29-145:~/IMAGE-server$ docker-compose up -d
 ERROR: Network traefik declared as external, but could not be found. Please create the network manually using `docker network create traefik` and try again.
@@ -184,14 +221,8 @@ ERROR: for action-recognition  Cannot start service action-recognition: could no
 
 
 Verify the containers are running :-
-docker ps
+`docker ps`
 
-The default compose file within there (`docker-compose.yml`) is a useful base for testing. Each image will be downloaded from the Github Container Registry
-using the "unstable" tag.
-
-This can be brought up using `docker-compose up -d`.
-We recommend limiting the number of running services to fit the resource constraints
-of your particular system (i.e., available CPU, GPU, memory).
 
 
 ## For Testing/Local Use
@@ -199,6 +230,7 @@ of your particular system (i.e., available CPU, GPU, memory).
 The default compose file within there (docker-compose.yml) is a useful base for testing. Each image will be downloaded from the Github Container Registry using the "unstable" tag.
 
 This can be brought up using docker-compose up -d. We recommend limiting the number of running services to fit the resource constraints of your particular system (i.e., available CPU, GPU, memory).
+
 
 
 ## For Production
