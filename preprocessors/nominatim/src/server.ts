@@ -16,7 +16,9 @@
  */
 
 import Ajv from "ajv";
-import express, { Request, Response } from "express";
+import express from "express";
+import { piiLogger } from "./config/logging_utils";
+
 import querySchemaJSON from "./schemas/request.schema.json";
 import preprocessorResponseJSON from "./schemas/preprocessor-response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
@@ -36,6 +38,7 @@ app.post("/preprocessor", async (req, res) => {
     // Validate the request data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
+        piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)}`);
         res.status(400).json(ajv.errors);
         return;
     }
@@ -75,15 +78,17 @@ app.post("/preprocessor", async (req, res) => {
                 res.json(response);
             } else {
                 console.error("Nominatim preprocessor data failed validation (possibly not an object?)");
-                console.error(ajv.errors);
+                piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)}`);
                 res.status(500).json(ajv.errors);
             }
         } else {
             console.error("Failed to generate a valid response");
+            piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)} | Response: ${JSON.stringify(response)}`);
             res.status(500).json(ajv.errors);
         }
     } catch (e) {
-        console.error(e);
+        console.error("Unexpected error occured.");
+        piiLogger.pii(`${(e as Error).message}`);
         res.status(500).json({"message": (e as Error).message});
     }
 });

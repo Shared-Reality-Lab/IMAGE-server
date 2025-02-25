@@ -1,6 +1,6 @@
 FROM python:3.13
 
-RUN apt-get install libcairo2
+RUN apt-get update && apt-get install -y libcairo2 curl && rm -rf /var/lib/apt/lists/*
 
 RUN adduser --disabled-password python
 WORKDIR /usr/src/app
@@ -11,8 +11,13 @@ COPY /handlers/text-followup-handler/requirements.txt /usr/src/app/requirements.
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
+COPY /config /usr/src/app/config
 COPY /handlers/text-followup-handler/ /usr/src/app
 
 EXPOSE 80
 USER python
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD curl -f http://localhost:80/health || exit 1
+
 CMD ["gunicorn", "followup:app", "-b", "0.0.0.0:80", "--capture-output", "--log-level=debug" ]

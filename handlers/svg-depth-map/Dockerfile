@@ -11,6 +11,7 @@ COPY /handlers/svg-depth-map/requirements.txt /usr/src/app/requirements.txt
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
+COPY /config /usr/src/app/config
 COPY /handlers/svg-depth-map/ /usr/src/app
 
 EXPOSE 80

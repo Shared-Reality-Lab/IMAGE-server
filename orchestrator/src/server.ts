@@ -167,38 +167,23 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
         data["preprocessors"] = {};
     }
     let currentPriorityGroup: number | undefined = undefined;
-    const queue: (string | number)[][] = []; //Microservice queue for preprocessors and handlers
-
-
-    //function that dequeues everything in the queue at once, executes them and waits for them to finish processing
-    const processQueue = async (): Promise<void> => {
-        try {
-            await Promise.all(queue.map(preprocessor => executePreprocessor(preprocessor, data)));
-        } catch (error) {
-            console.error(`One or more of the promises failed at priority group ${currentPriorityGroup}.`, error);
-        }
-        finally {   //empty the queue 
-            queue.length = 0;
-        }
-    };
+    let promises: Promise<void>[] = []; // array to hold promises for preprocessor executions within the current priority group
 
     for (const preprocessor of preprocessors) {
-        //If the priority group changes, process the queue and move to the next group
+        // check if priority group changes - if so, wait for the current promises to finish
         if (preprocessor[2] !== currentPriorityGroup) {
-            if (queue.length > 0) {
-                await processQueue(); //Process everything in the queue
+            if (promises.length > 0) {
+                await Promise.all(promises); // wait for all preprocessors in the current group
+                promises = []; // reset promises for the new priority group
             }
             currentPriorityGroup = Number(preprocessor[2]);
             console.debug(`Now on priority group ${currentPriorityGroup}`);
         }
-
-        //Add the preprocessor to the queue
-        queue.push(preprocessor);
+        // add the execution of the current preprocessor to the promises array
+        promises.push(executePreprocessor(preprocessor, data));
     }
-
-    //Process any remaining items in the queue
-    if (queue.length > 0) {
-        await processQueue();
+    if (promises.length > 0) {
+        await Promise.all(promises); // wait for remaining promises
     }
 
     return data;
@@ -475,11 +460,6 @@ app.get("/authenticate/:uuid/:check", async (req, res) => {
         console.warn("Auth endpoint hit while off!");
         res.status(503).end();
     }
-});
-
-// Healthcheck endpoint
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
 app.listen(port, () => {

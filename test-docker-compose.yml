@@ -115,7 +115,3 @@ services:
       - traefik.docker.network=traefik
     environment:
       - SERVER_NAME=unicorn.cim.mcgill.ca
-  
-  text-followup:
-    environment:
-      LOG_PII: "true"

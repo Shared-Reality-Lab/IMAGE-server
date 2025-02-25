@@ -12,7 +12,7 @@ COPY /handlers/ocr-handler/requirements.txt /app/requirements.txt
 RUN pip3 install -r requirements.txt
 
 COPY /schemas /app/schemas
-
+COPY /config /app/config
 COPY /handlers/ocr-handler/ /app
 
 EXPOSE 80

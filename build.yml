@@ -96,11 +96,6 @@ services:
             context: .
             dockerfile: ./preprocessors/graphic-caption/Dockerfile
         image: "graphic-caption:latest"
-    text-followup:
-        build:
-            context: .
-            dockerfile: ./preprocessors/text-followup/Dockerfile
-        image: "text-followup:latest"
     emotion-recognition:
         build:
             context: .
@@ -268,11 +263,6 @@ services:
             context: .
             dockerfile: ./handlers/svg-action-recognition/Dockerfile
         image: "svg-action-recognition:latest"
-    text-followup-handler:
-        build:
-            context: .
-            dockerfile: ./handlers/text-followup-handler/Dockerfile
-        image: "text-followup-handler:latest"
     # Supercollider on Fedora 34
     supercollider-base:
         build:

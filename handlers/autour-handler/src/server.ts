@@ -4,6 +4,7 @@ import fs from "fs/promises";
 import osc from "osc";
 import { v4 as uuidv4 } from "uuid";
 import { LatLonVectors as LatLon } from "geodesy";
+import { piiLogger } from "./config/logging_utils";
 
 // JSON imports
 import querySchemaJSON from "./schemas/request.schema.json";
@@ -32,6 +33,7 @@ app.post("/handler", async (req, res) => {
     // Check for good data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
+        piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)}`);
         res.status(400).json(ajv.errors);
         return;
     }
@@ -48,7 +50,7 @@ app.post("/handler", async (req, res) => {
             res.json(response);
         } else {
             console.error("Failed to generate a valid empty response!");
-            console.error(ajv.errors);
+            piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)}`);
             res.status(500).json(ajv.errors);
         }
         return;
@@ -69,7 +71,7 @@ app.post("/handler", async (req, res) => {
             res.json(response);
         } else {
             console.error("Failed to generate a valid empty response!");
-            console.error(ajv.errors);
+            piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)}`);
             res.status(500).json(ajv.errors);
         }
         return;
@@ -86,7 +88,7 @@ app.post("/handler", async (req, res) => {
             res.json(response);
         } else {
             console.error("Failed to generate a valid empty response!");
-            console.error(ajv.errors);
+            piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)}`);
             res.status(500).json(ajv.errors);
         }
         return;
@@ -162,8 +164,8 @@ app.post("/handler", async (req, res) => {
                 segments[i - 1] = translated[i];
             }
         } catch (e) {
-            console.error(e);
             console.debug(`Cannot translate to ${targetLanguage}`);
+            piiLogger.pii(`Translation error: ${e}`);
             res.status(500).json({
                 "Error": "Cannot translate to target language",
                 "Attempted target": targetLanguage
@@ -188,7 +190,8 @@ app.post("/handler", async (req, res) => {
         });
         ttsResponse = ttsResponse as Record<string, unknown>;
     } catch (e) {
-        console.error(e);
+        console.error("TTS request failed.");
+        piiLogger.pii(`TTS error: ${(e as Error).message}`);
         res.status(500).json({"error": (e as Error).message});
         return;
     }
@@ -248,6 +251,7 @@ app.post("/handler", async (req, res) => {
                             resolve(outFile);
                         }
                         else if (arg[0] === "fail") {
+                            piiLogger.pii(`OSC failure: ${JSON.stringify(oscMsg)}`);
                             oscPort.close();
                             reject(oscMsg);
                         }
@@ -264,7 +268,8 @@ app.post("/handler", async (req, res) => {
                     });
                     oscPort.open();
                 } catch (e) {
-                    console.error(e);
+                    console.error("OSC communication error");
+                    piiLogger.pii(`${(e as Error).message}`)
                     oscPort.close();
                     reject(e);
                 }
@@ -297,12 +302,12 @@ app.post("/handler", async (req, res) => {
         });
         // Verify match of simple audio
         if (!ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", renderings[renderings.length - 1]["data"])) {
-            console.error("Failed to validate data of simple renderer.");
+            piiLogger.pii(`Simple audio validation error: ${JSON.stringify(ajv.errors)}`);
             renderings.pop();
-            throw ajv.errors;
+            throw new Error("Failed to validate data of simple renderer");
         }
     }).catch(err => {
-        console.error(err);
+        piiLogger.pii(`Processing error: ${(err as Error).message}`);
     }).finally(() => {
         // Delete our files if they exist on the disk
         if (inFile !== undefined) {
@@ -327,7 +332,7 @@ app.post("/handler", async (req, res) => {
         res.json(response);
     } else {
         console.error("Failed to generate a valid response.");
-        console.error(ajv.errors);
+        piiLogger.pii(`Final response validation error: ${JSON.stringify(ajv.errors)}`);
         res.status(500).json(ajv.errors);
     }
 });

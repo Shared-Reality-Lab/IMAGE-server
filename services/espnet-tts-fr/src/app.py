@@ -21,14 +21,13 @@ import logging
 import numpy as np
 import soundfile as sf
 from espnet_util import tts, fs
-from flask import Flask, Response, request, jsonify
+from flask import Flask, Response, request
 from io import BytesIO
 from jsonschema import validate
 from torch.cuda import empty_cache
 from werkzeug.wsgi import FileWrapper
 from num2words import num2words
 import re  # for regular expression processing
-from datetime import datetime
 
 logging.basicConfig(format="%(asctime)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -170,14 +169,3 @@ def segment_tts():
         }, 500
     finally:
         empty_cache()
-
-
-@app.route("/health", methods=["GET"])
-def health():
-    """
-    Health check endpoint to verify if the service is running
-    """
-    return jsonify({
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat()
-    }), 200

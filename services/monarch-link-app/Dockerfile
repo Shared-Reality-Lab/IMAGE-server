@@ -1,6 +1,6 @@
 FROM python:3.11-alpine3.20
 
-RUN apk add supercronic curl
+RUN apk add supercronic
 
 RUN adduser --disabled-password python
 WORKDIR /usr/src/app
@@ -16,8 +16,5 @@ RUN chown -R python:python /usr/src/app
 
 EXPOSE 80
 USER python
-
-HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:80/health || exit 1
-
 CMD supercronic -quiet /usr/src/app/cronjob \
     & gunicorn app:app -b 0.0.0.0:80 --capture-output --log-level=debug
