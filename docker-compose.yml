@@ -21,8 +21,8 @@ services:
     profiles: [production, test, default]
     image: 'memcached:1.6'
     restart: unless-stopped
-    # cache memory size - 4GB
-    command: -m 4096
+    # cache memory size - 4GB, maximum item size - 5MB
+    command: -m 4096 -I 5m
 
   espnet-tts:
     profiles: [production, test, default]
