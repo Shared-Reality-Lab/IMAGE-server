@@ -25,8 +25,8 @@ cd "$DOCKER_DIR" || {
   exit 1
 }
 
-# TODO: new log output that arrives between the two `docker compose` lines below will be lost.
-docker compose logs -t | grep -ivE 'GET /(health|healthcheck.html).*200' | sort -k3
+docker compose logs -t | grep -ivE '^(supercollider-|.*GET /(health|healthcheck.html))' | sort -k3
 echo "====================== OLD LOGS COMPLETE, FOLLOWING NEW LOG OUTPUT STARTING HERE =========================================="
-docker compose logs -t -f --tail 0 | grep -ivE 'GET /(health|healthcheck.html).*200'
+docker compose logs -t -f --tail 0 | grep -ivE '^(supercollider-|.*GET /(health|healthcheck.html))'
 cd -
+~
