@@ -30,6 +30,9 @@ from io import BytesIO
 from datetime import datetime
 
 from utils import detect, Classifier
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 
@@ -86,7 +89,8 @@ def run():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for input request")
+        logging.pii(f"Validation error: {e.message} | Data: {content}")
         return jsonify("Invalid Preprocessor JSON format"), 400
     logging.info("Schemas validated")
 
@@ -116,8 +120,9 @@ def run():
             try:
                 MODEL = MODEL.to("cuda")
             except Exception as e:
-                logging.error("Error while loading model on GPU: {}".format(e))
-                return jsonify("Error while loading model on GPU"), 500
+                logging.error("Failed to load model on GPU")
+                logging.pii(f"GPU loading error: {e}")
+                return jsonify("Error loading model on GPU"), 500
 
             if len(people) == 1:
                 # don't crop if only one person detected
@@ -159,8 +164,9 @@ def run():
             MODEL.to("cpu")
 
         except Exception as e:
-            logging.error(f"Error while predicting actions: {e}")
-            return jsonify("Error while predicting actions"), 500
+            logging.error("Error during action prediction")
+            logging.pii(f"Prediction error: {e}")
+            return jsonify("Error during action prediction"), 500
 
         final = {"actions": data}
         logging.info("Validating results schema")
@@ -168,7 +174,8 @@ def run():
             validator = jsonschema.Draft7Validator(data_schema)
             validator.validate(final)
         except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+            logging.error("Validation failed for action results")
+            logging.pii(f"Validation error: {e.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         response = {
             "request_uuid": request_uuid,
@@ -182,7 +189,8 @@ def run():
                                                    resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+            logging.error("Validation failed for preprocessor response")
+            logging.pii(f"Validation error: {e.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.info("Schema validated")
         logging.info("Returning response")

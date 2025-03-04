@@ -29,6 +29,9 @@ jobs:
       - name: Copy schemas
         working-directory: ./handlers/photo-audio-haptics-handler
         run: cp -R ../../schemas src/
+      - name: Copy config
+        working-directory: ./handlers/photo-audio-haptics-handler
+        run: cp -R ../../config src/
       - name: Install dependencies
         working-directory: ./handlers/photo-audio-haptics-handler
         run: npm ci

@@ -22,6 +22,9 @@ import jsonschema
 import logging
 import os
 from datetime import datetime
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -55,7 +58,8 @@ def categorise():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     # check we received a graphic (e.g., not a map or chart request)
@@ -83,16 +87,13 @@ def categorise():
         logging.debug("OLLAMA_API_KEY looks properly formatted: " +
                       api_key[:3] + "[redacted]")
     else:
-        logging.warning("OLLAMA_API_KEY usually starts with sk-, "
-                        "but this one starts with: " + api_key[:3])
+        logging.warn("OLLAMA_API_KEY usually starts with sk-, "
+                     "but this one starts with: " + api_key[:3])
 
     prompt = "I am blind, so I cannot see this image. " \
              "Tell me the most important aspects of it, including " \
              "style, content, and the most significant aspect of the image." \
              "Answer with maximum one sentence. "
-    prompt = os.getenv('GRAPHIC_CAPTION_PROMPT_OVERRIDE', prompt)
-    logging.debug("prompt: " + prompt)
-
     request_data = {
         "model": ollama_model,
         "prompt": prompt,
@@ -128,9 +129,8 @@ def categorise():
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(graphic_caption_json)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
-        # TODO: add back next line once IMAGE-server #941 is complete
-        # logging.debug(e)  # print full error only in debug, due to PII
+        logging.error("Validation failed for graphic caption data")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # create full response & check meets overall preprocessor response schema
@@ -144,9 +144,8 @@ def categorise():
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
-        # TODO: add back next line once IMAGE-server #912 is complete
-        # logging.debug(e)  # print full error only in debug, due to PII
+        logging.error("Validation failed for final response")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # all done; return to orchestrator
