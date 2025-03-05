@@ -17,6 +17,8 @@
 import Docker from "dockerode";
 
 export const docker = new Docker();
+const _REQUIRED_DEP_LABEL_ = "ca.mcgill.a11y.image.required_dependencies";
+const _OPTIONAL_DEP_LABEL_ = "ca.mcgill.a11y.image.optional_dependencies";
 const _PREPROCESSOR_LABEL_ = "ca.mcgill.a11y.image.preprocessor";
 const _HANDLER_LABEL_ = "ca.mcgill.a11y.image.handler";
 const _PORT_LABEL_ = "ca.mcgill.a11y.image.port";
@@ -101,3 +103,43 @@ export function getHandlerServices(containers: Docker.ContainerInfo[], route: st
         return [container.Labels["com.docker.compose.service"], port];
     });
 }
+
+export async function getOptionalDependencies(preprocessorName: string, preprocessors: (string | number)[][]) : Promise<string[] | null>{
+    try{
+        //find the container using the name of the preprocessor 
+        const containers = await docker.listContainers({all:true});
+
+        //Find the container for the name passed
+        const container = containers.find(c => c.Labels["ca.mcgill.a11y.image.preprocessor"] === preprocessorName);
+        if(!container){
+            console.error(`Could not find the container for preprocessor ${preprocessorName}`);
+            return null;
+        }
+        const optionalPreprocessors = container.Labels["ca.mcgill.a11y.image.optional_dependencies"] || [];
+        return optionalPreprocessors;
+    }   catch(error){
+        console.error(`Error encountered while getting optional dependencies.`);
+        return null;
+    }
+
+}
+
+export async function getRequiredDependencies(preprocessorName: string, preprocessors: (string | number)[][]) : Promise<string[] | null>{
+    try{
+        //find the container using the name of the preprocessor 
+        const containers = await docker.listContainers({all:true});
+
+        //Find the container for the name passed
+        const container = containers.find(c => c.Labels["ca.mcgill.a11y.image.preprocessor"] === preprocessorName);
+        if(!container){
+            console.error(`Could not find the container for preprocessor ${preprocessorName}`);
+            return null;
+        }
+        const requiredPreprocessors = container.Labels["ca.mcgill.a11y.image.required_dependencies"] || [];
+        return requiredPreprocessors;
+        console.log(requiredPreprocessors);
+    }   catch(error){
+        console.error(`Error encountered while getting required dependencies.`);
+        return null;
+    }
+} 
