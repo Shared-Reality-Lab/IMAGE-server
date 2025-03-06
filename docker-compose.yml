@@ -108,6 +108,9 @@ services:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-text-followup:${REGISTRY_TAG}
     restart: unless-stopped
+    environment:
+      - MAX_HISTORY_LENGTH=100
+      - HISTORY_EXPIRY=3600
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
