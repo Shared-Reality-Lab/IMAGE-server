@@ -7,5 +7,13 @@ config/chart.env
 config/apis-and-selection.env
 config/vision_api_key.json
 config/ollama.env
+config/healthcheck.env
+config/image-summary.env
+config/image_daily_cron.env
+config/imagelogs.env
+config/make_request.env
+config/pp_daily_test.env
+config/restoreunstable.env
+config/sendimagereq.env
 *.sh
 docker-compose.override.yml
