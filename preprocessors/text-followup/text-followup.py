@@ -211,7 +211,14 @@ def followup():
 
     # Use history for the request
     uuid_messages = conversation_history[request_uuid]["messages"]
-    messages = uuid_messages[-MAX_HISTORY_LENGTH:]
+    if len(uuid_messages) <= MAX_HISTORY_LENGTH:
+        messages = uuid_messages
+    else:
+        # Get system message, first user message w/ image, and recent messages
+        messages = (
+            uuid_messages[:2] +
+            uuid_messages[-(MAX_HISTORY_LENGTH-2):]
+        )
 
     # Create log-friendly version without full base64 content
     if log_pii:
