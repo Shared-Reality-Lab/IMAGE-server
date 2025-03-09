@@ -20,6 +20,7 @@ messages will be passed to the model for context
 >the first user message (with graphic), and the most recent 98 interactions 
 >between the user and the model.
 
+
 It uses an LLM model running via ollama fronted by open-webui.
 There are several mandatory environment variables you must set.
 Example ollama.env file:

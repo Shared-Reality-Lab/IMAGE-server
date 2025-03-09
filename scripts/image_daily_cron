@@ -1,0 +1,28 @@
+#!/usr/bin/sh
+
+# daily cleanup script to reset test server every day and run tests
+
+# determine the script's directory dynamically
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+ENV_FILE="$SCRIPT_DIR/../config/image_daily_cron.env"
+if [ -f "$ENV_FILE" ]; then
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+  echo "Error: Environment file not found at $ENV_FILE" >&2
+  exit 1
+fi
+
+RESTOREUNSTABLE="$SCRIPT_DIR/restoreunstable"
+PP_DAILY_TEST="$SCRIPT_DIR/pp_daily_test"
+
+if [ ! -x "$RESTOREUNSTABLE" ] || [ ! -x "$PP_DAILY_TEST" ]; then
+  echo "Error: One or more required scripts are missing or not executable in $SCRIPTS_DIR." >&2
+  ls -l "$SCRIPTS_DIR"  # Show directory contents for debugging
+  exit 1
+fi
+
+# Run restoreunstable
+"$RESTOREUNSTABLE" > "$LOG_DIR/restoreunstable.$(date "+%Y.%m.%d-%H.%M.%S")" 2>&1
+
+# Run pp_daily_test
+"$PP_DAILY_TEST"

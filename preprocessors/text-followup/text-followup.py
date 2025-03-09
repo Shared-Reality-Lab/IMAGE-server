@@ -211,6 +211,7 @@ def followup():
 
     # Use history for the request
     uuid_messages = conversation_history[request_uuid]["messages"]
+
     if len(uuid_messages) <= MAX_HISTORY_LENGTH:
         messages = uuid_messages
     else:
