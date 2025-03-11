@@ -167,10 +167,6 @@ def followup():
     # override with prompt from environment variable only if it exists
     general_prompt = os.getenv('TEXT_FOLLOWUP_PROMPT_OVERRIDE', general_prompt)
     user_prompt = content["followup"]["query"]
-    if log_pii:
-        logging.debug(f"user followup prompt: {general_prompt} {user_prompt}")
-    else:
-        logging.debug(f"user followup prompt: {general_prompt} [redacted]")
 
     # prepare ollama request
     api_url = f"{os.environ['OLLAMA_URL']}/chat"
@@ -234,7 +230,11 @@ def followup():
                     for img in log_msg['images']
                 ]
             log_friendly_messages.append(log_msg)
-        logging.debug(f"Message history: {log_friendly_messages}")
+        logging.debug(
+            f"Message history: {json.dumps(log_friendly_messages, indent=2)}"
+            )
+    else:
+        logging.debug(f"User followup prompt: {general_prompt} [redacted]")
 
     # Create request data for chat endpoint
     request_data = {
