@@ -253,5 +253,53 @@ def health():
     }), 200
 
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+@app.route("/health/gpu", methods=["GET"])
+def gpu_health_check():
+    """
+    Health check to verify if NVIDIA GPU is accessible and the segmentation model is functional.
+    """
+
+    #  Check if CUDA is available
+    if not torch.cuda.is_available():
+        return jsonify({
+            "status": "unhealthy",
+            "message": "CUDA not available",
+            "cuda_version": torch.version.cuda,
+            "cudnn_version": torch.backends.cudnn.version()
+        }), 500
+
+    try:
+        # Log GPU memory usage
+        gpu_memory = torch.cuda.memory_allocated(0)
+        total_gpu_memory = torch.cuda.get_device_properties(0).total_memory
+
+        # Initialize the model on GPU
+        model = init_segmentor(BEIT_CONFIG, BEIT_CHECKPOINT, device='cuda:0')
+
+        torch.cuda.empty_cache()  # Clear CUDA memory before running inference
+
+        # create a dummy image and preprocess it
+        dummy_image = np.random.randint(0, 256, (256, 256, 3), dtype=np.uint8)
+        dummy_image = mmcv.imnormalize(dummy_image.astype(np.float32),
+                                       mean=[123.675, 116.28, 103.53],
+                                       std=[58.395, 57.12, 57.375], 
+                                       to_rgb=True)
+
+        # Run inference
+        _ = inference_segmentor(model, dummy_image)
+
+        return jsonify({
+            "status": "healthy",
+            "message": "GPU and model working correctly",
+            "gpu_memory_used": f"{gpu_memory / 1e6:.2f} MB",
+            "total_gpu_memory": f"{total_gpu_memory / 1e6:.2f} MB"
+        }), 200
+
+    except RuntimeError as e:
+        if "out of memory" in str(e).lower():
+            return jsonify({"status": "unhealthy", "message": "CUDA out"
+                            "of memory"}), 500
+        return jsonify({
+            "status": "unhealthy",
+            "message": f"Model init failed: {str(e)}"
+        }), 500
