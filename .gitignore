@@ -15,5 +15,6 @@ config/make_request.env
 config/pp_daily_test.env
 config/restoreunstable.env
 config/sendimagereq.env
+config/imageup.env
 *.sh
 docker-compose.override.yml
