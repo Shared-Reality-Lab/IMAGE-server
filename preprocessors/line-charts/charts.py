@@ -20,10 +20,13 @@ import time
 import logging
 import jsonschema
 from flask import Flask, request, jsonify
+from config.logging_utils import configure_logging
 
 from charts_utils import getLowerPointsOnLeft, getHigherPointsOnLeft
 from charts_utils import getLowerPointsOnRight, getHigherPointsOnRight
 from datetime import datetime
+
+configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -67,7 +70,8 @@ def get_chart_info():
         )
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {error.message}")
         return jsonify("Invalid Request JSON format"), 400
     # Use response schema to validate response
     resolver = jsonschema.RefResolver.from_schema(
@@ -108,7 +112,8 @@ def get_chart_info():
         validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
         validator.validate(data)
     except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
+        logging.error("Validation failed for proccessed data")
+        logging.pii(f"Validation error: {error.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {
@@ -122,7 +127,8 @@ def get_chart_info():
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
+        logging.error("Validation failed for response")
+        logging.pii(f"Validation error: {error.message} | {response}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")

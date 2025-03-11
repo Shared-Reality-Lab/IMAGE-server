@@ -22,6 +22,9 @@ import jsonschema
 import requests
 from flask import Flask, request, jsonify
 from datetime import datetime
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -91,7 +94,13 @@ def get_map_data():
 
     api_request = ''.join(api_request.split())
 
-    response = requests.get(api_request).json()
+    try:
+        response = requests.get(api_request).json()
+    except Exception as e:
+        logging.error("Failed to fetch data from Autour API")
+        logging.pii(f"Error: {e}")
+        return jsonify("Failed to fetch data from Autour API"), 500
+
     results = response['results']
 
     name = 'ca.mcgill.a11y.image.preprocessor.autour'
@@ -157,7 +166,8 @@ def validate(schema, data, resolver, json_message, error_code):
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(data)
     except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
+        logging.error("Validation error occurred")
+        logging.pii(f"Validation error: {error.message}")
         return jsonify(json_message), error_code
 
     return None
@@ -189,6 +199,8 @@ def get_coordinates(content):
     place_response = requests.get(request).json()
 
     if not check_google_response(place_response):
+        logging.error("Failed to retrieve valid response from Google API")
+        logging.pii(f"Google API response: {place_response}")
         return None
 
     location = place_response['results'][0]['geometry']['location']
@@ -213,7 +225,7 @@ def check_google_response(place_response):
     """
     if 'results' not in place_response or len(place_response['results']) == 0:
         logging.error("No results found for placeID")
-        logging.error(place_response)
+        logging.pii(f"Google API response: {place_response}")
         return False
 
     results = place_response['results'][0]

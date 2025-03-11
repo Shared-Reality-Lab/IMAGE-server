@@ -14,6 +14,7 @@ RUN pip3 install --upgrade pip && \
     pip3 install -r /usr/src/app/requirements.txt
 
 COPY /schemas /usr/src/app/schemas
+COPY /config /app/config
 
 RUN wget https://image.a11y.mcgill.ca/models/objectDetectionWeights/yolov8x.pt
 

@@ -1,4 +1,4 @@
-FROM node:alpine as builder
+FROM node:alpine AS builder
 
 RUN addgroup -g 4322 storage && addgroup node storage
 
@@ -9,9 +9,10 @@ RUN npm ci
 COPY /handlers/autour-handler/src ./src
 COPY /handlers/autour-handler/types ./types
 COPY /schemas src/schemas
+COPY /config ./src/config
 RUN npm run build && npm prune --production
 
-FROM node:alpine as final
+FROM node:alpine AS final
 
 RUN apk add --no-cache curl
 

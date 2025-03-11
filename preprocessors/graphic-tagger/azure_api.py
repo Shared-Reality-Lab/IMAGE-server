@@ -27,6 +27,9 @@ import base64
 import os
 from flask import Flask, request, jsonify
 from datetime import datetime
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -58,7 +61,8 @@ def process_image(image, labels):
     try:
         api_key = os.environ["AZURE_API_KEY"]
     except Exception as e:
-        logging.error(e)
+        logging.error("Azure API key not found")
+        logging.pii(f"Environment error: {e}")
         return "", 500
 
     # Set request headers
@@ -99,6 +103,9 @@ def process_image(image, labels):
                 return "Azure response not in json format", 500
 
     else:
+        logging.error(f"Azure API error with status code"
+                      f"{response.status_code}")
+        logging.pii(f"Azure API error response: {response.text}")
         return response.status_code
 
     return label
@@ -131,8 +138,10 @@ def categorise():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 400
+
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.graphicTagger"
@@ -172,7 +181,8 @@ def categorise():
             validator = jsonschema.Draft7Validator(data_schema)
             validator.validate(type)
         except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+            logging.error("Validation failed for graphic tagger result")
+            logging.pii(f"Validation error: {e.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         response = {
             "request_uuid": request_uuid,
@@ -186,8 +196,10 @@ def categorise():
                                                    resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+            logging.error("Validation failed for final response")
+            logging.pii(f"Validation error: {e.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
+
         logging.debug(type)
         return response
 

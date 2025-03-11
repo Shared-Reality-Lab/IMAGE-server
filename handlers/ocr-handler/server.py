@@ -21,6 +21,9 @@ import logging
 import jsonschema
 from flask import Flask, request, jsonify
 from datetime import datetime
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 

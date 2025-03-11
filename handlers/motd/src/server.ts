@@ -16,6 +16,7 @@
  */
 import express from "express";
 import Ajv from "ajv";
+import { piiLogger } from "./config/logging_utils";
 
 // JSON imports
 import querySchemaJSON from "./schemas/request.schema.json";
@@ -36,6 +37,7 @@ app.post("/handler", async (req, res) => {
     // Check for good data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
+        piiLogger.pii(`Schema validation failed: ${JSON.stringify(ajv.errors)}`);
         res.status(400).json(ajv.errors);
         return;
     }
@@ -51,7 +53,7 @@ app.post("/handler", async (req, res) => {
             res.json(response);
         } else {
             console.error("Failed to generate a valid empty response!");
-            console.error(ajv.errors);
+            piiLogger.pii(`Validation error in empty response: ${JSON.stringify(ajv.errors)}`);
             res.status(500).json(ajv.errors);
         }
         return;
@@ -67,7 +69,7 @@ app.post("/handler", async (req, res) => {
 
     if (!ajv.validate("https://image.a11y.mcgill.ca/renderers/text.schema.json", rendering["data"])) {
         console.error("Failed to generate a valid text rendering!");
-        console.error(ajv.errors);
+        piiLogger.pii(`Validation error in text rendering: ${JSON.stringify(ajv.errors)}`);
         res.status(500).json(ajv.errors);
         return;
     }
@@ -81,7 +83,7 @@ app.post("/handler", async (req, res) => {
         res.json(response);
     } else {
         console.error("Failed to generate a valid response.");
-        console.error(ajv.errors);
+        piiLogger.pii(`Validation error in final response: ${JSON.stringify(ajv.errors)}`);
         res.status(500).json(ajv.errors);
     }
 });

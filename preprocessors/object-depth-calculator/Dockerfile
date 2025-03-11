@@ -10,6 +10,7 @@ RUN pip3 install --upgrade pip && \
     pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
+COPY /config /app/config
 COPY /preprocessors/object-depth-calculator/ /app
 
 EXPOSE 5000

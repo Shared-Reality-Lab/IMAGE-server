@@ -1,12 +1,13 @@
-FROM node:alpine as builder
+FROM node:alpine AS builder
 
 WORKDIR /usr/src/app
 COPY /handlers/motd/ /usr/src/app
 RUN npm ci
 COPY /schemas src/schemas
+COPY /config src/config/ 
 RUN npm run build && npm prune --production
 
-FROM node:alpine as final
+FROM node:alpine AS final
 
 RUN apk add --no-cache curl
 
