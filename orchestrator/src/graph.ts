@@ -1,36 +1,5 @@
-export const allPreprocessors: (string | number)[][] = [
-  ["PreA", 1.0, JSON.stringify([]), JSON.stringify([])],
-  ["PreB", 1.1, JSON.stringify(["PreA"]), JSON.stringify([])],
-  ["PreC", 2.0, JSON.stringify(["PreA"]), JSON.stringify([])],
-  ["PreD", 1.2, JSON.stringify(["PreB"]), JSON.stringify([])],
-  ["PreE", 3.0, JSON.stringify(["PreB"]), JSON.stringify([])],
-  ["PreH", 3.0, JSON.stringify(["PreE"]), JSON.stringify([])],
-  ["PreF", 3.0, JSON.stringify(["PreC"]), JSON.stringify([])],
-  ["PreG", 3.0, JSON.stringify(["PreC"]), JSON.stringify([])],
-  ["PreI", 3.0, JSON.stringify(["PreF"]), JSON.stringify([])]
-];
-
-//returns the optional preprocessors required for the given preprocessor
-export function getOptionalPreprocessors(preprocessor: (string | number)[]): (string | number)[][] {
-    const optionalNames = JSON.parse(preprocessor[3] as string); // Convert back to an array
-    if(optionalNames.length != 0){
-        return allPreprocessors.filter(p => optionalNames.includes(p[0] as string)); // Find full preprocessors
-    } else {
-        return [];
-    }
-}
-
-//returns the required preprocessors required for the given preprocessor
-export function getRequiredPreprocessors(preprocessor: (string | number)[]): (string | number)[][] {
-    const requiredNames = JSON.parse(preprocessor[2] as string); // Convert back to an array
-    if(requiredNames.length != 0){
-        return allPreprocessors.filter(p => requiredNames.includes(p[0] as string)); // Find full preprocessors
-    } else {
-        return [];
-    }
-}
-
-class Graph {
+import { getOptionalDependencies, getRequiredDependencies } from "./docker";
+export class Graph {
     nodes: Map<string, GraphNode>;
   
     constructor() {
@@ -46,7 +15,7 @@ class Graph {
       return this.nodes.get(name)!;
     }
 
-    constructGraph(P: (string | number)[][], H: (string | number)[][]) : Set<GraphNode>  {
+    async constructGraph(P: (string | number)[][], H: (string | number)[][]) : Promise<Set<GraphNode>>  {
       const R = new Set<GraphNode>();
       const combinedArray = P.concat(H);
 
@@ -56,10 +25,10 @@ class Graph {
       }
       
       for (const preprocessor of combinedArray) {
-        const requiredPreprocessors = getRequiredPreprocessors(preprocessor);
-        const optionalPreprocessors = getOptionalPreprocessors(preprocessor);
+        const requiredPreprocessors = await getRequiredDependencies(preprocessor[0] as string, P);
+        const optionalPreprocessors = await getOptionalDependencies(preprocessor[0] as string, P);
 
-        if(requiredPreprocessors.every((r) => Pset.has(r[0] as string))){
+        if(optionalPreprocessors && requiredPreprocessors && requiredPreprocessors.every((r) => Pset.has(r[0] as string))){
           const node = this.addNode(preprocessor);
           const tmp = optionalPreprocessors.filter((o) => Array.isArray(o) && Pset.has(o[0] as string));
 
@@ -80,7 +49,6 @@ class Graph {
           }
         }   
       }
-      
       return R;
   }
 
@@ -120,7 +88,7 @@ class Graph {
     }
 }
   
-class GraphNode {
+export class GraphNode {
     preprocessor: (string | number)[];    //preprocessor that this node represents
     parents: Set<GraphNode>;
     children: Set<GraphNode>;
@@ -136,22 +104,8 @@ class GraphNode {
     }
 }
   
-function main() {
-    console.log("---------Building Dependency Graph---------")
-    const graph = new Graph();
-    const readyNodes = graph.constructGraph(allPreprocessors, []);
-    const isAcyclic = graph.isAcyclic();
-   
-    if(!isAcyclic){
-      console.error("Error: Preprocessor Dependency graph contains cycle.")
-    }
-    else {
-      printGraph(graph);
-      executePreprocessorsFromGraph(graph, readyNodes);
-    }
-}
 
-function printGraph(graph: Graph) {
+export function printGraph(graph: Graph) {
     console.log("\n=== Graph Structure ===");
 
     for (const node of graph.nodes.values()) {
@@ -195,4 +149,4 @@ function executePreprocessorsFromGraph(G: Graph, R: Set<GraphNode>){
   }
   
 }
-main();
+

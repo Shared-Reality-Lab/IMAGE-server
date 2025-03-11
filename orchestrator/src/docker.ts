@@ -17,6 +17,7 @@
 import Docker from "dockerode";
 
 export const docker = new Docker();
+
 const _REQUIRED_DEP_LABEL_ = "ca.mcgill.a11y.image.required_dependencies";
 const _OPTIONAL_DEP_LABEL_ = "ca.mcgill.a11y.image.optional_dependencies";
 const _PREPROCESSOR_LABEL_ = "ca.mcgill.a11y.image.preprocessor";
@@ -104,42 +105,98 @@ export function getHandlerServices(containers: Docker.ContainerInfo[], route: st
     });
 }
 
-export async function getOptionalDependencies(preprocessorName: string, preprocessors: (string | number)[][]) : Promise<string[] | null>{
+export async function getOptionalDependencies(preprocessorName: string, preprocessors: (string | number)[][]) : Promise<(string | number)[][]>{
     try{
+        // Check if the preprocessorName exists in preprocessors
+        const exists = preprocessors.some(p => p[0] === preprocessorName);
+        if (!exists) {
+            console.error(`Preprocessor "${preprocessorName}" not found in preprocessors list.`);
+            return [];
+        }
+        
         //find the container using the name of the preprocessor 
         const containers = await docker.listContainers({all:true});
+        
 
         //Find the container for the name passed
-        const container = containers.find(c => c.Labels["ca.mcgill.a11y.image.preprocessor"] === preprocessorName);
+        const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
+         
+
+
         if(!container){
             console.error(`Could not find the container for preprocessor ${preprocessorName}`);
-            return null;
+            return [];
         }
-        const optionalPreprocessors = container.Labels["ca.mcgill.a11y.image.optional_dependencies"] || [];
-        return optionalPreprocessors;
-    }   catch(error){
-        console.error(`Error encountered while getting optional dependencies.`);
-        return null;
+        //console.log(container.Labels);
+            //Test: ${container.Labels?.["ca.mcgill.a11y.image.required_dependencies"]}`);
+
+        //console.log(container.Labels);
+        
+        if (container.Labels?.[_REQUIRED_DEP_LABEL_] == undefined) {
+            console.warn(`Warning: The optional dependencies label is missing for preprocessor "${container.Labels["com.docker.compose.service"]}".`);
+            return [];
+        }
+       
+        const optionalPreprocessors = container.Labels[_OPTIONAL_DEP_LABEL_];
+        
+        let optionalPreprocessorsArray : string[] = [];
+        
+        //convert from string to array of strings 
+        if(optionalPreprocessors != ""){    //if the preprocessor has dependencies
+            optionalPreprocessorsArray = optionalPreprocessors ? optionalPreprocessors.split(",").filter(Boolean) : [];
+        }
+        
+        //filter through the array of preprocessor names and return an array of their actual values
+        return preprocessors.filter(function (p) { return optionalPreprocessorsArray.includes(p[0] as string); });
+        
+        
+    } catch(error){
+        console.error(`Error while getting optional dependencies for ${preprocessorName}:`, error);
+        return [];
     }
 
 }
 
-export async function getRequiredDependencies(preprocessorName: string, preprocessors: (string | number)[][]) : Promise<string[] | null>{
+export async function getRequiredDependencies(preprocessorName: string, preprocessors: (string | number)[][]) : Promise<(string | number)[][]>{
     try{
+        // Check if the preprocessorName exists in preprocessors
+        const exists = preprocessors.some(p => p[0] === preprocessorName);
+        if (!exists) {
+            console.error(`Preprocessor "${preprocessorName}" not found in preprocessors list.`);
+            return [];
+        }
+
         //find the container using the name of the preprocessor 
         const containers = await docker.listContainers({all:true});
 
         //Find the container for the name passed
-        const container = containers.find(c => c.Labels["ca.mcgill.a11y.image.preprocessor"] === preprocessorName);
+        const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
         if(!container){
             console.error(`Could not find the container for preprocessor ${preprocessorName}`);
-            return null;
+            return [];
         }
-        const requiredPreprocessors = container.Labels["ca.mcgill.a11y.image.required_dependencies"] || [];
-        return requiredPreprocessors;
-        console.log(requiredPreprocessors);
-    }   catch(error){
-        console.error(`Error encountered while getting required dependencies.`);
-        return null;
+
+        if (container.Labels?.[_REQUIRED_DEP_LABEL_] == undefined) {
+            console.warn(`Warning: The required dependencies label is missing for preprocessor "${preprocessorName}".`);
+            return [];
+        }
+
+        const requiredPreprocessors = container.Labels[_REQUIRED_DEP_LABEL_];
+        let requiredPreprocessorsArray : string[] = [];
+        
+        //convert from string to array of strings 
+        if(requiredPreprocessors != ""){    //if the preprocessor has dependencies
+            requiredPreprocessorsArray = requiredPreprocessors.split(",").filter(Boolean);
+        }
+        
+        //filter through the array of preprocessor names and return an array of their actual values
+        const f =  preprocessors.filter(function (p) { return requiredPreprocessorsArray.includes(p[0] as string); });
+
+        console.log(`Filtered optional dependencies for "${preprocessorName}":`, f);
+        return f;
+    } catch(error){
+        console.error(`Error while getting required dependencies for ${preprocessorName}:`, error);
+        return [];
     }
 } 
+
