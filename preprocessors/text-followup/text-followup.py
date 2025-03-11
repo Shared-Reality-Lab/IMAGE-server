@@ -234,7 +234,7 @@ def followup():
                     for img in log_msg['images']
                 ]
             log_friendly_messages.append(log_msg)
-            logging.debug(f"Message history: {log_friendly_messages}")
+        logging.debug(f"Message history: {log_friendly_messages}")
 
     # Create request data for chat endpoint
     request_data = {
