@@ -71,7 +71,7 @@ def followup():
     # ollama is returning, but this can contain PII. Until we have a safe
     # way of logging PII, using manually set LOG_PII env variable
     # to say whether or not we should go ahead and log potential PII
-    log_pii = os.getenv('LOG_PII', "false").lower() == "true"
+    log_pii = os.getenv('PII_LOGGING_ENABLED', "false").lower() == "true"
     if log_pii:
         logging.warning("LOG_PII is True: potential PII will be logged!")
 
