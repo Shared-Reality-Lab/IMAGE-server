@@ -32,6 +32,9 @@ from ocr_utils import (
     find_obj_enclosing,
     process_azure_read_v4_preview
 )
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -75,7 +78,8 @@ def get_ocr_text():
         )
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {error.message}")
         return jsonify("Invalid Request JSON format"), 400
     # Use response schema to validate response
     resolver = jsonschema.RefResolver.from_schema(
@@ -105,7 +109,8 @@ def get_ocr_text():
         validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
         validator.validate(data)
     except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
+        logging.error("Validation failed for processed OCR data")
+        logging.pii(f"Validation error: {error.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {
@@ -119,7 +124,8 @@ def get_ocr_text():
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
+        logging.error("Validation failed for final response")
+        logging.pii(f"Validation error: {error.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")
@@ -136,20 +142,25 @@ def analyze_image(source, width, height, cld_srv_optn):
     binary = base64.b64decode(image_b64)
     stream = io.BytesIO(binary)
 
-    if cld_srv_optn == "AZURE_READ":
-        return process_azure_read(stream, width, height)
+    try:
+        if cld_srv_optn == "AZURE_READ":
+            return process_azure_read(stream, width, height)
 
-    elif cld_srv_optn == "AZURE_READ_v4_PREVIEW":
-        return process_azure_read_v4_preview(stream, width, height)
+        elif cld_srv_optn == "AZURE_READ_v4_PREVIEW":
+            return process_azure_read_v4_preview(stream, width, height)
 
-    elif cld_srv_optn == "AZURE_OCR":
-        return process_azure_ocr(stream, width, height)
+        elif cld_srv_optn == "AZURE_OCR":
+            return process_azure_ocr(stream, width, height)
 
-    elif cld_srv_optn == "FREE_OCR":
-        return process_free_ocr(source, width, height)
+        elif cld_srv_optn == "FREE_OCR":
+            return process_free_ocr(source, width, height)
 
-    elif cld_srv_optn == "GOOGLE_VISION":
-        return process_google_vision(image_b64, width, height)
+        elif cld_srv_optn == "GOOGLE_VISION":
+            return process_google_vision(image_b64, width, height)
+    except Exception as e:
+        logging.error("Error during OCR analysis")
+        logging.pii(f"OCR analysis error: {e}")
+        return None
 
 
 @app.route("/health", methods=["GET"])
