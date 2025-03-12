@@ -177,11 +177,17 @@ async function runPreprocessorsParallelG(data: Record<string, unknown>, preproce
     const processQueue = async (): Promise<void> => {
         try {
             await Promise.all(prepQueue.map(preprocessor => executePreprocessor(preprocessor.preprocessor, data)));
-            for(const preprocessor of prepQueue){
+           
+             // Copy the current queue and clear it before iterating
+             const currentBatch = [...prepQueue];
+             prepQueue.length = 0;
+            console.log("Done");
+            for(const preprocessor of currentBatch){
                 console.log(`Dequeue: ${preprocessor.name}`);
                 for(const child of preprocessor.children){
                     child.parents.delete(preprocessor);
                     if(child.parents.size == 0){
+                        console.log(`push: ${child.name}`);
                         prepQueue.push(child);
                     }
                 }
@@ -189,9 +195,6 @@ async function runPreprocessorsParallelG(data: Record<string, unknown>, preproce
             
         } catch (error) {
             console.error(`One or more of the promises failed at priority group.`, error);
-        }
-        finally {   //empty the queue 
-            prepQueue.length = 0;
         }
     };
 
