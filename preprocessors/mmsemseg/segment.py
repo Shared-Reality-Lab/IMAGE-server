@@ -22,6 +22,7 @@ import gc
 import json
 import jsonschema
 import base64
+import subprocess
 
 import torch
 from mmseg.apis import inference_segmentor, init_segmentor
@@ -253,5 +254,58 @@ def health():
     }), 200
 
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+@app.route("/health/gpu", methods=["GET"])
+def gpu_driver_health_check():
+    """
+    verify if NVIDIA drivers are working correctly.
+    It ensures
+    - CUDA is available
+    - GPUs are detected
+    - `nvidia-smi` runs successfully
+    """
+
+    # check if CUDA is available
+    if not torch.cuda.is_available():
+        return jsonify({
+            "status": "unhealthy",
+            "message": "CUDA not available",
+            "cuda_version": torch.version.cuda,
+            "cudnn_version": torch.backends.cudnn.version()
+        }), 500
+
+    try:
+        # CUDA device properties
+        gpu_count = torch.cuda.device_count()
+        gpu_name = (
+            torch.cuda.get_device_name(0)
+            if gpu_count > 0
+            else "No GPU found"
+        )
+        driver_version = subprocess.check_output(
+            [
+                "nvidia-smi",
+                "--query-gpu=driver_version",
+                "--format=csv,noheader",
+            ],
+            text=True,
+        ).strip()
+
+        cuda_version = (
+            subprocess.check_output(["nvcc", "--version"], text=True)
+            .split("\n")[-2] if gpu_count > 0 else "N/A"
+        )
+
+        return jsonify({
+            "status": "healthy",
+            "message": "NVIDIA drivers and CUDA are working correctly",
+            "gpu_count": gpu_count,
+            "gpu_name": gpu_name,
+            "driver_version": driver_version,
+            "cuda_version": cuda_version
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy",
+            "message": f"NVIDIA driver check failed: {str(e)}"
+        }), 500
