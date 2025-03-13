@@ -22,6 +22,7 @@ import gc
 import json
 import jsonschema
 import base64
+import subprocess
 
 import torch
 from mmseg.apis import inference_segmentor, init_segmentor
@@ -254,12 +255,16 @@ def health():
 
 
 @app.route("/health/gpu", methods=["GET"])
-def gpu_health_check():
+def gpu_driver_health_check():
     """
-    Health check to verify if NVIDIA GPU is accessible and the segmentation model is functional.
+    verify if NVIDIA drivers are working correctly.
+    It ensures
+    - CUDA is available
+    - GPUs are detected
+    - `nvidia-smi` runs successfully
     """
 
-    #  Check if CUDA is available
+    # check if CUDA is available
     if not torch.cuda.is_available():
         return jsonify({
             "status": "unhealthy",
@@ -269,37 +274,38 @@ def gpu_health_check():
         }), 500
 
     try:
-        # Log GPU memory usage
-        gpu_memory = torch.cuda.memory_allocated(0)
-        total_gpu_memory = torch.cuda.get_device_properties(0).total_memory
+        # CUDA device properties
+        gpu_count = torch.cuda.device_count()
+        gpu_name = (
+            torch.cuda.get_device_name(0)
+            if gpu_count > 0
+            else "No GPU found"
+        )
+        driver_version = subprocess.check_output(
+            [
+                "nvidia-smi",
+                "--query-gpu=driver_version",
+                "--format=csv,noheader",
+            ],
+            text=True,
+        ).strip()
 
-        # Initialize the model on GPU
-        model = init_segmentor(BEIT_CONFIG, BEIT_CHECKPOINT, device='cuda:0')
-
-        torch.cuda.empty_cache()  # Clear CUDA memory before running inference
-
-        # create a dummy image and preprocess it
-        dummy_image = np.random.randint(0, 256, (256, 256, 3), dtype=np.uint8)
-        dummy_image = mmcv.imnormalize(dummy_image.astype(np.float32),
-                                       mean=[123.675, 116.28, 103.53],
-                                       std=[58.395, 57.12, 57.375], 
-                                       to_rgb=True)
-
-        # Run inference
-        _ = inference_segmentor(model, dummy_image)
+        cuda_version = (
+            subprocess.check_output(["nvcc", "--version"], text=True)
+            .split("\n")[-2] if gpu_count > 0 else "N/A"
+        )
 
         return jsonify({
             "status": "healthy",
-            "message": "GPU and model working correctly",
-            "gpu_memory_used": f"{gpu_memory / 1e6:.2f} MB",
-            "total_gpu_memory": f"{total_gpu_memory / 1e6:.2f} MB"
+            "message": "NVIDIA drivers and CUDA are working correctly",
+            "gpu_count": gpu_count,
+            "gpu_name": gpu_name,
+            "driver_version": driver_version,
+            "cuda_version": cuda_version
         }), 200
 
-    except RuntimeError as e:
-        if "out of memory" in str(e).lower():
-            return jsonify({"status": "unhealthy", "message": "CUDA out"
-                            "of memory"}), 500
+    except Exception as e:
         return jsonify({
             "status": "unhealthy",
-            "message": f"Model init failed: {str(e)}"
+            "message": f"NVIDIA driver check failed: {str(e)}"
         }), 500
