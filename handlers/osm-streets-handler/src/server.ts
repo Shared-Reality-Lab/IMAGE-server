@@ -18,6 +18,7 @@ import Ajv from "ajv";
 import express from "express";
 import fs from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
+import { piiLogger } from "./config/logging_utils";
 
 import * as utils from "./utils";
 
@@ -48,6 +49,7 @@ app.post("/handler", async (req, res) => {
     // Validate the request data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
+        piiLogger.pii(`Schema validation failed: ${JSON.stringify(ajv.errors)}`);
         res.status(400).json(ajv.errors);
         return;
     }
@@ -164,7 +166,8 @@ app.post("/handler", async (req, res) => {
                 if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudio.schema.json", rendering["data"])) {
                 renderings.push(rendering);
                 } else {
-                    console.error(ajv.errors);
+                    console.error("SegmentAudio validation failed");
+                    piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)}`);
                 }
             }
             else if (hasSimple) {
@@ -181,7 +184,8 @@ app.post("/handler", async (req, res) => {
             if (ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", rendering["data"])) {
                 renderings.push(rendering);
                 } else {
-                    console.error(ajv.errors);
+                    console.error("SimpleAudio validation failed");
+                    piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)}`);
                 }
             }
         }).finally(() => {
@@ -198,7 +202,7 @@ app.post("/handler", async (req, res) => {
         });
     } catch(e) {
         console.error("Failed to generate audio!");
-        console.error(e);
+        piiLogger.pii(`Audio generation error: ${(e as Error).message}`);
     }
 
     // Send response
@@ -210,7 +214,7 @@ app.post("/handler", async (req, res) => {
         res.json(response);
     } else {
         console.error("Failed to generate a valid response.");
-        console.error(ajv.errors);
+        piiLogger.pii(`Response validation error: ${JSON.stringify(ajv.errors)}`);
         res.status(500).json(ajv.errors);
     }
 });

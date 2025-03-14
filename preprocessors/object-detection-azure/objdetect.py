@@ -24,6 +24,9 @@ import base64
 import os
 from flask import Flask, request, jsonify
 from datetime import datetime
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -78,7 +81,8 @@ def process_image(image):
     try:
         api_key = os.environ["AZURE_API_KEY"]
     except Exception as e:
-        logging.error(e)
+        logging.error("Azure API key is missing")
+        logging.pii(f"Error: {e}")
         return "", 500
 
     # Set request headers
@@ -136,7 +140,8 @@ def categorise():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 400
     request_uuid = content["request_uuid"]
     timestamp = time.time()
@@ -177,7 +182,8 @@ def categorise():
             validator = jsonschema.Draft7Validator(data_schema)
             validator.validate(type)
         except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+            logging.error("Validation failed for processed image data")
+            logging.pii(f"Validation error: {e.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         response = {
             "request_uuid": request_uuid,
@@ -191,7 +197,8 @@ def categorise():
                                                    resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+            logging.error("Validation failed for final response")
+            logging.pii(f"Validation error: {e.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response

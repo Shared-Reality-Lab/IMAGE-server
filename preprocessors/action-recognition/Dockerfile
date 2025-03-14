@@ -22,6 +22,7 @@ RUN pip3 install --no-cache-dir --upgrade pip && \
     pip3 install --no-cache-dir -r /app/requirements.txt
 
 COPY --chown=python:python /schemas /app/schemas
+COPY --chown=python:python /config /app/config
 COPY --chown=python:python /preprocessors/action-recognition /app
 
 EXPOSE 5000

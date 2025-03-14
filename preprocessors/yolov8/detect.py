@@ -34,6 +34,9 @@ from ultralytics.yolo.utils import plt_settings
 from ultralytics.yolo.utils.torch_utils import select_device
 from ultralytics.yolo.utils.checks import check_imgsz
 from ultralytics.yolo.utils.ops import scale_coords, non_max_suppression
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 app = Flask(__name__)
@@ -255,8 +258,10 @@ def run(weights='yolov8x.pt',
                 first_schema, resolver=resolver)
             validator.validate(content)
         except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+            logging.error("Validation failed for incoming request")
+            logging.pii(f"Validation error: {e.message}")
             return jsonify("Invalid Preprocessor JSON format"), 400
+
         if "graphic" not in content:
             logging.info("No graphic content. Skipping...")
             return "", 204
@@ -354,7 +359,8 @@ def run(weights='yolov8x.pt',
             validator = jsonschema.Draft7Validator(data_schema)
             validator.validate(things)
         except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+            logging.error("Validation failed for object detection results")
+            logging.pii(f"Object detection validation error: {e.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         response = {
             "request_uuid": request_uuid,
@@ -367,7 +373,8 @@ def run(weights='yolov8x.pt',
                 schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+            logging.error("Validation failed for response")
+            logging.pii(f"Response validation error: {e.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Total number of Objects Detected - " +
                       str(len(things["objects"])))
