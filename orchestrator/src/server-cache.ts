@@ -18,6 +18,12 @@
 import { Client } from "memjs";
 import hash from "object-hash";
 
+interface CacheValue {
+    reqData: string | object;
+    preprocessor: string; 
+    followupQuery?: string 
+}
+
 /** Server cache implementation for IMAGE based on memjs :  https://memjs.netlify.app/ */
 export class ServerCache {
     memjsClient : Client;
@@ -44,7 +50,7 @@ export class ServerCache {
         }
     }
     
-    constructCacheKey(data: Record<string, unknown>, preprocessor: string): string{
+    constructCacheKey(data: Record<string, any>, preprocessor: string): string{
         // const reqCapabilities = data["capabilities"] as string[];
         // const isDebugMode = reqCapabilities && reqCapabilities.includes("ca.mcgill.a11y.image.capability.DebugMode");
         let reqData : string | object = "";
@@ -57,7 +63,10 @@ export class ServerCache {
         } else if(data["highChartsData"]){
             reqData = data["highChartsData"] as object;
         }
-        const cacheKeyData = {"reqData": reqData, "preprocessor": preprocessor}
+        const cacheKeyData: CacheValue  = { reqData: reqData, preprocessor: preprocessor };
+        if(data["followup"] && data["followup"]["query"]){
+            cacheKeyData["followupQuery"] = data["followup"]["query"] as string;
+        }
         return hash(cacheKeyData);
     }
 }
