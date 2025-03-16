@@ -165,7 +165,7 @@ async function executePreprocessor(preprocessor: (string | number)[], data: Reco
     });
 }
 
-async function runPreprocessorsParallelG(data: Record<string, unknown>, preprocessors: (string | number)[][], G: Graph, R: Set<GraphNode>): Promise<Record<string, unknown>> {
+async function runPreprocessorsParallelGraph(data: Record<string, unknown>, preprocessors: (string | number)[][], G: Graph, R: Set<GraphNode>): Promise<Record<string, unknown>> {
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
@@ -178,29 +178,25 @@ async function runPreprocessorsParallelG(data: Record<string, unknown>, preproce
         try {
             await Promise.all(prepQueue.map(preprocessor => executePreprocessor(preprocessor.preprocessor, data)));
            
-             // Copy the current queue and clear it before iterating
-             const currentBatch = [...prepQueue];
-             prepQueue.length = 0;
-            console.log("Done");
+            // Copy the current queue and clear it before iterating
+            const currentBatch = [...prepQueue];
+            prepQueue.length = 0;
+            //Dequeue everything in queue and process in parallel
             for(const preprocessor of currentBatch){
-                console.log(`Dequeue: ${preprocessor.name}`);
                 for(const child of preprocessor.children){
                     child.parents.delete(preprocessor);
-                    if(child.parents.size == 0){
-                        console.log(`push: ${child.name}`);
-                        prepQueue.push(child);
+                    if(child.parents.size == 0){    //if the child has no more dependencies not met 
+                        prepQueue.push(child);  
                     }
                 }
             }
-            
         } catch (error) {
             console.error(`One or more of the promises failed at priority group.`, error);
         }
     };
 
-      
+    //while theres preprocessors in the queue
       while(prepQueue.length > 0){
-          //--HERE IS WHERE WE WILL DEQUEUE ALL PREPROCESSORS AT ONCE AND RUN THEM IN PARALLEL
         if (prepQueue.length > 0) {
             await processQueue(); //Process everything in the queue
         }
@@ -358,11 +354,20 @@ app.post("/render", (req, res) => {
             const graph = new Graph();
             //Construct the graph using the handlers and preprocessors 
             const readyToRun =  await graph.constructGraph(preprocessors, []);
+            console.debug("Preprocessor graph produced successfully.");
             
             // Preprocessors
             if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
-                console.debug("Running preprocessors in parallell...");
-                data = await runPreprocessorsParallelG(data, preprocessors,graph,readyToRun);
+                console.debug("Running preprocessors in parallel...");
+                if(graph.isAcyclic()){
+                    console.debug("Dependency graph passes cycle check.");
+                    data = await runPreprocessorsParallelGraph(data, preprocessors,graph,readyToRun);
+                } else {
+                    console.debug("Dependency graph passes failed check. Please ensure that the preprocesors don't have cyclic dependencies.");
+                    console.debug("Using priority level execution...");
+                    data = await runPreprocessorsParallel(data, preprocessors);
+                }
+
             } else {
                 console.debug("Running preprocessors in series...");
                 data = await runPreprocessors(data, preprocessors);

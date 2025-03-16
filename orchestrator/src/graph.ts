@@ -125,28 +125,4 @@ export function printGraph(graph: Graph) {
     }
 }
 
-//This will be the general way we execute preprocessors, should work for both series and parallel
-function executePreprocessorsFromGraph(G: Graph, R: Set<GraphNode>){
-  const prepQueue = Array.from(R);    //queue of preprocessors 
-  while(prepQueue.length > 0){
-      //--HERE IS WHERE WE WILL DEQUEUE ALL PREPROCESSORS AT ONCE AND RUN THEM IN PARALLEL
-      const preprocessor = prepQueue.shift() as GraphNode;
-      //run the preprocessor here
-      const preprocessorName = preprocessor.preprocessor[0];
-      console.log(`RUNNING PREPROCESSOR: ${preprocessorName}`);
-
-      //response check goes here 
-      
-      //for each child of that preprocessor remove it as a parent from that child 
-      //(disown child)
-      for(const child of preprocessor.children){
-          child.parents.delete(preprocessor);
-          if(child.parents.size == 0){
-              prepQueue.push(child);
-          }
-      }
-      console.log();
-  }
-  
-}
 

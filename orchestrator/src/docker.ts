@@ -105,6 +105,8 @@ export function getHandlerServices(containers: Docker.ContainerInfo[], route: st
     });
 }
 
+//Returns the optional preprocessors needed for the given preprocessor to run 
+//Optional preprocessors: enhance functionality but are not strictly required for execution.
 export async function getOptionalDependencies(preprocessorName: string, preprocessors: (string | number)[][]) : Promise<(string | number)[][]>{
     try{
         // Check if the preprocessorName exists in preprocessors
@@ -112,33 +114,23 @@ export async function getOptionalDependencies(preprocessorName: string, preproce
         if (!exists) {
             console.error(`Preprocessor "${preprocessorName}" not found in preprocessors list.`);
             return [];
-        }
-        
+        }    
         //find the container using the name of the preprocessor 
         const containers = await docker.listContainers({all:true});
-        
-
+    
         //Find the container for the name passed
         const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
-         
-
-
+        
         if(!container){
             console.error(`Could not find the container for preprocessor ${preprocessorName}`);
             return [];
         }
-        //console.log(container.Labels);
-            //Test: ${container.Labels?.["ca.mcgill.a11y.image.required_dependencies"]}`);
-
-        //console.log(container.Labels);
-        
         if (container.Labels?.[_REQUIRED_DEP_LABEL_] == undefined) {
             console.warn(`Warning: The optional dependencies label is missing for preprocessor "${container.Labels["com.docker.compose.service"]}".`);
             return [];
         }
        
         const optionalPreprocessors = container.Labels[_OPTIONAL_DEP_LABEL_];
-        
         let optionalPreprocessorsArray : string[] = [];
         
         //convert from string to array of strings 
@@ -148,8 +140,6 @@ export async function getOptionalDependencies(preprocessorName: string, preproce
         
         //filter through the array of preprocessor names and return an array of their actual values
         return preprocessors.filter(function (p) { return optionalPreprocessorsArray.includes(p[0] as string); });
-        
-        
     } catch(error){
         console.error(`Error while getting optional dependencies for ${preprocessorName}:`, error);
         return [];
@@ -157,6 +147,7 @@ export async function getOptionalDependencies(preprocessorName: string, preproce
 
 }
 
+//Returns the required preprocessors needed for the given preprocessor to run 
 export async function getRequiredDependencies(preprocessorName: string, preprocessors: (string | number)[][]) : Promise<(string | number)[][]>{
     try{
         // Check if the preprocessorName exists in preprocessors
@@ -175,7 +166,6 @@ export async function getRequiredDependencies(preprocessorName: string, preproce
             console.error(`Could not find the container for preprocessor ${preprocessorName}`);
             return [];
         }
-
         if (container.Labels?.[_REQUIRED_DEP_LABEL_] == undefined) {
             console.warn(`Warning: The required dependencies label is missing for preprocessor "${preprocessorName}".`);
             return [];
@@ -191,8 +181,6 @@ export async function getRequiredDependencies(preprocessorName: string, preproce
         
         //filter through the array of preprocessor names and return an array of their actual values
         const f =  preprocessors.filter(function (p) { return requiredPreprocessorsArray.includes(p[0] as string); });
-
-        console.log(`Filtered optional dependencies for "${preprocessorName}":`, f);
         return f;
     } catch(error){
         console.error(`Error while getting required dependencies for ${preprocessorName}:`, error);
