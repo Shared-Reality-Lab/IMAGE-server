@@ -1,4 +1,4 @@
-FROM ultralytics/ultralytics:latest@sha256:af4572bf0df164d5708e4a1f50bddb5a74cb7d793fe46b7daf42b1768fbec608
+FROM ultralytics/ultralytics:latest@sha256:3d52e286bc345343b1a7a66dd38c44bb412bf418eb97d14298b8d8deb077f2e4
 
 WORKDIR /usr/src/app
 RUN adduser --disabled-password python 
@@ -15,7 +15,16 @@ RUN pip3 install --upgrade pip && \
 
 COPY /schemas /usr/src/app/schemas
 
-RUN wget https://image.a11y.mcgill.ca/models/objectDetectionWeights/yolov8x.pt
+# Set environment variable for model path
+ENV YOLO_MODEL_PATH=/usr/src/app/models/yolo11x.pt
+ENV CONF_THRESHOLD=0.75
+ENV MAX_IMAGE_SIZE=640
+
+# Create model directory
+RUN mkdir -p /usr/src/app/models
+
+# Download YOLOv11 model
+RUN wget -O /usr/src/app/models/yolo11x.pt https://unicorn.cim.mcgill.ca/image/resources/models/objectDetectionWeights/yolo11x.pt
 
 COPY /preprocessors/yolov8 /usr/src/app 
 
