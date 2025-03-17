@@ -24,7 +24,7 @@ ENV MAX_IMAGE_SIZE=640
 RUN mkdir -p /usr/src/app/models
 
 # Download YOLOv11 model
-RUN wget -O /usr/src/app/models/yolo11x.pt https://unicorn.cim.mcgill.ca/image/resources/models/objectDetectionWeights/yolo11x.pt
+RUN wget -O /usr/src/app/models/yolo11x.pt https://image.a11y.mcgill.ca/models/objectDetectionWeights/yolo11x.pt
 
 COPY /preprocessors/yolov8 /usr/src/app 
 
