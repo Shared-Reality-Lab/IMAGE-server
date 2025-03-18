@@ -45,6 +45,8 @@ CONF_THRESHOLD = float(os.environ.get('CONF_THRESHOLD', '0.75'))
 MAX_IMAGE_SIZE = int(os.environ.get('MAX_IMAGE_SIZE', '640'))
 
 # Load the model
+# `verbose` is a boolean argument which controls detailed inference log output
+# It needs to be turned off in production to avoid logging PII
 model = YOLO(MODEL_PATH, verbose=log_pii)
 
 # Choose GPU for processing if available
@@ -52,6 +54,9 @@ device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 logging.debug(f"Model path: {MODEL_PATH}")
 logging.debug(f"Using device: {device}")
+logging.debug(f"Confidence threshold: {CONF_THRESHOLD}")
+logging.debug(f"Max image size: {MAX_IMAGE_SIZE}")
+
 
 # Load schemas once at startup
 with open('./schemas/preprocessors/object-detection.schema.json') as f:
