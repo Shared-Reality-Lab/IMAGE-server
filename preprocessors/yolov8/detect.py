@@ -52,12 +52,6 @@ model = YOLO(MODEL_PATH, verbose=log_pii)
 # Choose GPU for processing if available
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-logging.debug(f"Model path: {MODEL_PATH}")
-logging.debug(f"Using device: {device}")
-logging.debug(f"Confidence threshold: {CONF_THRESHOLD}")
-logging.debug(f"Max image size: {MAX_IMAGE_SIZE}")
-
-
 # Load schemas once at startup
 with open('./schemas/preprocessors/object-detection.schema.json') as f:
     DATA_SCHEMA = json.load(f)
@@ -175,6 +169,12 @@ def detect():
     if image is None:
         logging.error("Failed to decode image")
         return jsonify("Failed to decode image"), 400
+
+    # Log settings for object detection
+    logging.debug(f"Model path: {MODEL_PATH}")
+    logging.debug(f"Using device: {device}")
+    logging.debug(f"Confidence threshold: {CONF_THRESHOLD}")
+    logging.debug(f"Max image size: {MAX_IMAGE_SIZE}")
 
     # Perform object detection with YOLOv11
     # Disable gradient tracking for speed/memory optimization
