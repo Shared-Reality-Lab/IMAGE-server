@@ -36,8 +36,6 @@ services:
 
 # override gpu selection on test environment
   semantic-segmentation:
-    environment:
-      - PII_LOGGING_ENABLED=true
     deploy:
       resources:
         reservations:
@@ -47,8 +45,6 @@ services:
             capabilities: ["gpu", "utility", "compute"]
 
   depth-map-generator:
-    environment:
-      - PII_LOGGING_ENABLED=true
     deploy:
       resources:
         reservations:
@@ -58,8 +54,6 @@ services:
             capabilities: ["gpu", "utility", "compute"]
 
   action-recognition:
-    environment:
-      - PII_LOGGING_ENABLED=true
     deploy:
       resources:
         reservations:
@@ -69,8 +63,6 @@ services:
             capabilities: ["gpu", "utility", "compute"]
 
   object-detection:
-    environment:
-      - PII_LOGGING_ENABLED=true
     deploy:
       resources:
         reservations:
@@ -123,111 +115,3 @@ services:
       - traefik.docker.network=traefik
     environment:
       - SERVER_NAME=unicorn.cim.mcgill.ca
-  
-  text-followup:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  autour-preprocessor:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  content-categoriser:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  graphic-caption:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  graphic-tagger:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  object-grouping:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  openstreetmap:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  object-sorting:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  photo-audio-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  autour-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  photo-audio-haptics-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  high-charts-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  svg-od-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  svg-semantic-seg-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  svg-depth-map:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  nominatim-preprocessor:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  photo-tactile-svg-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  map-tactile-svg-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  motd-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  hello-haptics-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  ocr-clouds-preprocessor:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  object-depth-calculator:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  line-charts:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  ocr-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  osm-streets-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-
-  svg-open-street-map-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
-      
-  svg-action-recognition-handler:
-    environment:
-      - PII_LOGGING_ENABLED=true
