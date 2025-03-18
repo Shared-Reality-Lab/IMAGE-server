@@ -8,31 +8,34 @@ way to deploy. The general principles and concerns will likely be relevant.
 ## System Requirements & Dependencies
 
 The following is written with the assumption you are running a Debian-based Linux distribution (e.g., Ubuntu 24.04, Debian 12).
-Other distributions may work fine, but are not tested.
+Other distributions may work but are not officially tested.
 
 Minimum System Requirements
-OS: Any Linux distribution (Debian-based preferred)
-CPU: At least 4 cores recommended
-RAM: 16GB or more recommended
-Storage: 50GB free, 100GB+ recommended if using a GPU
-GPU: NVIDIA GPU required for certain services
+- OS: Debian-based Linux (Ubuntu 24.04+ recommended) -- Pegasus runs on Ubuntu 24.04 LTS, so we recommend using the latest LTS.
+- CPU: At least 4 cores recommended -- more cores improve parallel processing.
+- RAM: 16GB or more recommended -- Some services may require more RAM, especially if running multiple preprocessors concurrently.
+- Storage: 50GB free, 100GB+ recommended if using a GPU
+- GPU: NVIDIA GPU required for certain services (some services will not run on CPU-only configurations)
+      - While AMD GPUs may work, we have not tested compatibility with AMD ROCm or other alternatives
 
 
 IMAGE Server was also successfully deployed on AWS EC2 using the below configuration:
+- Instance Type:	[Preferred] g4dn.xlarge (GPU) or t3.large (CPU-only)
+- OS:	Ubuntu 22.04 LTS
+- CPU: 4 vCPUs
+- RAM: 16GB
+- Storage: 1000GB EBS (Elastic Block Store)
+- Network: Default VPC with public IPv4
+- Security Group: Open ports 22 (SSH), 80 (HTTP), 443 (HTTPS) -- Required for server & web-based access
 
-Instance Type:	[Preferred] g4dn.xlarge (GPU) or t3.large (CPU-only)
-OS:	Ubuntu 22.04 LTS
-CPU: 4 vCPUs
-RAM: 16GB
-Storage: 1000GB EBS (Elastic Block Store)
-Network: Default VPC with public IPv4
-Security Group: Open ports 22 (SSH), 80 (HTTP), 443 (HTTPS)
+Note: If using a CPU-only instance (t3.large), some preprocessors/services will not be available.
+
 
 ## Required Software
 You will need the following installed:
 
 - [Docker Engine](https://docs.docker.com/engine/) and [Docker Compose](https://docs.docker.com/compose/)
-    - Note: For version 20.10.13 and later, the `docker-compose-plugin` package provides the `docker compose` subcommand which operates the same was as `docker-compose`.
+    - Note: docker-compose-plugin is required (old versions used docker-compose)
 - NVIDIA drivers and [nvidia-container-runtime](https://docs.docker.com/config/containers/resource_constraints/#gpu)
     - Many of these containers do not use or do not need to use a GPU, but performance will be greatly reduced.
 - [Git](https://git-scm.com/)
