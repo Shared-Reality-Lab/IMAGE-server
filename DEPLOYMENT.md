@@ -8,7 +8,7 @@ way to deploy. The general principles and concerns will likely be relevant.
 ## System Requirements & Dependencies
 
 The following is written with the assumption you are running a Debian-based Linux distribution (e.g., Ubuntu 24.04, Debian 12).
-Other distributions may work fine, but are not officially tested.
+Other distributions may work fine, but are not tested.
 
 Minimum System Requirements
 OS: Any Linux distribution (Debian-based preferred)
