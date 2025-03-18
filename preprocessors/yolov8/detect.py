@@ -45,9 +45,7 @@ CONF_THRESHOLD = float(os.environ.get('CONF_THRESHOLD', '0.75'))
 MAX_IMAGE_SIZE = int(os.environ.get('MAX_IMAGE_SIZE', '640'))
 
 # Load the model
-# `verbose` is a boolean argument which controls detailed inference log output
-# It needs to be turned off in production to avoid logging PII
-model = YOLO(MODEL_PATH, verbose=log_pii)
+model = YOLO(MODEL_PATH)
 
 # Choose GPU for processing if available
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
@@ -178,12 +176,15 @@ def detect():
 
     # Perform object detection with YOLOv11
     # Disable gradient tracking for speed/memory optimization
+    # `verbose` is a boolean argument which controls detailed log output
+    # It needs to be turned off in production to avoid logging PII
     with torch.no_grad():
         results = model.predict(
             image,
             device=device,
             conf=CONF_THRESHOLD,
-            imgsz=MAX_IMAGE_SIZE
+            imgsz=MAX_IMAGE_SIZE,
+            verbose=log_pii
         )
 
     # Format results according to schema
