@@ -18,7 +18,7 @@ Storage: 50GB free, 100GB+ recommended if using a GPU
 GPU: NVIDIA GPU required for certain services
 
 
-IMAGE Server was also successfully deployed on AWS EC2 using the below confiuratings:
+IMAGE Server was also successfully deployed on AWS EC2 using the below configuration:
 
 Instance Type:	[Preferred] g4dn.xlarge (GPU) or t3.large (CPU-only)
 OS:	Ubuntu 22.04 LTS
