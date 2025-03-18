@@ -81,70 +81,9 @@ Verify: `nvidia-smi`
 
 
 
-Clone the repository
+Clone the repository. Please note that if you see permission errors, you might not have an SSH key. [Check the documentation here.](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/4.-SSH-for-connecting-to-servers-and-to-github) 
 
-ubuntu@ip-172-31-29-145:~$ `cd ~`
-
-ubuntu@ip-172-31-29-145:~$ `git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git`
-
-Cloning into 'IMAGE-server'...
-The authenticity of host 'github.com (140.82.113.3)' can't be established.
-ED25519 key fingerprint is SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU.
-This key is not known by any other names
-Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-
-If it fails or you see permission errors:
-You might not have a SSH key: `ls -la ~/.ssh`
-
-
-`ssh-keygen -t ed25519 -C *[email]*`
-
-Generating public/private ed25519 key pair.
-
-Enter file in which to save the key (/home/ubuntu/.ssh/id_ed25519): 
-
-Enter passphrase (empty for no passphrase): 
-
-Enter same passphrase again: 
-
-Your identification has been saved in /home/ubuntu/.ssh/id_ed25519
-
-Your public key has been saved in /home/ubuntu/.ssh/id_ed25519.pub
-
-The key fingerprint is:
-
-SHA256:Boe/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx *[email]*
-
-The key's randomart image is:
-
-+--[ED25519 256]--+
-|+.               |
-|+.  . ..         |
-|+... +oo.        |
-| =.   =+. .      |
-|  + .o.oS. E     |
-| . . ++=..       |
-|     .X.o+       |
-|    .==*=.+      |
-|   .. B%+o..     |
-+----[SHA256]-----+
-
-Copy the public key: `cat ~/.ssh/id_ed25519.pub`
-
-Go to GitHub -> Settings -> SSH and GPG Keys -> New SSH Key
-
-Copy the content from ~/.ssh/id_ed25519.pub
-
-
-Test connection: 
-
-ubuntu@ip-172-31-29-145:~$ `ssh -T git@github.com`
-
-Hi shahdyousefak! You've successfully authenticated, but GitHub does not provide shell access.
-
-
-
-Then, retry cloning IMAGE-server: `git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git`
+`git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git`
 
 Cloning into 'IMAGE-server'...
 remote: Enumerating objects: 17977, done.
