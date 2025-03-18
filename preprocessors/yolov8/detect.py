@@ -37,10 +37,7 @@ logging.basicConfig(level=logging.DEBUG)
 log_pii = True
 
 # Environment variables and constants
-MODEL_PATH = os.environ.get(
-    'YOLO_MODEL_PATH',
-    'https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11x.pt'
-    )
+MODEL_PATH = os.environ.get('YOLO_MODEL_PATH')
 CONF_THRESHOLD = float(os.environ.get('CONF_THRESHOLD', '0.75'))
 MAX_IMAGE_SIZE = int(os.environ.get('MAX_IMAGE_SIZE', '640'))
 
@@ -48,7 +45,11 @@ MAX_IMAGE_SIZE = int(os.environ.get('MAX_IMAGE_SIZE', '640'))
 model = YOLO(MODEL_PATH)
 
 # Choose GPU for processing if available
-device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+if torch.cuda.is_available():
+    device = 'cuda:0'
+    device_name = torch.cuda.get_device_name()
+else:
+    device, device_name = 'cpu', 'CPU'
 
 # Load schemas once at startup
 with open('./schemas/preprocessors/object-detection.schema.json') as f:
@@ -170,7 +171,7 @@ def detect():
 
     # Log settings for object detection
     logging.debug(f"Model path: {MODEL_PATH}")
-    logging.debug(f"Using device: {device}")
+    logging.debug(f"Using device: {device_name}")
     logging.debug(f"Confidence threshold: {CONF_THRESHOLD}")
     logging.debug(f"Max image size: {MAX_IMAGE_SIZE}")
 
