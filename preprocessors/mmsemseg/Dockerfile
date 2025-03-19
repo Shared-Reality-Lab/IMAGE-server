@@ -52,5 +52,6 @@ ENV FLASK_APP=segment.py
 USER python
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:5000/health || exit 1
+HEALTHCHECK --interval=3600s --timeout=30s --start-period=120s --retries=3 CMD curl -f http://localhost:5000/health/gpu || exit 1
 
 CMD [ "gunicorn", "segment:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
