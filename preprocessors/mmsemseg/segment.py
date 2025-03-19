@@ -258,9 +258,9 @@ def health():
 def gpu_driver_health_check():
     """
     Enhanced health check:
-    verifies CUDA & NVIDIA drivers are working
-    detects if the loaded NVIDIA driver matches `nvidia-smi`
-    Ensures the container is using the correct GPU runtime
+    - Verifies CUDA & NVIDIA drivers are working
+    - Detects if the loaded NVIDIA driver matches `nvidia-smi`
+    - Ensures the container is using the correct GPU runtime
     """
 
     # Check if CUDA is available
