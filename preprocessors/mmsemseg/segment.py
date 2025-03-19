@@ -253,6 +253,7 @@ def health():
         "timestamp": datetime.now().isoformat()
     }), 200
 
+
 @app.route("/health/gpu", methods=["GET"])
 def gpu_driver_health_check():
     """
