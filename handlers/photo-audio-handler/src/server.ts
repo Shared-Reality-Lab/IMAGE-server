@@ -133,9 +133,6 @@ app.post("/handler", async (req, res) => {
         }
     }
 
-    // Generate rendering title
-    const renderingTitle = utils.renderingTitle(semseg, objDet, objGroup);
-
     // Handle language if targetLanguage is not English
     if (targetLanguage != "en") {
         console.debug(`Translating ttsData values to ${targetLanguage}"`);
@@ -160,7 +157,7 @@ app.post("/handler", async (req, res) => {
         const textString = ttsData.map(x => x["value"]).join(" ");
         const rendering = {
             "type_id": "ca.mcgill.a11y.image.renderer.Text",
-            "description": renderingTitle + " (text only)",
+            "description": "Text description",
             "data": { "text": textString }
         };
         if (ajv.validate("https://image.a11y.mcgill.ca/renderers/text.schema.json", rendering["data"])) {
@@ -234,7 +231,7 @@ app.post("/handler", async (req, res) => {
                     console.debug("Constructing segment audio rendering")
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
-                        "description": renderingTitle,
+                        "description": "Rich audio description",
                         "data": {
                             "audioFile": dataURL,
                             "audioInfo": segArray
@@ -253,7 +250,7 @@ app.post("/handler", async (req, res) => {
                     console.debug("Constructing simple audio rendering")
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                        "description": renderingTitle,
+                        "description": "Rich audio description",
                         "data": {
                             "audio": dataURL
                         },
@@ -286,22 +283,22 @@ app.post("/handler", async (req, res) => {
     }
 
     // Translate renderings' description before sending response
-	if (targetLanguage !== "en") {
-		try {
-			console.debug("Translating renderings description to " + targetLanguage);
-			const translatedDesc = await utils.getTranslationSegments(
+    if (targetLanguage !== "en") {
+        try {
+            console.debug("Translating renderings description to " + targetLanguage);
+            const translatedDesc = await utils.getTranslationSegments(
                             renderings.map(x => x["description"]),
                             targetLanguage
                         );
 
-			for (let i = 0; i < renderings.length; i++) {
-				renderings[i]["description"] = translatedDesc[i];
-			}
-		} catch(e) {
-			console.error("Failed to translate rendering descriptions to " + targetLanguage);
-			console.error(e);
-		}
-	}
+            for (let i = 0; i < renderings.length; i++) {
+                renderings[i]["description"] = translatedDesc[i];
+            }
+        } catch(e) {
+            console.error("Failed to translate rendering descriptions to " + targetLanguage);
+            console.error(e);
+        }
+    }
     // Send response
 
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
