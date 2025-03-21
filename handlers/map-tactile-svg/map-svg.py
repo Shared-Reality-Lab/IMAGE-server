@@ -22,6 +22,7 @@ import logging
 import time
 import drawSvg as draw
 from datetime import datetime
+import math
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -103,22 +104,25 @@ def handle():
         return response
 
     dimensions = 700, 700
+    data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
+    lat = data["bounds"]["latitude"]
+    lon = data["bounds"]["longitude"]
+    coords = getMidpoint(contents)
 
     renderingDescription = ("Tactile rendering of map centered at latitude " +
-                            str(contents["coordinates"]["latitude"]) +
+                            str(coords["latitude"]) +
                             " and longitude " +
-                            str(contents["coordinates"]["longitude"]))
+                            str(coords["longitude"]))
     caption = ("Map centered at latitude " +
-               str(contents["coordinates"]["latitude"]) +
+               str(coords["latitude"]) +
                " and longitude " +
-               str(contents["coordinates"]["longitude"]))
+               str(coords["longitude"]))
     # List of minor street types ('footway', 'crossing' and 'steps')
     # to be filtered out to simplify the resulting rendering
     remove_streets = ["footway", "crossing", "steps", "elevator"]
     svg = draw.Drawing(dimensions[0], dimensions[1],
                        origin=(0, -dimensions[1]))
 
-    data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
     if "streets" in data:
         streets = data["streets"]
         lat = data["bounds"]["latitude"]
@@ -426,14 +430,12 @@ def getNodeCategoryData(POI):
     category = POI["cat"]
     match category:
         case "crossing":
-            if POI["crossing"] == "marked":
-                tag += "Marked crossing, "
-            elif POI["crossing"] == "unmarked":
-                tag += "Unmarked crossing, "
-            elif POI["crossing"] == "traffic_signals":
-                tag += "Crossing with traffic signal, "
-            else:
-                tag += "Crossing, "
+            crossing_types = {
+                "marked": "Marked crossing, ",
+                "unmarked": "Unmarked crossing, ",
+                "traffic_signals": "Crossing with traffic signal, "
+            }
+            tag += crossing_types.get(POI.get("crossing"), "Crossing, ")
         case "traffic_signals":
             tag += "Traffic lights present, "
         case _:
@@ -477,6 +479,43 @@ def health():
         "status": "healthy",
         "timestamp": datetime.now().isoformat()
     }), 200
+
+
+def getMidpoint(contents):
+    if "coordinates" in contents:
+        logging.debug("Coordinates found in request")
+        return {"latitude": contents["coordinates"]["latitude"],
+                "longitude": contents["coordinates"]["longitude"]}
+
+    logging.debug("Coordinates not found in request. "
+                  "Calculating midpoint from bounds.")
+    data = contents["preprocessors"][
+        "ca.mcgill.a11y.image.preprocessor.openstreetmap"]
+    lat = data["bounds"]["latitude"]
+    lon = data["bounds"]["longitude"]
+
+    # Convert degrees to radians
+    lat1, lon1, lat2, lon2 = map(math.radians, 
+                                 [lat["min"], lon["min"], 
+                                  lat["max"], lon["max"]])
+
+    # Convert to Cartesian coordinates
+    x1, y1, z1 = (math.cos(lat1) * math.cos(lon1), 
+                  math.cos(lat1) * math.sin(lon1), math.sin(lat1))
+    x2, y2, z2 = (math.cos(lat2) * math.cos(lon2), 
+                  math.cos(lat2) * math.sin(lon2), math.sin(lat2))
+
+    # Compute the midpoint in Cartesian coordinates
+    x_m, y_m, z_m = (x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2
+
+    # Convert back to latitude and longitude
+    lon_m = math.atan2(y_m, x_m)
+    hyp = math.sqrt(x_m**2 + y_m**2)
+    lat_m = math.atan2(z_m, hyp)
+
+    # Convert radians back to degrees
+    return {"latitude": round(math.degrees(lat_m), 6),
+            "longitude": round(math.degrees(lon_m), 6)}
 
 
 if __name__ == "__main__":
