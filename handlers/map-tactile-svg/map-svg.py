@@ -495,14 +495,14 @@ def getMidpoint(contents):
     lon = data["bounds"]["longitude"]
 
     # Convert degrees to radians
-    lat1, lon1, lat2, lon2 = map(math.radians, 
+    lat1, lon1, lat2, lon2 = map(math.radians,
                                  [lat["min"], lon["min"], 
                                   lat["max"], lon["max"]])
 
     # Convert to Cartesian coordinates
-    x1, y1, z1 = (math.cos(lat1) * math.cos(lon1), 
+    x1, y1, z1 = (math.cos(lat1) * math.cos(lon1),
                   math.cos(lat1) * math.sin(lon1), math.sin(lat1))
-    x2, y2, z2 = (math.cos(lat2) * math.cos(lon2), 
+    x2, y2, z2 = (math.cos(lat2) * math.cos(lon2),
                   math.cos(lat2) * math.sin(lon2), math.sin(lat2))
 
     # Compute the midpoint in Cartesian coordinates
