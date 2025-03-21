@@ -496,7 +496,7 @@ def getMidpoint(contents):
 
     # Convert degrees to radians
     lat1, lon1, lat2, lon2 = map(math.radians,
-                                 [lat["min"], lon["min"], 
+                                 [lat["min"], lon["min"],
                                   lat["max"], lon["max"]])
 
     # Convert to Cartesian coordinates
