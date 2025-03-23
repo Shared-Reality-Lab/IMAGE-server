@@ -30,9 +30,7 @@ import responseSchemaJSON from "./schemas/response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 import { docker, getPreprocessorServices, getHandlerServices, DEFAULT_ROUTE_NAME } from "./docker";
 import { ServerCache } from "./server-cache";
-import { Graph } from "./graph";
-import { GraphNode } from "./graph";
-import { printGraph } from "./graph";
+import { Graph, GraphNode, printGraph } from "./graph";
 
 const app = express();
 const serverCache = new ServerCache();
