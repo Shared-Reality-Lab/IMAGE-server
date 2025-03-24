@@ -143,7 +143,7 @@ export function generateActions(objs: Obj[], group: number[], actionRec: Action)
         const act = actionRec["actions"].find((x: { "personID": number }) => x["personID"] === id);
         if (act !== undefined) {
             const label = act["action"].trim();
-            if (act["confidence"] < ACT_THRES) { 
+            if (act["confidence"] < ACT_THRES) {
                 if (maybeActions[label]) {
                     maybeActions[label].push(id);
                 }
@@ -158,9 +158,9 @@ export function generateActions(objs: Obj[], group: number[], actionRec: Action)
         }
         else {
             other.push(id);
-        } 
+        }
     }
-    
+
     for (const label in actions) {
         const len = actions[label].length;
         const pType = len > 1 ? "people" : "person";
@@ -172,7 +172,7 @@ export function generateActions(objs: Obj[], group: number[], actionRec: Action)
             "label": pType + " " + actionTxt,
             "value": len.toString() + " " + pType + " " + actionTxt + ","
         };
-        objects.push(object);       
+        objects.push(object);
     }
     for (const label in maybeActions) {
         const len = maybeActions[label].length;
@@ -184,7 +184,7 @@ export function generateActions(objs: Obj[], group: number[], actionRec: Action)
             "objects": acts,
             "value": len.toString() + " " + pType + " who might be " + actionTxt + ","
         };
-        objects.push(object);       
+        objects.push(object);
     }
     if (other.length > 0) {
         const len = other.length;
@@ -307,7 +307,7 @@ export async function getTTS(text: string[], language: string): Promise<TTSRespo
         console.error(`photo-audio-handler doesn't support '${language}' language`);
         throw new Error("Unable to send segment to TTS");
     }
-    
+
     return fetch(serviceURL, {
       method: "POST",
       headers: {
@@ -374,19 +374,4 @@ export async function sendOSC(jsonFile: string, outFile: string, server: string,
             }, 5000);
         })
     ]);
-}
-
-export function renderingTitle(semseg: { "segments": Record<string, unknown>[] }, objDet: ObjDet, objGroup: ObjGroup): string {
-    console.debug("Rendering title")
-    const hasSemseg = (semseg !== undefined) && (semseg["segments"].length > 0);
-    const hasObj = (objDet !== undefined) && (objGroup !== undefined) && (objDet["objects"].length > 0);
-    if (hasSemseg && hasObj) {
-        return "Regions, things, and people";
-    }
-    else if (hasSemseg) {
-        return "Outlines of regions";
-    }
-    else {
-        return "Things and people";
-    }
 }
