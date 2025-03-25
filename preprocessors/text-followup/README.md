@@ -6,14 +6,29 @@ and a question posed by the user.
 A brief and a full response are included, and together
 form the full response.
 
+The preprocessor keeps the memory of the conversation
+allowing users to ask follow-up questions about the original graphic.
+The period of history storage is defined by
+the `HISTORY_EXPIRY` environment variable (default is 1 hour).
+
+The `MAX_HISTORY_LENGTH` environment variable defines how many 
+messages will be passed to the model for context 
+(including system message, user requests, and LLM responses).
+
+>Example: if `MAX_HISTORY_LENGTH=100` and there are 120 interactions 
+>in the history, the model will receive the system message, 
+>the first user message (with graphic), and the most recent 98 interactions 
+>between the user and the model.
+
+
 It uses an LLM model running via ollama fronted by open-webui.
 There are several mandatory environment variables you must set.
 Example ollama.env file:
 
 ```
-OLLAMA_URL=https://ollama.myserver.com/ollama/api/generate
+OLLAMA_URL=https://ollama.myserver.com/ollama/api
 OLLAMA_API_KEY=sk-[YOUR_OLLAMA_SECRET KEY]
-OLLAMA_MODEL=llava:latest
+OLLAMA_MODEL=llama3.2-vision:latest
 ```
 Note these are not unique to this preprocessor. Due to
 GPU memory limitations, we assume that all preprocessors

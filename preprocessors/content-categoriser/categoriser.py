@@ -75,7 +75,7 @@ def categorise():
     graphic_b64 = source.split(",")[1]
 
     # prepare ollama request
-    api_url = os.environ['OLLAMA_URL']
+    api_url = f"{os.environ['OLLAMA_URL']}/generate"
     api_key = os.environ['OLLAMA_API_KEY']
     ollama_model = os.environ['OLLAMA_MODEL']
 

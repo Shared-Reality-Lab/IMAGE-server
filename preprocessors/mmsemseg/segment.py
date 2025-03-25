@@ -47,7 +47,6 @@ COLORS = mmseg.core.evaluation.get_palette("ade20k")
 CLASS_NAMES = mmseg.core.evaluation.get_classes("ade20k")
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG)
 
 
 def run_segmentation(url, model, dictionary):
