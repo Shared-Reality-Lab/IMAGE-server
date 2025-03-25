@@ -1,0 +1,27 @@
+#!/bin/bash
+# USAGE: make_request [PATH_TO_GRAPHIC_FILE]
+# example: make_request foo.jpg
+# Can be used in tandem with the sendimagereq script to send the request to an IMAGE server
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+ENV_FILE="$SCRIPT_DIR/../config/make_request.env"
+if [ -f "$ENV_FILE" ]; then
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+  echo "Error: Environment file not found at $ENV_FILE" >&2
+  exit 1
+fi
+
+image_file=$1
+
+if [ ! -f "$image_file" ]; then
+    echo "Not a file: $image_file!"
+    exit 1
+fi
+
+mimetype=$(file --mime-type -b "$image_file")
+b64=$(base64 -w0 "$image_file")
+imageurl="data:$mimetype;base64,$b64"
+dims=$(convert "$image_file" -print "[%w, %h]" /dev/null)
+
+echo '{"request_uuid": "'$(uuidgen -r)'", "timestamp": '$(date +%s)', "graphic": "'$imageurl'", "dimensions": '$dims', "context": "", "language": "'$LANGUAGE'", "capabilities": '$CAPABILITIES', "renderers": '$RENDERERS', "preprocessors": {}}'
