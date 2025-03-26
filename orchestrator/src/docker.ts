@@ -17,6 +17,9 @@
 import Docker from "dockerode";
 
 export const docker = new Docker();
+
+const _REQUIRED_DEP_LABEL_ = "ca.mcgill.a11y.image.required_dependencies";
+const _OPTIONAL_DEP_LABEL_ = "ca.mcgill.a11y.image.optional_dependencies";
 const _PREPROCESSOR_LABEL_ = "ca.mcgill.a11y.image.preprocessor";
 const _HANDLER_LABEL_ = "ca.mcgill.a11y.image.handler";
 const _PORT_LABEL_ = "ca.mcgill.a11y.image.port";
@@ -101,3 +104,87 @@ export function getHandlerServices(containers: Docker.ContainerInfo[], route: st
         return [container.Labels["com.docker.compose.service"], port];
     });
 }
+
+//Returns the optional preprocessors needed for the given preprocessor to run 
+//Optional preprocessors: enhance functionality but are not strictly required for execution.
+export async function getOptionalDependencies(preprocessorName: string, preprocessors: (string | number)[][]) : Promise<(string | number)[][]>{
+    try{
+        // Check if the preprocessorName exists in preprocessors
+        const exists = preprocessors.some(p => p[0] === preprocessorName);
+        if (!exists) {
+            console.error(`Preprocessor "${preprocessorName}" not found in preprocessors list.`);
+            return [];
+        }    
+        //find the container using the name of the preprocessor 
+        const containers = await docker.listContainers({all:true});
+    
+        //Find the container for the name passed
+        const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
+        
+        if(!container){
+            console.error(`Could not find the container for preprocessor ${preprocessorName}`);
+            return [];
+        }
+        if (container.Labels?.[_REQUIRED_DEP_LABEL_] == undefined) {
+            console.warn(`Warning: The optional dependencies label is missing for preprocessor "${container.Labels["com.docker.compose.service"]}".`);
+            return [];
+        }
+       
+        const optionalPreprocessors = container.Labels[_OPTIONAL_DEP_LABEL_];
+        let optionalPreprocessorsArray : string[] = [];
+        
+        //convert from string to array of strings 
+        if(optionalPreprocessors != ""){    //if the preprocessor has dependencies
+            optionalPreprocessorsArray = optionalPreprocessors ? optionalPreprocessors.split(",").filter(Boolean) : [];
+        }
+        
+        //filter through the array of preprocessor names and return an array of their actual values
+        return preprocessors.filter(function (p) { return optionalPreprocessorsArray.includes(p[0] as string); });
+    } catch(error){
+        console.error(`Error while getting optional dependencies for ${preprocessorName}:`, error);
+        return [];
+    }
+
+}
+
+//Returns the required preprocessors needed for the given preprocessor to run 
+export async function getRequiredDependencies(preprocessorName: string, preprocessors: (string | number)[][]) : Promise<(string | number)[][]>{
+    try{
+        // Check if the preprocessorName exists in preprocessors
+        const exists = preprocessors.some(p => p[0] === preprocessorName);
+        if (!exists) {
+            console.error(`Preprocessor "${preprocessorName}" not found in preprocessors list.`);
+            return [];
+        }
+
+        //find the container using the name of the preprocessor 
+        const containers = await docker.listContainers({all:true});
+
+        //Find the container for the name passed
+        const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
+        if(!container){
+            console.error(`Could not find the container for preprocessor ${preprocessorName}`);
+            return [];
+        }
+        if (container.Labels?.[_REQUIRED_DEP_LABEL_] == undefined) {
+            console.warn(`Warning: The required dependencies label is missing for preprocessor "${preprocessorName}".`);
+            return [];
+        }
+
+        const requiredPreprocessors = container.Labels[_REQUIRED_DEP_LABEL_];
+        let requiredPreprocessorsArray : string[] = [];
+        
+        //convert from string to array of strings 
+        if(requiredPreprocessors != ""){    //if the preprocessor has dependencies
+            requiredPreprocessorsArray = requiredPreprocessors.split(",").filter(Boolean);
+        }
+        
+        //filter through the array of preprocessor names and return an array of their actual values
+        const f =  preprocessors.filter(function (p) { return requiredPreprocessorsArray.includes(p[0] as string); });
+        return f;
+    } catch(error){
+        console.error(`Error while getting required dependencies for ${preprocessorName}:`, error);
+        return [];
+    }
+} 
+
