@@ -27,7 +27,6 @@ from config.logging_utils import configure_logging
 configure_logging()
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG)
 
 
 @app.route("/preprocessor", methods=['POST', ])
@@ -95,6 +94,10 @@ def categorise():
              "Which of the following categories best " \
              "describes this image, selecting from this enum: "
     possible_categories = "photograph, chart, text, other"
+    # override with prompt from environment variable only if it exists
+    prompt = os.getenv('CONTENT_CATEGORISER_PROMPT_OVERRIDE', prompt)
+    prompt += "[" + possible_categories + "]"
+    logging.debug("prompt: " + prompt)
 
     request_data = {
         "model": ollama_model,
