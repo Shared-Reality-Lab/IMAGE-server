@@ -16,19 +16,13 @@ from osm_service import (
     validate,
     get_coordinates,
 )
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
-
-# Configure logging settings
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s]: %(message)s",
-    datefmt="%y-%m-%d %H:%M %Z",
-)
-
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
 
 @app.route('/preprocessor', methods=['POST', ])
@@ -36,7 +30,7 @@ def get_map_data():
     """
     Gets map data from OpenStreetMap
     """
-    LOGGER.debug("Received request")
+    logging.debug("Received request")
     # Load schemas
     with open('./schemas/preprocessors/openstreetmap.schema.json') as jsonfile:
         data_schema = json.load(jsonfile)
@@ -49,29 +43,37 @@ def get_map_data():
         schema['$id']: schema,
         definition_schema['$id']: definition_schema
     }
-    content = request.get_json()
-    LOGGER.debug("Validating request")
-    with open('./schemas/request.schema.json') as jsonfile:
-        request_schema = json.load(jsonfile)
-    # Validate incoming request
-    resolver = jsonschema.RefResolver.from_schema(
-        request_schema, store=schema_store)
+    try:
+        content = request.get_json()
+        logging.debug("Validating request")
+        with open('./schemas/request.schema.json') as jsonfile:
+            request_schema = json.load(jsonfile)
 
-    validated = validate(
-        schema=request_schema,
-        data=content,
-        resolver=resolver,
-        json_message="Invalid Request JSON format",
-        error_code=400)
+        # Validate incoming request
+        resolver = jsonschema.RefResolver.from_schema(
+            request_schema, store=schema_store)
 
-    if validated is not None:
-        return validated
+        validated = validate(
+            schema=request_schema,
+            data=content,
+            resolver=resolver,
+            json_message="Invalid Request JSON format",
+            error_code=400
+        )
+
+        if validated is not None:
+            return validated
+    except jsonschema.exceptions.ValidationError as e:
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {e.message}")
+        return jsonify("Invalid Request JSON format"), 400
+
     time_stamp = int(get_timestamp())
     name = "ca.mcgill.a11y.image.preprocessor.openstreetmap"
     request_uuid = content["request_uuid"]
     # Check if this request is for an openstreetmap
     if 'coordinates' not in content and 'placeID' not in content:
-        LOGGER.info("Not map content. Skipping...")
+        logging.info("Not map content. Skipping...")
         return jsonify(""), 204
 
     # Build OpenStreetMap request
@@ -164,7 +166,7 @@ def get_map_data():
 
     if validated is not None:
         return validated
-    LOGGER.debug("Sending final response")
+    logging.debug("Sending final response")
     return response
 
 

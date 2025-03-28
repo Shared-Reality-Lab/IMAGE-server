@@ -28,13 +28,12 @@ import io
 from PIL import Image
 from ultralytics import YOLO
 import torch
+from config.logging_utils import configure_logging
 
 # Create Flask app
 app = Flask(__name__)
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-log_pii = True
+configure_logging()
 
 # Environment variables and constants
 MODEL_PATH = os.environ.get('YOLO_MODEL_PATH')
@@ -91,8 +90,7 @@ def decode_image(graphic_data):
         return image
     except Exception as e:
         logging.error(f"Failed to decode image: {str(e)}")
-        if log_pii:
-            logging.debug(traceback.format_exc())
+        logging.pii(traceback.format_exc())
         return None
 
 
@@ -134,8 +132,7 @@ def format_detection_results(results):
                 objects.append(obj)
     except Exception as e:
         logging.error(f"Error formatting detection results: {str(e)}")
-        if log_pii:
-            logging.debug(traceback.format_exc())
+        logging.pii(traceback.format_exc())
 
     return {"objects": objects}
 
@@ -151,7 +148,8 @@ def detect():
             )
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {e.message} | Data: {content}")
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     # Check if there is graphic content to process
@@ -185,7 +183,7 @@ def detect():
             device=device,
             conf=CONF_THRESHOLD,
             imgsz=MAX_IMAGE_SIZE,
-            verbose=log_pii
+            verbose=False
         )
 
     # Format results according to schema
@@ -196,9 +194,8 @@ def detect():
         validator = jsonschema.Draft7Validator(DATA_SCHEMA)
         validator.validate(objects)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
-        if log_pii:
-            logging.debug(e)
+        logging.error("Validation failed for detection data")
+        logging.pii(f"Validation error: {e.message} | Data: {objects}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # Create full response following preprocessor response schema
@@ -214,14 +211,11 @@ def detect():
             )
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
-        if log_pii:
-            logging.debug(e)
+        logging.error("Validation failed for full response")
+        logging.pii(f"Validation error: {e.message} | Response: {response}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
-    if log_pii:
-        logging.debug(response)
-
+    logging.pii(response)
     return jsonify(response), 200
 
 

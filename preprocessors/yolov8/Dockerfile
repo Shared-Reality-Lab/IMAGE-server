@@ -14,6 +14,7 @@ RUN pip3 install --upgrade pip && \
     pip3 install -r /usr/src/app/requirements.txt
 
 COPY /schemas /usr/src/app/schemas
+COPY /config /app/config
 
 # Set environment variable for model path
 ENV YOLO_MODEL_PATH=/usr/src/app/models/yolo11x.pt

@@ -11,6 +11,7 @@ COPY /handlers/svg-semantic-seg/requirements.txt /usr/src/app/requirements.txt
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
+COPY /config /app/config
 COPY /handlers/svg-semantic-seg/ /usr/src/app
 
 EXPOSE 80

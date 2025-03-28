@@ -21,6 +21,9 @@ import logging
 import jsonschema
 from flask import Flask, request, jsonify
 from datetime import datetime
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 
@@ -32,15 +35,20 @@ def render_ocr():
     """
 
     logging.debug("Received request")
-    # Load schemas
-    with open('./schemas/handler-response.schema.json') as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definition_schema = json.load(jsonfile)
-    schema_store = {
-        schema['$id']: schema,
-        definition_schema['$id']: definition_schema
-    }
+    try:
+        # Load schemas
+        with open('./schemas/handler-response.schema.json') as jsonfile:
+            schema = json.load(jsonfile)
+        with open('./schemas/definitions.json') as jsonfile:
+            definition_schema = json.load(jsonfile)
+        schema_store = {
+            schema['$id']: schema,
+            definition_schema['$id']: definition_schema
+        }
+    except Exception as e:
+        logging.error("Error loading schema files")
+        logging.pii(f"Schema loading error: {e}")
+        return jsonify("Schema files could not be loaded"), 500
 
     # Get request data
     content = request.get_json()
@@ -57,7 +65,8 @@ def render_ocr():
         )
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
+        logging.error("Request validation failed")
+        logging.pii(f"Validation error: {error.message}")
         return jsonify("Invalid Request JSON format"), 400
 
     # Check preprocessor data
@@ -75,7 +84,8 @@ def render_ocr():
             validator = jsonschema.Draft7Validator(schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
+            logging.error("Response validation failed")
+            logging.pii(f"Validation error: {error.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
@@ -94,7 +104,8 @@ def render_ocr():
             validator = jsonschema.Draft7Validator(schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
+            logging.error("Response validation failed")
+            logging.pii(f"Validation error: {error.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
@@ -111,7 +122,8 @@ def render_ocr():
             validator = jsonschema.Draft7Validator(schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
+            logging.error("Response validation failed")
+            logging.pii(f"Validation error: {error.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Sending response")
         return response
@@ -175,7 +187,8 @@ def render_ocr():
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as error:
-        logging.error(error)
+        logging.error("Response validation failed")
+        logging.pii(f"Validation error: {error.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
     logging.debug("Sending response")
     return response

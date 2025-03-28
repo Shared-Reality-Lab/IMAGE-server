@@ -42,6 +42,7 @@ RUN pip install --upgrade pip && \
     pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
+COPY /config /app/config
 COPY /preprocessors/mmsemseg/ /app
 
 # Download the model checkpoint

@@ -31,6 +31,9 @@ import logging
 import base64
 from lib.multi_depth_model_woauxi import RelDepthModel
 from datetime import datetime
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -108,8 +111,10 @@ def depthgenerator():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 400
+
     # check content category from contentCategoriser
     preprocess_output = content.get("preprocessors", {})
     classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
@@ -146,12 +151,18 @@ def depthgenerator():
     depth_model.eval()
 
     # load checkpoint
-    checkpoint = torch.load("/app/res101.pth")
-    depth_model.load_state_dict(strip_prefix_if_present(
-                                checkpoint['depth_model'], "module."),
-                                strict=True)
-    del checkpoint
-    torch.cuda.empty_cache()
+    try:
+        checkpoint = torch.load("/app/res101.pth")
+        depth_model.load_state_dict(strip_prefix_if_present(
+                                    checkpoint['depth_model'], "module."),
+                                    strict=True)
+    except Exception as e:
+        logging.error("Error loading model checkpoint")
+        logging.pii(f"Checkpoint load error: {e}")
+        return jsonify("Depth Model cannot complete"), 500
+    finally:
+        del checkpoint
+        torch.cuda.empty_cache()
 
     depth_model.cuda()
 
@@ -170,15 +181,18 @@ def depthgenerator():
         jsondepth = "data:image/jpeg;base64," + depthgraphic
         depth = {"depth-map": jsondepth, "scaling": 0}
     except Exception as e:
-        logging.error(e)
+        logging.error("Depth model inference error")
+        logging.pii(f"Inference error: {e}")
         return jsonify("Depth Model cannot complete"), 500
 
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(depth)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for depth data")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
+
     response = {
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
@@ -189,8 +203,10 @@ def depthgenerator():
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for final response")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
+
     torch.cuda.empty_cache()
     logging.debug("Sending response")
     return response

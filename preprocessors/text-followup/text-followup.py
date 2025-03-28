@@ -22,9 +22,11 @@ import jsonschema
 import logging
 import os
 from datetime import datetime
+from config.logging_utils import configure_logging
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG)
+
+configure_logging()
 
 # Dictionary to store conversation history by request_uuid
 # Maintains conversation context between requests
@@ -89,7 +91,8 @@ def followup():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {e.message} | Data: {content}")
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     # check we received a graphic (e.g., not a map or chart request)
@@ -120,14 +123,6 @@ def followup():
         logging.debug(
             f"Current history length for {request_uuid}: {msg_count}"
             )
-
-    # debugging this preprocessor is really difficult without seeing what
-    # ollama is returning, but this can contain PII. Until we have a safe
-    # way of logging PII, using manually set LOG_PII env variable
-    # to say whether or not we should go ahead and log potential PII
-    log_pii = os.getenv('LOG_PII', "false").lower() == "true"
-    if log_pii:
-        logging.warning("LOG_PII is True: potential PII will be logged!")
 
     # convert the uri to processable image
     # source.split code referred from
@@ -175,8 +170,7 @@ def followup():
 
     logging.debug("OLLAMA_URL " + api_url)
     if api_key.startswith("sk-"):
-        logging.debug("OLLAMA_API_KEY looks properly formatted: " +
-                      "sk-[redacted]")
+        logging.pii("OLLAMA_API_KEY looks properly formatted: sk-[redacted]")
     else:
         logging.warning("OLLAMA_API_KEY does not start with sk-")
 
@@ -218,23 +212,21 @@ def followup():
         )
 
     # Create log-friendly version without full base64 content
-    if log_pii:
-        log_friendly_messages = []
-        for msg in messages:
-            # Create a copy to avoid modifying the original
-            log_msg = msg.copy()
-            if 'images' in log_msg:
-                # Replace image content with placeholder or truncate it
-                log_msg['images'] = [
+    log_friendly_messages = []
+    for msg in messages:
+        # Create a copy to avoid modifying the original
+        log_msg = msg.copy()
+        if 'images' in log_msg:
+            # Replace image content with placeholder or truncate it
+            log_msg['images'] = [
                     f"[BASE64_IMAGE:{len(img)} bytes]"
                     for img in log_msg['images']
                 ]
-            log_friendly_messages.append(log_msg)
-        logging.debug(
-            f"Message history: {json.dumps(log_friendly_messages, indent=2)}"
-            )
-    else:
-        logging.debug(f"User followup prompt: {general_prompt} [redacted]")
+        log_friendly_messages.append(log_msg)
+    logging.pii(
+        f"Message history: {json.dumps(log_friendly_messages, indent=2)}"
+        )
+    logging.debug(f"User followup prompt: {general_prompt} [redacted]")
 
     # Create request data for chat endpoint
     request_data = {
@@ -272,8 +264,7 @@ def followup():
             response_json = json.loads(response.text)
             # strip() at end since llama often puts a newline before json
             response_text = response_json['message']['content'].strip()
-            if log_pii:
-                logging.debug("raw ollama response: " + response_text)
+            logging.pii("raw ollama response: " + response_text)
             followup_response_json = json.loads(response_text)
 
             # Format assistant response for history
@@ -307,21 +298,16 @@ def followup():
                 logging.error(ollama_error_msg + " returning 204")
                 return jsonify("Invalid LLM results"), 204
     else:
-        if log_pii:
-            logging.error("Error {response.status_code}: {response.text}")
-        else:
-            logging.error("Error {response.status_code}: "
-                          "[response text redacted]")
+        logging.error(f"Error {response.status_code}: \
+                      [response text redacted]")
         return jsonify("Invalid response from ollama"), 204
-
     # check if ollama returned valid json that follows schema
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(followup_response_json)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
-        if log_pii:
-            logging.debug(e)
+        logging.pii(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # create full response & check meets overall preprocessor response schema
@@ -336,15 +322,11 @@ def followup():
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
-        if log_pii:
-            logging.debug(e)  # print full error only in debug, due to PII
+        logging.pii(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
 
-    # all done; return to orchestrator
     logging.debug("full response length: " + str(len(response)))
-    if log_pii:
-        logging.debug(response)
-
+    logging.pii(response)
     return response
 
 
