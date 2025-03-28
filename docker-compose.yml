@@ -79,35 +79,42 @@ services:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
-
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   content-categoriser:
-      profiles: [production, test, default]
-      image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:${REGISTRY_TAG}
-      restart: unless-stopped
-      labels:
-        ca.mcgill.a11y.image.preprocessor: 1
-        ca.mcgill.a11y.image.port: 5000
-        ca.mcgill.a11y.image.cacheTimeout: 3600
-      env_file:
-        ./config/ollama.env
-
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 1
+      ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+    env_file:
+      ./config/ollama.env
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   graphic-caption:
-      profiles: [production, test, default]
-      image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-caption:${REGISTRY_TAG}
-      restart: unless-stopped
-      labels:
-        ca.mcgill.a11y.image.preprocessor: 1
-        ca.mcgill.a11y.image.port: 5000
-        ca.mcgill.a11y.image.cacheTimeout: 3600
-      env_file:
-        ./config/ollama.env
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-caption:${REGISTRY_TAG}
+    restart: unless-stopped
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 1
+      ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+    env_file:
+      ./config/ollama.env
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   text-followup:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-text-followup:${REGISTRY_TAG}
     restart: unless-stopped
+    environment:
+      - MAX_HISTORY_LENGTH=100
+      - HISTORY_EXPIRY=3600
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
@@ -115,7 +122,9 @@ services:
       ca.mcgill.a11y.image.route: "followup"
     env_file:
       ./config/ollama.env
-
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+  
   graphic-tagger:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:${REGISTRY_TAG}
@@ -126,7 +135,9 @@ services:
       ca.mcgill.a11y.image.preprocessor: 2
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
-
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+  
   object-detection:
     profiles: [production, default, test]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:${REGISTRY_TAG}
@@ -141,6 +152,8 @@ services:
           devices:
           - driver: nvidia
             capabilities: ["gpu", "utility", "compute"]
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   object-grouping:
     profiles: [production, test, default]
@@ -150,6 +163,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   openstreetmap:
     profiles: [production, test, default]
@@ -161,7 +176,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
-
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   object-sorting:
     profiles: [production, test, default]
@@ -171,7 +187,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 5
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
-
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   semantic-segmentation:
     profiles: [production, test, default]
@@ -187,7 +204,9 @@ services:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
-
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+  
   supercollider:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-supercollider:${REGISTRY_TAG}
@@ -197,6 +216,8 @@ services:
       - sc-store:/tmp/sc-store
     deploy:
         replicas: 2
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   photo-audio-handler:
     profiles: [production, test, default]
@@ -208,6 +229,8 @@ services:
       ca.mcgill.a11y.image.handler: enable
     volumes:
       - sc-store:/tmp/sc-store
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   autour-handler:
     profiles: [production, test, default]
@@ -219,6 +242,8 @@ services:
       ca.mcgill.a11y.image.handler: enable
     volumes:
       - sc-store:/tmp/sc-store
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   photo-audio-haptics-handler:
     profiles: [production, test, default]
@@ -230,6 +255,8 @@ services:
       ca.mcgill.a11y.image.handler: enable
     volumes:
       - sc-store:/tmp/sc-store
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   high-charts-handler:
     profiles: [production, test, default]
@@ -241,6 +268,8 @@ services:
       ca.mcgill.a11y.image.handler: enable
     volumes:
       - sc-store:/tmp/sc-store
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   svg-od-handler:
     profiles: [production, test, default]
@@ -248,6 +277,8 @@ services:
     restart: unless-stopped
     labels:
         ca.mcgill.a11y.image.handler: enable
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}       
 
   svg-semantic-seg-handler:
     profiles: [production, test, default]
@@ -255,6 +286,8 @@ services:
     restart: unless-stopped
     labels:
         ca.mcgill.a11y.image.handler: enable
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   depth-map-generator:
     profiles: [production, test, default]
@@ -270,6 +303,8 @@ services:
         ca.mcgill.a11y.image.preprocessor: 3
         ca.mcgill.a11y.image.port: 5000
         ca.mcgill.a11y.image.cacheTimeout: 3600
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   svg-depth-map:
     profiles: [production, test, default]
@@ -277,6 +312,8 @@ services:
     restart: unless-stopped
     labels:
         ca.mcgill.a11y.image.handler: enable
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   nominatim-preprocessor:
     profiles: [production, test, default]
@@ -287,6 +324,8 @@ services:
     labels:
         ca.mcgill.a11y.image.preprocessor: 2
         ca.mcgill.a11y.image.cacheTimeout: 3600
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   photo-tactile-svg-handler:
     profiles: [production, test, default]
@@ -294,6 +333,8 @@ services:
     restart: unless-stopped
     labels:
         ca.mcgill.a11y.image.handler: enable
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   map-tactile-svg-handler:
     profiles: [production, test, default]
@@ -301,6 +342,8 @@ services:
     restart: unless-stopped
     labels:
         ca.mcgill.a11y.image.handler: enable
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   text-followup-handler:
     profiles: [test, default]
@@ -309,6 +352,8 @@ services:
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.route: "followup"
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
 # end - common services
 
@@ -322,6 +367,7 @@ services:
       - ./config/express-common.env
     environment:
       - MOTD=Hello, world!
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
     labels:
       ca.mcgill.a11y.image.handler: enable
 
@@ -333,7 +379,9 @@ services:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
-
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+  
   # For environment setup refer to https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/ocr
   ocr-clouds-preprocessor:
     profiles: [test, default]
@@ -345,6 +393,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   object-depth-calculator:
     profiles: [test, default]
@@ -354,6 +404,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   line-charts:
     profiles: [test, default]
@@ -363,6 +415,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   action-recognition:
     profiles: [test, default]
@@ -378,6 +432,8 @@ services:
           devices:
           - driver: nvidia
             capabilities: ["gpu", "utility", "compute"]
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   ocr-handler:
     profiles: [test, default]
@@ -385,6 +441,8 @@ services:
     restart: unless-stopped
     labels:
       ca.mcgill.a11y.image.handler: enable
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   osm-streets-handler:
     profiles: [test, default]
@@ -399,6 +457,8 @@ services:
         ca.mcgill.a11y.image.handler: enable
     volumes:
         - sc-store:/tmp/sc-store
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   svg-open-street-map-handler:
     profiles: [test, default]
@@ -407,6 +467,8 @@ services:
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.port: 5000
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   collage-detector-preprocessor:
     profiles: [production, test, default]
@@ -416,12 +478,16 @@ services:
         ca.mcgill.a11y.image.preprocessor: 1
         ca.mcgill.a11y.image.port: 5000
         ca.mcgill.a11y.image.cacheTimeout: 3600
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   svg-action-recognition-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-action-recognition:${REGISTRY_TAG}
     labels:
         ca.mcgill.a11y.image.handler: enable
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
  
   monarch-link-app:
     profiles: [test, default]
