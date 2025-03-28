@@ -35,7 +35,6 @@ logging.basicConfig(level=logging.DEBUG)
 @app.route('/preprocessor', methods=['POST'])
 def detect_collage():
     logging.debug("Received request")
-
     with open('./schemas/preprocessors/collage-detector.schema.json') \
             as jsonfile:
         data_schema = json.load(jsonfile)

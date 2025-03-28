@@ -22,6 +22,9 @@ import jsonschema
 import logging
 import os
 from datetime import datetime
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -81,8 +84,8 @@ def categorise():
 
     logging.debug("OLLAMA_URL " + api_url)
     if api_key.startswith("sk-"):
-        logging.debug("OLLAMA_API_KEY looks properly formatted: " +
-                      api_key[:3] + "[redacted]")
+        logging.pii("OLLAMA_API_KEY looks properly formatted: " +
+                    api_key[:3] + "[redacted]")
     else:
         logging.warn("OLLAMA_API_KEY usually starts with sk-, "
                      "but this one starts with: " + api_key[:3])
@@ -132,7 +135,7 @@ def categorise():
             ollama_error_msg = "unknown error decoding json. investigate!"
         finally:
             if ollama_error_msg is not None:
-                logging.error(ollama_error_msg)
+                logging.pii(ollama_error_msg)
                 # TODO: add back next line once IMAGE-server #912 is complete
                 # logging.debug(f"response (pii) [{graphic_category_json}]")
                 return jsonify("Invalid LLM results"), 204
