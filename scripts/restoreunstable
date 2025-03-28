@@ -70,7 +70,9 @@ git remote set-url origin "$GIT_REMOTE"
 # Even though we pull already built docker images, keep the repo up to date
 # and sync up to any config directory changes.
 git checkout main
-# `could git reset --hard` here, but should probably just error out and let user deal with it
+# reset --hard and pull to make sure that we have a clean version of what is in main
+git fetch origin
+git reset --hard origin/main
 git pull
 git submodule update --init
 
@@ -86,6 +88,14 @@ docker compose down
 
 echo "about to stop all containers on image network..."
 IMAGECONTAINERS=$(docker ps -q -f "network=image")
+if [[ ${IMAGECONTAINERS} ]]; then
+    docker stop $IMAGECONTAINERS
+    docker container rm $IMAGECONTAINERS
+fi
+
+echo "about to find all containers with \"image\" in name, e.g., monarch link app and TAT"
+# https://github.com/Shared-Reality-Lab/IMAGE-server/issues/987
+IMAGECONTAINERS=$(docker container ls -q --filter name=image)
 if [[ ${IMAGECONTAINERS} ]]; then
     docker stop $IMAGECONTAINERS
     docker container rm $IMAGECONTAINERS
