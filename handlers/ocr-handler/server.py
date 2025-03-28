@@ -68,7 +68,7 @@ def render_ocr():
         logging.error("Request validation failed")
         logging.pii(f"Validation error: {error.message}")
         return jsonify("Invalid Request JSON format"), 400
-    
+
     # Check preprocessor data
     preprocessors = content['preprocessors']
 

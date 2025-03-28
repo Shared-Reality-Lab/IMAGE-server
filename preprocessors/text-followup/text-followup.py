@@ -298,9 +298,9 @@ def followup():
                 logging.error(ollama_error_msg + " returning 204")
                 return jsonify("Invalid LLM results"), 204
     else:
-        logging.error(f"Error {response.status_code}: [response text redacted]")
+        logging.error(f"Error {response.status_code}: \
+                      [response text redacted]")
         return jsonify("Invalid response from ollama"), 204
-    
     # check if ollama returned valid json that follows schema
     try:
         validator = jsonschema.Draft7Validator(data_schema)
