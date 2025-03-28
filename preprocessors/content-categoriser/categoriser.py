@@ -101,10 +101,10 @@ def categorise():
 
     request_data = {
         "model": ollama_model,
-        "prompt": prompt + "[" + possible_categories + "]",
+        "prompt": prompt,
         "images": [graphic_b64],
         "stream": "false",
-        # TODO: figure out if "format": json, should actually work
+        "format": "json",
         "temperature": 0.0,
         "keep_alive": -1  # keep model loaded in memory indefinitely
     }
@@ -138,9 +138,9 @@ def categorise():
             ollama_error_msg = "unknown error decoding json. investigate!"
         finally:
             if ollama_error_msg is not None:
-                logging.pii(ollama_error_msg)
-                # TODO: add back next line once IMAGE-server #912 is complete
-                # logging.debug(f"response (pii) [{graphic_category_json}]")
+                logging.pii(
+                    f"{ollama_error_msg}. Raw response: \
+                    {graphic_category_json}")
                 return jsonify("Invalid LLM results"), 204
 
         # is the found category  one of the ones we require?
