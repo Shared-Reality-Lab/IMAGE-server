@@ -115,15 +115,14 @@ services:
     environment:
       - MAX_HISTORY_LENGTH=100
       - HISTORY_EXPIRY=3600
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 0
       ca.mcgill.a11y.image.route: "followup"
     env_file:
-      ./config/ollama.env
-    environment:
-      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+      ./config/ollama.env      
   
   graphic-tagger:
     profiles: [production, test, default]
