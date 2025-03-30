@@ -167,38 +167,64 @@ async function runPreprocessorsParallelGraph(data: Record<string, unknown>, prep
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
-    //let currentPriorityGroup: number | undefined = undefined;
-    //const queue: (string | number)[][] = []; //Microservice queue for preprocessors and handlers
-    const prepQueue = Array.from(R);    //queue of preprocessors 
+    const prepQueue = Array.from(R);    //queue of preprocessors and handlers that are ready to run
 
     //function that dequeues everything in the queue at once, executes them and waits for them to finish processing
+    
+    const activePromises: Set<Promise<void>> = new Set(); // Track active promises for better concurrency control
+
     const processQueue = async (): Promise<void> => {
         try {
-            await Promise.all(prepQueue.map(preprocessor => executePreprocessor(preprocessor.preprocessor, data)));
-           
-            // Copy the current queue and clear it before iterating
-            const currentBatch = [...prepQueue];
-            prepQueue.length = 0;
-            //Dequeue everything in queue and process in parallel
-            for(const preprocessor of currentBatch){
-                for(const child of preprocessor.children){
-                    child.parents.delete(preprocessor);
-                    if(child.parents.size == 0){    //if the child has no more dependencies not met 
-                        prepQueue.push(child);  
+            // This will hold the promises for the current batch of tasks
+            let promises: Promise<void>[] = [];
+            // For each preprocessor in the queue, execute it and handle its dependencies when done
+            while (prepQueue.length > 0) {
+                const service = prepQueue.shift(); // Get the next service from the queue
+
+                if(service){
+                    //check if its a preprocessor or handler
+                    if(preprocessors.some(prep => prep[0] === service.value[0])){
+                        console.log(`DEQUEUE ${service?.name}`);
+                        // Execute the preprocessor asynchronously
+                        const promise = executePreprocessor(service.value, data)
+                        .then(() => {
+                            //After each preprocessor is done, handle its children
+                            for (const child of service.children) {
+                                child.parents.delete(service);
+
+                                // If the child has no more unmet dependencies, add it to the queue
+                                if (child.parents.size === 0 && !prepQueue.includes(child)) {
+                                    console.log(`ENQUEUE ${child?.name} length: ${prepQueue.length}`);
+                                    prepQueue.push(child);  // Add the child to the queue
+
+                                }
+                            }
+                            })
+                        .catch((error) => {
+                            console.error(`Preprocessor execution failed for ${service.value}:`, error);
+                        });
+                
+                        // Add the current task's promise to the list
+                        promises.push(promise);
+                    } else {    //Else its a handler 
+                        console.log(`Handler name: ${service.value[0]}`);
                     }
                 }
+                // Wait for the current batch of tasks to finish before continuing
+                if (prepQueue.length === 0 && promises.length > 0) {
+                    // Wait for all promises in the current batch to resolve
+                    await Promise.all(promises);
+                    promises = [];
+                } 
             }
+            console.log(`DONE`);
         } catch (error) {
-            console.error(`One or more of the promises failed at priority group.`, error);
+            console.error(`Error during preprocessor execution:`, error);
         }
     };
 
-    //while theres preprocessors in the queue
-      while(prepQueue.length > 0){
-        if (prepQueue.length > 0) {
-            await processQueue(); //Process everything in the queue
-        }
-      }
+    // Start processing the queue
+    await processQueue();
       
     return data;
 }
@@ -338,6 +364,47 @@ function getRoute(data: Record<string, any>): string {
     }
 }
 
+// Separate function to handle each fetch request and its logic, including the render call
+async function handleRequestAndRender(handler: any[][], data: Record<string, unknown>) {
+    try {
+        const resp = await fetch(`http://${handler[0]}:${handler[1]}/handler`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+
+        if (!resp.ok) {
+            console.error(`${resp.status} ${resp.statusText}`);
+            const result = await resp.json();
+            throw result;
+        }
+
+        const json = await resp.json();
+        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
+            const renderers = data["renderers"];
+            const renderings = json["renderings"];
+            
+            // Filter renderings based on renderers
+            const filteredRenderings = renderings.filter((rendering) => {
+                const inList = renderers.includes(rendering["type_id"]);
+                if (!inList) {
+                    console.warn(`Excluding rendering "%s" from handler "%s".`, rendering["type_id"], handler[0]);
+                }
+                return inList;
+            });
+
+            // Call the existing render endpoint immediately with the handler's filtered renderings
+            await render(filteredRenderings, handler); // Pass the filtered renderings and handler
+        } else {
+            console.error("Handler response failed validation!");
+            throw new Error(JSON.stringify(ajv.errors));
+        }
+    } catch (err) {
+        console.error(err);
+        return [];
+    }
+}
+
 app.post("/render", (req, res) => {
     console.debug("Received request");
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
@@ -351,7 +418,7 @@ app.post("/render", (req, res) => {
 
             const graph = new Graph();
             //Construct the graph using the handlers and preprocessors 
-            const readyToRun =  await graph.constructGraph(preprocessors, []);
+            const readyToRun =  await graph.constructGraph(preprocessors, handlers);
             console.debug("Preprocessor graph produced successfully.");
             
             // Preprocessors

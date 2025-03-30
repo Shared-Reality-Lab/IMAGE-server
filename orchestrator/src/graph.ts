@@ -1,4 +1,4 @@
-import { getOptionalDependencies, getRequiredDependencies } from "./docker";
+import { getOptional, getRequired } from "./docker";
 export class Graph {
     nodes: Map<string, GraphNode>;
   
@@ -25,8 +25,8 @@ export class Graph {
       }
       
       for (const preprocessor of combinedArray) {
-        const requiredPreprocessors = await getRequiredDependencies(preprocessor[0] as string, P);
-        const optionalPreprocessors = await getOptionalDependencies(preprocessor[0] as string, P);
+        const requiredPreprocessors = await getRequired(preprocessor[0] as string, P);
+        const optionalPreprocessors = await getOptional(preprocessor[0] as string, P);
 
         if(optionalPreprocessors && requiredPreprocessors && requiredPreprocessors.every((r) => Pset.has(r[0] as string))){
           const node = this.addNode(preprocessor);
@@ -89,18 +89,18 @@ export class Graph {
 }
   
 export class GraphNode {
-    preprocessor: (string | number)[];    //preprocessor that this node represents
+    value: (string | number)[];    //preprocessor that this node represents
     parents: Set<GraphNode>;
     children: Set<GraphNode>;
     
     constructor(preprocessors: (string | number)[]) {
-      this.preprocessor = preprocessors;
+      this.value = preprocessors;
       this.parents = new Set();
       this.children = new Set();
     }
   
     get name(): string {
-      return this.preprocessor[0] as string;
+      return this.value[0] as string;
     }
 }
   
