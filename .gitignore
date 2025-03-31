@@ -16,5 +16,6 @@ config/pp_daily_test.env
 config/restoreunstable.env
 config/sendimagereq.env
 config/slack-webhook-preprocessors.env
+config/imageup.env
 *.sh
 docker-compose.override.yml
