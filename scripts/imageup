@@ -5,7 +5,11 @@
 # Also run every night via cron to make sure latest is pulled and server is in a known state.
 # Removes any docker-compose overrides and pulls images from scratch so that
 # what is running reflects what is merged into main.
+# 
+# If you don't want to delete the override file, use the following to keep it:
+#    ./imageup -k
 
+# Determine the script's directory dynamically
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
 # Determine environment based on hostname
@@ -25,7 +29,7 @@ case "$HOSTNAME" in
     ;;
 esac
 
-# Load corresponding environment file
+# Load environment variables from imageup.env
 ENV_FILE="$SCRIPT_DIR/../config/imageup.env"
 if [ -f "$ENV_FILE" ]; then
   export $(grep -v '^#' "$ENV_FILE" | xargs)
@@ -34,56 +38,90 @@ else
   exit 1
 fi
 
-set -o errexit
+delete_override=true  # default to deleting override file
 
-# Always delete override file
-rm -f "$DOCKER_DIR/docker-compose.override.yml"
+# get command line arguments
+#  https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/21128172
+while getopts 'k' flag; do
+  case "${flag}" in
+    k) delete_override='false' ;;
+  esac
+done
+
+set -o errexit # halt script if anything returns error
+if [ "$delete_override" = true ]; then
+  rm -f "$DOCKER_DIR/docker-compose.override.yml"
+else
+  echo "DANGER! Not deleting override file!"
+fi
 touch "$DOCKER_DIR/docker-compose.override.yml"
 
 cd "$IMAGE_SERVER_DIR"
 
-# Git safe directory handling
+# Check if there are any safe directories before unsetting
 if git config --global --get-all safe.directory; then
-  git config --global --unset-all safe.directory || true
+    echo "Unsetting all safe directories"
+    git config --global --unset-all safe.directory
+    echo "Exit code for unset: $?"
+else
+    echo "No safe directories to unset"
 fi
 
-git config --global --add safe.directory "$IMAGE_SERVER_DIR"
-git config --global --add safe.directory "$IMAGE_SERVER_DIR/schemas"
+# different users will be working inside the server directory, so git becomes angry. Mark it as safe to do this.
+# To prevent duplicate entries, check if the directories are already listed as "safe" before adding them.
+# https://medium.com/@thecodinganalyst/git-detect-dubious-ownership-in-repository-e7f33037a8f
+if ! git config --global --get-all safe.directory | grep -q "$IMAGE_SERVER_DIR"; then
+    git config --global --add safe.directory "$IMAGE_SERVER_DIR"
+    echo "Added $IMAGE_SERVER_DIR to safe"
+fi
 
-# Update from main branch
+if ! git config --global --get-all safe.directory | grep -q "$IMAGE_SERVER_DIR/schemas"; then
+    git config --global --add safe.directory "$IMAGE_SERVER_DIR/schemas"
+    echo "Added $IMAGE_SERVER_DIR/schemas to safe"
+fi
+
+# git remote URL -- HTTPS (instead of SSH)
 git remote set-url origin "$GIT_REMOTE"
+
+# Even though we pull already built docker images, keep the repo up to date
+# and sync up to any config directory changes.
 git checkout main
+# reset --hard and pull to make sure that we have a clean version of what is in main
 git fetch origin
 git reset --hard origin/main
 git pull
 git submodule update --init
 
-# Pull latest images using the proper compose env file
+# Pull the latest built images
 docker compose --env-file "$COMPOSE_ENV_FILE" pull
 
+# Stop everything, including any containers on the image network that
+# weren't started with docker-compose
 cd "$DOCKER_DIR"
 
-# Stop all containers managed by compose
+echo "about to docker compose down..."
 docker compose --env-file "$COMPOSE_ENV_FILE" down
 
-# Stop all containers on 'image' network that weren’t compose-launched
+echo "about to stop all containers on image network..."
 IMAGECONTAINERS=$(docker ps -q -f "network=image")
-if [[ $IMAGECONTAINERS ]]; then
-  docker stop $IMAGECONTAINERS
-  docker container rm $IMAGECONTAINERS
+if [[ ${IMAGECONTAINERS} ]]; then
+    docker stop $IMAGECONTAINERS
+    docker container rm $IMAGECONTAINERS
 fi
 
-# Stop any container with 'image' in the name (e.g., monarch-link-app, TAT)
+echo "about to find all containers with \"image\" in name, e.g., monarch link app and TAT"
+# https://github.com/Shared-Reality-Lab/IMAGE-server/issues/987
 IMAGECONTAINERS=$(docker container ls -q --filter name=image)
-if [[ $IMAGECONTAINERS ]]; then
-  docker stop $IMAGECONTAINERS
-  docker container rm $IMAGECONTAINERS
+if [[ ${IMAGECONTAINERS} ]]; then
+    docker stop $IMAGECONTAINERS
+    docker container rm $IMAGECONTAINERS
 fi
 
-# Remove the image network (if exists)
+# get rid of the image network so that if someone manually creates it, we get it back via compose
+echo "about to remove image network"
 docker network rm -f image || true
 
-# Bring everything back up using the proper compose env file
+# Bring all the containers back up
 docker compose --env-file "$COMPOSE_ENV_FILE" up -d --force-recreate
 
 cd -
