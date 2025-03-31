@@ -2,7 +2,7 @@
 
 # Resets IMAGE docker stack completely.
 # Use this to get yourself out of trouble if you're testing and mess anything up.
-# Also run every night via cron to make sure latest is pulled and server is in a known state.
+# On a test server, can run every night via cron to make sure latest is pulled and server is in a known state.
 # Removes any docker-compose overrides and pulls images from scratch so that
 # what is running reflects what is merged into main.
 # 
