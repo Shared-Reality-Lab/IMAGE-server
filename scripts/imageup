@@ -12,29 +12,25 @@
 # Determine the script's directory dynamically
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
-# Determine environment based on hostname
-HOSTNAME="$(hostname)"
-case "$HOSTNAME" in
-  unicorn)
-    ENVIRONMENT="dev"
-    COMPOSE_ENV_FILE="/var/docker/image/IMAGE-server/test.env"
-    ;;
-  pegasus)
-    ENVIRONMENT="prod"
-    COMPOSE_ENV_FILE="/var/docker/image/IMAGE-server/production.env"
-    ;;
-  *)
-    echo "Unknown host: $HOSTNAME. Aborting."
-    exit 1
-    ;;
-esac
-
 # Load environment variables from imageup.env
 ENV_FILE="$SCRIPT_DIR/../config/imageup.env"
 if [ -f "$ENV_FILE" ]; then
   export $(grep -v '^#' "$ENV_FILE" | xargs)
 else
   echo "Error: Environment file not found at $ENV_FILE" >&2
+  exit 1
+fi
+
+# Determine environment based on hostname
+HOSTNAME="$(hostname)"
+if [[ "$HOSTNAME" == "$TEST_HOSTNAME" ]]; then
+  ENVIRONMENT="test"
+  COMPOSE_ENV_FILE="/var/docker/image/IMAGE-server/test.env"
+elif [[ "$HOSTNAME" == "$PROD_HOSTNAME" ]]; then
+  ENVIRONMENT="production"
+  COMPOSE_ENV_FILE="/var/docker/image/IMAGE-server/production.env"
+else
+  echo "Unknown host: $HOSTNAME. Expected TEST_HOSTNAME=$TEST_HOSTNAME or PROD_HOSTNAME=$PROD_HOSTNAME from imageup.env"
   exit 1
 fi
 
@@ -57,15 +53,6 @@ fi
 touch "$DOCKER_DIR/docker-compose.override.yml"
 
 cd "$IMAGE_SERVER_DIR"
-
-# Check if there are any safe directories before unsetting
-if git config --global --get-all safe.directory; then
-    echo "Unsetting all safe directories"
-    git config --global --unset-all safe.directory
-    echo "Exit code for unset: $?"
-else
-    echo "No safe directories to unset"
-fi
 
 # different users will be working inside the server directory, so git becomes angry. Mark it as safe to do this.
 # To prevent duplicate entries, check if the directories are already listed as "safe" before adding them.
