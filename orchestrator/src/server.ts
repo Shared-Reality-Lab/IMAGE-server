@@ -364,47 +364,6 @@ function getRoute(data: Record<string, any>): string {
     }
 }
 
-// Separate function to handle each fetch request and its logic, including the render call
-async function handleRequestAndRender(handler: any[][], data: Record<string, unknown>) {
-    try {
-        const resp = await fetch(`http://${handler[0]}:${handler[1]}/handler`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-        });
-
-        if (!resp.ok) {
-            console.error(`${resp.status} ${resp.statusText}`);
-            const result = await resp.json();
-            throw result;
-        }
-
-        const json = await resp.json();
-        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
-            const renderers = data["renderers"];
-            const renderings = json["renderings"];
-            
-            // Filter renderings based on renderers
-            const filteredRenderings = renderings.filter((rendering) => {
-                const inList = renderers.includes(rendering["type_id"]);
-                if (!inList) {
-                    console.warn(`Excluding rendering "%s" from handler "%s".`, rendering["type_id"], handler[0]);
-                }
-                return inList;
-            });
-
-            // Call the existing render endpoint immediately with the handler's filtered renderings
-            await render(filteredRenderings, handler); // Pass the filtered renderings and handler
-        } else {
-            console.error("Handler response failed validation!");
-            throw new Error(JSON.stringify(ajv.errors));
-        }
-    } catch (err) {
-        console.error(err);
-        return [];
-    }
-}
-
 app.post("/render", (req, res) => {
     console.debug("Received request");
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
