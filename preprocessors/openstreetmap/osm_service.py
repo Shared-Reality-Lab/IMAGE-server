@@ -9,7 +9,7 @@ import logging
 import math
 import os
 import requests
-from config import defaultServer, secondaryServer1, secondaryServer2
+from osm_config import defaultServer, secondaryServer1, secondaryServer2
 from geographiclib.geodesic import Geodesic
 import traceback
 
