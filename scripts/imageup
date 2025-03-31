@@ -1,0 +1,89 @@
+#!/bin/bash -x
+
+# Resets IMAGE docker stack completely.
+# Use this to get yourself out of trouble if you're testing and mess anything up.
+# Also run every night via cron to make sure latest is pulled and server is in a known state.
+# Removes any docker-compose overrides and pulls images from scratch so that
+# what is running reflects what is merged into main.
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+
+# Determine environment based on hostname
+HOSTNAME="$(hostname)"
+case "$HOSTNAME" in
+  unicorn)
+    ENVIRONMENT="dev"
+    COMPOSE_ENV_FILE="/var/docker/image/IMAGE-server/test.env"
+    ;;
+  pegasus)
+    ENVIRONMENT="prod"
+    COMPOSE_ENV_FILE="/var/docker/image/IMAGE-server/production.env"
+    ;;
+  *)
+    echo "Unknown host: $HOSTNAME. Aborting."
+    exit 1
+    ;;
+esac
+
+# Load corresponding environment file
+ENV_FILE="$SCRIPT_DIR/../config/imageup.env"
+if [ -f "$ENV_FILE" ]; then
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+  echo "Error: Environment file not found at $ENV_FILE" >&2
+  exit 1
+fi
+
+set -o errexit
+
+# Always delete override file
+rm -f "$DOCKER_DIR/docker-compose.override.yml"
+touch "$DOCKER_DIR/docker-compose.override.yml"
+
+cd "$IMAGE_SERVER_DIR"
+
+# Git safe directory handling
+if git config --global --get-all safe.directory; then
+  git config --global --unset-all safe.directory || true
+fi
+
+git config --global --add safe.directory "$IMAGE_SERVER_DIR"
+git config --global --add safe.directory "$IMAGE_SERVER_DIR/schemas"
+
+# Update from main branch
+git remote set-url origin "$GIT_REMOTE"
+git checkout main
+git fetch origin
+git reset --hard origin/main
+git pull
+git submodule update --init
+
+# Pull latest images using the proper compose env file
+docker compose --env-file "$COMPOSE_ENV_FILE" pull
+
+cd "$DOCKER_DIR"
+
+# Stop all containers managed by compose
+docker compose --env-file "$COMPOSE_ENV_FILE" down
+
+# Stop all containers on 'image' network that weren’t compose-launched
+IMAGECONTAINERS=$(docker ps -q -f "network=image")
+if [[ $IMAGECONTAINERS ]]; then
+  docker stop $IMAGECONTAINERS
+  docker container rm $IMAGECONTAINERS
+fi
+
+# Stop any container with 'image' in the name (e.g., monarch-link-app, TAT)
+IMAGECONTAINERS=$(docker container ls -q --filter name=image)
+if [[ $IMAGECONTAINERS ]]; then
+  docker stop $IMAGECONTAINERS
+  docker container rm $IMAGECONTAINERS
+fi
+
+# Remove the image network (if exists)
+docker network rm -f image || true
+
+# Bring everything back up using the proper compose env file
+docker compose --env-file "$COMPOSE_ENV_FILE" up -d --force-recreate
+
+cd -
