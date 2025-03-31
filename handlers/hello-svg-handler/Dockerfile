@@ -5,7 +5,6 @@ RUN apt-get install libcairo2 curl
 RUN adduser --disabled-password python
 WORKDIR /usr/src/app
 ENV PATH="/home/python/.local/bin:${PATH}"
-ENV PYTHONPATH=/usr/src/app
 
 RUN pip install --upgrade pip
 COPY /handlers/hello-svg-handler/requirements.txt /usr/src/app/requirements.txt
