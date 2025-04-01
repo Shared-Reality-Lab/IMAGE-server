@@ -30,6 +30,7 @@ import responseSchemaJSON from "./schemas/response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 import { docker, getPreprocessorServices, getHandlerServices, DEFAULT_ROUTE_NAME } from "./docker";
 import { ServerCache } from "./server-cache";
+import { Graph, GraphNode, printGraph } from "./graph";
 
 const app = express();
 const serverCache = new ServerCache();
@@ -162,44 +163,68 @@ async function executePreprocessor(preprocessor: (string | number)[], data: Reco
     });
 }
 
-async function runPreprocessorsParallel(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
+async function runPreprocessorsParallelGraph(data: Record<string, unknown>, preprocessors: (string | number)[][], G: Graph, R: Set<GraphNode>): Promise<Record<string, unknown>> {
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
-    let currentPriorityGroup: number | undefined = undefined;
-    const queue: (string | number)[][] = []; //Microservice queue for preprocessors and handlers
+    const prepQueue = Array.from(R);  //Queue of preprocessors and handlers that are ready to run
 
-
-    //function that dequeues everything in the queue at once, executes them and waits for them to finish processing
+    //Function that processes the queue of preprocessors
     const processQueue = async (): Promise<void> => {
         try {
-            await Promise.all(queue.map(preprocessor => executePreprocessor(preprocessor, data)));
+            const promises: Promise<void>[] = []; // Local promises array
+
+            while (prepQueue.length > 0) {
+                const service = prepQueue.shift(); // Get the next task from the queue
+
+                if (service) {
+                    // Check if it's a preprocessor or handler
+                    if (preprocessors.some(prep => prep[0] === service.value[0])) {
+                
+                        // Execute the preprocessor asynchronously
+                        const promise = executePreprocessor(service.value, data)
+                            .then(() => {
+                                // After each preprocessor is done, handle its children
+                                for (const child of service.children) {
+                                    child.parents.delete(service);
+
+                                    //If the child has no more unmet dependencies, add it to the queue
+                                    if (child.parents.size === 0 && !prepQueue.includes(child)) {
+                                        prepQueue.push(child);  // Add the child to the queue
+                                    }
+                                }
+                            })
+                            .catch((error) => {
+                                console.error(`Preprocessor execution failed for ${service.value}:`, error);
+                            });
+
+                        // Add the current task's promise to the list
+                        promises.push(promise);
+                    } else {
+                        console.log(`Handler name: ${service.value[0]}`);
+                    }
+                }
+            }
+
+            //Wait for all promises in the current batch to resolve
+            if (promises.length > 0) {
+                await Promise.all(promises); //Ensure all tasks in the batch resolve before moving on
+            }
+
+            // After promises resolve, clear the promises array to prepare for the next batch
+            promises.length = 0; // Clear the array for the next batch
         } catch (error) {
-            console.error(`One or more of the promises failed at priority group ${currentPriorityGroup}.`, error);
-        }
-        finally {   //empty the queue 
-            queue.length = 0;
+            console.error(`Error during preprocessor execution:`, error);
         }
     };
 
-    for (const preprocessor of preprocessors) {
-        //If the priority group changes, process the queue and move to the next group
-        if (preprocessor[2] !== currentPriorityGroup) {
-            if (queue.length > 0) {
-                await processQueue(); //Process everything in the queue
-            }
-            currentPriorityGroup = Number(preprocessor[2]);
-            console.debug(`Now on priority group ${currentPriorityGroup}`);
-        }
-
-        //Add the preprocessor to the queue
-        queue.push(preprocessor);
+    //start processing the queue and continue until all preprocessors are processed
+    while (prepQueue.length > 0) {
+        //continue processing until there are no tasks left to process
+        await processQueue(); //process everything in the queue
     }
 
-    //Process any remaining items in the queue
-    if (queue.length > 0) {
-        await processQueue();
-    }
+    console.log(`DONE`);
 
     return data;
 }
@@ -288,7 +313,47 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
     }
     return data;
 }
+async function runPreprocessorsParallel(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
+    if (data["preprocessors"] === undefined) {
+        data["preprocessors"] = {};
+    }
+    let currentPriorityGroup: number | undefined = undefined;
+    const queue: (string | number)[][] = []; //Microservice queue for preprocessors and handlers
 
+
+    //function that dequeues everything in the queue at once, executes them and waits for them to finish processing
+    const processQueue = async (): Promise<void> => {
+        try {
+            await Promise.all(queue.map(preprocessor => executePreprocessor(preprocessor, data)));
+        } catch (error) {
+            console.error(`One or more of the promises failed at priority group ${currentPriorityGroup}.`, error);
+        }
+        finally {   //empty the queue 
+            queue.length = 0;
+        }
+    };
+
+    for (const preprocessor of preprocessors) {
+        //If the priority group changes, process the queue and move to the next group
+        if (preprocessor[2] !== currentPriorityGroup) {
+            if (queue.length > 0) {
+                await processQueue(); //Process everything in the queue
+            }
+            currentPriorityGroup = Number(preprocessor[2]);
+            console.debug(`Now on priority group ${currentPriorityGroup}`);
+        }
+
+        //Add the preprocessor to the queue
+        queue.push(preprocessor);
+    }
+
+    //Process any remaining items in the queue
+    if (queue.length > 0) {
+        await processQueue();
+    }
+
+    return data;
+}
 function getRoute(data: Record<string, any>): string {
     if (data["route"] === undefined) {
         console.debug("No route defined in request. Setting default value.");
@@ -310,10 +375,23 @@ app.post("/render", (req, res) => {
             const preprocessors = getPreprocessorServices(containers, route);
             const handlers = getHandlerServices(containers, route);
 
+            const graph = new Graph();
+            //Construct the graph using the handlers and preprocessors 
+            const readyToRun =  await graph.constructGraph(preprocessors, []);
+            console.debug("Preprocessor graph produced successfully.");
+            
             // Preprocessors
             if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
                 console.debug("Running preprocessors in parallel...");
-                data = await runPreprocessorsParallel(data, preprocessors);
+                if(graph.isAcyclic()){
+                    console.debug("Dependency graph passes cycle check.");
+                    data = await runPreprocessorsParallelGraph(data, preprocessors,graph,readyToRun);
+                } else {
+                    console.debug("Dependency graph passes failed check. Please ensure that the preprocesors don't have cyclic dependencies.");
+                    console.debug("Using priority level execution...");
+                    data = await runPreprocessorsParallel(data, preprocessors);
+                }
+
             } else {
                 console.debug("Running preprocessors in series...");
                 data = await runPreprocessors(data, preprocessors);
@@ -413,6 +491,7 @@ app.post("/render/preprocess", (req, res) => {
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
             const preprocessors = getPreprocessorServices(containers, route);
+            
             if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
                 console.debug("Running preprocessors in parallel...");
                 return runPreprocessorsParallel(data, preprocessors);
@@ -485,3 +564,5 @@ app.get('/health', (req, res) => {
 app.listen(port, () => {
     console.log(`Started server on port ${port}`);
 });
+
+
