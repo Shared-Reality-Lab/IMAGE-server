@@ -167,65 +167,65 @@ async function runPreprocessorsParallelGraph(data: Record<string, unknown>, prep
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
-    const prepQueue = Array.from(R);    //queue of preprocessors and handlers that are ready to run
+    const prepQueue = Array.from(R);  //Queue of preprocessors and handlers that are ready to run
 
-    //function that dequeues everything in the queue at once, executes them and waits for them to finish processing
-    
-    const activePromises: Set<Promise<void>> = new Set(); // Track active promises for better concurrency control
-
+    //Function that processes the queue of preprocessors
     const processQueue = async (): Promise<void> => {
         try {
-            // This will hold the promises for the current batch of tasks
-            let promises: Promise<void>[] = [];
-            // For each preprocessor in the queue, execute it and handle its dependencies when done
-            while (prepQueue.length > 0) {
-                const service = prepQueue.shift(); // Get the next service from the queue
+            const promises: Promise<void>[] = []; // Local promises array
 
-                if(service){
-                    //check if its a preprocessor or handler
-                    if(preprocessors.some(prep => prep[0] === service.value[0])){
-                        console.log(`DEQUEUE ${service?.name}`);
+            while (prepQueue.length > 0) {
+                const service = prepQueue.shift(); // Get the next task from the queue
+
+                if (service) {
+                    // Check if it's a preprocessor or handler
+                    if (preprocessors.some(prep => prep[0] === service.value[0])) {
+                
                         // Execute the preprocessor asynchronously
                         const promise = executePreprocessor(service.value, data)
-                        .then(() => {
-                            //After each preprocessor is done, handle its children
-                            for (const child of service.children) {
-                                child.parents.delete(service);
+                            .then(() => {
+                                // After each preprocessor is done, handle its children
+                                for (const child of service.children) {
+                                    child.parents.delete(service);
 
-                                // If the child has no more unmet dependencies, add it to the queue
-                                if (child.parents.size === 0 && !prepQueue.includes(child)) {
-                                    console.log(`ENQUEUE ${child?.name} length: ${prepQueue.length}`);
-                                    prepQueue.push(child);  // Add the child to the queue
-
+                                    //If the child has no more unmet dependencies, add it to the queue
+                                    if (child.parents.size === 0 && !prepQueue.includes(child)) {
+                                        prepQueue.push(child);  // Add the child to the queue
+                                    }
                                 }
-                            }
                             })
-                        .catch((error) => {
-                            console.error(`Preprocessor execution failed for ${service.value}:`, error);
-                        });
-                
+                            .catch((error) => {
+                                console.error(`Preprocessor execution failed for ${service.value}:`, error);
+                            });
+
                         // Add the current task's promise to the list
                         promises.push(promise);
-                    } else {    //Else its a handler 
+                    } else {
                         console.log(`Handler name: ${service.value[0]}`);
                     }
                 }
-                // Wait for the current batch of tasks to finish before continuing
-                if (prepQueue.length === 0 && promises.length > 0) {
-                    // Wait for all promises in the current batch to resolve
-                    await Promise.all(promises);
-                    promises = [];
-                } 
             }
-            console.log(`DONE`);
+
+            //Wait for all promises in the current batch to resolve
+            if (promises.length > 0) {
+                await Promise.all(promises); //Ensure all tasks in the batch resolve before moving on
+            }
+
+            // After promises resolve, clear the promises array to prepare for the next batch
+            promises.length = 0; // Clear the array for the next batch
         } catch (error) {
             console.error(`Error during preprocessor execution:`, error);
         }
     };
 
-    // Start processing the queue
-    await processQueue();
-      
+    //start processing the queue and continue until all preprocessors are processed
+    while (prepQueue.length > 0) {
+        //continue processing until there are no tasks left to process
+        await processQueue(); //process everything in the queue
+    }
+
+    console.log(`DONE`);
+
     return data;
 }
 
@@ -377,7 +377,7 @@ app.post("/render", (req, res) => {
 
             const graph = new Graph();
             //Construct the graph using the handlers and preprocessors 
-            const readyToRun =  await graph.constructGraph(preprocessors, handlers);
+            const readyToRun =  await graph.constructGraph(preprocessors, []);
             console.debug("Preprocessor graph produced successfully.");
             
             // Preprocessors
