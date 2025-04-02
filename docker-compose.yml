@@ -139,7 +139,7 @@ services:
   
   object-detection:
     profiles: [production, default, test]
-    image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:${REGISTRY_TAG}
+    image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-yolo:${REGISTRY_TAG}
     restart: unless-stopped
     labels:
       ca.mcgill.a11y.image.preprocessor: 3

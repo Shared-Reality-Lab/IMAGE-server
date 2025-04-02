@@ -9,7 +9,7 @@ RUN apt-get update && \
     wget curl && \
     rm -rf /var/lib/apt/lists/*
 
-COPY /preprocessors/yolov8/requirements.txt /usr/src/app/requirements.txt
+COPY /preprocessors/yolo/requirements.txt /usr/src/app/requirements.txt
 RUN pip3 install --upgrade pip && \
     pip3 install -r /usr/src/app/requirements.txt
 
@@ -22,7 +22,7 @@ RUN mkdir -p /usr/src/app/models
 # Download YOLOv11 model
 RUN wget -O /usr/src/app/models/yolo11x.pt https://image.a11y.mcgill.ca/models/objectDetectionWeights/yolo11x.pt
 
-COPY /preprocessors/yolov8 /usr/src/app 
+COPY /preprocessors/yolo /usr/src/app 
 
 EXPOSE 5000
 
