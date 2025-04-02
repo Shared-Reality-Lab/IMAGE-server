@@ -16,11 +16,6 @@ RUN pip3 install --upgrade pip && \
 COPY /schemas /usr/src/app/schemas
 COPY /config /usr/src/app/config
 
-# Set environment variable for model path
-ENV YOLO_MODEL_PATH=/usr/src/app/models/yolo11x.pt
-ENV CONF_THRESHOLD=0.75
-ENV MAX_IMAGE_SIZE=640
-
 # Create model directory
 RUN mkdir -p /usr/src/app/models
 
