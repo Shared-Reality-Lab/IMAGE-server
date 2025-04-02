@@ -1,4 +1,4 @@
-FROM ultralytics/ultralytics:latest@sha256:3d52e286bc345343b1a7a66dd38c44bb412bf418eb97d14298b8d8deb077f2e4
+FROM ultralytics/ultralytics@sha256:3d52e286bc345343b1a7a66dd38c44bb412bf418eb97d14298b8d8deb077f2e4
 
 WORKDIR /usr/src/app
 RUN adduser --disabled-password python 
