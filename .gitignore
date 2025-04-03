@@ -13,7 +13,6 @@ config/image_daily_cron.env
 config/imagelogs.env
 config/make_request.env
 config/pp_daily_test.env
-config/restoreunstable.env
 config/sendimagereq.env
 config/slack-webhook-preprocessors.env
 config/imageup.env
