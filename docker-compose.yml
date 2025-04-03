@@ -30,8 +30,6 @@ services:
     restart: unless-stopped
     environment:
       - TORCH_DEVICE=cuda
-    ports:
-      - "8001:80"
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
