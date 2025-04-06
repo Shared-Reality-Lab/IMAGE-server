@@ -6,10 +6,15 @@ export class Graph {
       this.nodes = new Map();
     }
   
-    addNode(preprocessors: (string | number)[]): GraphNode {
-      const name = preprocessors[0] as string; 
+    addNode(service : (string | number)[], isPreprocessor: boolean): GraphNode {
+      const name = service[0] as string; 
       if (!this.nodes.has(name)) {
-        const newNode = new GraphNode(preprocessors);
+        const newNode = new GraphNode(service);
+        if(isPreprocessor){
+          newNode.type = "P"; //type P corresponds to preprocessor services
+        } else {
+          newNode.type = "H"; //type H corresponds to preprocessor services
+        }
         this.nodes.set(name, newNode);
       }
       return this.nodes.get(name)!;
@@ -24,25 +29,31 @@ export class Graph {
         Pset.add(preprocessor[0] as string);
       }
       
-      for (const preprocessor of combinedArray) {
-        const requiredPreprocessors = await getRequired(preprocessor[0] as string, P);
-        const optionalPreprocessors = await getOptional(preprocessor[0] as string, P);
+      for (const service of combinedArray) {
+        const requiredServices = await getRequired(service[0] as string, P);
+        let optionalPreprocessors = [] as (string | number)[][];
+        //Only get the optional preprocessors if its a preprocessor
+        if(P.some(p => p[0] == service[0])){
+          optionalPreprocessors = await getOptional(service[0] as string, P);
+        } 
+        
 
-        if(optionalPreprocessors && requiredPreprocessors && requiredPreprocessors.every((r) => Pset.has(r[0] as string))){
-          const node = this.addNode(preprocessor);
+        if(optionalPreprocessors && requiredServices && requiredServices.every((r) => Pset.has(r[0] as string))){
+          const node = this.addNode(service, P.some(p => p[0] == service[0]));
           const tmp = optionalPreprocessors.filter((o) => Array.isArray(o) && Pset.has(o[0] as string));
 
-          if (requiredPreprocessors.length === 0 && tmp.length === 0) {
+          if (requiredServices.length === 0 && tmp.length === 0) {
             R.add(node);
           } else {
-            for(const reqPrep of requiredPreprocessors){
-              const nodePrime = this.addNode(reqPrep);
+            for(const reqPrep of requiredServices){
+              //pass the preprocessor & true if its a preprocessor by checking if its a part of the preprocessors array 
+              const nodePrime = this.addNode(reqPrep, P.some(p => p[0] == reqPrep[0])); 
               node.parents.add(nodePrime);
               nodePrime.children.add(node);
             }
 
             for(const optPrep of optionalPreprocessors){
-              const nodePrime = this.addNode(optPrep);
+              const nodePrime = this.addNode(optPrep, P.some(p => p[0] == optPrep[0]));
               node.parents.add(nodePrime);
               nodePrime.children.add(node);
             }
@@ -92,11 +103,13 @@ export class GraphNode {
     value: (string | number)[];    //preprocessor that this node represents
     parents: Set<GraphNode>;
     children: Set<GraphNode>;
-    
+    type: string;
+
     constructor(preprocessors: (string | number)[]) {
       this.value = preprocessors;
       this.parents = new Set();
       this.children = new Set();
+      this.type = "";
     }
   
     get name(): string {
