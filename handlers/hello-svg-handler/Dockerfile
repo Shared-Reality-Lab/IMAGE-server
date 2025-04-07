@@ -11,6 +11,7 @@ COPY /handlers/hello-svg-handler/requirements.txt /usr/src/app/requirements.txt
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
+COPY /config /usr/src/app/config
 COPY /handlers/hello-svg-handler/ /usr/src/app
 
 EXPOSE 80

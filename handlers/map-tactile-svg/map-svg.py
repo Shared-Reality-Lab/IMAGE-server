@@ -22,6 +22,10 @@ import logging
 import time
 import drawSvg as draw
 from datetime import datetime
+import math
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -29,16 +33,22 @@ logging.basicConfig(level=logging.DEBUG)
 
 @app.route("/handler", methods=["POST"])
 def handle():
-    logging.debug("Received request")
-    # Load necessary schema files
-    with open("./schemas/definitions.json") as f:
-        definitions_schema = json.load(f)
-    with open("./schemas/request.schema.json") as f:
-        request_schema = json.load(f)
-    with open("./schemas/handler-response.schema.json") as f:
-        response_schema = json.load(f)
-    with open("./schemas/renderers/tactilesvg.schema.json") as f:
-        renderer_schema = json.load(f)
+    try:
+        logging.debug("Received request")
+        # Load necessary schema files
+        with open("./schemas/definitions.json") as f:
+            definitions_schema = json.load(f)
+        with open("./schemas/request.schema.json") as f:
+            request_schema = json.load(f)
+        with open("./schemas/handler-response.schema.json") as f:
+            response_schema = json.load(f)
+        with open("./schemas/renderers/tactilesvg.schema.json") as f:
+            renderer_schema = json.load(f)
+    except Exception as e:
+        logging.error("Error loading schema files")
+        logging.pii(f"Schema loading error: {e}")
+        return jsonify("Schema files could not be loaded"), 500
+
     store = {
         definitions_schema["$id"]: definitions_schema,
         request_schema["$id"]: request_schema,
@@ -56,7 +66,8 @@ def handle():
         )
         validator.validate(contents)
     except ValidationError as e:
-        logging.error(e)
+        logging.error("Validation error occurred")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("None"), 204
 
     preprocessor = contents["preprocessors"]
@@ -74,7 +85,8 @@ def handle():
                 response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
+            logging.error("Response validation failed")
+            logging.pii(f"Validation error: {error.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Missing " +
                       "'ca.mcgill.a11y.image.renderer.TactileSVG'." +
@@ -95,7 +107,8 @@ def handle():
                 response_schema, resolver=resolver)
             validator.validate(response)
         except jsonschema.exceptions.ValidationError as error:
-            logging.error(error)
+            logging.error("Response validation failed")
+            logging.pii(f"Validation error: {error.message}")
             return jsonify("Invalid Preprocessor JSON format"), 500
         logging.debug("Missing " +
                       "'ca.mcgill.a11y.image.preprocessor.openstreetmap'." +
@@ -103,22 +116,25 @@ def handle():
         return response
 
     dimensions = 700, 700
+    data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
+    lat = data["bounds"]["latitude"]
+    lon = data["bounds"]["longitude"]
+    coords = getMidpoint(contents)
 
     renderingDescription = ("Tactile rendering of map centered at latitude " +
-                            str(contents["coordinates"]["latitude"]) +
+                            str(coords["latitude"]) +
                             " and longitude " +
-                            str(contents["coordinates"]["longitude"]))
+                            str(coords["longitude"]))
     caption = ("Map centered at latitude " +
-               str(contents["coordinates"]["latitude"]) +
+               str(coords["latitude"]) +
                " and longitude " +
-               str(contents["coordinates"]["longitude"]))
+               str(coords["longitude"]))
     # List of minor street types ('footway', 'crossing' and 'steps')
     # to be filtered out to simplify the resulting rendering
     remove_streets = ["footway", "crossing", "steps", "elevator"]
     svg = draw.Drawing(dimensions[0], dimensions[1],
                        origin=(0, -dimensions[1]))
 
-    data = preprocessor["ca.mcgill.a11y.image.preprocessor.openstreetmap"]
     if "streets" in data:
         streets = data["streets"]
         lat = data["bounds"]["latitude"]
@@ -268,13 +284,13 @@ def handle():
                 + targetTag
             caption = "Map centered at " + targetTag
         except KeyError as e:
-            logging.debug("Missing key " + str(e)
-                          + " in nominatim preprocessor")
+            logging.debug("Missing required key in nominatim preprocessor")
+            logging.pii(f"KeyError: {e}")
             logging.debug("Reverse geocode data not added to response")
         except (TypeError, ValueError) as e:
-            logging.debug("Did not obtain expected value as "
-                          "POI name in nominatim")
-            logging.debug(str(e))
+            logging.debug(
+                "Invalid value encountered in nominatim preprocessor")
+            logging.pii(f"Validation error: {e}")
             logging.debug("Reverse geocode data not added to response")
 
     # Drawing in the nodes of category
@@ -313,8 +329,8 @@ def handle():
         )
         validator.validate(data)
     except ValidationError as e:
-        logging.error(e)
         logging.error("Failed to validate the response renderer!")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Failed to validate the response renderer"), 500
     response = {
         "request_uuid": contents["request_uuid"],
@@ -328,7 +344,7 @@ def handle():
         validator.validate(response)
     except ValidationError as e:
         logging.error("Failed to generate a valid response")
-        logging.error(e)
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Failed to generate a valid response"), 500
     logging.debug("Sending response")
     return response
@@ -426,14 +442,12 @@ def getNodeCategoryData(POI):
     category = POI["cat"]
     match category:
         case "crossing":
-            if POI["crossing"] == "marked":
-                tag += "Marked crossing, "
-            elif POI["crossing"] == "unmarked":
-                tag += "Unmarked crossing, "
-            elif POI["crossing"] == "traffic_signals":
-                tag += "Crossing with traffic signal, "
-            else:
-                tag += "Crossing, "
+            crossing_types = {
+                "marked": "Marked crossing, ",
+                "unmarked": "Unmarked crossing, ",
+                "traffic_signals": "Crossing with traffic signal, "
+            }
+            tag += crossing_types.get(POI.get("crossing"), "Crossing, ")
         case "traffic_signals":
             tag += "Traffic lights present, "
         case _:
@@ -477,6 +491,43 @@ def health():
         "status": "healthy",
         "timestamp": datetime.now().isoformat()
     }), 200
+
+
+def getMidpoint(contents):
+    if "coordinates" in contents:
+        logging.debug("Coordinates found in request")
+        return {"latitude": contents["coordinates"]["latitude"],
+                "longitude": contents["coordinates"]["longitude"]}
+
+    logging.debug("Coordinates not found in request. "
+                  "Calculating midpoint from bounds.")
+    data = contents["preprocessors"][
+        "ca.mcgill.a11y.image.preprocessor.openstreetmap"]
+    lat = data["bounds"]["latitude"]
+    lon = data["bounds"]["longitude"]
+
+    # Convert degrees to radians
+    lat1, lon1, lat2, lon2 = map(math.radians,
+                                 [lat["min"], lon["min"],
+                                  lat["max"], lon["max"]])
+
+    # Convert to Cartesian coordinates
+    x1, y1, z1 = (math.cos(lat1) * math.cos(lon1),
+                  math.cos(lat1) * math.sin(lon1), math.sin(lat1))
+    x2, y2, z2 = (math.cos(lat2) * math.cos(lon2),
+                  math.cos(lat2) * math.sin(lon2), math.sin(lat2))
+
+    # Compute the midpoint in Cartesian coordinates
+    x_m, y_m, z_m = (x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2
+
+    # Convert back to latitude and longitude
+    lon_m = math.atan2(y_m, x_m)
+    hyp = math.sqrt(x_m**2 + y_m**2)
+    lat_m = math.atan2(z_m, hyp)
+
+    # Convert radians back to degrees
+    return {"latitude": round(math.degrees(lat_m), 6),
+            "longitude": round(math.degrees(lon_m), 6)}
 
 
 if __name__ == "__main__":

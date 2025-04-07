@@ -18,6 +18,7 @@ import Ajv from "ajv";
 import express from "express";
 import fs from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
+import { piiLogger } from "./config/logging_utils";
 
 import * as utils from "./utils";
 
@@ -49,6 +50,7 @@ app.post("/handler", async (req, res) => {
     // Validate the request data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
+        piiLogger.pii(`Schema validation failed: ${JSON.stringify(ajv.errors)}`);
         res.status(400).json(ajv.errors);
         return;
     }
@@ -133,9 +135,6 @@ app.post("/handler", async (req, res) => {
         }
     }
 
-    // Generate rendering title
-    const renderingTitle = utils.renderingTitle(semseg, objDet, objGroup);
-
     // Handle language if targetLanguage is not English
     if (targetLanguage != "en") {
         console.debug(`Translating ttsData values to ${targetLanguage}"`);
@@ -151,6 +150,7 @@ app.post("/handler", async (req, res) => {
             }
         } catch (err) {
             console.error(`Failed to translate ttsData to ${targetLanguage}!`);
+            piiLogger.pii(`Translation error: ${(err as Error).message}`);
         }
     }
 
@@ -160,14 +160,14 @@ app.post("/handler", async (req, res) => {
         const textString = ttsData.map(x => x["value"]).join(" ");
         const rendering = {
             "type_id": "ca.mcgill.a11y.image.renderer.Text",
-            "description": renderingTitle + " (text only)",
+            "description": "Text description",
             "data": { "text": textString }
         };
         if (ajv.validate("https://image.a11y.mcgill.ca/renderers/text.schema.json", rendering["data"])) {
             renderings.push(rendering);
         } else {
             console.error("Failed to generate a valid text rendering!");
-            console.error(ajv.errors);
+            piiLogger.pii(`Text rendering validation error: ${JSON.stringify(ajv.errors)}`);
             console.warn("Trying to continue...");
         }
     } else {
@@ -234,7 +234,7 @@ app.post("/handler", async (req, res) => {
                     console.debug("Constructing segment audio rendering")
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.SegmentAudio",
-                        "description": renderingTitle,
+                        "description": "Rich audio description",
                         "data": {
                             "audioFile": dataURL,
                             "audioInfo": segArray
@@ -246,14 +246,14 @@ app.post("/handler", async (req, res) => {
                     if (ajv.validate("https://image.a11y.mcgill.ca/renderers/segmentaudio.schema.json", rendering["data"])) {
                         renderings.push(rendering);
                     } else {
-                        console.error(ajv.errors);
+                        piiLogger.pii(`SegmentAudio validation error: ${JSON.stringify(ajv.errors)}`);
                     }
                 }
                 else if (hasSimple) {
                     console.debug("Constructing simple audio rendering")
                     const rendering = {
                         "type_id": "ca.mcgill.a11y.image.renderer.SimpleAudio",
-                        "description": renderingTitle,
+                        "description": "Rich audio description",
                         "data": {
                             "audio": dataURL
                         },
@@ -264,7 +264,9 @@ app.post("/handler", async (req, res) => {
                     if (ajv.validate("https://image.a11y.mcgill.ca/renderers/simpleaudio.schema.json", rendering["data"])) {
                         renderings.push(rendering);
                     } else {
-                        console.error(ajv.errors);
+                        console.error("Simple Audio validation failed.");
+                        piiLogger.pii(`Simple Audio validation error: ${JSON.stringify(ajv.errors)}`);
+
                     }
                 }
             }).finally(() => {
@@ -281,27 +283,27 @@ app.post("/handler", async (req, res) => {
             });
         } catch(e) {
             console.error("Failed to generate audio!");
-            console.error(e);
+            piiLogger.pii(`TTS generation error: ${(e as Error).message}`);
         }
     }
 
     // Translate renderings' description before sending response
-	if (targetLanguage !== "en") {
-		try {
-			console.debug("Translating renderings description to " + targetLanguage);
-			const translatedDesc = await utils.getTranslationSegments(
+    if (targetLanguage !== "en") {
+        try {
+            console.debug("Translating renderings description to " + targetLanguage);
+            const translatedDesc = await utils.getTranslationSegments(
                             renderings.map(x => x["description"]),
                             targetLanguage
                         );
 
-			for (let i = 0; i < renderings.length; i++) {
-				renderings[i]["description"] = translatedDesc[i];
-			}
-		} catch(e) {
-			console.error("Failed to translate rendering descriptions to " + targetLanguage);
-			console.error(e);
-		}
-	}
+            for (let i = 0; i < renderings.length; i++) {
+                renderings[i]["description"] = translatedDesc[i];
+            }
+        } catch(e) {
+            console.error("Failed to translate rendering descriptions to " + targetLanguage);
+            piiLogger.pii(`Error: ${(e as Error).message}`);
+        }
+    }
     // Send response
 
     const response = utils.generateEmptyResponse(req.body["request_uuid"]);
@@ -311,7 +313,7 @@ app.post("/handler", async (req, res) => {
         res.json(response);
     } else {
         console.error("Failed to generate a valid response.");
-        console.error(ajv.errors);
+        piiLogger.pii(`Response validation error: ${JSON.stringify(ajv.errors)}`);
         res.status(500).json(ajv.errors);
     }
 });

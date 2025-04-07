@@ -85,7 +85,7 @@ This docker group ID changes from system to system and needs to be checked manua
 
 IMAGE uses Memcached as in-memory data store. Cache is implemented using [MemJS](https://www.npmjs.com/package/memjs). Following is the confugration to enable Cache for preprocessors:
 
-- Cache size is configured in the docker-compose in the commad attribute under memcached service `command: -m 4096` implies cache size of 4GB.
+- Cache size and max item size is configured in the docker-compose in the command attribute under memcached service `command: -m 4096 -I 5m` implies cache size of 4GB and maximum item size of 5MB.
 
 - Cache timeout is configured at the preprocessor level, with the label `ca.mcgill.a11y.image.cacheTimeout` . Label value is the timeout value in seconds. Timeout value of 0 indicates that Cache is disabled for a preprocessor. Missing `ca.mcgill.a11y.image.cacheTimeout` label on the preprocessor will default to timeout value of 0.
 

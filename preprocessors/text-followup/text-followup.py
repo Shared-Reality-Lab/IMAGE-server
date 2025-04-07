@@ -22,12 +22,48 @@ import jsonschema
 import logging
 import os
 from datetime import datetime
+from config.logging_utils import configure_logging
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG)
+
+configure_logging()
+
+# Dictionary to store conversation history by request_uuid
+# Maintains conversation context between requests
+conversation_history = {}
+
+# Configuration for history management
+# Max messages to keep (including user and model messages)
+MAX_HISTORY_LENGTH = int(os.getenv('MAX_HISTORY_LENGTH', '100'))
+# History expiry in seconds after the last message
+HISTORY_EXPIRY = int(os.getenv('HISTORY_EXPIRY', '3600'))
 
 
-@app.route("/preprocessor", methods=['POST', ])
+# Function to clean up old conversation histories
+@app.route("/cleanup", methods=["GET"])
+def cleanup_old_histories():
+    """
+    Remove conversation histories that are older than HISTORY_EXPIRY seconds
+    """
+    current_time = time.time()
+    uuids_to_remove = []
+
+    for uuid, history in conversation_history.items():
+        if current_time - history.get('last_updated', 0) > HISTORY_EXPIRY:
+            uuids_to_remove.append(uuid)
+
+    for uuid in uuids_to_remove:
+        del conversation_history[uuid]
+
+    if uuids_to_remove:
+        logging.debug(
+            f"Cleaned up {len(uuids_to_remove)} old conversation histories"
+        )
+
+    return {"status": "success", "removed": len(uuids_to_remove)}, 200
+
+
+@app.route("/preprocessor", methods=['POST'])
 def followup():
     logging.debug("Received request")
 
@@ -55,7 +91,8 @@ def followup():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {e.message} | Data: {content}")
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     # check we received a graphic (e.g., not a map or chart request)
@@ -67,13 +104,25 @@ def followup():
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.text-followup"
 
-    # debugging this preprocessor is really difficult without seeing what
-    # ollama is returning, but this can contain PII. Until we have a safe
-    # way of logging PII, using manually set LOG_PII env variable
-    # to say whether or not we should go ahead and log potential PII
-    log_pii = os.getenv('LOG_PII', "false").lower() == "true"
-    if log_pii:
-        logging.warning("LOG_PII is True: potential PII will be logged!")
+    # Clean up history based on defined expiry time
+    cleanup_old_histories()
+
+    # History status log
+    conversation_count = len(conversation_history)
+    logging.debug(
+        f"Current history status: {conversation_count} conversations stored"
+    )
+
+    # Check if this uuid exists in history
+    uuid_exists = request_uuid in conversation_history
+    logging.debug(
+        f"Request UUID {request_uuid} exists in history: {uuid_exists}"
+    )
+    if uuid_exists:
+        msg_count = len(conversation_history[request_uuid]["messages"])
+        logging.debug(
+            f"Current history length for {request_uuid}: {msg_count}"
+            )
 
     # convert the uri to processable image
     # source.split code referred from
@@ -113,33 +162,89 @@ def followup():
     # override with prompt from environment variable only if it exists
     general_prompt = os.getenv('TEXT_FOLLOWUP_PROMPT_OVERRIDE', general_prompt)
     user_prompt = content["followup"]["query"]
-    prompt = general_prompt + ' ' + user_prompt
-    if log_pii:
-        logging.debug("user followup prompt: " + prompt)
-    else:
-        logging.debug("user followup prompt: {general_prompt} [redacted]")
 
     # prepare ollama request
-    api_url = os.environ['OLLAMA_URL']
+    api_url = f"{os.environ['OLLAMA_URL']}/chat"
     api_key = os.environ['OLLAMA_API_KEY']
     ollama_model = os.environ['OLLAMA_MODEL']
 
     logging.debug("OLLAMA_URL " + api_url)
     if api_key.startswith("sk-"):
-        logging.debug("OLLAMA_API_KEY looks properly formatted: " +
-                      "sk-[redacted]")
+        logging.pii("OLLAMA_API_KEY looks properly formatted: sk-[redacted]")
     else:
         logging.warning("OLLAMA_API_KEY does not start with sk-")
 
+    # Create messages list for chat endpoint instead of single prompt
+    system_message = {
+        "role": "system",
+        "content": general_prompt
+    }
+
+    user_message = {
+        "role": "user",
+        "content": user_prompt,
+    }
+
+    # Retrieve existing conversation history or create new one
+    if uuid_exists:
+        # Add new user message
+        conversation_history[request_uuid]['messages'].append(user_message)
+        conversation_history[request_uuid]['last_updated'] = timestamp
+    else:
+        # Attach the image to the first request
+        user_message["images"] = [graphic_b64]
+        # Start a new conversation with system and user messages
+        conversation_history[request_uuid] = {
+            'messages': [system_message, user_message],
+            'last_updated': timestamp
+        }
+
+    # Use history for the request
+    uuid_messages = conversation_history[request_uuid]["messages"]
+
+    if len(uuid_messages) <= MAX_HISTORY_LENGTH:
+        messages = uuid_messages
+    else:
+        # Get system message, first user message w/ image, and recent messages
+        messages = (
+            uuid_messages[:2] +
+            uuid_messages[-(MAX_HISTORY_LENGTH-2):]
+        )
+
+    # Create log-friendly version without full base64 content
+    log_friendly_messages = []
+    for msg in messages:
+        # Create a copy to avoid modifying the original
+        log_msg = msg.copy()
+        if 'images' in log_msg:
+            # Replace image content with placeholder or truncate it
+            log_msg['images'] = [
+                    f"[BASE64_IMAGE:{len(img)} bytes]"
+                    for img in log_msg['images']
+                ]
+        log_friendly_messages.append(log_msg)
+    logging.pii(
+        f"Message history: {json.dumps(log_friendly_messages, indent=2)}"
+        )
+    logging.debug(f"User followup prompt: {general_prompt} [redacted]")
+
+    # Create request data for chat endpoint
     request_data = {
         "model": ollama_model,
-        "prompt": prompt,
-        "images": [graphic_b64],
+        "messages": messages,
         "stream": False,
         "temperature": 0.0,
-        "format": "json",
-        "keep_alive": -1  # keep model loaded in memory indefinitely
+        "format": {
+            "type": "object",
+            "properties": {
+                "response_brief": {"type": "string"},
+                "response_full": {"type": "string"},
+            },
+            "required": ["response_brief", "response_full"],
+        },
+        "keep_alive": -1,  # keep model loaded in memory indefinitely
     }
+
     logging.debug("serializing json from request_data dictionary")
     request_data_json = json.dumps(request_data)
 
@@ -156,11 +261,31 @@ def followup():
     if response.status_code == 200:
         ollama_error_msg = None
         try:
+            response_json = json.loads(response.text)
             # strip() at end since llama often puts a newline before json
-            response_text = json.loads(response.text)['response'].strip()
-            if log_pii:
-                logging.debug("raw ollama response: " + response_text)
+            response_text = response_json['message']['content'].strip()
+            logging.pii("raw ollama response: " + response_text)
             followup_response_json = json.loads(response_text)
+
+            # Format assistant response for history
+            model_resp = {
+                "role": "assistant",
+                "content": response_text
+            }
+
+            # Update conversation history
+            conversation_history[request_uuid]["messages"].append(model_resp)
+            conversation_history[request_uuid]["last_updated"] = timestamp
+
+            # Add debug logging
+            status = 'updated' if uuid_exists else 'created'
+            logging.debug(
+                f"Conversation history status: UUID {request_uuid} {status}"
+            )
+            logging.debug(
+                f"History contains {len(conversation_history)} conversations"
+                )
+
         except json.JSONDecodeError:
             ollama_error_msg = "raw response does not look like json"
         except KeyError:
@@ -173,21 +298,16 @@ def followup():
                 logging.error(ollama_error_msg + " returning 204")
                 return jsonify("Invalid LLM results"), 204
     else:
-        if log_pii:
-            logging.error("Error {response.status_code}: {response.text}")
-        else:
-            logging.error("Error {response.status_code}: "
-                          "[response text redacted]")
+        logging.error(f"Error {response.status_code}: \
+                      [response text redacted]")
         return jsonify("Invalid response from ollama"), 204
-
     # check if ollama returned valid json that follows schema
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(followup_response_json)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
-        if log_pii:
-            logging.debug(e)
+        logging.pii(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # create full response & check meets overall preprocessor response schema
@@ -202,16 +322,72 @@ def followup():
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
         logging.error(f"JSON schema validation fail: {e.validator} {e.schema}")
-        if log_pii:
-            logging.debug(e)  # print full error only in debug, due to PII
+        logging.pii(e)
         return jsonify("Invalid Preprocessor JSON format"), 500
 
-    # all done; return to orchestrator
     logging.debug("full response length: " + str(len(response)))
-    if log_pii:
-        logging.debug(response)
-
+    logging.pii(response)
     return response
+
+
+# Two following endpoints don't have immediate use
+# They are implemented in case we need to extend functionality later
+# They are tested and fully functional
+# New endpoint to clear history for a specific request_uuid
+@app.route("/clear-history/<request_uuid>", methods=["GET"])
+def clear_history(request_uuid):
+    """
+    Clear conversation history for a specific request_uuid
+    """
+    uuid_exists = request_uuid in conversation_history
+    logging.info(f"Request to clear history for {request_uuid}")
+    logging.info(
+        f"Before clearing: {len(conversation_history)} conversations in memory"
+    )
+    logging.info(f"UUID exists in history: {uuid_exists}")
+
+    if uuid_exists:
+        del conversation_history[request_uuid]
+        logging.info(
+            f"After clearing: {len(conversation_history)} conversations"
+            )
+        return jsonify({
+            "status": "success",
+            "message": f"History for {request_uuid} cleared"
+        }), 200
+    else:
+        logging.info("UUID not found in history")
+        return jsonify({
+            "status": "not_found",
+            "message": f"No history found for {request_uuid}"
+        }), 404
+
+
+# New endpoint to get conversation statistics
+@app.route("/history-stats", methods=["GET"])
+def history_stats():
+    """
+    Get statistics about stored conversation histories
+    """
+    history_data = conversation_history.values()
+    return (
+        jsonify(
+            {
+                "active_conversations": len(conversation_history),
+                "oldest_conversation": (
+                    min([h["last_updated"] for h in history_data])
+                    if conversation_history
+                    else None
+                ),
+                "newest_conversation": (
+                    max([h["last_updated"] for h in history_data])
+                    if conversation_history
+                    else None
+                ),
+            }
+        ),
+        200,
+    )
 
 
 @app.route("/health", methods=["GET"])
@@ -227,4 +403,3 @@ def health():
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
-    followup()

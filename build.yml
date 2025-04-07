@@ -74,7 +74,7 @@ services:
     object-detection:
         build:
             context: .
-            dockerfile: ./preprocessors/yolov8/Dockerfile
+            dockerfile: ./preprocessors/yolo/Dockerfile
         image: "object-detection:latest"
     object-detection-azure:
         build:

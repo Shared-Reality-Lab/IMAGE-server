@@ -22,9 +22,11 @@ import jsonschema
 import logging
 import os
 from datetime import datetime
+from config.logging_utils import configure_logging
+
+configure_logging()
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG)
 
 
 @app.route("/preprocessor", methods=['POST', ])
@@ -55,7 +57,8 @@ def categorise():
         validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
         validator.validate(content)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for incoming request")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     # check we received a graphic (e.g., not a map or chart request)
@@ -74,14 +77,14 @@ def categorise():
     graphic_b64 = source.split(",")[1]
 
     # prepare ollama request
-    api_url = os.environ['OLLAMA_URL']
+    api_url = f"{os.environ['OLLAMA_URL']}/generate"
     api_key = os.environ['OLLAMA_API_KEY']
     ollama_model = os.environ['OLLAMA_MODEL']
 
     logging.debug("OLLAMA_URL " + api_url)
     if api_key.startswith("sk-"):
-        logging.debug("OLLAMA_API_KEY looks properly formatted: " +
-                      api_key[:3] + "[redacted]")
+        logging.pii("OLLAMA_API_KEY looks properly formatted: " +
+                    api_key[:3] + "[redacted]")
     else:
         logging.warn("OLLAMA_API_KEY usually starts with sk-, "
                      "but this one starts with: " + api_key[:3])
@@ -91,13 +94,17 @@ def categorise():
              "Which of the following categories best " \
              "describes this image, selecting from this enum: "
     possible_categories = "photograph, chart, text, other"
+    # override with prompt from environment variable only if it exists
+    prompt = os.getenv('CONTENT_CATEGORISER_PROMPT_OVERRIDE', prompt)
+    prompt += "[" + possible_categories + "]"
+    logging.debug("prompt: " + prompt)
 
     request_data = {
         "model": ollama_model,
-        "prompt": prompt + "[" + possible_categories + "]",
+        "prompt": prompt,
         "images": [graphic_b64],
         "stream": "false",
-        # TODO: figure out if "format": json, should actually work
+        "format": "json",
         "temperature": 0.0,
         "keep_alive": -1  # keep model loaded in memory indefinitely
     }
@@ -131,9 +138,9 @@ def categorise():
             ollama_error_msg = "unknown error decoding json. investigate!"
         finally:
             if ollama_error_msg is not None:
-                logging.error(ollama_error_msg)
-                # TODO: add back next line once IMAGE-server #912 is complete
-                # logging.debug(f"response (pii) [{graphic_category_json}]")
+                logging.pii(
+                    f"{ollama_error_msg}. Raw response: \
+                    {graphic_category_json}")
                 return jsonify("Invalid LLM results"), 204
 
         # is the found category  one of the ones we require?
@@ -153,7 +160,8 @@ def categorise():
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(graphic_category_json)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for categorizer response")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # create full response & check meets overall preprocessor response schema
@@ -167,7 +175,8 @@ def categorise():
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(response)
     except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+        logging.error("Validation failed for final response")
+        logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # all done. give final category information and return to orchestrator

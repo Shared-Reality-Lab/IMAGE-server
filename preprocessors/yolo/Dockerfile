@@ -1,4 +1,4 @@
-FROM ultralytics/ultralytics:latest@sha256:af4572bf0df164d5708e4a1f50bddb5a74cb7d793fe46b7daf42b1768fbec608
+FROM ultralytics/ultralytics@sha256:3d52e286bc345343b1a7a66dd38c44bb412bf418eb97d14298b8d8deb077f2e4
 
 WORKDIR /usr/src/app
 RUN adduser --disabled-password python 
@@ -9,15 +9,20 @@ RUN apt-get update && \
     wget curl && \
     rm -rf /var/lib/apt/lists/*
 
-COPY /preprocessors/yolov8/requirements.txt /usr/src/app/requirements.txt
+COPY /preprocessors/yolo/requirements.txt /usr/src/app/requirements.txt
 RUN pip3 install --upgrade pip && \
     pip3 install -r /usr/src/app/requirements.txt
 
 COPY /schemas /usr/src/app/schemas
+COPY /config /usr/src/app/config
 
-RUN wget https://image.a11y.mcgill.ca/models/objectDetectionWeights/yolov8x.pt
+# Create model directory
+RUN mkdir -p /usr/src/app/models
 
-COPY /preprocessors/yolov8 /usr/src/app 
+# Download YOLOv11 model
+RUN wget -O /usr/src/app/models/yolo11x.pt https://image.a11y.mcgill.ca/models/objectDetectionWeights/yolo11x.pt
+
+COPY /preprocessors/yolo /usr/src/app 
 
 EXPOSE 5000
 

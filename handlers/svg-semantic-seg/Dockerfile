@@ -12,6 +12,7 @@ RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
 COPY /handlers/svg-semantic-seg/ /usr/src/app
+COPY /config /usr/src/app/config
 
 EXPOSE 80
 USER python

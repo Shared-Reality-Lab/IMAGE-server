@@ -21,7 +21,7 @@ import fs from "fs/promises";
 import path from "path";
 import hash from "object-hash";
 import { validate, version } from "uuid";
-import { performance, PerformanceObserver } from "perf_hooks"; // https://nodejs.org/api/perf_hooks.html
+import { performance } from "perf_hooks"; // https://nodejs.org/api/perf_hooks.html
 import os from "os"; // Import 'os' to get the number of CPU cores
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
@@ -30,6 +30,18 @@ import responseSchemaJSON from "./schemas/response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 import { docker, getPreprocessorServices, getHandlerServices, DEFAULT_ROUTE_NAME } from "./docker";
 import { ServerCache } from "./server-cache";
+
+interface PreprocessorResponse {
+    name: string;
+    data: Record<string, unknown>;
+}
+
+interface HandlerResponse {
+    renderings: Array<{
+        description: string;
+        type_id: string;
+    }>;
+}
 import { Graph, GraphNode, printGraph } from "./graph";
 
 const app = express();
@@ -118,7 +130,7 @@ async function fetchPreprocessorResponse(preprocessor: (string | number)[], data
 
 async function processResponse(response: Response, preprocessor: (string | number)[], data: Record<string, unknown>, hashedKey: string, cacheTimeOut: number): Promise<void> {
     if (response.status === 200) {
-        const jsonResponse = await response.json();
+        const jsonResponse = await response.json() as PreprocessorResponse;
         if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", jsonResponse)) {
             const preprocessorName = jsonResponse["name"];
             (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = jsonResponse["data"]; 
@@ -191,45 +203,6 @@ async function executeGraphNode(service: GraphNode, data: Record<string, unknown
         }
     }
     await Promise.all(newRun);
-}
-
-async function executeHandler(handler: (string | number)[], data: Record<string, unknown>): Promise<any[]> {
-    // Handlers
-    return fetch(`http://${handler[0]}:${handler[1]}/handler`, {
-        "method": "POST",
-        "headers": {
-            "Content-Type": "application/json"
-        },
-        "body": JSON.stringify(data)
-    }).then(async (resp) => {
-        if (resp.ok) {
-            return resp.json();
-        } else {
-            console.error(`${resp.status} ${resp.statusText}`);
-            const result = await resp.json();
-            throw result;
-        }
-    }).then(json => {
-        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
-            // Check each rendering for expected renderers
-            const renderers = data["renderers"] as any[];
-            const renderings = json["renderings"];
-            return renderings.filter((rendering: {"type_id": string}) => {
-                const inList = renderers.includes(rendering["type_id"]);
-                
-                if (!inList) {
-                    console.warn(`Excluding a rendering of type "%s" from handler "%s".\nThis renderer was not in the advertised list for this request.`, rendering["type_id"], handler[0]);
-                }
-                return inList;
-            });
-        } else {
-            console.error("Handler response failed validation!");
-            throw new Error(JSON.stringify(ajv.errors));
-        }
-    }).catch(err => {
-        console.error(err);
-        return [];
-    });
 }
 
 async function runPreprocessorsParallel(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
@@ -321,7 +294,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
             // OK data returned
             if (resp.status === 200) {
                 try {
-                    const json = await resp.json();
+                    const json = await resp.json() as PreprocessorResponse;
                     if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                         (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
                         // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP
@@ -405,11 +378,46 @@ app.post("/render", (req, res) => {
             }
 
             // Handlers
-             const promises = handlers.map(handler => executeHandler(handler, data));
+            const promises = handlers.map(handler => {
+                return fetch(`http://${handler[0]}:${handler[1]}/handler`, {
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "body": JSON.stringify(data)
+                }).then(async (resp) => {
+                    if (resp.ok) {
+                        return resp.json() as Promise<HandlerResponse>;
+                    } else {
+                        console.error(`${resp.status} ${resp.statusText}`);
+                        const result = await resp.json();
+                        throw result;
+                    }
+                }).then(json => {
+                    if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
+                        // Check each rendering for expected renderers
+                        const renderers = data["renderers"];
+                        const renderings = json["renderings"];
+                        return renderings.filter((rendering: {"type_id": string}) => {
+                            const inList = renderers.includes(rendering["type_id"]);
+                            if (!inList) {
+                                console.warn("Excluding a renderering of type \"%s\" from handler \"%s\".\nThis renderer was not in the advertised list for this request.", rendering["type_id"], handler[0]);
+                            }
+                            return inList;
+                        });
+                    } else {
+                        console.error("Handler response failed validation!");
+                        throw Error(JSON.stringify(ajv.errors));
+                    }
+                }).catch(err => {
+                    console.error(err);
+                    return [];
+                });
+            });
 
             console.debug("Waiting for handlers...");
             return Promise.all(promises);
-        }).then(async (results) => {
+        }).then(async (results: HandlerResponse["renderings"][]) => {
             // Hard code sorting so MOTD appears first...
             const renderings = results.reduce((a, b) => a.concat(b), [])
                 .sort((a: { "description": string }) => (a["description"] === "Server status message.") ? -1 : 0);

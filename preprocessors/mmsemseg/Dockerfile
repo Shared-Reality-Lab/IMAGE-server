@@ -43,6 +43,7 @@ RUN pip install --upgrade pip && \
 
 COPY /schemas /app/schemas
 COPY /preprocessors/mmsemseg/ /app
+COPY /config /app/config
 
 # Download the model checkpoint
 RUN wget https://image.a11y.mcgill.ca/resources/models/mmsemseg/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth
@@ -52,5 +53,6 @@ ENV FLASK_APP=segment.py
 USER python
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:5000/health || exit 1
+HEALTHCHECK --interval=3600s --timeout=30s --start-period=120s --retries=3 CMD curl -f http://localhost:5000/health/gpu || exit 1
 
 CMD [ "gunicorn", "segment:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]

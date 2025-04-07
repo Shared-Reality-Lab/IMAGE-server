@@ -33,6 +33,8 @@ export class Graph {
         const requiredServices = await getRequired(service[0] as string, P);
         let optionalPreprocessors = [] as (string | number)[][];
         //Only get the optional preprocessors if its a preprocessor
+        //Current assumption is that handlers will not have optional dependencies
+        //Specific to preprocessors
         if(P.some(p => p[0] == service[0])){
           optionalPreprocessors = await getOptional(service[0] as string, P);
         } 
@@ -42,6 +44,8 @@ export class Graph {
           const node = this.addNode(service, P.some(p => p[0] == service[0]));
           const tmp = optionalPreprocessors.filter((o) => Array.isArray(o) && Pset.has(o[0] as string));
 
+          //If the preprocessor has no required or optional dependencies
+          //then we can add it to the queue of ready to run preprocessors 
           if (requiredServices.length === 0 && tmp.length === 0) {
             R.add(node);
           } else {
@@ -52,7 +56,7 @@ export class Graph {
               nodePrime.children.add(node);
             }
 
-            for(const optPrep of optionalPreprocessors){
+            for(const optPrep of tmp){
               const nodePrime = this.addNode(optPrep, P.some(p => p[0] == optPrep[0]));
               node.parents.add(nodePrime);
               nodePrime.children.add(node);

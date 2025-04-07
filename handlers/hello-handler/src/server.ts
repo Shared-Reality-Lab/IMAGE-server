@@ -17,6 +17,7 @@
 import express from "express";
 import sharp from "sharp";
 import Ajv from "ajv";
+import { piiLogger } from "./config/logging_utils";
 
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
@@ -30,9 +31,15 @@ const ajv = new Ajv({
 });
 
 async function extractDimensions(dataUrl: string) {
-    const imageBuffer = Buffer.from(dataUrl.split(",")[1], "base64");
-    const metadata = await sharp(imageBuffer).metadata();
-    return [metadata.width as number, metadata.height as number];
+    try {
+        const imageBuffer = Buffer.from(dataUrl.split(",")[1], "base64");
+        const metadata = await sharp(imageBuffer).metadata();
+        return [metadata.width as number, metadata.height as number];
+    }
+     catch (error) {
+        piiLogger.pii(`Image processing error: ${(error as Error).message}`);
+        throw new Error("Failed to process image dimensions.");
+    }
 }
 
 function generateRendering(width: number, height: number) {
@@ -53,6 +60,7 @@ app.use(express.json({ limit: process.env.MAX_BODY }));
 
 app.post("/handler", async (req, res) => {
     console.debug("Received request");
+
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.log("Request validated");
         if (!req.body.graphic) {
@@ -70,6 +78,7 @@ app.post("/handler", async (req, res) => {
                 rendering.push(r);
             } else {
                 console.error("Failed to generate a valid text rendering!");
+                piiLogger.pii(`Text rendering validation error: ${JSON.stringify(ajv.errors)}`);
                 res.status(500).json(ajv.errors);
                 return;
             }
@@ -86,10 +95,12 @@ app.post("/handler", async (req, res) => {
             res.json(response);
         } else {
             console.log("Failed to generate a valid response (did the schema change?)");
+            piiLogger.pii(`Response validation error: ${JSON.stringify(ajv.errors)}`);
             res.status(500).json(ajv.errors);
         }
     } else {
         console.log("Request did not pass the schema.");
+        piiLogger.pii(`Schema validation error: ${JSON.stringify(ajv.errors)}`);
         res.status(400).send(ajv.errors);
     }
 });

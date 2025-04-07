@@ -11,6 +11,7 @@ COPY /handlers/svg-object-detection/requirements.txt /usr/src/app/requirements.t
 RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
+COPY /config /usr/src/app/config
 COPY /handlers/svg-object-detection/ /usr/src/app
 
 EXPOSE 80
