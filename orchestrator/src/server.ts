@@ -21,7 +21,7 @@ import fs from "fs/promises";
 import path from "path";
 import hash from "object-hash";
 import { validate, version } from "uuid";
-import { performance, PerformanceObserver } from "perf_hooks"; // https://nodejs.org/api/perf_hooks.html
+import { performance } from "perf_hooks"; // https://nodejs.org/api/perf_hooks.html
 import os from "os"; // Import 'os' to get the number of CPU cores
 import querySchemaJSON from "./schemas/request.schema.json";
 import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
@@ -30,6 +30,18 @@ import responseSchemaJSON from "./schemas/response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
 import { docker, getPreprocessorServices, getHandlerServices, DEFAULT_ROUTE_NAME } from "./docker";
 import { ServerCache } from "./server-cache";
+
+interface PreprocessorResponse {
+    name: string;
+    data: Record<string, unknown>;
+}
+
+interface HandlerResponse {
+    renderings: Array<{
+        description: string;
+        type_id: string;
+    }>;
+}
 
 const app = express();
 const serverCache = new ServerCache();
@@ -117,7 +129,7 @@ async function fetchPreprocessorResponse(preprocessor: (string | number)[], data
 
 async function processResponse(response: Response, preprocessor: (string | number)[], data: Record<string, unknown>, hashedKey: string, cacheTimeOut: number): Promise<void> {
     if (response.status === 200) {
-        const jsonResponse = await response.json();
+        const jsonResponse = await response.json() as PreprocessorResponse;
         if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", jsonResponse)) {
             const preprocessorName = jsonResponse["name"];
             (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = jsonResponse["data"]; 
@@ -251,7 +263,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
             // OK data returned
             if (resp.status === 200) {
                 try {
-                    const json = await resp.json();
+                    const json = await resp.json() as PreprocessorResponse;
                     if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                         (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
                         // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP
@@ -329,7 +341,7 @@ app.post("/render", (req, res) => {
                     "body": JSON.stringify(data)
                 }).then(async (resp) => {
                     if (resp.ok) {
-                        return resp.json();
+                        return resp.json() as Promise<HandlerResponse>;
                     } else {
                         console.error(`${resp.status} ${resp.statusText}`);
                         const result = await resp.json();
@@ -359,7 +371,7 @@ app.post("/render", (req, res) => {
 
             console.debug("Waiting for handlers...");
             return Promise.all(promises);
-        }).then(async (results) => {
+        }).then(async (results: HandlerResponse["renderings"][]) => {
             // Hard code sorting so MOTD appears first...
             const renderings = results.reduce((a, b) => a.concat(b), [])
                 .sort((a: { "description": string }) => (a["description"] === "Server status message.") ? -1 : 0);
