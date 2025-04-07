@@ -182,8 +182,8 @@ async function runServicesParallel(data: Record<string, unknown>, preprocessors:
     
     // Get unique set of nodes that are running
     const running = Array.from(R)
-    .filter((service) => preprocessors.some(p => p[0] == service.value[0]))  // optional
-    .map((preprocesor) => executeGraphNode(preprocesor, data));
+        .filter((service) => preprocessors.some(p => p[0] == service.value[0]))  // optional
+        .map((preprocesor) => executeGraphNode(preprocesor, data));
         
     //Run until no more can run
     await Promise.all(running);
