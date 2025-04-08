@@ -406,7 +406,7 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                             }
                             return inList;
                         });
-                        return filteredRenderings;
+                        return filteredRenderings; // Promise.all(promises) resolves to [[handler1Renderings], [handler2Renderings], ...]
                     } else {
                         console.error("Handler response failed validation!");
                         throw Error(JSON.stringify(ajv.errors));
