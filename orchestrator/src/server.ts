@@ -332,7 +332,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
     return data;
 }
 
-function getRoute(data: Record<string, any>): string {
+function getRoute(data: Record<string, unknown>): string {
     if (data["route"] === undefined) {
         console.debug("No route defined in request. Setting default value.");
         return DEFAULT_ROUTE_NAME;
@@ -342,11 +342,12 @@ function getRoute(data: Record<string, any>): string {
     }
 }
 
-app.post("/render", (req, res) => {
+app.post("/render", (req: express.Request, res: express.Response) => {
     console.debug("Received request");
-    if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
+    const requestBody = req.body; // capture req.body early
+    if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", requestBody)) {
         // get route variable or set to default
-        let data = JSON.parse(JSON.stringify(req.body));
+        let data = JSON.parse(JSON.stringify(requestBody));
         const route = getRoute(data);
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
@@ -397,14 +398,15 @@ app.post("/render", (req, res) => {
                     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
                         // Check each rendering for expected renderers
                         const renderers = data["renderers"];
-                        const renderings = json["renderings"];
-                        return renderings.filter((rendering: {"type_id": string}) => {
-                            const inList = renderers.includes(rendering["type_id"]);
+                        const renderings = (json as HandlerResponse).renderings;
+                        const filteredRenderings = renderings.filter((rendering) => {
+                            const inList = renderers.includes(rendering.type_id);
                             if (!inList) {
-                                console.warn("Excluding a renderering of type \"%s\" from handler \"%s\".\nThis renderer was not in the advertised list for this request.", rendering["type_id"], handler[0]);
+                                console.warn(`Excluding a rendering of type "${rendering["type_id"]}" from handler "${handler[0]}". This renderer was not in the advertised list for this request.`);
                             }
                             return inList;
                         });
+                        return filteredRenderings;
                     } else {
                         console.error("Handler response failed validation!");
                         throw Error(JSON.stringify(ajv.errors));
@@ -417,12 +419,13 @@ app.post("/render", (req, res) => {
 
             console.debug("Waiting for handlers...");
             return Promise.all(promises);
-        }).then(async (results: HandlerResponse["renderings"][]) => {
-            // Hard code sorting so MOTD appears first...
-            const renderings = results.reduce((a, b) => a.concat(b), [])
-                .sort((a: { "description": string }) => (a["description"] === "Server status message.") ? -1 : 0);
+        }).then(async (results) => {
+            // Promise.all resolves to HandlerResponse["renderings"][] or empty arrays; we can typecast it properly
+            const renderings = (results as HandlerResponse["renderings"][])
+                .reduce((a, b) => a.concat(b), [])
+                .sort((a) => (a.description === "Server status message.") ? -1 : 0);
             const response = {
-                "request_uuid": req.body.request_uuid,
+                "request_uuid": requestBody.request_uuid,
                 "timestamp": Math.round(Date.now() / 1000),
                 "renderings": renderings
             }
@@ -435,7 +438,7 @@ app.post("/render", (req, res) => {
             }
 
             if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {
-                const requestPath = path.join(BASE_LOG_PATH, req.body.request_uuid);
+                const requestPath = path.join(BASE_LOG_PATH, requestBody.request_uuid);
                 fs.mkdir(
                     requestPath,
                     { recursive: true }
@@ -464,7 +467,7 @@ app.post("/render", (req, res) => {
     }
 });
 
-app.post("/render/preprocess", (req, res) => {
+app.post("/render/preprocess", (req: express.Request, res: express.Response) => {
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         const data = req.body;
         const route = getRoute(data);
@@ -496,7 +499,7 @@ app.post("/render/preprocess", (req, res) => {
     }
 });
 
-app.get("/authenticate/:uuid/:check", async (req, res) => {
+app.get("/authenticate/:uuid/:check", async (req: express.Request, res: express.Response) => {
     if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {
         // Check for valid uuidv4 path
         const uuid = req.params.uuid;
@@ -537,7 +540,7 @@ app.get("/authenticate/:uuid/:check", async (req, res) => {
 });
 
 // Healthcheck endpoint
-app.get('/health', (req, res) => {
+app.get("/health", (req: express.Request, res: express.Response) => {
     res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
