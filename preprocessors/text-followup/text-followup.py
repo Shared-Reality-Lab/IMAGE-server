@@ -134,31 +134,30 @@ def followup():
     # TODO: add previous request history before new prompt
 
     # default prompt, which can be overriden by env var just after
-    general_prompt = ("""
-              I am blind so I cannot see this image.
+    general_prompt = """
+              The user cannot see this image. Answer user's question about it.
               Answer in a single JSON object containing two keys.
-              The first key is "response_brief" and is a single sentence
-              that can stand on its own that directly answers the specific
-              request at the end of this prompt.
-              The second key is "response_full" and provides maximum
+              The first key is "response_brief" and its value is a single
+              sentence that can stand on its own. It directly answers the
+              specific request at the end of this prompt.
+              The second key is "response_full" and its value provides maximum
               three sentences of additional detail,
               without repeating the information in the first key.
               If there is no more detail you can provide,
-              omit the second key instead of having an empty key.
-              Remember to answer only in JSON, or I will be very angry!
+              omit the "response_full" key instead of having an empty key.
+              IMPORTANT: answer only in JSON.
               Do not put anything before or after the JSON,
               and make sure the entire response is only a single JSON block,
               with both keys in the same JSON object.
               Here is an example of the output JSON in the format you
               are REQUIRED to follow:
               {
-                "response_brief": "One sentence response to the user request",
-                "response_full": "Further details."
+                "response_brief": "One sentence response to the user request.",
+                "response_full": "Further details. Maximum three sentences."
               }
               Note that the first character of output MUST be "{".
               Remove all whitespace before and after the JSON.
-              Here is my request:
-              """)
+              """
     # override with prompt from environment variable only if it exists
     general_prompt = os.getenv('TEXT_FOLLOWUP_PROMPT_OVERRIDE', general_prompt)
     user_prompt = content["followup"]["query"]
