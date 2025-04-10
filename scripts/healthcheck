@@ -1,0 +1,82 @@
+#!/bin/bash
+
+SERVER_NAME=$(hostname)
+
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+ENV_FILE="$SCRIPT_DIR/../config/healthcheck.env"
+
+if [ -f "$ENV_FILE" ]; then
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+  echo "Error: Environment file not found at $ENV_FILE" >&2
+  exit 1
+fi
+
+LOG_FILE="${LOG_DIR}/docker_healthcheck_${TIMESTAMP}.log"
+
+touch "$LOG_FILE"
+if [ ! -w "$LOG_FILE" ]; then
+  echo "Error: Log file is not writable. Please check permissions." >&2
+  exit 1
+fi
+
+# Get all containers attached to the image network, including stopped ones
+ALL_IMAGE_CONTAINERS=$(docker ps -a --filter "network=image" --format '{{.Names}}')
+echo "ALL IMAGE CONTAINERS ON $SERVER_NAME: $ALL_IMAGE_CONTAINERS" >> "$LOG_FILE"
+
+# Get all currently running container IDs and names on the image network
+RUNNING_CONTAINERS=$(docker ps --filter "network=image" --format "{{.ID}} {{.Names}}")
+echo "ALL RUNNING CONTAINERS ON $SERVER_NAME: $RUNNING_CONTAINERS" >> "$LOG_FILE"
+
+MESSAGES=""
+
+# Loop through the list of all containers on the "image" network
+for EXPECTED_CONTAINER in $ALL_IMAGE_CONTAINERS; do
+  FOUND=0
+
+  # Checks if an expected container is running, and if so, whether it is unhealthy.
+  while read -r CONTAINER_ID CONTAINER_NAME; do
+    if [ "$CONTAINER_NAME" == "$EXPECTED_CONTAINER" ]; then
+      FOUND=1
+      # Check health status if the container is running
+      STATUS=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}not-applicable{{end}}' $CONTAINER_ID 2>>"$LOG_FILE")
+      if [ "$?" -ne 0 ]; then
+        echo "$(date) - Error inspecting container $CONTAINER_NAME (ID: $CONTAINER_ID)" >> "$LOG_FILE"
+      elif [ "$STATUS" == "unhealthy" ]; then
+        MESSAGE=":warning: Container *$SERVER_NAME - $CONTAINER_NAME* (ID: $CONTAINER_ID) is *unhealthy*."
+        MESSAGES+="$MESSAGE"$'\n'
+        echo "$(date) - $MESSAGE" >> "$LOG_FILE"
+      elif [ "$STATUS" == "not-applicable" ]; then
+        echo "$(date) - Container $CONTAINER_NAME on $SERVER_NAME (ID: $CONTAINER_ID) does not have a health check." >> "$LOG_FILE"
+      else
+        echo "$(date) - Container $CONTAINER_NAME (ID: $CONTAINER_ID) is healthy." >> "$LOG_FILE"
+      fi
+    fi
+  done <<< "$RUNNING_CONTAINERS"
+
+  # Checks if any of the containers are not running at all. If not, it is appended to messages, that will later be sent to Slack.
+  if [ "$FOUND" -eq 0 ]; then
+    MESSAGE=":warning: Expected container *$EXPECTED_CONTAINER on $SERVER_NAME* is not running."
+    MESSAGES+="$MESSAGE"$'\n'
+    echo "$(date) - $MESSAGE" >> "$LOG_FILE"
+  fi
+done
+
+# Send collected messages to Slack if there are any
+if [ -n "$MESSAGES" ]; then
+  # Ensure SLACK_WEBHOOK_URL is set and not empty
+  if [ -z "$SLACK_WEBHOOK_URL" ]; then
+    echo "$(date) - SLACK_WEBHOOK_URL is not set. Cannot send notifications." >> "$LOG_FILE"
+  else
+    RESPONSE=$(curl -X POST -H 'Content-type: application/json' --data "{\"text\": \"$MESSAGES\"}" "$SLACK_WEBHOOK_URL" 2>>"$LOG_FILE")
+    if [ "$?" -ne 0 ]; then
+      echo "$(date) - Error sending Slack notification. Curl command failed!" >> "$LOG_FILE"
+    else
+      echo "$(date) - Slack notification sent successfully." >> "$LOG_FILE"
+    fi
+  fi
+else
+  echo "$(date) - No issues detected. No notifications sent." >> "$LOG_FILE"
+fi
