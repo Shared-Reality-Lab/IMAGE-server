@@ -381,7 +381,7 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                 data = await runPreprocessors(data, preprocessors);
             }
             preprocessorEndTime = performance.now();
-
+            console.log(`PreprocessorsExecutionTime execution_time_ms=${(preprocessorEndTime - totalRequestStartTime).toFixed(2)}ms`);
             // Handlers
             const promises = handlers.map(handler => {
                 return fetch(`http://${handler[0]}:${handler[1]}/handler`, {
