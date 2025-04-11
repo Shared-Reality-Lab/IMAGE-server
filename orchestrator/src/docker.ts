@@ -107,7 +107,7 @@ export function getHandlerServices(containers: Docker.ContainerInfo[], route: st
 
 //Returns the optional preprocessors/handlers needed for the given preprocessor/handler to run 
 //Optional preprocessors: enhance functionality but are not strictly required for execution.
-export async function getOptional(preprocessorName: string, preprocessors: (string | number)[][]) : Promise<(string | number)[][]>{
+export function getOptional(containers: Docker.ContainerInfo[], preprocessorName: string, preprocessors: (string | number)[][]) : (string | number)[][]{
     try{
         // Check if the preprocessorName exists in preprocessors
         const exists = preprocessors.some(p => p[0] === preprocessorName);
@@ -115,8 +115,6 @@ export async function getOptional(preprocessorName: string, preprocessors: (stri
             console.error(`Preprocessor "${preprocessorName}" not found in preprocessors list.`);
             return [];
         }    
-        //find the container using the name of the preprocessor 
-        const containers = await docker.listContainers({all:true});
     
         //Find the container for the name passed
         const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
@@ -148,12 +146,8 @@ export async function getOptional(preprocessorName: string, preprocessors: (stri
 }
 
 //Returns the required preprocessors/handlers needed for the given preprocessor/handler to run 
-export async function getRequired(preprocessorName: string, preprocessors: (string | number)[][]) : Promise<(string | number)[][]>{
+export function getRequired(containers: Docker.ContainerInfo[], preprocessorName: string, preprocessors: (string | number)[][]) : (string | number)[][]{
     try{
-
-        //find the container using the name of the preprocessor 
-        const containers = await docker.listContainers({all:true});
-
         //Find the container for the name passed
         const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
         if(!container){

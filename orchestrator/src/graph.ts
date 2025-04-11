@@ -1,4 +1,7 @@
 import { getOptional, getRequired } from "./docker";
+import Docker from "dockerode";
+
+export const docker = new Docker();
 export class Graph {
     nodes: Map<string, GraphNode>;
   
@@ -20,7 +23,7 @@ export class Graph {
       return this.nodes.get(name)!;
     }
 
-    async constructGraph(P: (string | number)[][], H: (string | number)[][]) : Promise<Set<GraphNode>>  {
+    async constructGraph(P: (string | number)[][], H: (string | number)[][], containers: Docker.ContainerInfo[]) : Promise<Set<GraphNode>>  {
       const R = new Set<GraphNode>();
       const combinedArray = P.concat(H);
 
@@ -30,13 +33,14 @@ export class Graph {
       }
       
       for (const service of combinedArray) {
-        const requiredServices = await getRequired(service[0] as string, P);
+        const requiredServices = await getRequired(containers, service[0] as string, P);
         let optionalPreprocessors = [] as (string | number)[][];
         //Only get the optional preprocessors if its a preprocessor
         //Current assumption is that handlers will not have optional dependencies
         //Specific to preprocessors
         if(P.some(p => p[0] == service[0])){
-          optionalPreprocessors = await getOptional(service[0] as string, P);
+        const requiredServices = getRequired(containers, service[0] as string, P);
+        optionalPreprocessors = getOptional(containers, service[0] as string, P);
         } 
         
 

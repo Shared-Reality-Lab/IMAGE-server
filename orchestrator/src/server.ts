@@ -356,7 +356,7 @@ app.post("/render", (req: express.Request, res: express.Response) => {
 
             const graph = new Graph();
             //Construct the graph using the handlers and preprocessors 
-            const readyToRun =  await graph.constructGraph(preprocessors, handlers);
+            const readyToRun =  await graph.constructGraph(preprocessors, handlers, containers);
             console.debug("Preprocessor graph produced successfully.");
             
 
@@ -547,5 +547,4 @@ app.get("/health", (req: express.Request, res: express.Response) => {
 app.listen(port, () => {
     console.log(`Started server on port ${port}`);
 });
-
 
