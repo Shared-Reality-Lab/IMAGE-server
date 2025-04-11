@@ -313,6 +313,7 @@ function getRoute(data: Record<string, any>): string {
 
 app.post("/render", (req, res) => {
     console.debug("Received request");
+    const totalRequestStartTime = performance.now();
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         // get route variable or set to default
         let data = JSON.parse(JSON.stringify(req.body));
@@ -325,10 +326,14 @@ app.post("/render", (req, res) => {
             // Preprocessors
             if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
                 console.debug("Running preprocessors in parallel...");
-                data = await runPreprocessorsParallel(data, preprocessors);
-            } else {
+                data = await measureExecutionTime("PriorityQueueExecutionTotal", async () => {
+                    return runPreprocessorsParallel(data, preprocessors);
+                });
+                } else {
                 console.debug("Running preprocessors in series...");
-                data = await runPreprocessors(data, preprocessors);
+                data = await measureExecutionTime("SerialExecutionTotal", async () => {
+                    return runPreprocessors(data, preprocessors);
+                });
             }
 
             // Handlers
@@ -383,6 +388,8 @@ app.post("/render", (req, res) => {
             if (ajv.validate("https://image.a11y.mcgill.ca/response.schema.json", response)) {
                 console.debug("Valid response generated.");
                 res.json(response);
+                const totalRequestEndTime = performance.now();
+                console.log(`TotalRequestExecutionTime execution_time_ms=${(totalRequestEndTime - totalRequestStartTime).toFixed(2)}ms`);
             } else {
                 console.debug("Failed to generate a valid response (did the schema change?)");
                 res.status(500).send(ajv.errors);
@@ -412,6 +419,9 @@ app.post("/render", (req, res) => {
         }).catch(e => {
             console.error(e);
             res.status(500).send(e.name + ": " + e.message);
+            const totalRequestEndTime = performance.now();
+            console.log(`TotalRequestExecutionTime execution_time_ms=${(totalRequestEndTime - totalRequestStartTime).toFixed(2)}ms`);
+
         });
     } else {
         res.status(400).send(ajv.errors);
