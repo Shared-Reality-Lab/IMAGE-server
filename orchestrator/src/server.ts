@@ -345,6 +345,9 @@ function getRoute(data: Record<string, unknown>): string {
 app.post("/render", (req: express.Request, res: express.Response) => {
     console.debug("Received request");
     const requestBody = req.body; // capture req.body early
+    const totalRequestStartTime = performance.now();
+    let preprocessorEndTime: number;
+
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", requestBody)) {
         // get route variable or set to default
         let data = JSON.parse(JSON.stringify(requestBody));
@@ -377,6 +380,7 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                 console.debug("Running preprocessors in series...");
                 data = await runPreprocessors(data, preprocessors);
             }
+            preprocessorEndTime = performance.now();
 
             // Handlers
             const promises = handlers.map(handler => {
@@ -458,9 +462,17 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                     console.error(e);
                 });
             }
+            const totalRequestEndTime = performance.now();
+            console.log(`PostPreprocessorsExecutionTime execution_time_ms=${(totalRequestEndTime - preprocessorEndTime).toFixed(2)}ms`);
+            console.log(`TotalRequestExecutionTime execution_time_ms=${(totalRequestEndTime - totalRequestStartTime).toFixed(2)}ms`);
+
         }).catch(e => {
             console.error(e);
             res.status(500).send(e.name + ": " + e.message);
+            const totalRequestEndTime = performance.now();
+            console.log(`PostPreprocessorsExecutionTime execution_time_ms=${(totalRequestEndTime - preprocessorEndTime).toFixed(2)}ms`);
+            console.log(`TotalRequestExecutionTime execution_time_ms=${(totalRequestEndTime - totalRequestStartTime).toFixed(2)}ms`);
+
         });
     } else {
         res.status(400).send(ajv.errors);
