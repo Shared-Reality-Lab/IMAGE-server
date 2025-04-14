@@ -38,6 +38,22 @@ function getOrchestratorNetworks(containers: Docker.ContainerInfo[]): string[] {
     }
 }
 
+//Returns the containers that share a network with the Orchestrator's networks
+function getFilteredContainers(containers: Docker.ContainerInfo[]) : Docker.ContainerInfo[] {
+    //Get the networks that the Orchestrator is connected to 
+    const orchestratorNetworks = getOrchestratorNetworks(containers);
+    //filter through the containers list and check which are connected to any of the orchestrator networks 
+    return containers.filter(container => {
+        //network of container
+        const networks = container.NetworkSettings.Networks || {};
+        //get network id of the container
+        const containerNetworkIds = Object.values(networks).map(net => net.NetworkID);
+        //return the container if one of its IDs is part of the orchestrator networks
+        const isInTargetNetwork = containerNetworkIds.some(id => orchestratorNetworks.includes(id));
+        return isInTargetNetwork;
+    });
+}
+
 function isPartOfRoute(container: Docker.ContainerInfo, route: string) {
     const containerName = container.Labels["com.docker.compose.service"];
     if (container.Labels[_ROUTE_LABEL_] !== undefined) {
@@ -109,6 +125,9 @@ export function getHandlerServices(containers: Docker.ContainerInfo[], route: st
 //Optional preprocessors: enhance functionality but are not strictly required for execution.
 export function getOptional(containers: Docker.ContainerInfo[], preprocessorName: string, preprocessors: (string | number)[][]) : (string | number)[][]{
     try{
+        //Get the containers that share a network with the orchestrator 
+        const connectedContainers = getFilteredContainers(containers);
+        
         // Check if the preprocessorName exists in preprocessors
         const exists = preprocessors.some(p => p[0] === preprocessorName);
         if (!exists) {
@@ -117,7 +136,7 @@ export function getOptional(containers: Docker.ContainerInfo[], preprocessorName
         }    
     
         //Find the container for the name passed
-        const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
+        const container = connectedContainers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
         
         if(!container){
             console.error(`Could not find the container for preprocessor ${preprocessorName}`);
@@ -148,8 +167,10 @@ export function getOptional(containers: Docker.ContainerInfo[], preprocessorName
 //Returns the required preprocessors/handlers needed for the given preprocessor/handler to run 
 export function getRequired(containers: Docker.ContainerInfo[], preprocessorName: string, preprocessors: (string | number)[][]) : (string | number)[][]{
     try{
+        //Get the containers that share a network with the orchestrator 
+        const connectedContainers = getFilteredContainers(containers);
         //Find the container for the name passed
-        const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
+        const container = connectedContainers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
         if(!container){
             console.error(`Could not find the container for preprocessor ${preprocessorName}`);
             return [];
