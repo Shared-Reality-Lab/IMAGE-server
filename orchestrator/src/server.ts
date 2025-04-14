@@ -28,7 +28,7 @@ import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
 import preprocessorResponseSchemaJSON from "./schemas/preprocessor-response.schema.json";
 import responseSchemaJSON from "./schemas/response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
-import { docker, getPreprocessorServices, getHandlerServices, DEFAULT_ROUTE_NAME } from "./docker";
+import { docker, getPreprocessorServices, getHandlerServices, DEFAULT_ROUTE_NAME, getFilteredContainers } from "./docker";
 import { ServerCache } from "./server-cache";
 
 interface PreprocessorResponse {
@@ -354,12 +354,14 @@ app.post("/render", (req: express.Request, res: express.Response) => {
         const route = getRoute(data);
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
-            const preprocessors = getPreprocessorServices(containers, route);
-            const handlers = getHandlerServices(containers, route);
+            //Get the list of filtered containers that are connected to one of the Orchestrator networks
+            const connectedContainers = getFilteredContainers(containers);
+            const preprocessors = getPreprocessorServices(connectedContainers, route);
+            const handlers = getHandlerServices(connectedContainers, route);
 
             const graph = new Graph();
             //Construct the graph using the handlers and preprocessors 
-            const readyToRun =  await graph.constructGraph(preprocessors, handlers, containers);
+            const readyToRun =  await graph.constructGraph(preprocessors, handlers, connectedContainers);
             console.debug("Preprocessor graph produced successfully.");
             
 
