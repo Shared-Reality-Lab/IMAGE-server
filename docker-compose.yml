@@ -77,6 +77,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -88,6 +90,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
       ./config/ollama.env
     environment:
@@ -101,6 +105,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
       ./config/ollama.env
     environment:
@@ -119,6 +125,8 @@ services:
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 0
       ca.mcgill.a11y.image.route: "followup"
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
       ./config/ollama.env      
   
@@ -132,6 +140,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 2
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
   
@@ -143,6 +153,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser"
     deploy:
       resources:
         reservations:
@@ -163,6 +175,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "object-detection"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -176,6 +190,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -187,6 +203,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 5
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: "object-detection"
+      ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -204,6 +222,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser,graphic-tagger"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
   
@@ -227,6 +247,8 @@ services:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: "autour-preprocessor"
+      ca.mcgill.a11y.image.optional_dependencies: ""
     volumes:
       - sc-store:/tmp/sc-store
     environment:
@@ -240,6 +262,8 @@ services:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: "autour-preprocessor"
+      ca.mcgill.a11y.image.optional_dependencies: ""
     volumes:
       - sc-store:/tmp/sc-store
     environment:
@@ -253,6 +277,8 @@ services:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation,object-grouping,object-detection"
+      ca.mcgill.a11y.image.optional_dependencies: ""
     volumes:
       - sc-store:/tmp/sc-store
     environment:
@@ -266,6 +292,8 @@ services:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     volumes:
       - sc-store:/tmp/sc-store
     environment:
@@ -277,6 +305,8 @@ services:
     restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "object-detection,object-grouping"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}       
 
@@ -286,6 +316,8 @@ services:
     restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -303,6 +335,8 @@ services:
         ca.mcgill.a11y.image.preprocessor: 3
         ca.mcgill.a11y.image.port: 5000
         ca.mcgill.a11y.image.cacheTimeout: 3600
+        ca.mcgill.a11y.image.required_dependencies: "content-categoriser"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -312,6 +346,8 @@ services:
     restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: ""
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -324,6 +360,8 @@ services:
     labels:
         ca.mcgill.a11y.image.preprocessor: 2
         ca.mcgill.a11y.image.cacheTimeout: 3600
+        ca.mcgill.a11y.image.required_dependencies: ""
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -333,6 +371,8 @@ services:
     restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "object-detection,object-grouping,semantic-segmentation,graphic-caption"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -342,6 +382,8 @@ services:
     restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "openstreetmap,nominatim-preprocessor"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -352,6 +394,8 @@ services:
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.route: "followup"
+        ca.mcgill.a11y.image.required_dependencies: "text-followup"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -370,6 +414,8 @@ services:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
 
   hello-haptics-handler:
     profiles: [test, default]
@@ -379,6 +425,8 @@ services:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: "object-detection"
+      ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
   
@@ -393,6 +441,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "object-detection"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -404,6 +454,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "object-detection"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -415,6 +467,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -426,6 +480,8 @@ services:
         ca.mcgill.a11y.image.preprocessor: 4
         ca.mcgill.a11y.image.port: 5000
         ca.mcgill.a11y.image.cacheTimeout: 3600
+        ca.mcgill.a11y.image.required_dependencies: ""
+        ca.mcgill.a11y.image.optional_dependencies: "object-detection"
     deploy:
       resources:
         reservations:
@@ -441,6 +497,8 @@ services:
     restart: "no"
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: "ocr-clouds-preprocessor,object-detection"
+      ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -455,6 +513,8 @@ services:
         - espnet-tts
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "openstreetmap"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     volumes:
         - sc-store:/tmp/sc-store
     environment:
@@ -467,6 +527,8 @@ services:
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.port: 5000
+        ca.mcgill.a11y.image.required_dependencies: ""
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -478,6 +540,8 @@ services:
         ca.mcgill.a11y.image.preprocessor: 1
         ca.mcgill.a11y.image.port: 5000
         ca.mcgill.a11y.image.cacheTimeout: 3600
+        ca.mcgill.a11y.image.required_dependencies: ""
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -486,6 +550,8 @@ services:
     image: ghcr.io/shared-reality-lab/image-handler-svg-action-recognition:${REGISTRY_TAG}
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "object-detection,action-recognition"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
  

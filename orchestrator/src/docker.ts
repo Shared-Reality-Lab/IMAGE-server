@@ -17,6 +17,9 @@
 import Docker from "dockerode";
 
 export const docker = new Docker();
+
+const _REQUIRED_LABEL_ = "ca.mcgill.a11y.image.required_dependencies";
+const _OPTIONAL_LABEL_ = "ca.mcgill.a11y.image.optional_dependencies";
 const _PREPROCESSOR_LABEL_ = "ca.mcgill.a11y.image.preprocessor";
 const _HANDLER_LABEL_ = "ca.mcgill.a11y.image.handler";
 const _PORT_LABEL_ = "ca.mcgill.a11y.image.port";
@@ -33,6 +36,25 @@ function getOrchestratorNetworks(containers: Docker.ContainerInfo[]): string[] {
         console.error("Could not find the orchestrator container! This should not happen!");
         return [];
     }
+}
+
+//Returns the containers that running and share a network with the Orchestrator's networks 
+export function getFilteredContainers(containers: Docker.ContainerInfo[]) : Docker.ContainerInfo[] {
+    //Get the networks that the Orchestrator is connected to 
+    const orchestratorNetworks = getOrchestratorNetworks(containers);
+    //filter through the containers list and check which are connected to any of the orchestrator networks 
+    const filteredContainers = containers.filter(container => {
+        //network of container
+        const networks = container.NetworkSettings.Networks || {};
+        //get network id of the container
+        const containerNetworkIds = Object.values(networks).map(net => net.NetworkID);
+        //return the container if one of its IDs is part of the orchestrator networks
+        const isInTargetNetwork = containerNetworkIds.some(id => orchestratorNetworks.includes(id));
+        return isInTargetNetwork;
+    });
+    //Only return the containers that are running 
+    return filteredContainers.filter(c => c.State === "running");
+    
 }
 
 function isPartOfRoute(container: Docker.ContainerInfo, route: string) {
@@ -52,12 +74,11 @@ function isPartOfRoute(container: Docker.ContainerInfo, route: string) {
 }
 
 export function getPreprocessorServices(containers: Docker.ContainerInfo[], route: string) {
-    const orchestratorNetworks = getOrchestratorNetworks(containers);
-    const activePreprocessors = containers.filter(container => {
-        const matchingNetworks = Object.values(container.NetworkSettings.Networks)
-                                    .filter(network => orchestratorNetworks.includes(network.NetworkID));
-        return (container.State === "running") && (container.Labels[_PREPROCESSOR_LABEL_]) && (matchingNetworks.length > 0) && isPartOfRoute(container, route);
-    });
+    const activePreprocessors = containers.filter(container =>
+        container.State === "running" &&
+        container.Labels[_PREPROCESSOR_LABEL_] &&
+        isPartOfRoute(container, route)
+    );
     return activePreprocessors.sort((first, second) => {
         const firstNum = Number(first.Labels[_PREPROCESSOR_LABEL_]);
         const secondNum = Number(second.Labels[_PREPROCESSOR_LABEL_]);
@@ -81,12 +102,13 @@ export function getPreprocessorServices(containers: Docker.ContainerInfo[], rout
 }
 
 export function getHandlerServices(containers: Docker.ContainerInfo[], route: string) {
-    const orchestratorNetworks = getOrchestratorNetworks(containers);
-    const activeHandlers = containers.filter(container => {
-        const matchingNetworks = Object.values(container.NetworkSettings.Networks)
-                                    .filter(network => orchestratorNetworks.includes(network.NetworkID));
-        return (container.State === "running") && (container.Labels[_HANDLER_LABEL_]) && (container.Labels[_HANDLER_LABEL_] === "enable") && (matchingNetworks.length > 0) && isPartOfRoute(container, route);
-    });
+    const activeHandlers = containers.filter(container =>
+        container.State === "running" &&
+        container.Labels[_HANDLER_LABEL_] &&
+        container.Labels[_HANDLER_LABEL_] === "enable" &&
+        isPartOfRoute(container, route) 
+    );
+
     return activeHandlers.map(container => {
         const portLabel = container.Labels[_PORT_LABEL_];
         let port;
@@ -101,3 +123,75 @@ export function getHandlerServices(containers: Docker.ContainerInfo[], route: st
         return [container.Labels["com.docker.compose.service"], port];
     });
 }
+
+//Returns the optional preprocessors/handlers needed for the given preprocessor/handler to run 
+//Optional preprocessors: enhance functionality but are not strictly required for execution.
+export function getOptional(containers: Docker.ContainerInfo[], preprocessorName: string, preprocessors: (string | number)[][]) : (string | number)[][]{
+    try{
+        //Check if the preprocessorName exists in preprocessors
+        const exists = preprocessors.some(p => p[0] === preprocessorName);
+        if (!exists) {
+            console.error(`Preprocessor "${preprocessorName}" not found in preprocessors list.`);
+            return [];
+        }    
+    
+        //Find the container for the name passed
+        const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
+        
+        if(!container){
+            console.error(`Could not find the container for preprocessor ${preprocessorName}`);
+            return [];
+        }
+        if (container.Labels?.[_OPTIONAL_LABEL_] == undefined) {
+            console.warn(`Warning: The optional dependencies label is missing for preprocessor "${container.Labels["com.docker.compose.service"]}".`);
+            return [];
+        }
+       
+        const optionalPreprocessors = container.Labels[_OPTIONAL_LABEL_];
+        let optionalPreprocessorsArray : string[] = [];
+        
+        //convert from string to array of strings 
+        if(optionalPreprocessors != ""){    //if the preprocessor has dependencies
+            optionalPreprocessorsArray = optionalPreprocessors ? optionalPreprocessors.split(",").filter(Boolean) : [];
+        }
+        
+        //filter through the array of preprocessor names and return an array of their actual values
+        return preprocessors.filter(function (p) { return optionalPreprocessorsArray.includes(p[0] as string); });
+    } catch(error){
+        console.error(`Error while getting optional dependencies for ${preprocessorName}:`, error);
+        return [];
+    }
+
+}
+
+//Returns the required preprocessors/handlers needed for the given preprocessor/handler to run 
+export function getRequired(containers: Docker.ContainerInfo[], preprocessorName: string, preprocessors: (string | number)[][]) : (string | number)[][]{
+    try{
+        //Find the container for the name passed
+        const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
+        if(!container){
+            console.error(`Could not find the container for preprocessor ${preprocessorName}`);
+            return [];
+        }
+        if (container.Labels?.[_REQUIRED_LABEL_] == undefined) {
+            console.warn(`Warning: The required dependencies label is missing for preprocessor "${preprocessorName}".`);
+            return [];
+        }
+
+        const requiredPreprocessors = container.Labels[_REQUIRED_LABEL_];
+        let requiredPreprocessorsArray : string[] = [];
+        
+        //convert from string to array of strings 
+        if(requiredPreprocessors != ""){    //if the preprocessor has dependencies
+            requiredPreprocessorsArray = requiredPreprocessors.split(",").filter(Boolean);
+        }
+        
+        //filter through the array of preprocessor names and return an array of their actual values
+        const f =  preprocessors.filter(function (p) { return requiredPreprocessorsArray.includes(p[0] as string); });
+        return f;
+    } catch(error){
+        console.error(`Error while getting required dependencies for ${preprocessorName}:`, error);
+        return [];
+    }
+} 
+

@@ -28,7 +28,7 @@ import handlerResponseSchemaJSON from "./schemas/handler-response.schema.json";
 import preprocessorResponseSchemaJSON from "./schemas/preprocessor-response.schema.json";
 import responseSchemaJSON from "./schemas/response.schema.json";
 import definitionsJSON from "./schemas/definitions.json";
-import { docker, getPreprocessorServices, getHandlerServices, DEFAULT_ROUTE_NAME } from "./docker";
+import { docker, getPreprocessorServices, getHandlerServices, DEFAULT_ROUTE_NAME, getFilteredContainers } from "./docker";
 import { ServerCache } from "./server-cache";
 
 interface PreprocessorResponse {
@@ -42,6 +42,7 @@ interface HandlerResponse {
         type_id: string;
     }>;
 }
+import { Graph, GraphNode, printGraph } from "./graph";
 
 const app = express();
 const serverCache = new ServerCache();
@@ -174,6 +175,36 @@ async function executePreprocessor(preprocessor: (string | number)[], data: Reco
     });
 }
 
+async function runServicesParallel(data: Record<string, unknown>, preprocessors: (string | number)[][], G: Graph, R: Set<GraphNode>): Promise<Record<string, unknown>> {
+    if (data["preprocessors"] === undefined) {
+        data["preprocessors"] = {};
+    }
+    
+    // Get unique set of nodes that are running
+    const running = Array.from(R)
+        .filter((service) => preprocessors.some(p => p[0] == service.value[0]))  // optional
+        .map((preprocesor) => executeGraphNode(preprocesor, data));
+        
+    //Run until no more can run
+    await Promise.all(running);
+
+    return data;
+}
+
+// modified executepreprocessor
+async function executeGraphNode(service: GraphNode, data: Record<string, unknown>): Promise<void> {
+    
+    await executePreprocessor(service.value, data);
+    const newRun: Promise<void>[] = [];
+    for (const child of service.children) {
+        child.parents.delete(service);
+        if (child.parents.size === 0 && child.type === "P") {
+            newRun.push(executeGraphNode(child, data));
+        }
+    }
+    await Promise.all(newRun);
+}
+
 async function runPreprocessorsParallel(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
@@ -301,7 +332,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
     return data;
 }
 
-function getRoute(data: Record<string, any>): string {
+function getRoute(data: Record<string, unknown>): string {
     if (data["route"] === undefined) {
         console.debug("No route defined in request. Setting default value.");
         return DEFAULT_ROUTE_NAME;
@@ -311,26 +342,48 @@ function getRoute(data: Record<string, any>): string {
     }
 }
 
-app.post("/render", (req, res) => {
+app.post("/render", (req: express.Request, res: express.Response) => {
     console.debug("Received request");
-    if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
+    const requestBody = req.body; // capture req.body early
+    const totalRequestStartTime = performance.now();
+    let preprocessorEndTime: number;
+
+    if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", requestBody)) {
         // get route variable or set to default
-        let data = JSON.parse(JSON.stringify(req.body));
+        let data = JSON.parse(JSON.stringify(requestBody));
         const route = getRoute(data);
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
-            const preprocessors = getPreprocessorServices(containers, route);
-            const handlers = getHandlerServices(containers, route);
+            //Get the list of filtered containers that are connected to one of the Orchestrator networks
+            const connectedContainers = getFilteredContainers(containers);
+            const preprocessors = getPreprocessorServices(connectedContainers, route);
+            const handlers = getHandlerServices(connectedContainers, route);
+
+            const graph = new Graph();
+            //Construct the graph using the handlers and preprocessors 
+            const readyToRun =  await graph.constructGraph(preprocessors, handlers, connectedContainers);
+            console.debug("Preprocessor graph produced successfully.");
+            
+
 
             // Preprocessors
             if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
                 console.debug("Running preprocessors in parallel...");
-                data = await runPreprocessorsParallel(data, preprocessors);
+                if(graph.isAcyclic()){
+                    console.debug("Dependency graph passes cycle check.");
+                    data = await runServicesParallel(data, preprocessors, graph, readyToRun);
+                } else {
+                    console.debug("Dependency graph passes failed check. Please ensure that the preprocesors don't have cyclic dependencies.");
+                    console.debug("Using priority level execution...");
+                    data = await runPreprocessorsParallel(data, preprocessors);
+                }
+
             } else {
                 console.debug("Running preprocessors in series...");
                 data = await runPreprocessors(data, preprocessors);
             }
-
+            preprocessorEndTime = performance.now();
+            console.log(`PreprocessorsExecutionTime execution_time_ms=${(preprocessorEndTime - totalRequestStartTime).toFixed(2)}ms`);
             // Handlers
             const promises = handlers.map(handler => {
                 return fetch(`http://${handler[0]}:${handler[1]}/handler`, {
@@ -351,14 +404,15 @@ app.post("/render", (req, res) => {
                     if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
                         // Check each rendering for expected renderers
                         const renderers = data["renderers"];
-                        const renderings = json["renderings"];
-                        return renderings.filter((rendering: {"type_id": string}) => {
-                            const inList = renderers.includes(rendering["type_id"]);
+                        const renderings = (json as HandlerResponse).renderings;
+                        const filteredRenderings = renderings.filter((rendering) => {
+                            const inList = renderers.includes(rendering.type_id);
                             if (!inList) {
-                                console.warn("Excluding a renderering of type \"%s\" from handler \"%s\".\nThis renderer was not in the advertised list for this request.", rendering["type_id"], handler[0]);
+                                console.warn(`Excluding a rendering of type "${rendering["type_id"]}" from handler "${handler[0]}". This renderer was not in the advertised list for this request.`);
                             }
                             return inList;
                         });
+                        return filteredRenderings; // Promise.all(promises) resolves to [[handler1Renderings], [handler2Renderings], ...]
                     } else {
                         console.error("Handler response failed validation!");
                         throw Error(JSON.stringify(ajv.errors));
@@ -371,12 +425,13 @@ app.post("/render", (req, res) => {
 
             console.debug("Waiting for handlers...");
             return Promise.all(promises);
-        }).then(async (results: HandlerResponse["renderings"][]) => {
-            // Hard code sorting so MOTD appears first...
-            const renderings = results.reduce((a, b) => a.concat(b), [])
-                .sort((a: { "description": string }) => (a["description"] === "Server status message.") ? -1 : 0);
+        }).then(async (results) => {
+            // Promise.all resolves to HandlerResponse["renderings"][] or empty arrays; we can typecast it properly
+            const renderings = (results as HandlerResponse["renderings"][])
+                .reduce((a, b) => a.concat(b), [])
+                .sort((a) => (a.description === "Server status message.") ? -1 : 0);
             const response = {
-                "request_uuid": req.body.request_uuid,
+                "request_uuid": requestBody.request_uuid,
                 "timestamp": Math.round(Date.now() / 1000),
                 "renderings": renderings
             }
@@ -389,7 +444,7 @@ app.post("/render", (req, res) => {
             }
 
             if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {
-                const requestPath = path.join(BASE_LOG_PATH, req.body.request_uuid);
+                const requestPath = path.join(BASE_LOG_PATH, requestBody.request_uuid);
                 fs.mkdir(
                     requestPath,
                     { recursive: true }
@@ -409,22 +464,31 @@ app.post("/render", (req, res) => {
                     console.error(e);
                 });
             }
+            const totalRequestEndTime = performance.now();
+            console.log(`PostPreprocessorsExecutionTime execution_time_ms=${(totalRequestEndTime - preprocessorEndTime).toFixed(2)}ms`);
+            console.log(`TotalRequestExecutionTime execution_time_ms=${(totalRequestEndTime - totalRequestStartTime).toFixed(2)}ms`);
+
         }).catch(e => {
             console.error(e);
             res.status(500).send(e.name + ": " + e.message);
+            const totalRequestEndTime = performance.now();
+            console.log(`PostPreprocessorsExecutionTime execution_time_ms=${(totalRequestEndTime - preprocessorEndTime).toFixed(2)}ms`);
+            console.log(`TotalRequestExecutionTime execution_time_ms=${(totalRequestEndTime - totalRequestStartTime).toFixed(2)}ms`);
+
         });
     } else {
         res.status(400).send(ajv.errors);
     }
 });
 
-app.post("/render/preprocess", (req, res) => {
+app.post("/render/preprocess", (req: express.Request, res: express.Response) => {
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         const data = req.body;
         const route = getRoute(data);
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
             const preprocessors = getPreprocessorServices(containers, route);
+            
             if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
                 console.debug("Running preprocessors in parallel...");
                 return runPreprocessorsParallel(data, preprocessors);
@@ -449,7 +513,7 @@ app.post("/render/preprocess", (req, res) => {
     }
 });
 
-app.get("/authenticate/:uuid/:check", async (req, res) => {
+app.get("/authenticate/:uuid/:check", async (req: express.Request, res: express.Response) => {
     if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {
         // Check for valid uuidv4 path
         const uuid = req.params.uuid;
@@ -490,10 +554,11 @@ app.get("/authenticate/:uuid/:check", async (req, res) => {
 });
 
 // Healthcheck endpoint
-app.get('/health', (req, res) => {
+app.get("/health", (req: express.Request, res: express.Response) => {
     res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
 app.listen(port, () => {
     console.log(`Started server on port ${port}`);
 });
+
