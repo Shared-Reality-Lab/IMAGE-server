@@ -396,7 +396,7 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                     if (resp.ok) {
                         return resp.json() as Promise<HandlerResponse>;
                     } else {
-                        console.error(`${resp.status} ${resp.statusText}`);
+                        console.error(`Received ${resp.status} ${resp.statusText} from ${handler[0]}.`);
                         const result = await resp.json();
                         throw result;
                     }
