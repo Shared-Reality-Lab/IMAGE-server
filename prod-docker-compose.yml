@@ -45,7 +45,9 @@ services:
   monarch-link-app:
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.monarch-link-app.rule=Host(`monarch.image.a11y.mcgill.ca`)"
+      - "traefik.http.routers.monarch-link-app.rule=Host(`image.a11y.mcgill.ca`) && PathPrefix(`/monarch`)"
+      - "traefik.http.middlewares.monarch-stripprefix.stripprefix.prefixes=/monarch"
+      - "traefik.http.routers.monarch-link-app.middlewares=monarch-stripprefix@docker"
       - "traefik.http.routers.monarch-link-app.tls.certresolver=myresolver"
       - traefik.docker.network=traefik
     environment:
@@ -54,7 +56,10 @@ services:
   tat:
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.tat.rule=Host(`tat.image.a11y.mcgill.ca`)"
+      - "traefik.http.routers.tat.rule=Host(image.a11y.mcgill.ca) && PathPrefix(/tat)"
+      - "traefik.http.routers.tat.tls.certresolver=myresolver"
+      - "traefik.http.middlewares.tat-stripprefix.stripprefix.prefixes=/tat"
+      - "traefik.http.routers.tat.middlewares=tat-stripprefix@docker"
       - "traefik.http.routers.tat.tls.certresolver=myresolver"
       - traefik.docker.network=traefik
     environment:
