@@ -1,0 +1,150 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/textbook-diagram.schema.json",
+    "type": "object",
+    "title": "Textbook Diagram Data",
+    "description": "JSON containing pixel coordinates of different segments in a textbook diagram and the links between them",
+    "definitions": {
+        "normCoord": {
+            "description": "A pair of normalized coordinates.",
+            "type": "array",
+            "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+            },
+            "minItems": 2,
+            "maxItems": 2
+        },
+        "contour": {
+            "type": "object",
+            "description": "A single contour of a segment as detected. Each contour is a separate region.",
+            "properties": {
+                "coordinates": {
+                    "description": "The normalized coordinates forming the contour as returned by OpenCV.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/normCoord"
+                    }
+                },
+                "centroid": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/normCoord"
+                        },
+                        {
+                            "description": "The center of the contour with normalized coordinates."
+                        }
+                    ]
+                },
+                "area": {
+                    "description": "The area of the image taken by this contour",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                }
+            }
+        }
+    },
+    "properties": {
+        "nodes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "description": "A stage in the flow diagram",
+                "properties": {
+                    "segments": {
+                        "type": "array",
+                        "description": "Divides the entire stage into different segments where each segment indicates a noteworthy region or structure.",
+                        "items": {
+                            "type": "object",
+                            "description": "Contains information about each individual segment in the stage. Information such as area, centre of segment etc are included in this section",
+                            "properties": {
+                                "name": {
+                                    "description": "The name of the segment.",
+                                    "type": "string"
+                                },
+                                "contours": {
+                                    "description": "The separate contours making up the segment.",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/contour"
+                                    }
+                                },
+                                "centroid": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/normCoord"
+                                        },
+                                        {
+                                            "description": "The overall centroid of the segment with normalized coordinates."
+                                        }
+                                    ]
+                                },
+                                "area": {
+                                    "description": "Total area occupied by the segment in a given stage. the area is normalised between 0 and 1",
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                }
+                            },
+                            "required": [
+                                "name",
+                                "contours",
+                                "centroid",
+                                "area"
+                            ]
+                        }
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Unique identifier for the stage"
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Name of the stage"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "One/ two sentence description of the stage"
+                    }
+                },
+                "required": [
+                    "id",
+                    "label",
+                    "segments"
+                ]
+            }
+        },
+        "links": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "description": "Links between the various nodes based on the arrow directions",
+                "properties": {
+                    "source": {
+                        "type": "string",
+                        "description": "id of the node at which the link starts. Randomly chosen if the arrow is bidirectional"
+                    },
+                    "target": {
+                        "type": "string",
+                        "description": "id of the node at which the link ends. Randomly chosen if the arrow is bidirectional"
+                    },
+                    "directed": {
+                        "type": "boolean",
+                        "description": "true indicates that the link is unidirectional"
+                    }
+                },
+                "required": [
+                    "source",
+                    "target",
+                    "directed"
+                ]
+            }
+        }
+    },
+    "required": [
+        "nodes",
+        "links"
+    ]
+}
