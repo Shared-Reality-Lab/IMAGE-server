@@ -61,7 +61,7 @@
                             "description": "Contains information about each individual segment in the stage. Information such as area, centre of segment etc are included in this section",
                             "properties": {
                                 "name": {
-                                    "description": "The name of the segment.",
+                                    "description": "The name of the segment. Provides additional detail regarding subsections of a stage, if present.",
                                     "type": "string"
                                 },
                                 "contours": {
@@ -89,7 +89,6 @@
                                 }
                             },
                             "required": [
-                                "name",
                                 "contours",
                                 "centroid",
                                 "area"
