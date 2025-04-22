@@ -1,9 +1,9 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://image.a11y.mcgill.ca/preprocessors/textbook-diagram.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/mutistage-textbook-diagram.schema.json",
     "type": "object",
-    "title": "Textbook Diagram Data",
-    "description": "JSON containing pixel coordinates of different segments in a textbook diagram and the links between them",
+    "title": "Multistage Textbook Diagram Data",
+    "description": "JSON containing pixel coordinates of different stages in a mutistage textbook diagram and the links between them",
     "definitions": {
         "normCoord": {
             "description": "A pair of normalized coordinates.",
