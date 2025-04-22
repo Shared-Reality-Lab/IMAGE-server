@@ -77,4 +77,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            REGISTRY_TAG=${{ env.REGISTRY_TAG }}
+            REGISTRY_TAG=${{ env.REGISTRY }}
