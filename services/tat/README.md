@@ -11,4 +11,4 @@ While this app is included in the same docker-compose as other components of the
 This container runs on port 80.
 
 ## Endpoints
-- GET `https://tat.unicorn.cim.mcgill.ca/` opens the web application on a web browser. It has been tested for Chrome (but could also work for recent versions of Safari and Firefox as per [the application's parent repo](https://github.com/SVG-Edit/svgedit))
+- GET `https://unicorn.cim.mcgill.ca/image/tat` opens the web application on a web browser. It has been tested for Chrome (but could also work for recent versions of Safari and Firefox as per [the application's parent repo](https://github.com/SVG-Edit/svgedit))
