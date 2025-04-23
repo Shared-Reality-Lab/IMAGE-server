@@ -153,40 +153,43 @@ async function processResponse(response: Response, preprocessor: (string | numbe
     }
 }
 
-async function executeHandler(handler: (string | number)[], data: Record<string, unknown>): Promise<any[]>{
-    return fetch(`http://${handler[0]}:${handler[1]}/handler`, {
-        "method": "POST",
-        "headers": {
-            "Content-Type": "application/json"
-        },
-        "body": JSON.stringify(data)
-    }).then(async (resp) => {
-        if (resp.ok) {
-            return resp.json() as Promise<HandlerResponse>;
-        } else {
-            console.error(`${resp.status} ${resp.statusText}`);
-            const result = await resp.json();
-            throw result;
-        }
-    }).then(json => {
-        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
-            // Check each rendering for expected renderers
-            const renderers = data["renderers"]as any;
-            const renderings = json["renderings"];
-            return renderings.filter((rendering: {"type_id": string}) => {
-                const inList = renderers.includes(rendering["type_id"]);
-                if (!inList) {
-                    console.warn("Excluding a renderering of type \"%s\" from handler \"%s\".\nThis renderer was not in the advertised list for this request.", rendering["type_id"], handler[0]);
-                }
-                return inList;
+async function executeHandler(handler: (string | number)[], data: Record<string, unknown>): Promise<any[]> {
+    return measureExecutionTime(`Handler "${handler[0]}"`, async () => {
+        try {
+            const resp = await fetch(`http://${handler[0]}:${handler[1]}/handler`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
             });
-        } else {
-            console.error("Handler response failed validation!");
-            throw Error(JSON.stringify(ajv.errors));
+
+            if (!resp.ok) {
+                console.error(`${resp.status} ${resp.statusText}`);
+                const result = await resp.json();
+                throw result;
+            }
+
+            const json = await resp.json() as HandlerResponse;
+
+            if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
+                // Check each rendering for expected renderers
+                const renderers = data["renderers"] as any;
+                return json["renderings"].filter((rendering: { type_id: string }) => {
+                    const inList = renderers.includes(rendering["type_id"]);
+                    if (!inList) {
+                        console.warn(
+                            `Excluding a rendering of type "${rendering["type_id"]}" from handler "${handler[0]}".\nThis renderer was not in the advertised list for this request.`
+                        );
+                    }
+                    return inList;
+                });
+            } else {
+                console.error("Handler response failed validation!");
+                throw Error(JSON.stringify(ajv.errors));
+            }
+        } catch (err) {
+            console.error(`Handler "${handler[0]}" execution failed:`, err);
+            return [];
         }
-    }).catch(err => {
-        console.error(err);
-        return [];
     });
 }
 
@@ -432,7 +435,6 @@ app.post("/render", (req: express.Request, res: express.Response) => {
     console.debug("Received request");
     const requestBody = req.body; // capture req.body early
     const totalRequestStartTime = performance.now();
-    let preprocessorEndTime: number;
 
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", requestBody)) {
         // get route variable or set to default
@@ -471,22 +473,17 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                 console.debug("Running preprocessors in series...");
                 data = await runPreprocessors(data, preprocessors);
             }
-            preprocessorEndTime = performance.now();
-            console.log(`PreprocessorsExecutionTime execution_time_ms=${(preprocessorEndTime - totalRequestStartTime).toFixed(2)}ms`);
-            
             
             if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {
                 await storeResponse(requestBody, req, response as Record<string, unknown>);
             }
             const totalRequestEndTime = performance.now();
-            console.log(`PostPreprocessorsExecutionTime execution_time_ms=${(totalRequestEndTime - preprocessorEndTime).toFixed(2)}ms`);
             console.log(`TotalRequestExecutionTime execution_time_ms=${(totalRequestEndTime - totalRequestStartTime).toFixed(2)}ms`);
 
         }).catch(e => {
             console.error(e);
             res.status(500).send(e.name + ": " + e.message);
             const totalRequestEndTime = performance.now();
-            console.log(`PostPreprocessorsExecutionTime execution_time_ms=${(totalRequestEndTime - preprocessorEndTime).toFixed(2)}ms`);
             console.log(`TotalRequestExecutionTime execution_time_ms=${(totalRequestEndTime - totalRequestStartTime).toFixed(2)}ms`);
 
         });
