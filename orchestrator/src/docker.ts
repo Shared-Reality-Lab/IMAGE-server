@@ -53,8 +53,7 @@ export function getFilteredContainers(containers: Docker.ContainerInfo[]) : Dock
         return isInTargetNetwork;
     });
     //Only return the containers that are running 
-    return filteredContainers.filter(c => c.State === "running");
-    
+    return filteredContainers.filter(c => c.State === "running");  
 }
 
 function isPartOfRoute(container: Docker.ContainerInfo, route: string) {

@@ -153,6 +153,43 @@ async function processResponse(response: Response, preprocessor: (string | numbe
     }
 }
 
+async function executeHandler(handler: (string | number)[], data: Record<string, unknown>): Promise<any[]>{
+    return fetch(`http://${handler[0]}:${handler[1]}/handler`, {
+        "method": "POST",
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": JSON.stringify(data)
+    }).then(async (resp) => {
+        if (resp.ok) {
+            return resp.json() as Promise<HandlerResponse>;
+        } else {
+            console.error(`${resp.status} ${resp.statusText}`);
+            const result = await resp.json();
+            throw result;
+        }
+    }).then(json => {
+        if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
+            // Check each rendering for expected renderers
+            const renderers = data["renderers"]as any;
+            const renderings = json["renderings"];
+            return renderings.filter((rendering: {"type_id": string}) => {
+                const inList = renderers.includes(rendering["type_id"]);
+                if (!inList) {
+                    console.warn("Excluding a renderering of type \"%s\" from handler \"%s\".\nThis renderer was not in the advertised list for this request.", rendering["type_id"], handler[0]);
+                }
+                return inList;
+            });
+        } else {
+            console.error("Handler response failed validation!");
+            throw Error(JSON.stringify(ajv.errors));
+        }
+    }).catch(err => {
+        console.error(err);
+        return [];
+    });
+}
+
 async function executePreprocessor(preprocessor: (string | number)[], data: Record<string, unknown>): Promise<void> {
     const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
     const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
@@ -175,31 +212,37 @@ async function executePreprocessor(preprocessor: (string | number)[], data: Reco
     });
 }
 
-async function runServicesParallel(data: Record<string, unknown>, preprocessors: (string | number)[][], G: Graph, R: Set<GraphNode>): Promise<Record<string, unknown>> {
+async function runServicesParallel(data: Record<string, unknown>, preprocessors: (string | number)[][], G: Graph, R: Set<GraphNode>): Promise<{ data: Record<string, unknown>, handlerResults: any[][] }> {
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
     
+    const handlerResults: any[][] = [];
+
     // Get unique set of nodes that are running
     const running = Array.from(R)
-        .filter((service) => preprocessors.some(p => p[0] == service.value[0]))  // optional
-        .map((preprocesor) => executeGraphNode(preprocesor, data));
+        .map((service) => executeGraphNode(service, data, handlerResults));
         
     //Run until no more can run
     await Promise.all(running);
 
-    return data;
+    return { data, handlerResults };
 }
 
 // modified executepreprocessor
-async function executeGraphNode(service: GraphNode, data: Record<string, unknown>): Promise<void> {
-    
-    await executePreprocessor(service.value, data);
+async function executeGraphNode(service: GraphNode, data: Record<string, unknown>, handlerResults: any[][]): Promise<void> {
+    if (service.type === "P") {
+        await executePreprocessor(service.value, data);
+    } else if (service.type === "H") {
+        const result = await executeHandler(service.value, data);
+        handlerResults.push(result);  // accumulate result
+    }
+
     const newRun: Promise<void>[] = [];
     for (const child of service.children) {
         child.parents.delete(service);
-        if (child.parents.size === 0 && child.type === "P") {
-            newRun.push(executeGraphNode(child, data));
+        if (child.parents.size === 0) {
+            newRun.push(executeGraphNode(child, data, handlerResults));
         }
     }
     await Promise.all(newRun);
@@ -332,6 +375,49 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
     return data;
 }
 
+function finalizeResponse(results: any[][],requestBody: any,res: express.Response): Record<string, unknown> {
+    const renderings = (results as HandlerResponse["renderings"][])
+        .reduce((a, b) => a.concat(b), [])
+        .sort((a) => (a.description === "Server status message.") ? -1 : 0);
+
+    const response = {
+        request_uuid: requestBody.request_uuid,
+        timestamp: Math.round(Date.now() / 1000),
+        renderings: renderings
+    };
+
+    if (ajv.validate("https://image.a11y.mcgill.ca/response.schema.json", response)) {
+        console.debug("Valid response generated.");
+        res.json(response);
+    } else {
+        console.debug("Failed to generate a valid response (did the schema change?)");
+        res.status(500).send(ajv.errors);
+    }
+    
+    return response;
+}
+
+async function storeResponse(requestBody: any, req: express.Request, response: Record<string, unknown>) {
+    const requestPath = path.join(BASE_LOG_PATH, requestBody.request_uuid);
+    try {
+        await fs.mkdir(requestPath, { recursive: true });
+        await fs.writeFile(
+            path.join(requestPath, "request.json"),
+            JSON.stringify(req.body)
+        );
+        await fs.writeFile(
+            path.join(requestPath, "response.json"),
+            JSON.stringify(response)
+        );
+        console.debug("Wrote temporary files to " + requestPath);
+    } catch (e) {
+        console.error("Error occurred while logging to " + requestPath);
+        console.error(e);
+    }
+}
+
+
+
 function getRoute(data: Record<string, unknown>): string {
     if (data["route"] === undefined) {
         console.debug("No route defined in request. Setting default value.");
@@ -354,6 +440,7 @@ app.post("/render", (req: express.Request, res: express.Response) => {
         const route = getRoute(data);
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
+            let response: Record<string, unknown> | null = null;
             //Get the list of filtered containers that are connected to one of the Orchestrator networks
             const connectedContainers = getFilteredContainers(containers);
             const preprocessors = getPreprocessorServices(connectedContainers, route);
@@ -371,7 +458,9 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                 console.debug("Running preprocessors in parallel...");
                 if(graph.isAcyclic()){
                     console.debug("Dependency graph passes cycle check.");
-                    data = await runServicesParallel(data, preprocessors, graph, readyToRun);
+                    const { data: processedData, handlerResults } = await runServicesParallel(data, preprocessors, graph, readyToRun);
+                    response = finalizeResponse(handlerResults, requestBody, res);
+                    
                 } else {
                     console.debug("Dependency graph passes failed check. Please ensure that the preprocesors don't have cyclic dependencies.");
                     console.debug("Using priority level execution...");
@@ -384,85 +473,10 @@ app.post("/render", (req: express.Request, res: express.Response) => {
             }
             preprocessorEndTime = performance.now();
             console.log(`PreprocessorsExecutionTime execution_time_ms=${(preprocessorEndTime - totalRequestStartTime).toFixed(2)}ms`);
-            // Handlers
-            const promises = handlers.map(handler => {
-                return fetch(`http://${handler[0]}:${handler[1]}/handler`, {
-                    "method": "POST",
-                    "headers": {
-                        "Content-Type": "application/json"
-                    },
-                    "body": JSON.stringify(data)
-                }).then(async (resp) => {
-                    if (resp.ok) {
-                        return resp.json() as Promise<HandlerResponse>;
-                    } else {
-                        console.error(`${resp.status} ${resp.statusText}`);
-                        const result = await resp.json();
-                        throw result;
-                    }
-                }).then(json => {
-                    if (ajv.validate("https://image.a11y.mcgill.ca/handler-response.schema.json", json)) {
-                        // Check each rendering for expected renderers
-                        const renderers = data["renderers"];
-                        const renderings = (json as HandlerResponse).renderings;
-                        const filteredRenderings = renderings.filter((rendering) => {
-                            const inList = renderers.includes(rendering.type_id);
-                            if (!inList) {
-                                console.warn(`Excluding a rendering of type "${rendering["type_id"]}" from handler "${handler[0]}". This renderer was not in the advertised list for this request.`);
-                            }
-                            return inList;
-                        });
-                        return filteredRenderings; // Promise.all(promises) resolves to [[handler1Renderings], [handler2Renderings], ...]
-                    } else {
-                        console.error("Handler response failed validation!");
-                        throw Error(JSON.stringify(ajv.errors));
-                    }
-                }).catch(err => {
-                    console.error(err);
-                    return [];
-                });
-            });
-
-            console.debug("Waiting for handlers...");
-            return Promise.all(promises);
-        }).then(async (results) => {
-            // Promise.all resolves to HandlerResponse["renderings"][] or empty arrays; we can typecast it properly
-            const renderings = (results as HandlerResponse["renderings"][])
-                .reduce((a, b) => a.concat(b), [])
-                .sort((a) => (a.description === "Server status message.") ? -1 : 0);
-            const response = {
-                "request_uuid": requestBody.request_uuid,
-                "timestamp": Math.round(Date.now() / 1000),
-                "renderings": renderings
-            }
-            if (ajv.validate("https://image.a11y.mcgill.ca/response.schema.json", response)) {
-                console.debug("Valid response generated.");
-                res.json(response);
-            } else {
-                console.debug("Failed to generate a valid response (did the schema change?)");
-                res.status(500).send(ajv.errors);
-            }
-
+            
+            
             if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {
-                const requestPath = path.join(BASE_LOG_PATH, requestBody.request_uuid);
-                fs.mkdir(
-                    requestPath,
-                    { recursive: true }
-                ).then(() => {
-                    return fs.writeFile(
-                        path.join(requestPath, "request.json"),
-                        JSON.stringify(req.body)
-                    );
-                }).then(() => {
-                    return fs.writeFile(
-                        path.join(requestPath, "response.json"),
-                        JSON.stringify(response)
-                    );
-                }).then(() => { console.debug("Wrote temporary files to " + requestPath); })
-                .catch(e => {
-                    console.error("Error occurred while logging to " + requestPath);
-                    console.error(e);
-                });
+                await storeResponse(requestBody, req, response as Record<string, unknown>);
             }
             const totalRequestEndTime = performance.now();
             console.log(`PostPreprocessorsExecutionTime execution_time_ms=${(totalRequestEndTime - preprocessorEndTime).toFixed(2)}ms`);

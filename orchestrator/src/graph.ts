@@ -36,11 +36,7 @@ export class Graph {
         const requiredServices = getRequired(containers, service[0] as string, P);
         let optionalPreprocessors = [] as (string | number)[][];
         //Only get the optional preprocessors if its a preprocessor
-        //Current assumption is that handlers will not have optional dependencies
-        //Specific to preprocessors
-        if(P.some(p => p[0] == service[0])){
-          optionalPreprocessors = getOptional(containers, service[0] as string, P);
-        } 
+        optionalPreprocessors = getOptional(containers, service[0] as string, P);
         
 
         if(optionalPreprocessors && requiredServices && requiredServices.every((r) => Pset.has(r[0] as string))){
