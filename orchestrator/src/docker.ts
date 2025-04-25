@@ -124,72 +124,64 @@ export function getHandlerServices(containers: Docker.ContainerInfo[], route: st
 }
 
 //Returns the optional preprocessors/handlers needed for the given preprocessor/handler to run 
-//Optional preprocessors: enhance functionality but are not strictly required for execution.
-export function getOptional(containers: Docker.ContainerInfo[], preprocessorName: string, preprocessors: (string | number)[][]) : (string | number)[][]{
-    try{
-        //Check if the preprocessorName exists in preprocessors
-        const exists = preprocessors.some(p => p[0] === preprocessorName);
-        if (!exists) {
-            console.error(`Preprocessor "${preprocessorName}" not found in preprocessors list.`);
-            return [];
-        }    
-    
-        //Find the container for the name passed
-        const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
-        
+//Optional services: enhance functionality but are not strictly required for execution.
+export function getOptional(containers: Docker.ContainerInfo[], serviceName: string, servicesArray: (string | number)[][]) : (string | number)[][]{
+    try{   
+        //Find the container for the service name passed
+        const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === serviceName);
         if(!container){
-            console.error(`Could not find the container for preprocessor ${preprocessorName}`);
+            console.error(`Could not find the container for the service:  ${serviceName}`);
             return [];
         }
         if (container.Labels?.[_OPTIONAL_LABEL_] == undefined) {
-            console.warn(`Warning: The optional dependencies label is missing for preprocessor "${container.Labels["com.docker.compose.service"]}".`);
+            console.warn(`Warning: The optional dependencies label is missing for service:  "${container.Labels["com.docker.compose.service"]}".`);
             return [];
         }
        
-        const optionalPreprocessors = container.Labels[_OPTIONAL_LABEL_];
-        let optionalPreprocessorsArray : string[] = [];
+        const optionalServices = container.Labels[_OPTIONAL_LABEL_];
+        let optionalArr : string[] = [];
         
         //convert from string to array of strings 
-        if(optionalPreprocessors != ""){    //if the preprocessor has dependencies
-            optionalPreprocessorsArray = optionalPreprocessors ? optionalPreprocessors.split(",").filter(Boolean) : [];
+        if(optionalServices != ""){    //if the preprocessor has dependencies
+            optionalArr = optionalServices ? optionalServices.split(",").filter(Boolean) : [];
         }
         
-        //filter through the array of preprocessor names and return an array of their actual values
-        return preprocessors.filter(function (p) { return optionalPreprocessorsArray.includes(p[0] as string); });
+        //filter through the array of preprocessor & handler names and return an array of their actual values
+        return servicesArray.filter(function (p) { return optionalArr.includes(p[0] as string); });
+        
     } catch(error){
-        console.error(`Error while getting optional dependencies for ${preprocessorName}:`, error);
+        console.error(`Error while getting optional dependencies for ${serviceName}:`, error);
         return [];
     }
 
 }
 
 //Returns the required preprocessors/handlers needed for the given preprocessor/handler to run 
-export function getRequired(containers: Docker.ContainerInfo[], preprocessorName: string, preprocessors: (string | number)[][]) : (string | number)[][]{
+export function getRequired(containers: Docker.ContainerInfo[], serviceName: string, servicesArray: (string | number)[][]) : (string | number)[][]{
     try{
-        //Find the container for the name passed
-        const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === preprocessorName);
+        //Find the container for the service name passed
+        const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === serviceName);
         if(!container){
-            console.error(`Could not find the container for preprocessor ${preprocessorName}`);
+            console.error(`Could not find the container for the service: ${serviceName}`);
             return [];
         }
         if (container.Labels?.[_REQUIRED_LABEL_] == undefined) {
-            console.warn(`Warning: The required dependencies label is missing for preprocessor "${preprocessorName}".`);
+            console.warn(`Warning: The required dependencies label is missing for service: "${serviceName}".`);
             return [];
         }
 
-        const requiredPreprocessors = container.Labels[_REQUIRED_LABEL_];
-        let requiredPreprocessorsArray : string[] = [];
+        const requiredServices = container.Labels[_REQUIRED_LABEL_];
+        let requiredArr : string[] = [];
         
         //convert from string to array of strings 
-        if(requiredPreprocessors != ""){    //if the preprocessor has dependencies
-            requiredPreprocessorsArray = requiredPreprocessors.split(",").filter(Boolean);
+        if(requiredServices != ""){    //if the preprocessor/handler has dependencies
+            requiredArr = requiredServices.split(",").filter(Boolean);
         }
         
-        //filter through the array of preprocessor names and return an array of their actual values
-        const f =  preprocessors.filter(function (p) { return requiredPreprocessorsArray.includes(p[0] as string); });
-        return f;
+        //filter through the array of preprocessor & handler names and return an array of their actual values
+        return servicesArray.filter(function (p) { return requiredArr.includes(p[0] as string); });
     } catch(error){
-        console.error(`Error while getting required dependencies for ${preprocessorName}:`, error);
+        console.error(`Error while getting required dependencies for ${serviceName}:`, error);
         return [];
     }
 } 

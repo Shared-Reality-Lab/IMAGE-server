@@ -467,11 +467,19 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                     console.debug("Dependency graph passes failed check. Please ensure that the preprocesors don't have cyclic dependencies.");
                     console.debug("Using priority level execution...");
                     data = await runPreprocessorsParallel(data, preprocessors);
+                    const handlerResults: any[][] = await Promise.all(
+                        handlers.map(handler => executeHandler(handler, data))
+                    );                
+                    response = finalizeResponse(handlerResults, requestBody, res);
                 }
 
             } else {
                 console.debug("Running preprocessors in series...");
                 data = await runPreprocessors(data, preprocessors);
+                const handlerResults: any[][] = await Promise.all(
+                    handlers.map(handler => executeHandler(handler, data))
+                );                
+                response = finalizeResponse(handlerResults, requestBody, res);
             }
             
             if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {

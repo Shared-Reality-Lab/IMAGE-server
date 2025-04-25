@@ -33,10 +33,10 @@ export class Graph {
       }
       
       for (const service of combinedArray) {
-        const requiredServices = getRequired(containers, service[0] as string, P);
+        const requiredServices = getRequired(containers, service[0] as string, combinedArray);
         let optionalPreprocessors = [] as (string | number)[][];
         //Only get the optional preprocessors if its a preprocessor
-        optionalPreprocessors = getOptional(containers, service[0] as string, P);
+        optionalPreprocessors = getOptional(containers, service[0] as string, combinedArray);
         
 
         if(optionalPreprocessors && requiredServices && requiredServices.every((r) => Pset.has(r[0] as string))){
