@@ -3,7 +3,7 @@ services:
   orchestrator:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-orchestrator:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     environment:
       - PARALLEL_PREPROCESSORS=ON
       - STORE_IMAGE_DATA=ON
@@ -20,14 +20,14 @@ services:
   memcached:
     profiles: [production, test, default]
     image: 'memcached:1.6'
-    restart: unless-stopped
+    restart: "no"
     # cache memory size - 4GB, maximum item size - 5MB
     command: -m 4096 -I 5m
 
   espnet-tts:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-espnet-tts:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     environment:
       - TORCH_DEVICE=cuda
     labels:
@@ -42,7 +42,7 @@ services:
   espnet-tts-fr:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-espnet-tts-fr:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     environment:
       - TORCH_DEVICE=cuda
     labels:
@@ -57,7 +57,7 @@ services:
   multilang-support:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-translation:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
@@ -70,7 +70,7 @@ services:
   autour-preprocessor:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-autour:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/maps.env
     labels:
@@ -85,7 +85,7 @@ services:
   content-categoriser:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
@@ -100,7 +100,7 @@ services:
   graphic-caption:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-caption:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
@@ -115,7 +115,7 @@ services:
   text-followup:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-text-followup:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     environment:
       - MAX_HISTORY_LENGTH=100
       - HISTORY_EXPIRY=3600
@@ -133,7 +133,7 @@ services:
   graphic-tagger:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/azure-api.env
     labels:
@@ -148,7 +148,7 @@ services:
   object-detection:
     profiles: [production, default, test]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-yolo:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
@@ -170,7 +170,7 @@ services:
   object-grouping:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
@@ -183,7 +183,7 @@ services:
   openstreetmap:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/maps.env
     labels:
@@ -198,7 +198,7 @@ services:
   object-sorting:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-sorting:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 5
       ca.mcgill.a11y.image.port: 5000
@@ -211,7 +211,7 @@ services:
   semantic-segmentation:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-mmsemantic-segmentation:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     deploy:
       resources:
         reservations:
@@ -231,7 +231,7 @@ services:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-supercollider:${REGISTRY_TAG}
     command: sclang -D ./loader.scd
-    restart: unless-stopped
+    restart: "no"
     volumes:
       - sc-store:/tmp/sc-store
     deploy:
@@ -242,7 +242,7 @@ services:
   photo-audio-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-audio:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/express-common.env
     labels:
@@ -257,7 +257,7 @@ services:
   autour-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-autour:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/express-common.env
     labels:
@@ -272,7 +272,7 @@ services:
   photo-audio-haptics-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-audio-haptics:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/express-common.env
     labels:
@@ -287,7 +287,7 @@ services:
   high-charts-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-high-charts:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/express-common.env
     labels:
@@ -302,7 +302,7 @@ services:
   svg-od-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-od:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.required_dependencies: "object-detection,object-grouping"
@@ -313,7 +313,7 @@ services:
   svg-semantic-seg-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-semantic-seg:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation"
@@ -324,7 +324,7 @@ services:
   depth-map-generator:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-depth-map-generator:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     deploy:
       resources:
         reservations:
@@ -343,7 +343,7 @@ services:
   svg-depth-map:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-depth-map:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.required_dependencies: ""
@@ -354,7 +354,7 @@ services:
   nominatim-preprocessor:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-nominatim:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
         - ./config/express-common.env
     labels:
@@ -368,7 +368,7 @@ services:
   photo-tactile-svg-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-tactile-svg:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.required_dependencies: "object-detection,object-grouping,semantic-segmentation,graphic-caption"
@@ -379,7 +379,7 @@ services:
   map-tactile-svg-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-map-tactile-svg:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.required_dependencies: "openstreetmap,nominatim-preprocessor"
@@ -390,7 +390,7 @@ services:
   text-followup-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-text-followup:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.route: "followup"
@@ -406,7 +406,7 @@ services:
   motd-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-motd:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/express-common.env
     environment:
@@ -420,7 +420,7 @@ services:
   hello-haptics-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-hello-haptics:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/express-common.env
     labels:
@@ -434,7 +434,7 @@ services:
   ocr-clouds-preprocessor:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/apis-and-selection.env
     labels:
@@ -449,7 +449,7 @@ services:
   object-depth-calculator:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-depth-calculator:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
@@ -462,7 +462,7 @@ services:
   line-charts:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-line-charts:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
@@ -475,7 +475,7 @@ services:
   action-recognition:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-action-recognition:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.preprocessor: 4
         ca.mcgill.a11y.image.port: 5000
@@ -494,7 +494,7 @@ services:
   ocr-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-ocr:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.handler: enable
       ca.mcgill.a11y.image.required_dependencies: "ocr-clouds-preprocessor,object-detection"
@@ -505,7 +505,7 @@ services:
   osm-streets-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-osm-streets:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
         - ./config/express-common.env
     depends_on:
@@ -523,7 +523,7 @@ services:
   svg-open-street-map-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-open-street-map:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.port: 5000
@@ -535,7 +535,7 @@ services:
   collage-detector-preprocessor:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-collage-detector:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.preprocessor: 1
         ca.mcgill.a11y.image.port: 5000
@@ -558,14 +558,14 @@ services:
   monarch-link-app:
     profiles: [test, default]
     image: "ghcr.io/shared-reality-lab/image-service-monarch-link-app:${REGISTRY_TAG}"
-    restart: unless-stopped
+    restart: "no"
     networks:
       - traefik
   
   tat:
     profiles: [test, default]
     image: "ghcr.io/shared-reality-lab/image-service-tat:${REGISTRY_TAG}"
-    restart: unless-stopped
+    restart: "no"
     networks:
       - traefik
 # end - unicorn exclusive services        

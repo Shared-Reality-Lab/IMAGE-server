@@ -29,8 +29,16 @@ configure_logging()
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
+PROMPT = """
+Give a detailed description of the style, content,
+and the most significant aspects of this image.
+Answer with maximum one sentence.
+"""
 
-@app.route("/preprocessor", methods=['POST', ])
+logging.debug(f"Graphic caption prompt: {PROMPT}")
+
+
+@app.route("/preprocessor", methods=['POST'])
 def categorise():
     logging.debug("Received request")
 
@@ -90,13 +98,9 @@ def categorise():
         logging.warn("OLLAMA_API_KEY usually starts with sk-, "
                      "but this one starts with: " + api_key[:3])
 
-    prompt = "I am blind, so I cannot see this image. " \
-             "Tell me the most important aspects of it, including " \
-             "style, content, and the most significant aspect of the image." \
-             "Answer with maximum one sentence. "
     request_data = {
         "model": ollama_model,
-        "prompt": prompt,
+        "prompt": PROMPT,
         "images": [graphic_b64],
         "stream": False,
         "temperature": 0.0,
@@ -165,4 +169,3 @@ def health():
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
-    categorise()

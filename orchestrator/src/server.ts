@@ -481,7 +481,6 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                 );                
                 response = finalizeResponse(handlerResults, requestBody, res);
             }
-            
             if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {
                 await storeResponse(requestBody, req, response as Record<string, unknown>);
             }
