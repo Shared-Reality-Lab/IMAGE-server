@@ -24,6 +24,7 @@ import drawSvg as draw
 import inflect
 from config.logging_utils import configure_logging
 from datetime import datetime
+import numpy as np
 
 configure_logging()
 app = Flask(__name__)
@@ -162,12 +163,15 @@ def handle():
         layer = 0
         g = draw.Group(data_image_layer="Layer " +
                            str(layer), aria_label="Overview")
+        coord_lims = {}
         # Loop through stages
         for stage in data["stages"]:
-            label = [stage["label"]]
+            label = stage["label"]
             description = None
             if description in stage:
                 description = stage["description"]
+            # (x_min, y_min, x_max, y_max)
+            coord_vals = (1, 1, 0, 0)
             segments = stage["segments"]
             for segment in segments:
                 contour = segment["contours"]
@@ -187,8 +191,26 @@ def handle():
                                 (- coords[i][1] * dimensions[1]))
                         p.L(coords[i][0] * dimensions[0],
                             (- coords[i][1] * dimensions[1]))
+                    coord_vals= (min(coords[:][0]) if (min(coords[:][0])<coord_vals[0]) else coord_vals[0], 
+                                 min(coords[:][1]) if (min(coords[:][1])<coord_vals[1]) else coord_vals[1], 
+                                 max(coords[:][0]) if (max(coords[:][0])>coord_vals[2]) else coord_vals[2],
+                                 max(coords[:][1]) if (max(coords[:][1])>coord_vals[3]) else coord_vals[3])
                 g.append(p)
-            svg.append(g)
+            coord_lims[stage["id"]] = coord_vals
+        for link in data["links"]:
+            label = ("Arrow between "+ link["source"] +
+                     " and " + link["target"])
+            src_cntr = (coord_lims[link["source"]][2] - coord_lims[link["source"]][0], 
+                        coord_lims[link["source"]][3] - coord_lims[link["source"]][1])
+            tgt_cntr = (coord_lims[link["target"]][2] - coord_lims[link["target"]][0], 
+                        coord_lims[link["target"]][3] - coord_lims[link["target"]][1])
+            angle = np.degrees(np.atan2((tgt_cntr[1]-src_cntr[1]), (tgt_cntr[0]-src_cntr[0])))
+            logging.debug(label)
+            logging.debug(angle)
+            
+            
+
+        svg.append(g)
 
     # Checking if graphic-caption preprocessor is present
     if ("ca.mcgill.a11y.image.preprocessor.graphic-caption"
