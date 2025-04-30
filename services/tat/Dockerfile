@@ -24,7 +24,14 @@ ENV npm_config_ignore_scripts=true
 WORKDIR /app/packages/svgcanvas
 RUN npx rollup -c
 WORKDIR /app
-RUN npx rollup -c
+# Set server url based on registry tag
+ARG REGISTRY_TAG
+RUN if [ ${REGISTRY_TAG} = "unstable" ]; then \
+    npx rollup -c --environment SERVER_URL:"https://unicorn.cim.mcgill.ca/image/monarch/"; \
+else \
+    npx rollup -c --environment SERVER_URL:"https://image.a11y.mcgill.ca/image/monarch/"; \
+fi
+
 
 # Stage 2: Serve the application
 FROM nginx:alpine
