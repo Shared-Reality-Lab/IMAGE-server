@@ -258,6 +258,11 @@ services:
             context: .
             dockerfile: ./handlers/map-tactile-svg/Dockerfile
         image: "map-tactile-svg:latest"
+    multistage-diagram-tactile-svg-handler:
+        build:
+            context: .
+            dockerfile: ./handlers/multistage-diagram-tactile-svg/Dockerfile
+        image: "multistage-diagram-tactile-svg:latest"
     nominatim-preprocessor:
         build:
             context: .

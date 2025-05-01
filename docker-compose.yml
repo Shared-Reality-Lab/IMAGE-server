@@ -387,6 +387,17 @@ services:
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
+  multistage-diagram-tactile-svg-handler:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-multistage-diagram-tactile-svg:${REGISTRY_TAG}
+    restart: "no"
+    labels:
+        ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "mutistage-diagram-segmentation,graphic-caption"
+        ca.mcgill.a11y.image.optional_dependencies: ""
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+
   text-followup-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-text-followup:${REGISTRY_TAG}
