@@ -28,7 +28,6 @@ import numpy as np
 
 configure_logging()
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG)
 
 
 @app.route("/handler", methods=["POST"])
@@ -37,7 +36,7 @@ def handle():
     contents = request.get_json()
     preprocessors = contents['preprocessors']
     preprocessor_names = []
-    """
+    
     try:
         # Load necessary schema files
         with open("./schemas/definitions.json") as f:
@@ -46,22 +45,46 @@ def handle():
             request_schema = json.load(f)
         with open("./schemas/handler-response.schema.json") as f:
             response_schema = json.load(f)
-        with open("./schemas/renderers/multistage-diagram.schema.json") as f:
+        with open("./schemas/renderers/tactilesvg.schema.json") as f:
             renderer_schema = json.load(f)
+        with open("./schemas/preprocessors/multistage-diagram.schema.json") as f:
+            input_schema = json.load(f)
     except Exception as e:
         logging.error("Error loading schema files")
         logging.pii(f"Schema loading error: {e}")
         return jsonify("Schema files could not be loaded"), 500
-
+    
     store = {
         definitions_schema["$id"]: definitions_schema,
         request_schema["$id"]: request_schema,
         response_schema["$id"]: response_schema,
         renderer_schema["$id"]: renderer_schema,
+        input_schema["$id"]: input_schema,
     }
+    """
     resolver = jsonschema.RefResolver.from_schema(
         request_schema, store=store
     )
+    """
+    
+    resolver = jsonschema.RefResolver.from_schema(
+        input_schema, store=store
+    )
+    try:
+        logging.debug("Validating request schema")
+        validator = jsonschema.Draft7Validator(
+            input_schema, resolver=resolver
+        )
+        validator.validate(contents["preprocessors"][
+                                     "ca.mcgill.a11y.image.preprocessor."
+                                     "multistageDiagram"])
+    except ValidationError as e:
+        logging.error("Validation error in request schema")
+        logging.debug(f"Validation error: {e.message}")
+        return jsonify("Invalid request received!"), 400
+
+    
+    """
     # Get and validate request contents
     contents = request.get_json()
     try:
@@ -151,7 +174,7 @@ def handle():
     svg = draw.Drawing(dimensions[0], dimensions[1],
                        origin=(0, -dimensions[1]))
     # form = inflect.engine()
-    caption = "Rendering os a multistage diagram"
+    caption = "Rendering is a multistage diagram"
 
     # if "ca.mcgill.a11y.image.preprocessor.objectDetection" in preprocessors:
     if True:
@@ -189,27 +212,34 @@ def handle():
                         if (i == 1):
                             p.M(coords[i][0] * dimensions[0],
                                 (- coords[i][1] * dimensions[1]))
+                            
                         p.L(coords[i][0] * dimensions[0],
                             (- coords[i][1] * dimensions[1]))
-                    coord_vals= (min(coords[:][0]) if (min(coords[:][0])<coord_vals[0]) else coord_vals[0], 
-                                 min(coords[:][1]) if (min(coords[:][1])<coord_vals[1]) else coord_vals[1], 
-                                 max(coords[:][0]) if (max(coords[:][0])>coord_vals[2]) else coord_vals[2],
-                                 max(coords[:][1]) if (max(coords[:][1])>coord_vals[3]) else coord_vals[3])
+                    coords = np.asarray(coords)
+                    coords_max = coords.max(axis=0, keepdims=True)
+                    coords_min = coords.min(axis=0, keepdims=True)
+                    coord_vals= (coords_min[0][0] if (coords_min[0][0]<coord_vals[0]) else coord_vals[0], 
+                                 coords_min[0][1] if (coords_min[0][1]<coord_vals[1]) else coord_vals[1], 
+                                 coords_max[0][0] if (coords_max[0][0]>coord_vals[2]) else coord_vals[2],
+                                 coords_max[0][1] if (coords_max[0][1]>coord_vals[3]) else coord_vals[3])
                 g.append(p)
             coord_lims[stage["id"]] = coord_vals
         for link in data["links"]:
             label = ("Arrow between "+ link["source"] +
                      " and " + link["target"])
-            src_cntr = (coord_lims[link["source"]][2] - coord_lims[link["source"]][0], 
-                        coord_lims[link["source"]][3] - coord_lims[link["source"]][1])
-            tgt_cntr = (coord_lims[link["target"]][2] - coord_lims[link["target"]][0], 
-                        coord_lims[link["target"]][3] - coord_lims[link["target"]][1])
-            angle = np.degrees(np.atan2((tgt_cntr[1]-src_cntr[1]), (tgt_cntr[0]-src_cntr[0])))
-            logging.debug(label)
-            logging.debug(angle)
+            src_cntr = ((coord_lims[link["source"]][2] + coord_lims[link["source"]][0])/2, 
+                        (coord_lims[link["source"]][3] + coord_lims[link["source"]][1])/2)
+            tgt_cntr = ((coord_lims[link["target"]][2] + coord_lims[link["target"]][0])/2, 
+                        (coord_lims[link["target"]][3] + coord_lims[link["target"]][1])/2)
+            arw_src = cohenSutherlandClip(src_cntr, tgt_cntr,
+                                    (coord_lims[link["source"]]))
+            arw_tgt = cohenSutherlandClip(tgt_cntr, src_cntr,
+                                    (coord_lims[link["target"]]))
+            arw_src = point_at_distance(arw_src, arw_tgt, 0.1)
+            arw_tgt = point_at_distance(arw_tgt, arw_src, 0.2)
             
-            
-
+            p = draw_arrow(arw_src, arw_tgt, dimensions, label, link["directed"])
+            g.append(p)
         svg.append(g)
 
     # Checking if graphic-caption preprocessor is present
@@ -264,6 +294,148 @@ def handle():
     """
     logging.debug("Sending response")
     return response
+
+        
+
+# Function to compute region code for a point(x, y)
+def computeCode(x, y, lims):
+    (x_min, y_min, x_max, y_max) = lims
+    code = 0
+    if x < x_min:  # to the left of rectangle
+        code |= 1
+    elif x > x_max:  # to the right of rectangle
+        code |= 2
+    if y < y_min:  # below the rectangle
+        code |= 4
+    elif y > y_max:  # above the rectangle
+        code |= 8
+    return code
+
+
+# Implementing variant of Cohen-Sutherland algorithm
+def cohenSutherlandClip(src, tgt, lims):
+    logging.debug("Cohen Sutherland")
+    logging.debug(lims)
+    (x_min, y_min, x_max, y_max) = lims
+    (x1, y1) = src
+    (x2, y2) = tgt
+    logging.debug(tgt)
+    # Compute region codes for P1, P2
+    code1 = computeCode(x1, y1, lims)
+    code2 = computeCode(x2, y2, lims)
+    while True:
+
+        # If both endpoints lie within rectangle
+        if code1 == 0 and code2 == 0:
+            break
+
+        # Some segment lies within the rectangle
+        else:
+
+            # Line needs clipping
+            # At least one of the points is outside,
+            # select it
+            x = 1.0
+            y = 1.0
+            code_out = code2
+
+            # Find intersection point
+            # using formulas y = y1 + slope * (x - x1),
+            # x = x1 + (1 / slope) * (y - y1)
+            if code_out & 8:
+                # Point is above the clip rectangle
+                x = x1 + (x2 - x1) * (y_max - y1) / (y2 - y1)
+                y = y_max
+            elif code_out & 4:
+                # Point is below the clip rectangle
+                x = x1 + (x2 - x1) * (y_min - y1) / (y2 - y1)
+                y = y_min
+            elif code_out & 2:
+                # Point is to the right of the clip rectangle
+                y = y1 + (y2 - y1) * (x_max - x1) / (x2 - x1)
+                x = x_max
+            elif code_out & 1:
+                # Point is to the left of the clip rectangle
+                y = y1 + (y2 - y1) * (x_min - x1) / (x2 - x1)
+                x = x_min
+
+            # Now intersection point (x, y) is found
+            # We replace point outside clipping rectangle
+            # by intersection point
+            x2 = x
+            y2 = y
+            code2 = computeCode(x2, y2, lims)
+
+    return (x2, y2)
+
+def point_at_distance(start_point, end_point, fraction):
+    """
+    Calculates a point at a specified distance along a line segment.
+
+    Args:
+        start_point (tuple): Coordinates of the starting point (x, y).
+        end_point (tuple): Coordinates of the ending point (x, y).
+        fraction (float): Fraction of distance from the start point to the desired point.
+
+    Returns:
+        tuple: Coordinates of the point at the specified distance (x, y).
+               Returns None if the distance is invalid.
+    """
+    x1, y1 = start_point
+    x2, y2 = end_point
+
+    line_length = ((x2 - x1)**2 + (y2 - y1)**2)**0.5
+    distance = line_length * fraction
+
+    if line_length == 0:
+        return start_point
+
+    ratio = distance / line_length
+
+    x = x1 + ratio * (x2 - x1)
+    y = y1 + ratio * (y2 - y1)
+
+    return (x, y)
+
+def draw_arrow(arw_src, arw_tgt, dimensions, label, directed):
+    try:
+        p = draw.Path(stroke="#ff4477", stroke_width=10,
+                        fill='none', aria_label=label,)
+    except BaseException:
+        p = draw.Path(stroke="red", stroke_width=10,
+                        fill='none', aria_label=label,)
+    p.M(arw_src[0] * dimensions[0],
+                (- arw_src[1] * dimensions[1]))
+    p.L(arw_tgt[0] * dimensions[0],
+        (- arw_tgt[1] * dimensions[1]))
+    if directed:
+        arw_hd_start = point_at_distance(arw_tgt, arw_src, 0.1)
+        # find point at perpendicular distance from point
+        dx = arw_src[0] - arw_tgt[0]
+        dy = arw_src[1] - arw_tgt[1]
+        L = (dx**2 + dy**2)**0.5
+        distance = 0.05 * L
+        # Unit direction vector of the line
+        ux = dx / L
+        uy = dy / L
+        # Unit normal vector (perpendicular to line)
+        nx = -dy / L
+        ny = dx / L
+        offset_x1 = (ux + nx) / np.sqrt(2)
+        offset_y1 = (uy + ny) / np.sqrt(2)
+        offset_x2 = (ux - nx) / np.sqrt(2)
+        offset_y2 = (uy - ny) / np.sqrt(2)
+        # Final points at the given distance
+        p1 = (arw_hd_start[0] + distance * offset_x1, arw_hd_start[1] + distance * offset_y1)
+        p2 = (arw_hd_start[0] + distance * offset_x2, arw_hd_start[1] + distance * offset_y2)
+        p.M(p1[0] * dimensions[0],
+            (- p1[1] * dimensions[1]))
+        p.L(arw_tgt[0] * dimensions[0],
+            (- arw_tgt[1] * dimensions[1]))
+        p.L(p2[0] * dimensions[0],
+            (- p2[1] * dimensions[1]))
+    return p
+    
 
 
 @app.route("/health", methods=["GET"])
