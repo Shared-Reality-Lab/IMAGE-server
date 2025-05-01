@@ -1,8 +1,8 @@
 import logging
 import os
 
-# Define a PII log level
-PII_LOG_LEVEL = 5
+# Define a PII log level. Note: DEBUG = 10, INFO = 20
+PII_LOG_LEVEL = 5  # defined lower than debug level
 logging.addLevelName(PII_LOG_LEVEL, "PII")
 
 
@@ -19,13 +19,15 @@ logging.pii = lambda msg, *args, **kwargs: logging.log(
 def configure_logging():
     """
     Configures logging based on environment variables.
+    Always allow INFO and DEBUG.
+    Allow PII only if enabled.
     """
-    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+    log_level = os.getenv("LOG_LEVEL", "DEBUG").upper()
     pii_logging_enabled = os.getenv("PII_LOGGING_ENABLED",
                                     "false").lower() == "true"
 
-    level = getattr(logging, log_level, logging.INFO)
-    logging.basicConfig(level=level)
+    level = getattr(logging, log_level, logging.DEBUG)
+    logging.basicConfig(level=level, force=True)
 
     if pii_logging_enabled:
         logging.warning("Environment Unicorn: PII logging enabled!")
