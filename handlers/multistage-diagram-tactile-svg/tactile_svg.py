@@ -197,9 +197,9 @@ def handle():
             g.append(p)
         coord_lims[stage["id"]] = {"lims": coord_vals, "name": label}
     for link in data["links"]:
-        try: 
+        try:
             label = ("Arrow between " + coord_lims[link["source"]]["name"] +
-                    " and " + coord_lims[link["target"]]["name"])
+                     " and " + coord_lims[link["target"]]["name"])
             src_cntr = ((coord_lims[link["source"]]["lims"][2] +
                         coord_lims[link["source"]]["lims"][0])/2,
                         (coord_lims[link["source"]]["lims"][3] +
@@ -209,12 +209,15 @@ def handle():
                         (coord_lims[link["target"]]["lims"][3] +
                         coord_lims[link["target"]]["lims"][1])/2)
             arw_src = cohenSutherlandClip(src_cntr, tgt_cntr,
-                                        (coord_lims[link["source"]]["lims"]))
+                                          (coord_lims
+                                           [link["source"]]["lims"]))
             arw_tgt = cohenSutherlandClip(tgt_cntr, src_cntr,
-                                        (coord_lims[link["target"]]["lims"]))
+                                          (coord_lims
+                                           [link["target"]]["lims"]))
             arw_src = point_at_distance(arw_src, arw_tgt, 0.1)
             arw_tgt = point_at_distance(arw_tgt, arw_src, 0.2)
-            p = draw_arrow(arw_src, arw_tgt, dimensions, label, link["directed"])
+            p = draw_arrow(arw_src, arw_tgt, dimensions,
+                           label, link["directed"])
             g.append(p)
         except Exception as e:
             logging.debug("Encountered error while drawing arrow")
