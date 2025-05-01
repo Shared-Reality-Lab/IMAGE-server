@@ -20,10 +20,10 @@ Minimum System Requirements
 
 
 IMAGE Server was also successfully deployed on AWS EC2 using the below configuration:
-- Instance Type:	[Preferred] g4dn.xlarge (GPU) or t3.large (CPU-only)
+- Instance Type:	[Preferred] g5.xlarge (GPU) or t3.large (CPU-only)
 - OS:	Ubuntu 22.04 LTS
 - CPU: 4 vCPUs
-- RAM: 16GB
+- RAM: 16 GiB (15 GiB usable)
 - Storage: 1000GB EBS (Elastic Block Store)
 - Network: Default VPC with public IPv4
 - Security Group: Open ports 22 (SSH), 80 (HTTP), 443 (HTTPS) -- Required for server & web-based access
