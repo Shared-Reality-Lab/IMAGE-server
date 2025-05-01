@@ -91,8 +91,8 @@ def handle():
         return response
 
     # Throws error when both multistage diagram preprocessor NOT found
-    logging.debug("Checking for object detection "
-                  "and/ or semantic segmentation responses")
+    logging.debug("Checking for multistage diagram "
+                  "segmentation responses")
     if not ("ca.mcgill.a11y.image.preprocessor.multistage-diagram-segmentation"
             in preprocessors):
         logging.debug("Multistage Diagram Preprocessor not found")
@@ -197,24 +197,29 @@ def handle():
             g.append(p)
         coord_lims[stage["id"]] = {"lims": coord_vals, "name": label}
     for link in data["links"]:
-        label = ("Arrow between " + coord_lims[link["source"]]["name"] +
-                 " and " + coord_lims[link["target"]]["name"])
-        src_cntr = ((coord_lims[link["source"]]["lims"][2] +
-                     coord_lims[link["source"]]["lims"][0])/2,
-                    (coord_lims[link["source"]]["lims"][3] +
-                     coord_lims[link["source"]]["lims"][1])/2)
-        tgt_cntr = ((coord_lims[link["target"]]["lims"][2] +
-                     coord_lims[link["target"]]["lims"][0])/2,
-                    (coord_lims[link["target"]]["lims"][3] +
-                     coord_lims[link["target"]]["lims"][1])/2)
-        arw_src = cohenSutherlandClip(src_cntr, tgt_cntr,
-                                      (coord_lims[link["source"]]["lims"]))
-        arw_tgt = cohenSutherlandClip(tgt_cntr, src_cntr,
-                                      (coord_lims[link["target"]]["lims"]))
-        arw_src = point_at_distance(arw_src, arw_tgt, 0.1)
-        arw_tgt = point_at_distance(arw_tgt, arw_src, 0.2)
-        p = draw_arrow(arw_src, arw_tgt, dimensions, label, link["directed"])
-        g.append(p)
+        try: 
+            label = ("Arrow between " + coord_lims[link["source"]]["name"] +
+                    " and " + coord_lims[link["target"]]["name"])
+            src_cntr = ((coord_lims[link["source"]]["lims"][2] +
+                        coord_lims[link["source"]]["lims"][0])/2,
+                        (coord_lims[link["source"]]["lims"][3] +
+                        coord_lims[link["source"]]["lims"][1])/2)
+            tgt_cntr = ((coord_lims[link["target"]]["lims"][2] +
+                        coord_lims[link["target"]]["lims"][0])/2,
+                        (coord_lims[link["target"]]["lims"][3] +
+                        coord_lims[link["target"]]["lims"][1])/2)
+            arw_src = cohenSutherlandClip(src_cntr, tgt_cntr,
+                                        (coord_lims[link["source"]]["lims"]))
+            arw_tgt = cohenSutherlandClip(tgt_cntr, src_cntr,
+                                        (coord_lims[link["target"]]["lims"]))
+            arw_src = point_at_distance(arw_src, arw_tgt, 0.1)
+            arw_tgt = point_at_distance(arw_tgt, arw_src, 0.2)
+            p = draw_arrow(arw_src, arw_tgt, dimensions, label, link["directed"])
+            g.append(p)
+        except Exception as e:
+            logging.debug("Encountered error while drawing arrow")
+            logging.pii(e.message)
+
     svg.append(g)
 
     # Checking if graphic-caption preprocessor is present
