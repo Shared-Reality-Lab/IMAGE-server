@@ -1,0 +1,50 @@
+{
+    "type": "object",
+    "properties": {
+        "stages": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "description": "Description of the stage in the flow diagram",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "unique identifier for the stage"
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "name of the stage"
+                        },
+                    "description": {
+                        "type": "string",
+                        "description": "One/two-sentence description of the stage"
+                    }
+                },
+                "required": ["id", "label"]
+            }
+        },
+        "links": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "description": "Links between the various stages based on the arrow directions",
+                "properties": {
+                    "source": {
+                        "type": "string",
+                        "description": "id of the node at which the link starts. Randomly chosen if the arrow if bidirectional"
+                    },
+                    "target": {
+                        "type": "string",
+                        "description": "id of the node at which the link ends. Randomly chosen if the arrow if bidirectional"
+                    },
+                    "directed": {
+                        "type": "boolean",
+                        "description": "true indicates that the link is unidirectional"
+                    }
+                },
+                "required": ["source", "target", "directed"]
+            }
+        }
+    },
+    "required": ["stages", "links"]
+}

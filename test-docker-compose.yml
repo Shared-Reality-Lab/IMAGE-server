@@ -44,6 +44,15 @@ services:
             device_ids: ['1']
             capabilities: ["gpu", "utility", "compute"]
 
+  multistage-diagram-segmentation:
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['1']
+            capabilities: ["gpu", "utility", "compute"]
+
   depth-map-generator:
     deploy:
       resources:
