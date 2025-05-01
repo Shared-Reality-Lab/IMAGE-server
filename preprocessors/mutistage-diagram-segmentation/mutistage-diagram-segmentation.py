@@ -101,7 +101,8 @@ If some of the properties can't be identified, assign empty value to them.
 """
 
 # Schema Gemini should follow for the initial extraction
-with open('/usr/src/app/base_schema.json') as f:
+BASE_SCHEMA_PATH = os.getenv("BASE_SCHEMA")
+with open(BASE_SCHEMA_PATH) as f:
     BASE_SCHEMA_GEMINI = json.load(f)
 
 # Gemini safety settings

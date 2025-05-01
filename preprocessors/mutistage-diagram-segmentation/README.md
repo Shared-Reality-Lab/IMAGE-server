@@ -21,6 +21,7 @@ GOOGLE_API_KEY=[Your Google API Key]
 SAM_MODEL_PATH=[Path to SAM model file]
 GEMINI_MODEL=gemini-2.5-pro-exp-03-25
 PII_LOGGING_ENABLED=[true or false]
+BASE_SCHEMA=[location of the schema used by Gemini for the initial data extraction]
 ```
 
 Note: For production use, it's strongly recommended to set PII_LOGGING_ENABLED=false to prevent security risks.
