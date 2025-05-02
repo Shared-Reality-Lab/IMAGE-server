@@ -662,7 +662,8 @@ def process_diagram():
 
     # 0. Check the URL of the request to avoid processing PII in production
     # until the Google API is approved for use
-    if content["URL"] != "https://image.a11y.mcgill.ca/":
+    if (content["URL"] !=
+            "https://image.a11y.mcgill.ca/pages/multistage_diagrams.html"):
         logging.info(
             "Request URL does not match expected endpoint. Skipping."
             )
