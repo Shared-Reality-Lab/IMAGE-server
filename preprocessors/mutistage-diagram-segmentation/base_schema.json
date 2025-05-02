@@ -31,7 +31,7 @@
                 "properties": {
                     "source": {
                         "type": "string",
-                        "description": "id of the node at which the link starts. Randomly chosen if the arrow if bidirectional"
+                        "description": "id of the stage at which the link starts. Randomly chosen if the arrow is bidirectional"
                     },
                     "target": {
                         "type": "string",
