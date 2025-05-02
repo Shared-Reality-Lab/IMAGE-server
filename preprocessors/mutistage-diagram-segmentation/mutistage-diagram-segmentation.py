@@ -397,7 +397,7 @@ def extract_normalized_contours(
     Extracts and normalizes contours from SAM results. (Copied from new file)
     """
     if not results or len(results) == 0 or not results[0].masks:
-        logging.warning("No masks found in SAM results.")
+        logging.info("No masks found in SAM results.")
         return []
 
     try:
