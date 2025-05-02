@@ -167,9 +167,9 @@ services:
       - CONF_THRESHOLD=0.75
       - MAX_IMAGE_SIZE=640
 
-  mutistage-diagram-segmentation:
+  multistage-diagram-segmentation:
     profiles: [test]
-    image: ghcr.io/shared-reality-lab/image-preprocessor-mutistage-diagram-segmentation:${REGISTRY_TAG}
+    image: ghcr.io/shared-reality-lab/image-preprocessor-multistage-diagram-segmentation:${REGISTRY_TAG}
     restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 1

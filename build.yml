@@ -101,11 +101,11 @@ services:
             context: .
             dockerfile: ./preprocessors/text-followup/Dockerfile
         image: "text-followup:latest"
-    mutistage-diagram-segmentation:
+    multistage-diagram-segmentation:
         build:
             context: .
-            dockerfile: ./preprocessors/mutistage-diagram-segmentation/Dockerfile
-        image: "mutistage-diagram-segmentation:latest"
+            dockerfile: ./preprocessors/multistage-diagram-segmentation/Dockerfile
+        image: "multistage-diagram-segmentation:latest"
     emotion-recognition:
         build:
             context: .
