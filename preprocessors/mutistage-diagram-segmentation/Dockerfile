@@ -16,7 +16,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
-COPY /preprocessors/mutistage-diagram-segmentation/requirements.txt /usr/src/app/requirements.txt
+COPY /preprocessors/multistage-diagram-segmentation/requirements.txt /usr/src/app/requirements.txt
 
 # Install Python dependencies
 RUN pip3 install --upgrade pip && \
@@ -34,10 +34,10 @@ RUN wget -O /usr/src/app/models/sam2.1_l.pt https://image.a11y.mcgill.ca/models/
 
 # Copy your preprocessor application code
 # Make sure your python script is named 'diagram_preprocessor.py'
-COPY /preprocessors/mutistage-diagram-segmentation /usr/src/app 
+COPY /preprocessors/multistage-diagram-segmentation /usr/src/app 
 
 # Set environment variables needed by the Flask app
-ENV FLASK_APP=mutistage-diagram-segmentation.py
+ENV FLASK_APP=multistage-diagram-segmentation.py
 
 # Expose the port the application runs on
 EXPOSE 5000
@@ -49,4 +49,4 @@ USER python
 HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:5000/health || exit 1
 
 # Define the command to run the application using gunicorn
-CMD [ "gunicorn", "mutistage-diagram-segmentation:app", "-b", "0.0.0.0:5000", "--capture-output", "--timeout=120", "--log-level=debug" ]
+CMD [ "gunicorn", "multistage-diagram-segmentation:app", "-b", "0.0.0.0:5000", "--capture-output", "--timeout=120", "--log-level=debug" ]
