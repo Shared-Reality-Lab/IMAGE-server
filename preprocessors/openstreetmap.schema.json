@@ -42,7 +42,7 @@
                         "max": {
                             "$ref": "#/definitions/node/lat"
                         }
-                    }   
+                    }
                 },
                 "longitude": {
                     "type": "object",
@@ -137,9 +137,17 @@
                         }
                     }
                 },
-                "required": ["street_id", "street_name"]
+                "required": ["street_id"],
+                "anyOf": [
+                    {
+                        "required": ["street_name"]
+                    },
+                    {
+                        "required": ["street_type"]
+                    }
+                ]
             }
-        }      
+        }
     },
     "required": ["bounds", "points_of_interest", "streets"]
 }  
