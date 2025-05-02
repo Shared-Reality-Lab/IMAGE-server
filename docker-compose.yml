@@ -188,6 +188,8 @@ services:
       - SAM_MODEL_PATH=/usr/src/app/models/sam2.1_l.pt
       - GEMINI_MODEL=gemini-2.5-pro-exp-03-25
       - BASE_SCHEMA=/usr/src/app/base_schema.json
+    env_file:
+      ./config/gemini.env   
 
   object-grouping:
     profiles: [production, test, default]
