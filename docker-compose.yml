@@ -167,6 +167,28 @@ services:
       - CONF_THRESHOLD=0.75
       - MAX_IMAGE_SIZE=640
 
+  mutistage-diagram-segmentation:
+    profiles: [test]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-mutistage-diagram-segmentation:${REGISTRY_TAG}
+    restart: "no"
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 1
+      ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 0
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu", "utility", "compute"]
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+      - SAM_MODEL_PATH=/usr/src/app/models/sam2.1_l.pt
+      - GEMINI_MODEL=gemini-2.5-pro-exp-03-25
+      - BASE_SCHEMA=/usr/src/app/base_schema.json
+
   object-grouping:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:${REGISTRY_TAG}
