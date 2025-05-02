@@ -1,4 +1,4 @@
-name: Multisgate Diagram Segmentation
+name: Multistage Diagram Segmentation
 on:
   push:
     branches: [ main, mutistage-diagram-segmentation ]
