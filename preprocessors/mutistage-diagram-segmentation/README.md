@@ -1,6 +1,6 @@
 # Multistage Diagram Segmentation Preprocessor
 
-Beta quality: Useful enough for testing by end-users.
+Alpha quality: not yet ready for use by end-users.
 
 This preprocessor analyzes flow diagrams and process charts to extract structured information about stages, their dependencies, and visual representations. It produces a comprehensive JSON output containing:
 
