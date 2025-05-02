@@ -35,7 +35,7 @@
                     },
                     "target": {
                         "type": "string",
-                        "description": "id of the node at which the link ends. Randomly chosen if the arrow is bidirectional"
+                        "description": "id of the stage at which the link ends. Randomly chosen if the arrow is bidirectional"
                     },
                     "directed": {
                         "type": "boolean",
