@@ -273,7 +273,9 @@ def handle():
     logging.debug("Sending response")
     return response
 
-
+# Adapted from the implementation of
+# Cohen-Sutherland algorithm at :
+# https://www.geeksforgeeks.org/line-clipping-set-1-cohen-sutherland-algorithm/
 # Function to compute region code for a point(x, y)
 def computeCode(x, y, lims):
     (x_min, y_min, x_max, y_max) = lims
@@ -289,7 +291,9 @@ def computeCode(x, y, lims):
     return code
 
 
-# Implementing variant of Cohen-Sutherland algorithm
+# Adapted from the implementation of
+# Cohen-Sutherland algorithm at :
+# https://www.geeksforgeeks.org/line-clipping-set-1-cohen-sutherland-algorithm/
 def cohenSutherlandClip(src, tgt, lims):
     (x_min, y_min, x_max, y_max) = lims
     (x1, y1) = src
