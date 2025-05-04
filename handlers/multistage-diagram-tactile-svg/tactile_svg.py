@@ -273,6 +273,7 @@ def handle():
     logging.debug("Sending response")
     return response
 
+
 # Adapted from the implementation of
 # Cohen-Sutherland algorithm at :
 # https://www.geeksforgeeks.org/line-clipping-set-1-cohen-sutherland-algorithm/
