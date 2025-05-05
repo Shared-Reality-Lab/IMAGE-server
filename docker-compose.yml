@@ -114,7 +114,7 @@ services:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   text-followup:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-text-followup:${REGISTRY_TAG}
     restart: "no"
     environment:
@@ -169,7 +169,7 @@ services:
       - MAX_IMAGE_SIZE=640
 
   multistage-diagram-segmentation:
-    profiles: [test]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-multistage-diagram-segmentation:${REGISTRY_TAG}
     restart: "no"
     labels:
@@ -413,7 +413,7 @@ services:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   multistage-diagram-tactile-svg-handler:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-multistage-diagram-tactile-svg:${REGISTRY_TAG}
     restart: "no"
     labels:
@@ -424,7 +424,7 @@ services:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   text-followup-handler:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-text-followup:${REGISTRY_TAG}
     restart: "no"
     labels:
@@ -592,14 +592,14 @@ services:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
  
   monarch-link-app:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: "ghcr.io/shared-reality-lab/image-service-monarch-link-app:${REGISTRY_TAG}"
     restart: "no"
     networks:
       - traefik
   
   tat:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: "ghcr.io/shared-reality-lab/image-service-tat:${REGISTRY_TAG}"
     restart: "no"
     networks:
