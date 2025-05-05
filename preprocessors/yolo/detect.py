@@ -189,6 +189,12 @@ def detect():
     # Format results according to schema
     objects = format_detection_results(results)
 
+    # Check if any objects were detected
+    # If no objects are detected, return 204 No Content
+    if len(objects["objects"]) == 0:
+        logging.info("No objects detected")
+        return "", 204
+
     # Validate YOLO output against the object detection data schema
     try:
         validator = jsonschema.Draft7Validator(DATA_SCHEMA)
