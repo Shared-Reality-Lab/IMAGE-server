@@ -175,7 +175,7 @@ services:
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
-      ca.mcgill.a11y.image.cacheTimeout: 0
+      ca.mcgill.a11y.image.cacheTimeout: 3600
       ca.mcgill.a11y.image.required_dependencies: ""
       ca.mcgill.a11y.image.optional_dependencies: ""
     deploy:
