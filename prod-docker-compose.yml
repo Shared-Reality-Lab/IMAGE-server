@@ -56,7 +56,7 @@ services:
   tat:
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.tat.rule=Host(image.a11y.mcgill.ca) && PathPrefix(/tat)"
+      - "traefik.http.routers.tat.rule=Host(`image.a11y.mcgill.ca`) && PathPrefix(`/tat`)"
       - "traefik.http.routers.tat.tls.certresolver=myresolver"
       - "traefik.http.middlewares.tat-stripprefix.stripprefix.prefixes=/tat"
       - "traefik.http.routers.tat.middlewares=tat-stripprefix@docker"
