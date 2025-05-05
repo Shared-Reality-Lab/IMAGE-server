@@ -8,6 +8,7 @@ services:
       - PARALLEL_PREPROCESSORS=ON
       - STORE_IMAGE_DATA=ON
       - MEMCACHE_SERVERS=memcached:11211
+      - PREPROCESSOR_TIMEOUT=90000
     env_file:
       - ./config/express-common.env
     group_add:
