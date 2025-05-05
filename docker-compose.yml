@@ -393,7 +393,7 @@ services:
     restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
-        ca.mcgill.a11y.image.required_dependencies: "mutistage-diagram-segmentation"
+        ca.mcgill.a11y.image.required_dependencies: "multistage-diagram-segmentation"
         ca.mcgill.a11y.image.optional_dependencies: "graphic-caption"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
