@@ -29,7 +29,7 @@ ARG REGISTRY_TAG
 RUN if [ ${REGISTRY_TAG} = "unstable" ]; then \
     npx rollup -c --environment SERVER_URL:"https://unicorn.cim.mcgill.ca/image/monarch/"; \
 else \
-    npx rollup -c --environment SERVER_URL:"https://image.a11y.mcgill.ca/image/monarch/"; \
+    npx rollup -c --environment SERVER_URL:"https://image.a11y.mcgill.ca/monarch/"; \
 fi
 
 
