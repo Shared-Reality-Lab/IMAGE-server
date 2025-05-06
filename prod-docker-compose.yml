@@ -11,7 +11,8 @@ services:
       - "traefik.http.middlewares.peg-redirect.redirectregex.permanent=true"
       - "traefik.http.routers.atp-pegasus.middlewares=peg-redirect@docker"
 
-      - "traefik.http.routers.image.rule=Host(`image.a11y.mcgill.ca`) || Host(`image.ally.mcgill.ca`) || Host(`image.accessibility.mcgill.ca`)"
+      - "traefik.http.routers.image.rule=(Host(`image.a11y.mcgill.ca`) || Host(`image.ally.mcgill.ca`) || Host(`image.accessibility.mcgill.ca`)) \
+          && !(PathPrefix(`/tat`) || PathPrefix(`/monarch`))"
       - "traefik.http.middlewares.ally-redirect.redirectregex.regex=^(https?)://image.(ally|accessibility).mcgill.ca(/?.*)"
       - "traefik.http.middlewares.ally-redirect.redirectregex.replacement=$${1}://image.a11y.mcgill.ca$${3}"
       - "traefik.http.middlewares.ally-redirect.redirectregex.permanent=true"
