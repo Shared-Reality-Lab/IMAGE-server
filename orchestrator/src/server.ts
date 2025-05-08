@@ -163,7 +163,7 @@ async function executeHandler(handler: (string | number)[], data: Record<string,
             });
 
             if (!resp.ok) {
-                console.error(`${resp.status} ${resp.statusText}`);
+                console.error(`Received ${resp.status} ${resp.statusText} from ${handler[0]}`);
                 const result = await resp.json();
                 throw result;
             }
