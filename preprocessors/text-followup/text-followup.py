@@ -21,6 +21,7 @@ import time
 import jsonschema
 import logging
 import os
+import html
 from datetime import datetime
 from config.logging_utils import configure_logging
 
@@ -269,7 +270,7 @@ def followup():
             # Format assistant response for history
             model_resp = {
                 "role": "assistant",
-                "content": response_text
+                "content": html.unescape(response_text)
             }
 
             # Update conversation history
@@ -326,7 +327,7 @@ def followup():
 
     logging.debug("full response length: " + str(len(response)))
     logging.pii(response)
-    return response
+    return jsonify(response)
 
 
 # Two following endpoints don't have immediate use

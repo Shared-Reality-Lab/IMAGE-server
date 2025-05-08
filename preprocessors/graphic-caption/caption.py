@@ -21,6 +21,7 @@ import time
 import jsonschema
 import logging
 import os
+import html
 from datetime import datetime
 from config.logging_utils import configure_logging
 
@@ -122,7 +123,7 @@ def categorise():
     if response.status_code == 200:
         response_text = response.text
         data = json.loads(response_text)
-        graphic_caption = data['response']
+        graphic_caption = html.unescape(data['response'])
     else:
         logging.error("Error: {response.text}")
         return jsonify("Invalid response from ollama"), 500
@@ -153,7 +154,7 @@ def categorise():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # all done; return to orchestrator
-    return response
+    return jsonify(response)
 
 
 @app.route("/health", methods=["GET"])
