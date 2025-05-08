@@ -221,7 +221,7 @@ def handle():
             g.append(p)
         except Exception as e:
             logging.debug("Encountered error while drawing arrow")
-            logging.pii(e.message)
+            logging.pii(e)
 
     svg.append(g)
 
