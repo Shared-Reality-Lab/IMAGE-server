@@ -87,7 +87,7 @@ def categorise():
                     api_key[:3] + "[redacted]")
     else:
         logging.warning("OLLAMA_API_KEY usually starts with sk-, "
-                     "but this one starts with: " + api_key[:3])
+                        "but this one starts with: " + api_key[:3])
 
     prompt = "Answer only in JSON with the format " \
              '{"category": "YOUR_ANSWER"}. ' \
