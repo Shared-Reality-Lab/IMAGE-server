@@ -662,6 +662,10 @@ def process_diagram():
 
     # 0. Check the URL of the request to avoid processing PII in production
     # until the Google API is approved for use
+    # Check if there is graphic content to process
+    if "graphic" not in content:
+        logging.info("No graphic content. Skipping...")
+        return jsonify({"error": "No graphic content"}), 204
     if (content["URL"] !=
             "https://image.a11y.mcgill.ca/pages/multistage_diagrams.html"):
         logging.info(
@@ -680,11 +684,6 @@ def process_diagram():
         logging.error("Validation failed for incoming request")
         logging.pii(f"Validation error: {e.message} | Data: {content}")
         return jsonify({"error": "Invalid Preprocessor JSON format"}), 400
-
-    # Check if there is graphic content to process
-    if "graphic" not in content:
-        logging.info("No graphic content. Skipping...")
-        return jsonify({"error": "No graphic content"}), 204
 
     request_uuid = content["request_uuid"]
     timestamp = time.time()
