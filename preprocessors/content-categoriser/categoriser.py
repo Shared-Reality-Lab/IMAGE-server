@@ -86,8 +86,11 @@ def categorise():
         logging.pii("OLLAMA_API_KEY looks properly formatted: " +
                     api_key[:3] + "[redacted]")
     else:
-        logging.warning("OLLAMA_API_KEY usually starts with sk-, "
-                        "but this one starts with: " + api_key[:3])
+        logging.warning(f'''OLLAMA_API_KEY usually starts with sk-,
+                        but this one starts with: {api_key[:3]}.
+                        You either entered an incorrect API key,
+                        or used a JWT token instead.'''
+                        )
 
     prompt = "Answer only in JSON with the format " \
              '{"category": "YOUR_ANSWER"}. ' \
