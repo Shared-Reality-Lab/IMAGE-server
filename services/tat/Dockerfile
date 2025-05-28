@@ -24,14 +24,7 @@ ENV npm_config_ignore_scripts=true
 WORKDIR /app/packages/svgcanvas
 RUN npx rollup -c
 WORKDIR /app
-# Set server url based on registry tag
-ARG REGISTRY_TAG
-RUN if [ ${REGISTRY_TAG} = "unstable" ]; then \
-    npx rollup -c --environment SERVER_URL:"https://unicorn.cim.mcgill.ca/image/monarch/"; \
-else \
-    npx rollup -c --environment SERVER_URL:"https://image.a11y.mcgill.ca/monarch/"; \
-fi
-
+RUN npx rollup -c
 
 # Stage 2: Serve the application
 FROM nginx:alpine
@@ -41,6 +34,12 @@ COPY --from=build /app/dist/editor/ /usr/share/nginx/html
 
 # Add a static health check file
 COPY services/tat/healthcheck.html /usr/share/nginx/html/
+
+# passing the env vars straight to the dist via a startup script
+COPY services/tat/config.template.json /usr/share/nginx/html/config.template.json
+COPY services/tat/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Copy a custom Nginx configuration file, if needed (optional)
 # COPY nginx.conf /etc/nginx/nginx.conf
