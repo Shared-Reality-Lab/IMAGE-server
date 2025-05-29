@@ -41,7 +41,7 @@ app = Flask(__name__)
 
 # --- Configuration ---
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro-exp-03-25")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro-preview-05-06")
 if not GOOGLE_API_KEY:
     logging.error("GOOGLE_API_KEY environment variable not set.")
     sys.exit(1)
@@ -487,7 +487,8 @@ def segment_stages(
             )
         return {}
 
-    aggregated_contour_data = {}
+    bboxes = []
+    labels = []
 
     width, height = im.size
     if width <= 0 or height <= 0:
@@ -527,33 +528,36 @@ def segment_stages(
                 )
             continue
 
+        # After all checks add data to respective lists
+        bboxes.append(sam_bbox)
+        labels.append(label)
+
         logging.debug(f"Input Norm BBox (0-1000): {bbox_norm}")
         logging.debug(f"Converted SAM BBox (pixels): {sam_bbox}")
 
-        # Run SAM model for this specific bounding box
-        try:
-            # Ensure image is in a format SAM expects (PIL is usually fine)
-            results = sam_model(im, bboxes=[sam_bbox])
+    # Run SAM model for this all bounding boxes at once
+    try:
+        # Ensure image is in a format SAM expects (PIL is usually fine)
+        results = sam_model(im, bboxes=bboxes)
 
+        aggregated_contour_data = {label: [] for label in labels}
+
+        # Process results paired with their labels
+        for result, label in zip(results[0], labels):
             normalized_contours = extract_normalized_contours(
-                results, width, height
+                result, width, height
                 )
             logging.pii(
-                f"Found {len(normalized_contours)} contours \
-                    for label '{label}' using bbox {sam_bbox}."
+                f"Found {len(normalized_contours)} contour(s) for '{label}'"
                 )
+            aggregated_contour_data[label].extend(normalized_contours)
 
-            if normalized_contours:
-                if label not in aggregated_contour_data:
-                    aggregated_contour_data[label] = []
-                aggregated_contour_data[label].extend(normalized_contours)
-
-        except Exception as e:
-            logging.pii(
-                f"Error during SAM processing for label '{label}' \
-                    with bbox {sam_bbox}: {e}", exc_info=True
-                )
-            # Continue processing other boxes
+    except Exception as e:
+        logging.pii(
+            f"Error during SAM processing for label '{label}' \
+                with bbox {sam_bbox}: {e}", exc_info=True
+            )
+        # Continue processing other boxes
 
     logging.pii("--- Aggregated Contour Data Summary ---")
     for lbl, contours in aggregated_contour_data.items():
