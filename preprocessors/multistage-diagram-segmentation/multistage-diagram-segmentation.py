@@ -547,9 +547,6 @@ def segment_stages(
             normalized_contours = extract_normalized_contours(
                 result, width, height
                 )
-            logging.pii(
-                f"Found {len(normalized_contours)} contour(s) for '{label}'"
-                )
             aggregated_contour_data[label].extend(normalized_contours)
 
     except Exception as e:
