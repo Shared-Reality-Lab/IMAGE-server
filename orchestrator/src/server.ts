@@ -43,7 +43,7 @@ interface HandlerResponse {
     }>;
 }
 
-export type PreprocessorInfo = (string | number | boolean)[]
+export type ServiceInfo = (string | number | boolean)[]
 import { Graph, GraphNode, printGraph } from "./graph";
 
 const app = express();
@@ -120,7 +120,7 @@ async function checkCache(preprocessorName: string, hashedKey: string, cacheTime
     return null; // cache miss
 }
 
-async function fetchPreprocessorResponse(preprocessor: PreprocessorInfo, data: Record<string, unknown>): Promise<Response> {
+async function fetchPreprocessorResponse(preprocessor: ServiceInfo, data: Record<string, unknown>): Promise<Response> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), PREPROCESSOR_TIME_MS);
     try {
@@ -138,7 +138,7 @@ async function fetchPreprocessorResponse(preprocessor: PreprocessorInfo, data: R
     }
 }
 
-async function processResponse(response: Response, preprocessor: PreprocessorInfo, data: Record<string, unknown>, hashedKey: string, cacheTimeOut: number): Promise<void> {
+async function processResponse(response: Response, preprocessor: ServiceInfo, data: Record<string, unknown>, hashedKey: string, cacheTimeOut: number): Promise<void> {
     if (response.status === 200) {
         const jsonResponse = await response.json() as PreprocessorResponse;
         if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", jsonResponse)) {
@@ -180,7 +180,7 @@ async function processResponse(response: Response, preprocessor: PreprocessorInf
     }
 }
 
-async function executeHandler(handler: PreprocessorInfo, data: Record<string, unknown>): Promise<any[]> {
+async function executeHandler(handler: ServiceInfo, data: Record<string, unknown>): Promise<any[]> {
     return measureExecutionTime(`Handler "${handler[0]}"`, async () => {
         try {
             const resp = await fetch(`http://${handler[0]}:${handler[1]}/handler`, {
@@ -220,7 +220,7 @@ async function executeHandler(handler: PreprocessorInfo, data: Record<string, un
     });
 }
 
-async function executePreprocessor(preprocessor: PreprocessorInfo, data: Record<string, unknown>): Promise<void> {
+async function executePreprocessor(preprocessor: ServiceInfo, data: Record<string, unknown>): Promise<void> {
     const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0] as string] || '';
     const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
     const cacheTimeOut = preprocessor[3] as number;
@@ -243,7 +243,7 @@ async function executePreprocessor(preprocessor: PreprocessorInfo, data: Record<
     });
 }
 
-async function runServicesParallel(data: Record<string, unknown>, preprocessors: PreprocessorInfo[], G: Graph, R: Set<GraphNode>): Promise<{ data: Record<string, unknown>, handlerResults: any[][] }> {
+async function runServicesParallel(data: Record<string, unknown>, preprocessors: ServiceInfo[], G: Graph, R: Set<GraphNode>): Promise<{ data: Record<string, unknown>, handlerResults: any[][] }> {
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
@@ -279,12 +279,12 @@ async function executeGraphNode(service: GraphNode, data: Record<string, unknown
     await Promise.all(newRun);
 }
 
-async function runPreprocessorsParallel(data: Record<string, unknown>, preprocessors: PreprocessorInfo[]): Promise<Record<string, unknown>> {
+async function runPreprocessorsParallel(data: Record<string, unknown>, preprocessors: ServiceInfo[]): Promise<Record<string, unknown>> {
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
     let currentPriorityGroup: number | undefined = undefined;
-    const queue: PreprocessorInfo[] = []; //Microservice queue for preprocessors and handlers
+    const queue: ServiceInfo[] = []; //Microservice queue for preprocessors and handlers
 
 
     //function that dequeues everything in the queue at once, executes them and waits for them to finish processing
@@ -321,7 +321,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
     return data;
 }
 
-async function runPreprocessors(data: Record<string, unknown>, preprocessors: PreprocessorInfo[]): Promise<Record<string, unknown>> {
+async function runPreprocessors(data: Record<string, unknown>, preprocessors: ServiceInfo[]): Promise<Record<string, unknown>> {
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }

@@ -14,7 +14,7 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
  */
-import { PreprocessorInfo } from "./server";
+import { ServiceInfo } from "./server";
 import Docker from "dockerode";
 
 export const docker = new Docker();
@@ -128,7 +128,7 @@ export function getHandlerServices(containers: Docker.ContainerInfo[], route: st
 
 //Returns the optional preprocessors/handlers needed for the given preprocessor/handler to run 
 //Optional services: enhance functionality but are not strictly required for execution.
-export function getOptional(containers: Docker.ContainerInfo[], serviceName: string, servicesArray: PreprocessorInfo[]) : PreprocessorInfo[]{
+export function getOptional(containers: Docker.ContainerInfo[], serviceName: string, servicesArray: ServiceInfo[]) : ServiceInfo[]{
     try{   
         //Find the container for the service name passed
         const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === serviceName);
@@ -160,7 +160,7 @@ export function getOptional(containers: Docker.ContainerInfo[], serviceName: str
 }
 
 //Returns the required preprocessors/handlers needed for the given preprocessor/handler to run 
-export function getRequired(containers: Docker.ContainerInfo[], serviceName: string, servicesArray: PreprocessorInfo[]) : PreprocessorInfo[]{
+export function getRequired(containers: Docker.ContainerInfo[], serviceName: string, servicesArray: ServiceInfo[]) : ServiceInfo[]{
     try{
         //Find the container for the service name passed
         const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === serviceName);
