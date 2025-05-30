@@ -1,3 +1,4 @@
+import {PreprocessorInfo} from "./server";
 import { getOptional, getRequired } from "./docker";
 import Docker from "dockerode";
 
@@ -9,7 +10,7 @@ export class Graph {
       this.nodes = new Map();
     }
   
-    addNode(service : (string | number)[], isPreprocessor: boolean): GraphNode {
+    addNode(service : PreprocessorInfo, isPreprocessor: boolean): GraphNode {
       const name = service[0] as string; 
       if (!this.nodes.has(name)) {
         const newNode = new GraphNode(service);
@@ -23,9 +24,9 @@ export class Graph {
       return this.nodes.get(name)!;
     }
 
-    async constructGraph(P: (string | number)[][], H: (string | number)[][], containers: Docker.ContainerInfo[]) : Promise<Set<GraphNode>>  {
+    async constructGraph(P: PreprocessorInfo[], H: (string | number)[][], containers: Docker.ContainerInfo[]) : Promise<Set<GraphNode>>  {
       const R = new Set<GraphNode>();
-      const combinedArray = P.concat(H);
+      const combinedArray = P.concat(H as PreprocessorInfo[]);
 
       const Pset = new Set<string>();
       for(const preprocessor of P){
@@ -34,7 +35,7 @@ export class Graph {
       
       for (const service of combinedArray) {
         const requiredServices = getRequired(containers, service[0] as string, combinedArray);
-        let optionalPreprocessors = [] as (string | number)[][];
+        let optionalPreprocessors = [] as PreprocessorInfo[] 
         //Only get the optional preprocessors if its a preprocessor
         optionalPreprocessors = getOptional(containers, service[0] as string, combinedArray);
         
@@ -103,12 +104,12 @@ export class Graph {
 }
   
 export class GraphNode {
-    value: (string | number)[];    //preprocessor that this node represents
+    value: PreprocessorInfo;    //preprocessor that this node represents
     parents: Set<GraphNode>;
     children: Set<GraphNode>;
     type: string;
 
-    constructor(preprocessors: (string | number)[]) {
+    constructor(preprocessors: PreprocessorInfo) {
       this.value = preprocessors;
       this.parents = new Set();
       this.children = new Set();
