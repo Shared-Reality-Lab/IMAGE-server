@@ -14,6 +14,7 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
  */
+import { ServiceInfo } from "./server";
 import Docker from "dockerode";
 
 export const docker = new Docker();
@@ -27,6 +28,7 @@ const _CACHE_TIMEOUT_LABEL = "ca.mcgill.a11y.image.cacheTimeout";
 const _ORCHESTRATOR_ID_ = process.env.HOSTNAME as string;
 export const DEFAULT_ROUTE_NAME = "default";
 const _ROUTE_LABEL_ = "ca.mcgill.a11y.image.route";
+const _MODIFY_REQUEST_LABEL_ = "ca.mcgill.a11y.image.modifyRequest";
 
 function getOrchestratorNetworks(containers: Docker.ContainerInfo[]): string[] {
     const container = containers.filter(c => c.Id.startsWith(_ORCHESTRATOR_ID_)).shift();
@@ -86,6 +88,7 @@ export function getPreprocessorServices(containers: Docker.ContainerInfo[], rout
         const portLabel = container.Labels[_PORT_LABEL_];
         const priorityLabel = Number(container.Labels[_PREPROCESSOR_LABEL_]);
         const cacheTimeout = Number(container.Labels[_CACHE_TIMEOUT_LABEL] || 0);
+        const modifyRequest = Boolean(container.Labels[_MODIFY_REQUEST_LABEL_] || false);
 
         let port;
         if (portLabel !== undefined) {
@@ -96,7 +99,7 @@ export function getPreprocessorServices(containers: Docker.ContainerInfo[], rout
         } else {
             port = 80;
         }
-        return [container.Labels["com.docker.compose.service"], port, priorityLabel, cacheTimeout];
+        return [container.Labels["com.docker.compose.service"], port, priorityLabel, cacheTimeout, modifyRequest];
     });
 }
 
@@ -125,7 +128,7 @@ export function getHandlerServices(containers: Docker.ContainerInfo[], route: st
 
 //Returns the optional preprocessors/handlers needed for the given preprocessor/handler to run 
 //Optional services: enhance functionality but are not strictly required for execution.
-export function getOptional(containers: Docker.ContainerInfo[], serviceName: string, servicesArray: (string | number)[][]) : (string | number)[][]{
+export function getOptional(containers: Docker.ContainerInfo[], serviceName: string, servicesArray: ServiceInfo[]) : ServiceInfo[]{
     try{   
         //Find the container for the service name passed
         const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === serviceName);
@@ -157,7 +160,7 @@ export function getOptional(containers: Docker.ContainerInfo[], serviceName: str
 }
 
 //Returns the required preprocessors/handlers needed for the given preprocessor/handler to run 
-export function getRequired(containers: Docker.ContainerInfo[], serviceName: string, servicesArray: (string | number)[][]) : (string | number)[][]{
+export function getRequired(containers: Docker.ContainerInfo[], serviceName: string, servicesArray: ServiceInfo[]) : ServiceInfo[]{
     try{
         //Find the container for the service name passed
         const container = containers.find(c => c.Labels?.["com.docker.compose.service"] === serviceName);

@@ -42,6 +42,8 @@ interface HandlerResponse {
         type_id: string;
     }>;
 }
+
+export type ServiceInfo = (string | number | boolean)[]
 import { Graph, GraphNode, printGraph } from "./graph";
 
 const app = express();
@@ -59,6 +61,14 @@ const ajv = new Ajv2020({
 const PREPROCESSOR_TIME_MS = (!isNaN(parseInt(process.env.PREPROCESSOR_TIMEOUT || ""))) ? parseInt(process.env.PREPROCESSOR_TIMEOUT || "") : 15000;
 
 const BASE_LOG_PATH = path.join("/var", "log", "IMAGE");
+
+const MODIFY_REQUEST_INDEX = 4;  // The index returned by getPreprocessorServices corresponding to modifyRequest
+const NAME_MODIFY_REQUEST = "ca.mcgill.a11y.image.request";
+const RESTRICTED_FIELDS = [
+    "request_uuid",
+    "timestamp",
+    "preprocessors",
+];
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
@@ -110,7 +120,7 @@ async function checkCache(preprocessorName: string, hashedKey: string, cacheTime
     return null; // cache miss
 }
 
-async function fetchPreprocessorResponse(preprocessor: (string | number)[], data: Record<string, unknown>): Promise<Response> {
+async function fetchPreprocessorResponse(preprocessor: ServiceInfo, data: Record<string, unknown>): Promise<Response> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), PREPROCESSOR_TIME_MS);
     try {
@@ -128,19 +138,36 @@ async function fetchPreprocessorResponse(preprocessor: (string | number)[], data
     }
 }
 
-async function processResponse(response: Response, preprocessor: (string | number)[], data: Record<string, unknown>, hashedKey: string, cacheTimeOut: number): Promise<void> {
+async function processResponse(response: Response, preprocessor: ServiceInfo, data: Record<string, unknown>, hashedKey: string, cacheTimeOut: number): Promise<void> {
     if (response.status === 200) {
         const jsonResponse = await response.json() as PreprocessorResponse;
         if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", jsonResponse)) {
-            const preprocessorName = jsonResponse["name"];
-            (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = jsonResponse["data"]; 
-            // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP 
-            SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = preprocessorName;
-            // store data in cache
-            // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
-            if (cacheTimeOut > 0) {
-                console.debug(`Saving response for ${preprocessorName} in cache with key ${hashedKey}`);
-                await serverCache.setResponseInCache(hashedKey, JSON.stringify(jsonResponse["data"]), cacheTimeOut);
+            if (preprocessor[MODIFY_REQUEST_INDEX] == false) {
+                const preprocessorName = jsonResponse["name"];
+                (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = jsonResponse["data"]; 
+                // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP 
+                SERVICE_PREPROCESSOR_MAP[preprocessor[0] as string] = preprocessorName;
+                // store data in cache
+                // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
+                if (cacheTimeOut > 0) {
+                    console.debug(`Saving response for ${preprocessorName} in cache with key ${hashedKey}`);
+                    await serverCache.setResponseInCache(hashedKey, JSON.stringify(jsonResponse["data"]), cacheTimeOut);
+                }
+            } else {
+                // Verify that name in response matches expectation.
+                if (jsonResponse["name"] != NAME_MODIFY_REQUEST) {
+                    console.debug(`Pseudo-preprocessor ${preprocessor[0]} attempted to modify the request, but returned unexpected name ${jsonResponse["name"]}. Ignoring response.`);
+                } else {
+                    // Make transmitted modifications, within reason.
+                    for (const [field, value] of Object.entries(jsonResponse["data"])) {
+                        if (RESTRICTED_FIELDS.includes(field)) {
+                            console.debug(`Pseudo-preprocessor ${preprocessor[0]} attempted to modify restricted request field '${field}'. Ignoring modification.`);
+                        } else {
+                            data[field] = value;
+                        }
+                    }
+                    // TODO caching
+                }
             }
         } else {
             console.error(`Preprocessor "${preprocessor[0]}" response validation failed!`);
@@ -153,7 +180,7 @@ async function processResponse(response: Response, preprocessor: (string | numbe
     }
 }
 
-async function executeHandler(handler: (string | number)[], data: Record<string, unknown>): Promise<any[]> {
+async function executeHandler(handler: ServiceInfo, data: Record<string, unknown>): Promise<any[]> {
     return measureExecutionTime(`Handler "${handler[0]}"`, async () => {
         try {
             const resp = await fetch(`http://${handler[0]}:${handler[1]}/handler`, {
@@ -193,16 +220,17 @@ async function executeHandler(handler: (string | number)[], data: Record<string,
     });
 }
 
-async function executePreprocessor(preprocessor: (string | number)[], data: Record<string, unknown>): Promise<void> {
-    const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
+async function executePreprocessor(preprocessor: ServiceInfo, data: Record<string, unknown>): Promise<void> {
+    const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0] as string] || '';
     const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
     const cacheTimeOut = preprocessor[3] as number;
+    const isModifyRequest = preprocessor[MODIFY_REQUEST_INDEX] as boolean;
 
     // profile preprocessor lifecycle performance
     await measureExecutionTime(`Preprocessor "${preprocessor[0]}"`, async () => {
         // check if a cached response exists for the current preprocessor
         const cacheResponse = await checkCache(preprocessorName, hashedKey, cacheTimeOut);
-        if (cacheResponse) {  // if the response is found in cache, update `data` directly without making any calls
+        if (cacheResponse && !isModifyRequest) {  // if the response is found in cache, update `data` directly without making any calls
             (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse;
             return; // cache hit, no further processing is needed
         }
@@ -215,7 +243,7 @@ async function executePreprocessor(preprocessor: (string | number)[], data: Reco
     });
 }
 
-async function runServicesParallel(data: Record<string, unknown>, preprocessors: (string | number)[][], G: Graph, R: Set<GraphNode>): Promise<{ data: Record<string, unknown>, handlerResults: any[][] }> {
+async function runServicesParallel(data: Record<string, unknown>, preprocessors: ServiceInfo[], G: Graph, R: Set<GraphNode>): Promise<{ data: Record<string, unknown>, handlerResults: any[][] }> {
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
@@ -251,12 +279,12 @@ async function executeGraphNode(service: GraphNode, data: Record<string, unknown
     await Promise.all(newRun);
 }
 
-async function runPreprocessorsParallel(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
+async function runPreprocessorsParallel(data: Record<string, unknown>, preprocessors: ServiceInfo[]): Promise<Record<string, unknown>> {
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
     let currentPriorityGroup: number | undefined = undefined;
-    const queue: (string | number)[][] = []; //Microservice queue for preprocessors and handlers
+    const queue: ServiceInfo[] = []; //Microservice queue for preprocessors and handlers
 
 
     //function that dequeues everything in the queue at once, executes them and waits for them to finish processing
@@ -293,7 +321,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
     return data;
 }
 
-async function runPreprocessors(data: Record<string, unknown>, preprocessors: (string | number)[][]): Promise<Record<string, unknown>> {
+async function runPreprocessors(data: Record<string, unknown>, preprocessors: ServiceInfo[]): Promise<Record<string, unknown>> {
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
@@ -306,7 +334,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
         let resp;
         // get value from cache for each preprocessor if it exists
         const cacheTimeOut = preprocessor[3] as number;
-        const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0]] || '';
+        const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0] as string] || '';
         const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
         const cacheValue = await serverCache.getResponseFromCache(hashedKey);
         if (cacheTimeOut && cacheValue && preprocessorName){
@@ -342,15 +370,30 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: (s
                 try {
                     const json = await resp.json() as PreprocessorResponse;
                     if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
-                        (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
-                        // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP
-                        SERVICE_PREPROCESSOR_MAP[preprocessor[0]] = json["name"];
-                        // store the value in cache
-                        // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
-                        if(cacheTimeOut > 0){
-                            const hashedKey =  serverCache.constructCacheKey(data, json["name"]);
-                            console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
-                            await serverCache.setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut)
+                        if (preprocessor[MODIFY_REQUEST_INDEX] == false) {
+                            (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
+                            // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP
+                            SERVICE_PREPROCESSOR_MAP[preprocessor[0] as string] = json["name"];
+                            // store the value in cache
+                            // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
+                            if(cacheTimeOut > 0){
+                                const hashedKey =  serverCache.constructCacheKey(data, json["name"]);
+                                console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
+                                await serverCache.setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut)
+                            }
+                        } else {
+                            if (json["name"] != NAME_MODIFY_REQUEST) {
+                                console.debug(`Pseudo-preprocessor ${preprocessorName} attempted to modify the request, but returned unexpected name ${json["name"]}. Ignoring response.`);
+                            } else {
+                                for (const [field, value] of Object.entries(json["data"])) {
+                                    if (RESTRICTED_FIELDS.includes(field)) {
+                                        console.debug(`Pseudo-preprocessor ${preprocessorName} attempted to modify restricted request field '${field}'. Ignoring modification.`);
+                                    } else {
+                                        data[field] = value;
+                                    }
+                                }
+                                // TODO caching
+                            }
                         }
                     } else {
                         console.error("Preprocessor response failed validation!");
@@ -445,18 +488,40 @@ app.post("/render", (req: express.Request, res: express.Response) => {
             let response: Record<string, unknown> | null = null;
             //Get the list of filtered containers that are connected to one of the Orchestrator networks
             const connectedContainers = getFilteredContainers(containers);
-            const preprocessors = getPreprocessorServices(connectedContainers, route);
+            const allPreprocessors = getPreprocessorServices(connectedContainers, route);
+            const pseudopreprocessors = allPreprocessors.filter(p => p[MODIFY_REQUEST_INDEX] == true);
+            const preprocessors = allPreprocessors.filter(p => p[MODIFY_REQUEST_INDEX] == false);
             const handlers = getHandlerServices(connectedContainers, route);
+
+            // Construct pseudo-preprocessor graph
+            const pseudoGraph = new Graph();
+            const pseudoReady = await pseudoGraph.constructGraph(
+                pseudopreprocessors,
+                [],
+                connectedContainers
+            );
 
             const graph = new Graph();
             //Construct the graph using the handlers and preprocessors 
-            const readyToRun =  await graph.constructGraph(preprocessors, handlers, connectedContainers);
+            const readyToRun =  await graph.constructGraph(
+                preprocessors,
+                handlers,
+                connectedContainers
+            );
             console.debug("Preprocessor graph produced successfully.");
-            
-
 
             // Preprocessors
             if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
+                // Deal with pseudo-preprocessors first, if any
+                if (pseudoGraph.isAcyclic()) {
+                    console.debug("Running pseudo-preprocessors in parallel...");
+                    const { data: modifiedData, handlerResults: tmpHResults} = await runServicesParallel(data, pseudopreprocessors, pseudoGraph, pseudoReady);
+                    data = modifiedData;
+                } else {
+                    console.debug("Dependency graph has cycles, please check for cyclic dependencies in pseudopreprocessors.");
+                    console.debug("Defaulting to serial execution.");
+                    data = await runPreprocessors(data, pseudopreprocessors);
+                }
                 console.debug("Running preprocessors in parallel...");
                 if(graph.isAcyclic()){
                     console.debug("Dependency graph passes cycle check.");
@@ -474,6 +539,8 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                 }
 
             } else {
+                console.debug("Running pseudo-preprocessors in series...");
+                data = await runPreprocessors(data, pseudopreprocessors);
                 console.debug("Running preprocessors in series...");
                 data = await runPreprocessors(data, preprocessors);
                 const handlerResults: any[][] = await Promise.all(
