@@ -127,4 +127,4 @@ services:
       - "traefik.http.routers.tat.tls.certresolver=myresolver"
       - traefik.docker.network=traefik
     environment:
-      - SERVER_NAME=unicorn.cim.mcgill.ca
+      - SERVER_URL=https://unicorn.cim.mcgill.ca/image/
