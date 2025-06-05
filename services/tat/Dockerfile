@@ -24,14 +24,7 @@ ENV npm_config_ignore_scripts=true
 WORKDIR /app/packages/svgcanvas
 RUN npx rollup -c
 WORKDIR /app
-# Set server url based on registry tag
-ARG REGISTRY_TAG
-RUN if [ ${REGISTRY_TAG} = "unstable" ]; then \
-    npx rollup -c --environment SERVER_URL:"https://unicorn.cim.mcgill.ca/image/monarch/"; \
-else \
-    npx rollup -c --environment SERVER_URL:"https://image.a11y.mcgill.ca/monarch/"; \
-fi
-
+RUN npx rollup -c
 
 # Stage 2: Serve the application
 FROM nginx:alpine
@@ -51,5 +44,5 @@ EXPOSE 80
 # Healthcheck
 HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost/healthcheck.html || exit 1
 
-# Start the Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Create config.js and start the Nginx server
+CMD sh -c "echo \"window.APP_CONFIG = { serverUrl: '\${SERVER_URL}' };\" > /usr/share/nginx/html/config.js && nginx -g 'daemon off;'"
