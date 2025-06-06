@@ -1,5 +1,5 @@
 name: Action Recognition Handler 
-gon:
+on:
   workflow_dispatch:
   
   # push:
