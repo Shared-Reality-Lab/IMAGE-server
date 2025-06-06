@@ -1,6 +1,4 @@
 name: Action Recognition
-# Disabled workflow — kept for archival purposes
-
 on:
   workflow_dispatch:
   

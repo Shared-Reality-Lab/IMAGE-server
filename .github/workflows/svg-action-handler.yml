@@ -1,6 +1,5 @@
 name: Action Recognition Handler 
-# Disabled workflow — kept for archival purposes
-on:
+gon:
   workflow_dispatch:
   
   # push:
