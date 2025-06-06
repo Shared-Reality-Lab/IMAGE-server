@@ -1,17 +1,18 @@
 name: Action Recognition Handler 
 on:
-  push:
-    branches: [ main ]
-    tags: [ "handler-svg-action-recognition-[0-9]+.[0-9]+.[0-9]+" ]
-    paths: [ "handlers/svg-action-recognition/**" ]
-  pull_request:
-    branches: [ main ]
-    paths: [ "handlers/svg-action-recognition/**" ]
-  workflow_run:
-    workflows: [ "Schemas (Trigger)" ]
-    types:
-      - completed
   workflow_dispatch:
+  
+  # push:
+  #   branches: [ main ]
+  #   tags: [ "handler-svg-action-recognition-[0-9]+.[0-9]+.[0-9]+" ]
+  #   paths: [ "handlers/svg-action-recognition/**" ]
+  # pull_request:
+  #   branches: [ main ]
+  #   paths: [ "handlers/svg-action-recognition/**" ]
+  # workflow_run:
+  #   workflows: [ "Schemas (Trigger)" ]
+  #   types:
+  #     - completed
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: shared-reality-lab/image-handler-svg-action-recognition

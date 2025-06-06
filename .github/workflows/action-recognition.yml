@@ -1,17 +1,18 @@
 name: Action Recognition
 on:
-  push:
-    branches: [ main ]
-    tags: [ "preprocessor-action-recognition-[0-9]+.[0-9]+.[0-9]+" ]
-    paths: [ "preprocessors/action-recognition/**" ]
-  pull_request:
-    branches: [ main ]
-    paths: [ "preprocessors/action-recognition/**" ]
-  workflow_run:
-    workflows: [ "Schemas (Trigger)" ]
-    types:
-      - completed
   workflow_dispatch:
+  
+  # push:
+  #   branches: [ main ]
+  #   tags: [ "preprocessor-action-recognition-[0-9]+.[0-9]+.[0-9]+" ]
+  #   paths: [ "preprocessors/action-recognition/**" ]
+  # pull_request:
+  #   branches: [ main ]
+  #   paths: [ "preprocessors/action-recognition/**" ]
+  # workflow_run:
+  #   workflows: [ "Schemas (Trigger)" ]
+  #   types:
+  #     - completed
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: shared-reality-lab/image-preprocessor-action-recognition
