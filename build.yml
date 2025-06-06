@@ -288,6 +288,10 @@ services:
             context: ./schemas
             dockerfile: Dockerfile
         image: "schemas:latest"
+    resize-graphic:
+        build:
+            context: .
+            dockerfile: ./preprocessors/resize-graphic/Dockerfile
     multilang-service:
         image: "multilang-service:latest"
         build:
