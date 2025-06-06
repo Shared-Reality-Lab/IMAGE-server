@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/modify-request.schema.json",
+    "type": "object",
+    "title": "Request Modification",
+    "description": "Pseudo-preprocessor: the key-value pairs in the body will be used to update those in the request, prior to it being sent to regular preprocessors. The ca.mcgill.a11y.image.request name and modifyRequest flag must be present.",
+    "not": {
+        "anyOf": [
+            { "required": ["request_uuid"] },
+            { "required": ["timestamp"] },
+            { "required": ["preprocessors"] }
+        ]
+    }
+}
