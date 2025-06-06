@@ -15,8 +15,6 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 import jsonschema
-from io import BytesIO
-import base64
 import json
 import logging
 import time
