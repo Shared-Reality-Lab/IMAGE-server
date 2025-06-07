@@ -42,8 +42,8 @@ RUN pip install --upgrade pip && \
     pip install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
-COPY /config /app/config
 COPY /preprocessors/mmsemseg/ /app
+COPY /config /app/config
 
 # Download the model checkpoint
 RUN wget https://image.a11y.mcgill.ca/resources/models/mmsemseg/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth

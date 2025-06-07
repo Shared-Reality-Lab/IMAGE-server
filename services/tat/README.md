@@ -8,7 +8,12 @@ This is the containerized version of the web app [IMAGE-TactileAuthoring](https:
 
 While this app is included in the same docker-compose as other components of the IMAGE architecture, it is not a "service" in the specific sense the term is used within the IMAGE architecture. This web app is not used by any handlers/preprocessors within IMAGE. Instead, it is a standalone application related to IMAGE and is included in the docker-compose solely for convenience and ease of deployment.
 
+Environment variable to be set:
+```
+SERVER_URL=[URL of server with monarch-link-app component]
+```
+
 This container runs on port 80.
 
 ## Endpoints
-- GET `https://tat.unicorn.cim.mcgill.ca/` opens the web application on a web browser. It has been tested for Chrome (but could also work for recent versions of Safari and Firefox as per [the application's parent repo](https://github.com/SVG-Edit/svgedit))
+- GET `https://unicorn.cim.mcgill.ca/image/tat` opens the web application on a web browser. It has been tested for Chrome (but could also work for recent versions of Safari and Firefox as per [the application's parent repo](https://github.com/SVG-Edit/svgedit))

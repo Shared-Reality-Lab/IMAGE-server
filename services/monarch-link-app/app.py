@@ -135,6 +135,10 @@ def update(id):
                     # include source graphic if present
                     if "graphicBlob" in req_data:
                         svgData[id]["graphicBlob"] = req_data["graphicBlob"]
+                    elif "coordinates" in req_data:
+                        svgData[id]["coordinates"] = req_data["coordinates"]
+                    elif "placeID" in req_data:
+                        svgData[id]["placeID"] = req_data["placeID"]
                     write_data(svgData)
                     logging.debug('Updated graphic')
                     return "Graphic in channel "+id+" has been updated!"
@@ -152,6 +156,10 @@ def update(id):
                 # include source graphic if present
                 if "graphicBlob" in req_data:
                     svgData[id]["graphicBlob"] = req_data["graphicBlob"]
+                elif "coordinates" in req_data:
+                    svgData[id]["coordinates"] = req_data["coordinates"]
+                elif "placeID" in req_data:
+                    svgData[id]["placeID"] = req_data["placeID"]
                 write_data(svgData)
                 logging.debug('TEMP: Created new channel using update!')
                 return ("New channel created with code "+id +
@@ -180,6 +188,10 @@ def display(id):
                                           "layer": svgData[id]["layer"]}}]}
                 if "graphicBlob" in svgData[id]:
                     response_val["graphicBlob"] = svgData[id]["graphicBlob"]
+                elif "coordinates" in svgData[id]:
+                    response_val["coordinates"] = svgData[id]["coordinates"]
+                elif "placeID" in svgData[id]:
+                    response_val["placeID"] = svgData[id]["placeID"]
                 response.set_data(json.dumps(response_val))
                 response.add_etag(hashlib.md5(
                     (svgData[id]["data"]+svgData[id]["layer"]).encode()))

@@ -21,6 +21,7 @@ import time
 import jsonschema
 import logging
 import os
+import html
 from datetime import datetime
 from config.logging_utils import configure_logging
 
@@ -29,8 +30,16 @@ configure_logging()
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
+PROMPT = """
+Give a detailed description of the style, content,
+and the most significant aspects of this image.
+Answer with maximum one sentence.
+"""
 
-@app.route("/preprocessor", methods=['POST', ])
+logging.debug(f"Graphic caption prompt: {PROMPT}")
+
+
+@app.route("/preprocessor", methods=['POST'])
 def categorise():
     logging.debug("Received request")
 
@@ -87,16 +96,15 @@ def categorise():
         logging.debug("OLLAMA_API_KEY looks properly formatted: " +
                       api_key[:3] + "[redacted]")
     else:
-        logging.warn("OLLAMA_API_KEY usually starts with sk-, "
-                     "but this one starts with: " + api_key[:3])
+        logging.warning(f'''OLLAMA_API_KEY usually starts with sk-,
+                        but this one starts with: {api_key[:3]}.
+                        You either entered an incorrect API key,
+                        or used a JWT token instead.'''
+                        )
 
-    prompt = "I am blind, so I cannot see this image. " \
-             "Tell me the most important aspects of it, including " \
-             "style, content, and the most significant aspect of the image." \
-             "Answer with maximum one sentence. "
     request_data = {
         "model": ollama_model,
-        "prompt": prompt,
+        "prompt": PROMPT,
         "images": [graphic_b64],
         "stream": False,
         "temperature": 0.0,
@@ -118,7 +126,7 @@ def categorise():
     if response.status_code == 200:
         response_text = response.text
         data = json.loads(response_text)
-        graphic_caption = data['response']
+        graphic_caption = html.unescape(data['response'])
     else:
         logging.error("Error: {response.text}")
         return jsonify("Invalid response from ollama"), 500
@@ -149,7 +157,7 @@ def categorise():
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # all done; return to orchestrator
-    return response
+    return jsonify(response)
 
 
 @app.route("/health", methods=["GET"])
@@ -165,4 +173,3 @@ def health():
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
-    categorise()

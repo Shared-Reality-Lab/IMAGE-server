@@ -86,8 +86,11 @@ def categorise():
         logging.pii("OLLAMA_API_KEY looks properly formatted: " +
                     api_key[:3] + "[redacted]")
     else:
-        logging.warn("OLLAMA_API_KEY usually starts with sk-, "
-                     "but this one starts with: " + api_key[:3])
+        logging.warning(f'''OLLAMA_API_KEY usually starts with sk-,
+                        but this one starts with: {api_key[:3]}.
+                        You either entered an incorrect API key,
+                        or used a JWT token instead.'''
+                        )
 
     prompt = "Answer only in JSON with the format " \
              '{"category": "YOUR_ANSWER"}. ' \
@@ -103,7 +106,7 @@ def categorise():
         "model": ollama_model,
         "prompt": prompt,
         "images": [graphic_b64],
-        "stream": "false",
+        "stream": False,
         "format": "json",
         "temperature": 0.0,
         "keep_alive": -1  # keep model loaded in memory indefinitely
@@ -197,4 +200,3 @@ def health():
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
-    categorise()

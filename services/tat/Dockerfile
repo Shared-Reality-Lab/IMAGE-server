@@ -1,16 +1,17 @@
+ARG REGISTRY_TAG
 # Stage 1: Build the application
-FROM node:20-alpine AS build
+FROM ghcr.io/shared-reality-lab/tat-service:${REGISTRY_TAG} as build
 
 # Set the working directory inside the container
 WORKDIR /app
 
 # Clone git repo into app dir
-RUN apk add git
-RUN git clone https://github.com/Shared-Reality-Lab/IMAGE-TactileAuthoring.git \
-    --depth 1 --single-branch .
+# RUN apk add git
+# RUN git clone https://github.com/Shared-Reality-Lab/IMAGE-TactileAuthoring.git \
+#     --depth 1 --single-branch .
 
 # Install dependencies
-RUN npm install
+# RUN npm install
 
 
 # Build the application
@@ -43,5 +44,5 @@ EXPOSE 80
 # Healthcheck
 HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost/healthcheck.html || exit 1
 
-# Start the Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Create config.js and start the Nginx server
+CMD sh -c "echo \"window.APP_CONFIG = { serverUrl: '\${SERVER_URL}' };\" > /usr/share/nginx/html/config.js && nginx -g 'daemon off;'"

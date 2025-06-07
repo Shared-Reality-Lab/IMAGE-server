@@ -10,8 +10,8 @@ RUN pip3 install --upgrade pip && \
     pip3 install -r /app/requirements.txt
 
 COPY ./schemas /app/schemas
-COPY /config /app/config
 COPY ./preprocessors/openstreetmap/ /app
+COPY ./config /app/config
 
 EXPOSE 5000
 

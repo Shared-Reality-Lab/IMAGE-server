@@ -3,11 +3,12 @@ services:
   orchestrator:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-orchestrator:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     environment:
       - PARALLEL_PREPROCESSORS=ON
       - STORE_IMAGE_DATA=ON
       - MEMCACHE_SERVERS=memcached:11211
+      - PREPROCESSOR_TIMEOUT=90000
     env_file:
       - ./config/express-common.env
     group_add:
@@ -20,18 +21,16 @@ services:
   memcached:
     profiles: [production, test, default]
     image: 'memcached:1.6'
-    restart: unless-stopped
+    restart: "no"
     # cache memory size - 4GB, maximum item size - 5MB
     command: -m 4096 -I 5m
 
   espnet-tts:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-espnet-tts:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     environment:
       - TORCH_DEVICE=cuda
-    ports:
-      - "8001:80"
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
@@ -44,7 +43,7 @@ services:
   espnet-tts-fr:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-espnet-tts-fr:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     environment:
       - TORCH_DEVICE=cuda
     labels:
@@ -59,7 +58,7 @@ services:
   multilang-support:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-translation:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
@@ -72,24 +71,28 @@ services:
   autour-preprocessor:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-autour:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/maps.env
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   content-categoriser:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-content-categoriser:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
       ./config/ollama.env
     environment:
@@ -98,20 +101,22 @@ services:
   graphic-caption:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-caption:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
       ./config/ollama.env
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   text-followup:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-text-followup:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     environment:
       - MAX_HISTORY_LENGTH=100
       - HISTORY_EXPIRY=3600
@@ -121,30 +126,36 @@ services:
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 0
       ca.mcgill.a11y.image.route: "followup"
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
       ./config/ollama.env      
   
   graphic-tagger:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/azure-api.env
     labels:
       ca.mcgill.a11y.image.preprocessor: 2
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
   
   object-detection:
     profiles: [production, default, test]
-    image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-v8:${REGISTRY_TAG}
-    restart: unless-stopped
+    image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-yolo:${REGISTRY_TAG}
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser"
     deploy:
       resources:
         reservations:
@@ -153,46 +164,79 @@ services:
             capabilities: ["gpu", "utility", "compute"]
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+      - YOLO_MODEL_PATH=/usr/src/app/models/yolo11x.pt
+      - CONF_THRESHOLD=0.75
+      - MAX_IMAGE_SIZE=640
+
+  multistage-diagram-segmentation:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-multistage-diagram-segmentation:${REGISTRY_TAG}
+    restart: "no"
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 1
+      ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu", "utility", "compute"]
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+      - SAM_MODEL_PATH=/usr/src/app/models/sam2.1_l.pt
+      - GEMINI_MODEL=gemini-2.5-pro-preview-05-06
+      - BASE_SCHEMA=/usr/src/app/base_schema.json
+    env_file:
+      ./config/gemini.env   
 
   object-grouping:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-grouping:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "object-detection"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   openstreetmap:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/maps.env
     labels:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   object-sorting:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-sorting:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 5
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: "object-detection"
+      ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   semantic-segmentation:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-mmsemantic-segmentation:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     deploy:
       resources:
         reservations:
@@ -203,6 +247,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser,graphic-tagger"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
   
@@ -210,7 +256,7 @@ services:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-supercollider:${REGISTRY_TAG}
     command: sclang -D ./loader.scd
-    restart: unless-stopped
+    restart: "no"
     volumes:
       - sc-store:/tmp/sc-store
     deploy:
@@ -221,11 +267,13 @@ services:
   photo-audio-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-audio:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation,object-grouping,object-detection,graphic-caption"
+      ca.mcgill.a11y.image.optional_dependencies: "collage-detector-preprocessor,graphic-tagger"
     volumes:
       - sc-store:/tmp/sc-store
     environment:
@@ -234,11 +282,13 @@ services:
   autour-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-autour:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: "autour-preprocessor"
+      ca.mcgill.a11y.image.optional_dependencies: ""
     volumes:
       - sc-store:/tmp/sc-store
     environment:
@@ -247,11 +297,13 @@ services:
   photo-audio-haptics-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-audio-haptics:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation,object-grouping,object-detection"
+      ca.mcgill.a11y.image.optional_dependencies: ""
     volumes:
       - sc-store:/tmp/sc-store
     environment:
@@ -260,11 +312,13 @@ services:
   high-charts-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-high-charts:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     volumes:
       - sc-store:/tmp/sc-store
     environment:
@@ -273,25 +327,29 @@ services:
   svg-od-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-od:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "object-detection,object-grouping"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}       
 
   svg-semantic-seg-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-semantic-seg:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   depth-map-generator:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-depth-map-generator:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     deploy:
       resources:
         reservations:
@@ -302,55 +360,78 @@ services:
         ca.mcgill.a11y.image.preprocessor: 3
         ca.mcgill.a11y.image.port: 5000
         ca.mcgill.a11y.image.cacheTimeout: 3600
+        ca.mcgill.a11y.image.required_dependencies: "content-categoriser"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   svg-depth-map:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-depth-map:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: ""
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   nominatim-preprocessor:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-nominatim:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
         - ./config/express-common.env
     labels:
         ca.mcgill.a11y.image.preprocessor: 2
         ca.mcgill.a11y.image.cacheTimeout: 3600
+        ca.mcgill.a11y.image.required_dependencies: ""
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   photo-tactile-svg-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-tactile-svg:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "object-detection,object-grouping,semantic-segmentation,graphic-caption"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   map-tactile-svg-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-map-tactile-svg:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "openstreetmap,nominatim-preprocessor"
+        ca.mcgill.a11y.image.optional_dependencies: ""
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+
+  multistage-diagram-tactile-svg-handler:
+    profiles: [production, test, default]
+    image: ghcr.io/shared-reality-lab/image-handler-multistage-diagram-tactile-svg:${REGISTRY_TAG}
+    restart: "no"
+    labels:
+        ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "multistage-diagram-segmentation"
+        ca.mcgill.a11y.image.optional_dependencies: "graphic-caption"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   text-followup-handler:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-text-followup:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.route: "followup"
+        ca.mcgill.a11y.image.required_dependencies: "text-followup"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -361,7 +442,7 @@ services:
   motd-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-motd:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/express-common.env
     environment:
@@ -369,15 +450,19 @@ services:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
 
   hello-haptics-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-hello-haptics:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: "object-detection"
+      ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
   
@@ -385,68 +470,59 @@ services:
   ocr-clouds-preprocessor:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - ./config/apis-and-selection.env
     labels:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "object-detection"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   object-depth-calculator:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-depth-calculator:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "object-detection"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   line-charts:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-line-charts:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
-    environment:
-      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
-
-  action-recognition:
-    profiles: [test, default]
-    image: ghcr.io/shared-reality-lab/image-preprocessor-action-recognition:${REGISTRY_TAG}
-    restart: unless-stopped
-    labels:
-        ca.mcgill.a11y.image.preprocessor: 4
-        ca.mcgill.a11y.image.port: 5000
-        ca.mcgill.a11y.image.cacheTimeout: 3600
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            capabilities: ["gpu", "utility", "compute"]
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   ocr-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-ocr:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
       ca.mcgill.a11y.image.handler: enable
+      ca.mcgill.a11y.image.required_dependencies: "ocr-clouds-preprocessor,object-detection"
+      ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   osm-streets-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-osm-streets:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     env_file:
         - ./config/express-common.env
     depends_on:
@@ -454,6 +530,8 @@ services:
         - espnet-tts
     labels:
         ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: "openstreetmap"
+        ca.mcgill.a11y.image.optional_dependencies: ""
     volumes:
         - sc-store:/tmp/sc-store
     environment:
@@ -462,43 +540,39 @@ services:
   svg-open-street-map-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-open-street-map:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.port: 5000
+        ca.mcgill.a11y.image.required_dependencies: ""
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   collage-detector-preprocessor:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-collage-detector:${REGISTRY_TAG}
-    restart: unless-stopped
+    restart: "no"
     labels:
         ca.mcgill.a11y.image.preprocessor: 1
         ca.mcgill.a11y.image.port: 5000
         ca.mcgill.a11y.image.cacheTimeout: 3600
-    environment:
-      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
-
-  svg-action-recognition-handler:
-    profiles: [test, default]
-    image: ghcr.io/shared-reality-lab/image-handler-svg-action-recognition:${REGISTRY_TAG}
-    labels:
-        ca.mcgill.a11y.image.handler: enable
+        ca.mcgill.a11y.image.required_dependencies: ""
+        ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
  
   monarch-link-app:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: "ghcr.io/shared-reality-lab/image-service-monarch-link-app:${REGISTRY_TAG}"
-    restart: unless-stopped
+    restart: "no"
     networks:
       - traefik
   
   tat:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: "ghcr.io/shared-reality-lab/image-service-tat:${REGISTRY_TAG}"
-    restart: unless-stopped
+    restart: "no"
     networks:
       - traefik
 # end - unicorn exclusive services        
