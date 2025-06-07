@@ -104,4 +104,7 @@ docker network rm -f image || true
 # Bring all the containers back up
 docker compose --env-file "$COMPOSE_ENV_FILE" up -d --force-recreate
 
+echo "Running warmup for critical services..."
+"${SCRIPT_DIR}/warmup"
+
 cd -
