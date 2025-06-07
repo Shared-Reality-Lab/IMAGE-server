@@ -198,5 +198,43 @@ def health():
     }), 200
 
 
+@app.route("/warmup", methods=["GET"])
+def warmup():
+    """
+    Trigger a warmup call to load the Ollama LLM into memory.
+    This avoids first-request latency by sending a dummy request.
+    """
+    try:
+        # construct the target Ollama endpoint for chat
+        api_url = f"{os.environ['OLLAMA_URL']}/chat"
+
+        # authorization headers with API key
+        headers = {
+            "Authorization": f"Bearer {os.environ['OLLAMA_API_KEY']}"
+        }
+
+        # prepare the warmup request data using the configured model
+        data = {
+            "model": os.environ["OLLAMA_MODEL"],
+            "messages": [{"role": "user", "content": "warmup"}],
+            "stream": False
+        }
+
+        logging.info("[WARMUP] Warmup endpoint triggered.")
+        logging.debug(
+            "[Warmup] Posting to %s with model %s", api_url, data["model"]
+        )
+
+        # send warmup request (with timeout)
+        r = requests.post(api_url, headers=headers, json=data, timeout=60)
+        r.raise_for_status()
+
+        return jsonify({"status": "warmed"}), 200
+
+    except Exception as e:
+        logging.exception("[WARMUP] Warmup failed.")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)

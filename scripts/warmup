@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Locate this script's directory
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+
+# Load env file
+ENV_FILE="$SCRIPT_DIR/../config/warmup.env"
+if [ -f "$ENV_FILE" ]; then
+  source "$ENV_FILE"
+else
+  echo "Missing $ENV_FILE" >&2
+  exit 1
+fi
+
+# Setup log file (with date)
+timestamp=$(date +"%Y%m%d_%H%M%S")
+logfile="${WARMUP_LOG_DIR}/warmup_${timestamp}.log"
+mkdir -p "$WARMUP_LOG_DIR"
+
+echo "[Warmup] $(date) Starting warmup..." | tee -a "$logfile"
+
+# Wait for health and warm up
+for container in "${!WARMUP_TARGETS[@]}"; do
+  endpoint="${WARMUP_TARGETS[$container]}"
+
+  if ! docker inspect "$container" &>/dev/null; then
+    echo "[Warmup] Container $container not found. Skipping." | tee -a "$logfile"
+    continue
+  fi
+
+  echo "[Warmup] Waiting for $container to be healthy..." | tee -a "$logfile"
+  until [[ "$(docker inspect -f '{{.State.Health.Status}}' "$container")" == "healthy" ]]; do
+    sleep 5
+  done
+
+  echo "[Warmup] $container marked healthy. Waiting 10s before hitting warmup..." | tee -a "$logfile"
+  # Wait briefly after container is marked healthy to ensure internal models are fully initialized before warmup.
+  # prevents race conditions where healthcheck passes but model isnt ready
+  sleep 10
+
+  echo "[Warmup] Hitting warmup endpoint on $container..." | tee -a "$logfile"
+  resp=$(docker exec "$container" curl -s -w "%{http_code}" -o /tmp/warmup_resp.txt "$endpoint")
+  if [[ "$resp" == "200" ]]; then
+    echo "[Warmup] $container warmed successfully." | tee -a "$logfile"
+  else
+    echo "[Warmup] $container warmup failed with HTTP $resp. Response was:" | tee -a "$logfile"
+    docker exec "$container" cat /tmp/warmup_resp.txt | tee -a "$logfile" || echo "[Warmup] (no response body)" | tee -a "$logfile"
+  fi
+done
+
+echo "[Warmup] Completed at $(date)! " | tee -a "$logfile"
