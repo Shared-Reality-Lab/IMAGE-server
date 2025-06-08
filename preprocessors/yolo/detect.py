@@ -239,5 +239,29 @@ def health():
     }), 200
 
 
+@app.route("/warmup", methods=["GET"])
+def warmup():
+    try:
+        # create a blank dummy image (640x640)
+        dummy_image = Image.new("RGB", (640, 640), color=(0, 0, 0))
+
+        # Run YOLO inference with dummy image
+        with torch.no_grad():
+            _ = model.predict(
+                dummy_image,
+                device=device,
+                conf=CONF_THRESHOLD,
+                imgsz=MAX_IMAGE_SIZE,
+                verbose=False
+            )
+
+        logging.info("YOLO warmup completed successfully")
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        logging.error(f"YOLO warmup failed: {str(e)}")
+        logging.pii(traceback.format_exc())
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(debug=True)
