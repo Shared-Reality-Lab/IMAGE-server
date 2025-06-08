@@ -51,7 +51,6 @@ class SbRIF:
         # img = cv2.resize(img,
         #                  (self.rescale_size, self.rescale_size),
         #                  interpolation=cv2.INTER_AREA)
-        img = cv2.resize(img, (self.rescale_size, self.rescale_size), interpolation=cv2.INTER_AREA)
         edges = cv2.Canny(img, 50, 200)
         gray_edges = cv2.bitwise_not(edges)
 
