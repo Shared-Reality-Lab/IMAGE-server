@@ -320,5 +320,33 @@ def gpu_driver_health_check():
         }), 500
 
 
+@app.route("/warmup", methods=["GET"])
+def warmup():
+    """
+    Warms up the segmentation model by running a dummy inference.
+    """
+    try:
+        # dummy black image (512×512)
+        dummy_img = np.zeros((512, 512, 3), dtype=np.uint8)
+
+        # runs inference_segmentor(): model weight loading/memory allocation
+        model = init_segmentor(BEIT_CONFIG, BEIT_CHECKPOINT, device='cuda:0')
+        _ = inference_segmentor(model, dummy_img)
+
+        torch.cuda.empty_cache()
+
+        return jsonify({
+            "status": "warmup successful",
+            "timestamp": datetime.now().isoformat()
+        }), 200
+
+    except Exception as e:
+        logging.exception("Warmup failed")
+        return jsonify({
+            "status": "warmup failed",
+            "message": str(e)
+        }), 500
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
