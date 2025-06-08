@@ -26,7 +26,6 @@ import base64
 import torch
 from mmseg.apis import inference_segmentor, init_segmentor
 import mmseg
-import mmcv
 import numpy as np
 import cv2
 
