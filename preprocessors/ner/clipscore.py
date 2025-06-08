@@ -147,7 +147,7 @@ class CLIPImageDataset(torch.utils.data.Dataset):
 
     def _transform_test(self, n_px):
         return Compose([
-            Resize(n_px, interpolation=Image.BICUBIC),
+            #Resize(n_px, interpolation=Image.BICUBIC), # Resizing handled upstream
             CenterCrop(n_px),
             lambda image: image.convert("RGB"),
             ToTensor(),

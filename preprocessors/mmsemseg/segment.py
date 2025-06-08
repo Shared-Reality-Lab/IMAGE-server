@@ -67,14 +67,14 @@ def run_segmentation(url, model, dictionary):
 
     # rescale the image
     height, width, channels = image_np.shape
-    scale_factor = float(1500.0 / float(max(height, width)))
+    # scale_factor = float(1500.0 / float(max(height, width)))  # Resizing handled upstream
 
     logging.info("graphic original dimension {}".format(image_np.shape))
 
-    if scale_factor <= 1.0:
-        logging.info("scaling down an image")
-        image_np = mmcv.imrescale(image_np, scale_factor)
-        logging.info("graphic scaled dimension: {}".format(image_np.shape))
+    # if scale_factor <= 1.0:  # Resizing handled upstream
+    #     logging.info("scaling down an image")
+    #     image_np = mmcv.imrescale(image_np, scale_factor)
+    #     logging.info("graphic scaled dimension: {}".format(image_np.shape))
 
     height, width, channels = image_np.shape
 

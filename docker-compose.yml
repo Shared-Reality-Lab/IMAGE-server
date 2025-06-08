@@ -166,7 +166,6 @@ services:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - YOLO_MODEL_PATH=/usr/src/app/models/yolo11x.pt
       - CONF_THRESHOLD=0.75
-      - MAX_IMAGE_SIZE=640
 
   multistage-diagram-segmentation:
     profiles: [production, test, default]
