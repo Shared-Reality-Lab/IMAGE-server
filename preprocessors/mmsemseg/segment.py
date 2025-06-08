@@ -67,7 +67,8 @@ def run_segmentation(url, model, dictionary):
 
     # rescale the image
     height, width, channels = image_np.shape
-    # scale_factor = float(1500.0 / float(max(height, width)))  # Resizing handled upstream
+    # Resizing handled upstream
+    # scale_factor = float(1500.0 / float(max(height, width)))
 
     logging.info("graphic original dimension {}".format(image_np.shape))
 
