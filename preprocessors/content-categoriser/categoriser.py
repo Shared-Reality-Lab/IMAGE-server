@@ -221,8 +221,8 @@ def warmup():
         }
 
         logging.info("[WARMUP] Warmup endpoint triggered.")
-        logging.debug(
-            "[Warmup] Posting to %s with model %s", api_url, data["model"]
+        logging.pii(
+            f"[WARMUP] Posting to {api_url} with model {data['model']}"
         )
 
         # send warmup request (with timeout)
@@ -232,7 +232,8 @@ def warmup():
         return jsonify({"status": "warmed"}), 200
 
     except Exception as e:
-        logging.exception("[WARMUP] Warmup failed.")
+        logging.pii(f"[WARMUP] Warmup failed: {str(e)}")
+        logging.exception("[WARMUP] Exception details:")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
