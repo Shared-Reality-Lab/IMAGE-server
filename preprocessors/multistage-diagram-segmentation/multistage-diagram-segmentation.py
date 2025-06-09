@@ -819,5 +819,48 @@ def health():
     }), 200
 
 
+@app.route("/warmup", methods=["GET"])
+def warmup():
+    """
+    Warms up Gemini & SAM
+    by running dummy inferences to load models into memory.
+    """
+    try:
+        logging.info("Starting warmup routine...")
+
+        # 1. warm up Gemini by sending a dummy prompt with a blank image
+        dummy_img = Image.new("RGB", (512, 512), color="white")
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=["Return an empty JSON object.", dummy_img],
+            config=types.GenerateContentConfig(
+                temperature=0.1,
+                safety_settings=safety_settings,
+                response_mime_type='application/json',
+                response_schema=BASE_SCHEMA_GEMINI,
+            )
+        )
+        _ = validate_gemini_response(response)
+
+        # 2. warm up SAM with a dummy box
+        dummy_cv2 = np.zeros((512, 512, 3), dtype=np.uint8)
+        dummy_pil = Image.fromarray(dummy_cv2)
+        dummy_bbox = [[100, 100, 200, 200]]  # [x1, y1, x2, y2]
+        _ = sam_model(dummy_pil, bboxes=dummy_bbox)
+
+        logging.info("Warmup completed successfully.")
+        return jsonify({
+            "status": "warmup successful",
+            "timestamp": datetime.now().isoformat()
+        }), 200
+
+    except Exception as e:
+        logging.exception("Warmup failed")
+        return jsonify({
+            "status": "warmup failed",
+            "message": str(e)
+        }), 500
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)

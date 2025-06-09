@@ -341,6 +341,7 @@ def warmup():
         }), 200
 
     except Exception as e:
+        logging.pii(f"[WARMUP] Warmup failed: {e}")
         logging.exception("Warmup failed")
         return jsonify({
             "status": "warmup failed",

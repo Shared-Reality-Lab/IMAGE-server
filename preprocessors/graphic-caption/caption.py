@@ -28,7 +28,6 @@ from config.logging_utils import configure_logging
 configure_logging()
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG)
 
 PROMPT = """
 Give a detailed description of the style, content,
@@ -194,8 +193,9 @@ def warmup():
         }
 
         logging.info("[WARMUP] Warmup endpoint triggered.")
-        logging.debug(
-            "[Warmup] Posting to %s with model %s", api_url, data["model"]
+        logging.pii(
+            f"[WARMUP] Sending warmup request to {api_url} with model: \
+                {data['model']}"
         )
 
         # send warmup request (with timeout)
@@ -205,7 +205,8 @@ def warmup():
         return jsonify({"status": "warmed"}), 200
 
     except Exception as e:
-        logging.exception("[WARMUP] Warmup failed.")
+        logging.pii(f"[WARMUP] Warmup failed: {e}")
+        logging.exception("[WARMUP] Exception details:")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 

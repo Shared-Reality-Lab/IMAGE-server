@@ -36,7 +36,6 @@ from config.logging_utils import configure_logging
 configure_logging()
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG)
 
 
 def parse_args():
@@ -226,6 +225,7 @@ def health():
 @app.route("/warmup", methods=["GET"])
 def warmup():
     try:
+        logging.pii("[WARMUP] Initializing RelDepthModel with resnext101 backbone and loading weights from /app/res101.pth")
         model = RelDepthModel(backbone='resnext101').eval().cuda()
         model.load_state_dict(
             strip_prefix_if_present(
