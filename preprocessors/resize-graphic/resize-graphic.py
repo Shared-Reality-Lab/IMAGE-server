@@ -88,12 +88,17 @@ def resize_graphic():
 
     # 2. Resize Image and convert to PNG
     max_size = int(os.environ.get('MAX_IMAGE_SIZE', '2048'))
+    # Remove header (e.g. 'data:image/jpeg;base64,')
+    graphic_data = content["graphic"]
+    if ',' in graphic_data:
+        graphic_data = graphic_data.split(',', 1)[1]
     new_graphic = process_image(
-        content["graphic"],
+        graphic_data,
         (max_size, max_size),
         "PNG"
     )
-    new_b64_graphic = base64.b64encode(new_graphic.tobytes()).decode('utf-8')
+    encoded_data = base64.b64encode(new_graphic.tobytes()).decode('utf-8')
+    new_b64_graphic = f"data:image/png;base64,{encoded_data}"
 
     data = {
         "graphic": new_b64_graphic
