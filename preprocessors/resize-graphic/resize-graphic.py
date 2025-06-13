@@ -18,9 +18,12 @@ import jsonschema
 import json
 import logging
 import time
+import base64
+import os
 from flask import Flask, request, jsonify
 from datetime import datetime
 from config.logging_utils import configure_logging
+from config.process_image import process_image
 
 configure_logging()
 
@@ -83,10 +86,17 @@ def resize_graphic():
     request_uuid = content["request_uuid"]
     timestamp = time.time()
 
-    # 2. TODO resizing
-    new_b64_graphic = None  # this should be Something
+    # 2. Resize Image and convert to PNG
+    max_size = int(os.environ.get('MAX_IMAGE_SIZE', '2048'))
+    new_graphic = process_image(
+        content["graphic"],
+        (max_size, max_size),
+        "PNG"
+    )
+    new_b64_graphic = base64.b64encode(new_graphic.tobytes()).decode('utf-8')
+
     data = {
-            "graphic": new_b64_graphic
+        "graphic": new_b64_graphic
     }
 
     # 3. Check modification

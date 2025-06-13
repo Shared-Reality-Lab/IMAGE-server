@@ -35,6 +35,7 @@ services:
       ca.mcgill.a11y.image.required_dependencies: ""
       ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
+      - MAX_IMAGE_SIZE=2048
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   espnet-tts:
