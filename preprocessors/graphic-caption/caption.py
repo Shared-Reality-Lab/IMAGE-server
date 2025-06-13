@@ -30,11 +30,13 @@ configure_logging()
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
-PROMPT = """
-Give a detailed description of the style, content,
-and the most significant aspects of this image.
-Answer with maximum one sentence.
-"""
+PROMPT = """Describe this image to a person who cannot see it.
+    Use simple, descriptive, clear, and concise language.
+    Answer with only one sentence.
+    Do not give any intro like "Here's what in this image:",
+    "The image depicts", or "This photograph showcases" unless
+    the graphic type is significant (like oil painting or aerial photo).
+    Instead, start describing the graphic right away."""
 
 logging.debug(f"Graphic caption prompt: {PROMPT}")
 
