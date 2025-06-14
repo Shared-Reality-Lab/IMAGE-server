@@ -20,6 +20,7 @@ import logging
 import time
 import base64
 import os
+from io import BytesIO
 from flask import Flask, request, jsonify
 from datetime import datetime
 from config.logging_utils import configure_logging
@@ -97,7 +98,11 @@ def resize_graphic():
         (max_size, max_size),
         "PNG"
     )
-    encoded_data = base64.b64encode(new_graphic.tobytes()).decode('utf-8')
+    # Convert image to base64 data URL format
+    buffer = BytesIO()
+    new_graphic.save(buffer, format='PNG')
+    buffer.seek(0)
+    encoded_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
     new_b64_graphic = f"data:image/png;base64,{encoded_data}"
 
     data = {
