@@ -88,7 +88,7 @@ def resize_graphic():
     timestamp = time.time()
 
     # 2. Resize Image and convert to PNG
-    max_size = int(os.environ.get('MAX_IMAGE_SIZE', '2048'))
+    max_size = int(os.environ.get('MAX_GRAPHIC_DIMENSION', '2048'))
     # Remove header (e.g. 'data:image/jpeg;base64,')
     graphic_data = content["graphic"]
     if ',' in graphic_data:
