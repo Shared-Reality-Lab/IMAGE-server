@@ -38,7 +38,8 @@ configure_logging()
 # Environment variables and constants
 MODEL_PATH = os.environ.get('YOLO_MODEL_PATH')
 CONF_THRESHOLD = float(os.environ.get('CONF_THRESHOLD', '0.75'))
-MAX_IMAGE_SIZE = int(os.environ.get('MAX_IMAGE_SIZE', '640'))
+# Resizing handled upstream
+# MAX_IMAGE_SIZE = int(os.environ.get('MAX_IMAGE_SIZE', '640'))
 
 # Load the model
 model = YOLO(MODEL_PATH)
@@ -171,7 +172,8 @@ def detect():
     logging.debug(f"Model path: {MODEL_PATH}")
     logging.debug(f"Using device: {device_name}")
     logging.debug(f"Confidence threshold: {CONF_THRESHOLD}")
-    logging.debug(f"Max image size: {MAX_IMAGE_SIZE}")
+    # Resizing handled upstream
+    # logging.debug(f"Max image size: {MAX_IMAGE_SIZE}")
 
     # Perform object detection with YOLOv11
     # Disable gradient tracking for speed/memory optimization
@@ -182,7 +184,8 @@ def detect():
             image,
             device=device,
             conf=CONF_THRESHOLD,
-            imgsz=MAX_IMAGE_SIZE,
+            # Resizing handled upstream
+            # imgsz=MAX_IMAGE_SIZE,
             verbose=False
         )
 
