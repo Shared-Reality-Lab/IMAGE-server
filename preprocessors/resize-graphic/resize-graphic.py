@@ -58,9 +58,9 @@ RESOLVER = jsonschema.RefResolver.from_schema(
 @app.route("/preprocessor", methods=['POST'])
 def resize_graphic():
     """
-    Main endpoint to process multi-stage textbook diagrams.
+    Main endpoint to process graphic resizing.
     """
-    logging.debug("Received request for multi-stage diagram processing.")
+    logging.debug("Received request for resize-graphic processing.")
 
     # Get JSON content from the request
     content = request.get_json()
