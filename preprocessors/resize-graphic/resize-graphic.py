@@ -65,8 +65,6 @@ def resize_graphic():
     # Get JSON content from the request
     content = request.get_json()
 
-    # 0. Check the URL of the request to avoid processing PII in production
-    # until the Google API is approved for use
     # Check if there is graphic content to process
     if "graphic" not in content:
         logging.info("No graphic content. Skipping...")
@@ -122,7 +120,7 @@ def resize_graphic():
         logging.pii(
             f"Validation error: {e.message} | Data: {data}"
             )
-        return jsonify("Failed to modify graphic (this shouldn't happen)"), 500
+        return jsonify({"error": "Request not in the appropriate format"}), 400
 
     # 4. Construct and check response
     response = {
@@ -142,7 +140,7 @@ def resize_graphic():
         logging.pii(
             f"Validation error: {e.message} | Response: {response}"
             )
-        return jsonify("Failed to create response (shouldn't happen)"), 500
+        return jsonify({"error": "Failed to Create Response"}), 500
 
     logging.info(
         f"Modified 'graphic' in request {request_uuid}."
