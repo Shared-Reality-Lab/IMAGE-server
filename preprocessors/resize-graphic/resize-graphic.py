@@ -93,11 +93,15 @@ def resize_graphic():
     graphic_data = content["graphic"]
     if ',' in graphic_data:
         graphic_data = graphic_data.split(',', 1)[1]
-    new_graphic = process_image(
-        graphic_data,
-        (max_size, max_size),
-        "PNG"
-    )
+    try:
+        new_graphic = process_image(
+            graphic_data,
+            (max_size, max_size),
+            "PNG"
+        )
+    except Exception as e:
+        logging.error(f"Failed to process image: {str(e)}")
+        return jsonify({"error": "Failed to process image"}), 422
     # Convert image to base64 data URL format
     buffer = BytesIO()
     new_graphic.save(buffer, format='PNG')
