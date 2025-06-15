@@ -38,7 +38,8 @@ class SbRIF:
         self.t_cnt = int(math.tan(t * math.pi / 2))
         self.c = c
         self.s = s
-        self.rescale_size = rescale_size
+        # Resizing handled upstream
+        # self.rescale_size = rescale_size
 
     def edge_filter(self, img):
         """
@@ -46,9 +47,10 @@ class SbRIF:
         Args:
             img: the image
         """
-        img = cv2.resize(img,
-                         (self.rescale_size, self.rescale_size),
-                         interpolation=cv2.INTER_AREA)
+        # Resizing handled upstream
+        # img = cv2.resize(img,
+        #                  (self.rescale_size, self.rescale_size),
+        #                  interpolation=cv2.INTER_AREA)
         edges = cv2.Canny(img, 50, 200)
         gray_edges = cv2.bitwise_not(edges)
 
