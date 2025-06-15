@@ -25,6 +25,19 @@ services:
     # cache memory size - 4GB, maximum item size - 5MB
     command: -m 4096 -I 5m
 
+  resize-graphic:
+    profiles: [test, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-resize-graphic:${REGISTRY_TAG}
+    restart: "no"
+    labels:
+      ca.mcgill.a11y.image.modifyRequest: true
+      ca.mcgill.a11y.image.preprocessor: 1
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: ""
+    environment:
+      - MAX_GRAPHIC_DIMENSION=2048
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+
   espnet-tts:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-espnet-tts:${REGISTRY_TAG}
