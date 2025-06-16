@@ -44,6 +44,7 @@ services:
     restart: "no"
     environment:
       - TORCH_DEVICE=cuda
+      - WARMUP_ENABLED=true
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
@@ -59,6 +60,7 @@ services:
     restart: "no"
     environment:
       - TORCH_DEVICE=cuda
+      - WARMUP_ENABLED=true
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
     deploy:
@@ -80,6 +82,8 @@ services:
           devices:
             - driver: nvidia
               capabilities: ["gpu", "compute", "utility"]
+    environment:
+      - WARMUP_ENABLED=true
 
   autour-preprocessor:
     profiles: [production, test, default]
@@ -110,6 +114,7 @@ services:
       ./config/ollama.env
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+      - WARMUP_ENABLED=true
 
   graphic-caption:
     profiles: [production, test, default]
@@ -125,6 +130,7 @@ services:
       ./config/ollama.env
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+      - WARMUP_ENABLED=true
 
   text-followup:
     profiles: [production, test, default]
@@ -134,6 +140,7 @@ services:
       - MAX_HISTORY_LENGTH=100
       - HISTORY_EXPIRY=3600
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+      - WARMUP_ENABLED=true
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
@@ -179,6 +186,7 @@ services:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - YOLO_MODEL_PATH=/usr/src/app/models/yolo11x.pt
       - CONF_THRESHOLD=0.75
+      - WARMUP_ENABLED=true
 
   multistage-diagram-segmentation:
     profiles: [production, test, default]
@@ -201,6 +209,7 @@ services:
       - SAM_MODEL_PATH=/usr/src/app/models/sam2.1_l.pt
       - GEMINI_MODEL=gemini-2.5-pro-preview-06-05
       - BASE_SCHEMA=/usr/src/app/base_schema.json
+      - WARMUP_ENABLED=true
     env_file:
       ./config/gemini.env   
 
@@ -263,6 +272,7 @@ services:
       ca.mcgill.a11y.image.optional_dependencies: "content-categoriser,graphic-tagger"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+      - WARMUP_ENABLED=true
   
   supercollider:
     profiles: [production, test, default]
@@ -376,6 +386,7 @@ services:
         ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+      - WARMUP_ENABLED=true
 
   svg-depth-map:
     profiles: [production, test, default]

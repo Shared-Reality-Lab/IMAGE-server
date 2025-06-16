@@ -3,43 +3,47 @@
 # Locate this script's directory
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
-# Load env file
-ENV_FILE="$SCRIPT_DIR/../config/warmup.env"
-if [ -f "$ENV_FILE" ]; then
-  source "$ENV_FILE"
-else
-  echo "Missing $ENV_FILE" >&2
-  exit 1
-fi
-
-# Setup log file (with date)
+WARMUP_LOG_DIR="/var/docker/image/testing/warmup"
 timestamp=$(date +"%Y%m%d_%H%M%S")
 logfile="${WARMUP_LOG_DIR}/warmup_${timestamp}.log"
 mkdir -p "$WARMUP_LOG_DIR"
 
 echo "[Warmup] $(date) Starting warmup..." | tee -a "$logfile"
 
-# Wait for health and warm up
-for container in "${!WARMUP_TARGETS[@]}"; do
-  endpoint="${WARMUP_TARGETS[$container]}"
+# Get all running containers
+containers=$(docker ps --format '{{.Names}}')
 
-  if ! docker inspect "$container" &>/dev/null; then
-    echo "[Warmup] Container $container not found. Skipping." | tee -a "$logfile"
+for container in $containers; do
+  # Check if WARMUP_ENABLED=true is present in the environment
+  if ! docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" | grep -q "^WARMUP_ENABLED=true$"; then
     continue
   fi
 
+  # Get EXPOSED port (assume first one is the correct one)
+  exposed_port=$(docker inspect -f '{{range $p, $_ := .Config.ExposedPorts}}{{println $p}}{{end}}' "$container" | head -n1 | cut -d'/' -f1)
+  if [ -z "$exposed_port" ]; then
+    echo "[Warmup] $container has no EXPOSEd port. Skipping." | tee -a "$logfile"
+    continue
+  fi
+
+  endpoint="http://localhost:${exposed_port}/warmup"
+
   echo "[Warmup] Waiting for $container to be healthy..." | tee -a "$logfile"
   until [[ "$(docker inspect -f '{{.State.Health.Status}}' "$container")" == "healthy" ]]; do
-    sleep 5
+    sleep 2
   done
 
   echo "[Warmup] $container marked healthy. Waiting 10s before hitting warmup..." | tee -a "$logfile"
   # Wait briefly after container is marked healthy to ensure internal models are fully initialized before warmup.
   # prevents race conditions where healthcheck passes but model isnt ready
-  sleep 10
 
-  echo "[Warmup] Hitting warmup endpoint on $container..." | tee -a "$logfile"
+  # add random jitter to stagger warmups (addresses potential resource spike if all hit at once)
+  jitter=$((RANDOM % 5))
+  sleep $((10 + jitter))
+
+  echo "[Warmup] Hitting warmup endpoint at $endpoint..." | tee -a "$logfile"
   resp=$(docker exec "$container" curl -s -w "%{http_code}" -o /tmp/warmup_resp.txt "$endpoint")
+
   if [[ "$resp" == "200" ]]; then
     echo "[Warmup] $container warmed successfully." | tee -a "$logfile"
   else
