@@ -18,13 +18,13 @@ WORKDIR /app
 # RUN npm run build
 
 # Set npm to ignore scripts
-ENV npm_config_ignore_scripts=true
+# ENV npm_config_ignore_scripts=true
 
 # Run build manually ignoring scripts
-WORKDIR /app/packages/svgcanvas
-RUN npx rollup -c
-WORKDIR /app
-RUN npx rollup -c
+# WORKDIR /app/packages/svgcanvas
+# RUN npx rollup -c
+# WORKDIR /app
+# RUN npx rollup -c
 
 # Stage 2: Serve the application
 FROM nginx:alpine
