@@ -25,6 +25,7 @@ LOGGER.setLevel(logging.DEBUG)
 
 SERVERS = os.environ['SERVERS'].split(",")
 
+
 def create_bbox_coordinates(distance, lat, lon):
     assert distance > 0
     assert lat >= -90.0 and lat <= 90.0
