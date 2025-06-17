@@ -179,12 +179,17 @@ def handle():
         for i, street in enumerate(streets):
             color = i % len(colors)
             # Filter only necessary street types
-            if street["street_type"] not in remove_streets:
+            # If street type is not present still include street if
+            # street name is present
+            if (("street_type" in street and street["street_type"]
+                 not in remove_streets) or ("street_type"
+                                            not in street and "street_name"
+                                            in street)):
                 name = street["street_name"] if "street_name"\
                     in street else street["street_type"]
                 description = getDescriptions(street)
                 stroke_width = return_stroke_width(
-                    street["street_type"])
+                    street["street_type"] if "street_type" in street else None)
                 args = dict(stroke=colors[color], stroke_width=stroke_width,
                             fill='none', aria_label=name)
                 # Add this arg only if the detailed description is not empty
@@ -375,7 +380,7 @@ def getDescriptions(street):
         "oneway", "lanes", "surface", "maxspeed", "access",
         "sidewalk"
         ]
-    if "street_name" in street:
+    if "street_name" in street and "street_type" in street:
         attributes.append("street_type")
     for attr, val in street.items():
         if attr in attributes:
