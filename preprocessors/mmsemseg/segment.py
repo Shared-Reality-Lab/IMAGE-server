@@ -284,10 +284,13 @@ def gpu_driver_health_check():
     try:
         # Get installed NVIDIA driver version from nvidia-smi
         nvidia_smi_version = subprocess.check_output(
-            ["nvidia-smi", "--query-gpu=driver_version",
-             "--format=csv,noheader"],
+            [
+                "nvidia-smi",
+                "--query-gpu=driver_version",
+                "--format=csv,noheader"
+            ],
             text=True
-        ).strip()
+        ).strip().split("\n")[0]
 
         # Get loaded driver version from /proc/driver/nvidia/version
         loaded_driver_version = subprocess.check_output(
@@ -317,6 +320,35 @@ def gpu_driver_health_check():
             "status": "unhealthy",
             "message": f"NVIDIA driver check failed: {str(e)}",
             "recommendation": "Check driver installation and restart system"
+        }), 500
+
+
+@app.route("/warmup", methods=["GET"])
+def warmup():
+    """
+    Warms up the segmentation model by running a dummy inference.
+    """
+    try:
+        # dummy black image (512×512)
+        dummy_img = np.zeros((512, 512, 3), dtype=np.uint8)
+
+        # runs inference_segmentor(): model weight loading/memory allocation
+        model = init_segmentor(BEIT_CONFIG, BEIT_CHECKPOINT, device='cuda:0')
+        _ = inference_segmentor(model, dummy_img)
+
+        torch.cuda.empty_cache()
+
+        return jsonify({
+            "status": "warmup successful",
+            "timestamp": datetime.now().isoformat()
+        }), 200
+
+    except Exception as e:
+        logging.pii(f"[WARMUP] Warmup failed: {e}")
+        logging.exception("Warmup failed")
+        return jsonify({
+            "status": "warmup failed",
+            "message": str(e)
         }), 500
 
 

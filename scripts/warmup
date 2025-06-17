@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Locate this script's directory
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+
+WARMUP_LOG_DIR="/var/docker/image/testing/warmup"
+timestamp=$(date +"%Y%m%d_%H%M%S")
+logfile="${WARMUP_LOG_DIR}/warmup_${timestamp}.log"
+mkdir -p "$WARMUP_LOG_DIR"
+
+echo "[Warmup] $(date) Starting warmup..." | tee -a "$logfile"
+
+# Get all running containers
+# Restrict to containers on the 'image' Docker network
+if docker network inspect image &> /dev/null; then
+  containers=$(docker network inspect image | jq -r '.[0].Containers | to_entries[] | .value.Name') 
+else
+  echo "[Warmup] No Docker network named 'image' found. Aborting." | tee -a "$logfile"
+  exit 1
+fi
+
+for container in $containers; do
+  # Check if WARMUP_ENABLED=true is present in the environment
+  if ! docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" | grep -q "^WARMUP_ENABLED=true$"; then
+    continue
+  fi
+
+  # Get EXPOSED port (assume first one is the correct one)
+  exposed_port=$(docker inspect -f '{{range $p, $_ := .Config.ExposedPorts}}{{println $p}}{{end}}' "$container" | head -n1 | cut -d'/' -f1)
+  if [ -z "$exposed_port" ]; then
+    echo "[Warmup] $container has no EXPOSEd port. Skipping." | tee -a "$logfile"
+    continue
+  fi
+
+  endpoint="http://localhost:${exposed_port}/warmup"
+
+  echo "[Warmup] Waiting for $container to be healthy..." | tee -a "$logfile"
+  until [[ "$(docker inspect -f '{{.State.Health.Status}}' "$container")" == "healthy" ]]; do
+    sleep 2
+  done
+
+  echo "[Warmup] $container marked healthy. Waiting 10s before hitting warmup..." | tee -a "$logfile"
+  # Wait briefly after container is marked healthy to ensure internal models are fully initialized before warmup.
+  # prevents race conditions where healthcheck passes but model isnt ready
+
+  # add random jitter to stagger warmups (addresses potential resource spike if all hit at once)
+  # note: even if some warmups fail, most models will still be partially/fully loaded, so the first real request is likely to succeed or respond faster than a cold start.
+  jitter=$((RANDOM % 5))
+  sleep $((10 + jitter))
+
+  echo "[Warmup] Hitting warmup endpoint at $endpoint..." | tee -a "$logfile"
+  resp=$(docker exec "$container" curl -s -w "%{http_code}" -o /tmp/warmup_resp.txt "$endpoint")
+
+  if [[ "$resp" == "200" ]]; then
+    echo "[Warmup] $container warmed successfully." | tee -a "$logfile"
+  else
+    echo "[Warmup] $container warmup failed with HTTP $resp. Response was:" | tee -a "$logfile"
+    docker exec "$container" cat /tmp/warmup_resp.txt | tee -a "$logfile" || echo "[Warmup] (no response body)" | tee -a "$logfile"
+  fi
+done
+
+echo "[Warmup] Completed at $(date)! " | tee -a "$logfile"

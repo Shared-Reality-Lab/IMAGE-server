@@ -172,6 +172,22 @@ def segment_tts():
         empty_cache()
 
 
+@app.route("/warmup", methods=["GET"])
+def warmup():
+    """
+    Trigger a dummy call to warm up the model and pre-load it into GPU memory.
+    to reduce first-request latency by avoiding model load.
+    """
+    try:
+        logger.info("[WARMUP] Warmup endpoint triggered.")
+        # Run inference on a short dummy input
+        _ = tts("warmup")
+        return jsonify({"status": "warmed"}), 200
+    except Exception as e:
+        logger.exception("[WARMUP] Warmup failed.")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.route("/health", methods=["GET"])
 def health():
     """
