@@ -11,7 +11,13 @@ mkdir -p "$WARMUP_LOG_DIR"
 echo "[Warmup] $(date) Starting warmup..." | tee -a "$logfile"
 
 # Get all running containers
-containers=$(docker ps --format '{{.Names}}')
+# Restrict to containers on the 'image' Docker network
+if docker network inspect image &> /dev/null; then
+  containers=$(docker network inspect image | jq -r '.[0].Containers | to_entries[] | .value.Name') 
+else
+  echo "[Warmup] No Docker network named 'image' found. Aborting." | tee -a "$logfile"
+  exit 1
+fi
 
 for container in $containers; do
   # Check if WARMUP_ENABLED=true is present in the environment
@@ -38,6 +44,7 @@ for container in $containers; do
   # prevents race conditions where healthcheck passes but model isnt ready
 
   # add random jitter to stagger warmups (addresses potential resource spike if all hit at once)
+  # note: even if some warmups fail, most models will still be partially/fully loaded, so the first real request is likely to succeed or respond faster than a cold start.
   jitter=$((RANDOM % 5))
   sleep $((10 + jitter))
 
