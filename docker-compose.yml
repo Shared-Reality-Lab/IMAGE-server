@@ -82,8 +82,6 @@ services:
           devices:
             - driver: nvidia
               capabilities: ["gpu", "compute", "utility"]
-    environment:
-      - WARMUP_ENABLED=true
 
   autour-preprocessor:
     profiles: [production, test, default]
