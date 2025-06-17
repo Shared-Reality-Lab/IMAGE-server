@@ -243,7 +243,7 @@ def health():
 def warmup():
     try:
         # create a blank dummy image (640x640)
-        dummy_image = Image.new("RGB", (640, 640), color=(0, 0, 0))
+        dummy_image = Image.new("RGB", (8, 8), color=(0, 0, 0))
 
         # Run YOLO inference with dummy image
         with torch.no_grad():
@@ -255,7 +255,7 @@ def warmup():
                 verbose=False
             )
 
-        logging.info("YOLO warmup completed successfully")
+        logging.info("YOLO warmup completed successfully with 8x8 image.")
         return jsonify({"status": "ok"}), 200
     except Exception as e:
         logging.error(f"YOLO warmup failed: {str(e)}")

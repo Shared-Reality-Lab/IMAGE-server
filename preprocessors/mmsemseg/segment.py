@@ -284,10 +284,13 @@ def gpu_driver_health_check():
     try:
         # Get installed NVIDIA driver version from nvidia-smi
         nvidia_smi_version = subprocess.check_output(
-            ["nvidia-smi", "--query-gpu=driver_version",
-             "--format=csv,noheader"],
+            [
+                "nvidia-smi", 
+                "--query-gpu=driver_version",
+                "--format=csv,noheader"
+            ],
             text=True
-        ).strip()
+        ).strip().split("\n")[0]
 
         # Get loaded driver version from /proc/driver/nvidia/version
         loaded_driver_version = subprocess.check_output(
