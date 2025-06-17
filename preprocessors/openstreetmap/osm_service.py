@@ -9,7 +9,6 @@ import logging
 import math
 import os
 import requests
-from osm_config import defaultServer, secondaryServer1, secondaryServer2
 from geographiclib.geodesic import Geodesic
 import traceback
 
@@ -24,6 +23,7 @@ logging.basicConfig(
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
+SERVERS = os.environ['SERVERS'].split(",")
 
 def create_bbox_coordinates(distance, lat, lon):
     assert distance > 0
@@ -89,25 +89,20 @@ def server_config2(url, bbox_coord):
 
 def get_streets(bbox_coord):
     """ fetch all ways and nodes """
-    try:
-        OSM_data = server_config1(defaultServer, bbox_coord)
-    except Exception:
+    # loop through all provided servers
+    for i in range(len(SERVERS)):
         try:
-            error = error = (f"{defaultServer} not responding, so connecting "
-                             f"{secondaryServer1}")
-            LOGGER.debug(error)
-            OSM_data = server_config1(secondaryServer1, bbox_coord)
+            OSM_data = server_config1(SERVERS[i], bbox_coord)
+            break
         except Exception:
-            try:
+            if (i+1) < len(SERVERS):
                 error = error = (
-                    f"{secondaryServer1} not responding, so connecting "
-                    f"{secondaryServer2}")
-                LOGGER.debug(error)
-                OSM_data = server_config1(secondaryServer2, bbox_coord)
-            except Exception:
+                        f"{SERVERS[i]} not responding, so connecting to "
+                        f"{SERVERS[i+1]}")
+            else:
                 error = 'Unable to get data. All servers down!'
-                LOGGER.debug(error)
                 OSM_data = None
+            LOGGER.debug(error)
     return (OSM_data)
 
 
@@ -672,24 +667,20 @@ def get_amenities(bbox_coord):
     lat_max = bbox_coord[2]
     lon_min = bbox_coord[1]
     lon_max = bbox_coord[3]
-    try:
-        amenities = server_config2(defaultServer, bbox_coord)
-    except Exception:
+    # loop through all provided servers
+    for i in range(len(SERVERS)):
         try:
-            error = (f"{defaultServer} not responding, so connecting "
-                     f"{secondaryServer1}")
-            LOGGER.debug(error)
-            amenities = server_config2(secondaryServer1, bbox_coord)
+            amenities = server_config2(SERVERS[i], bbox_coord)
+            break
         except Exception:
-            try:
-                error = (f"{secondaryServer1} not responding, so connecting "
-                         f"{secondaryServer2}")
-                LOGGER.debug(error)
-                amenities = server_config2(secondaryServer2, bbox_coord)
-            except Exception:
+            if (i+1) < len(SERVERS):
+                error = error = (
+                        f"{SERVERS[i]} not responding, so connecting to "
+                        f"{SERVERS[i+1]}")
+            else:
                 error = 'Unable to get data. All servers down!'
-                LOGGER.debug(error)
                 amenities = None
+            LOGGER.debug(error)
 
     # Fetch the basic amenity tags
     amenity = []
