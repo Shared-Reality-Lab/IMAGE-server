@@ -12,7 +12,9 @@ import requests
 from osm_config import defaultServer, secondaryServer1, secondaryServer2
 from geographiclib.geodesic import Geodesic
 import traceback
+from config.logging_utils import configure_logging
 
+configure_logging()
 
 # Configure logging settings
 logging.basicConfig(
@@ -177,12 +179,17 @@ def process_streets_data(OSM_data, bbox_coordinates):
                 }
                 # Delete key if value is empty
                 way_object = dict(x for x in way_object.items() if all(x))
-                processed_OSM_data.append(way_object)
+                if "street_id" in way_object and (
+                                                  "street_name" in way_object
+                                                  or
+                                                  "street_type" in way_object):
+                    processed_OSM_data.append(way_object)
 
-                # Remove name, highway, lane, and oneway tags from the tag list
+                # Remove name, highway, lanes, and oneway tags from the tag 
+                # list
                 way.tags.pop("name", None)
                 way.tags.pop("highway", None)
-                way.tags.pop("lane", None)
+                way.tags.pop("lanes", None)
                 way.tags.pop("oneway", None)
 
                 # Add other tags
@@ -191,7 +198,12 @@ def process_streets_data(OSM_data, bbox_coordinates):
                 way_object["nodes"] = node_list
                 # Delete key if value is empty
                 way_object = dict(x for x in way_object.items() if all(x))
-                if way_object not in processed_OSM_data:
+                if (way_object not in processed_OSM_data and 
+                    "street_id" in way_object and (
+                                                   "street_name" in way_object
+                                                   or
+                                                   "street_type"
+                                                   in way_object)):
                     processed_OSM_data.append(way_object)
     except AttributeError:
         error = 'Overpass Attibute error. Retry again'
@@ -993,7 +1005,8 @@ def validate(schema, data, resolver, json_message, error_code):
         validator = jsonschema.Draft7Validator(schema, resolver=resolver)
         validator.validate(data)
     except jsonschema.exceptions.ValidationError as error:
-        LOGGER.error(error)
+        LOGGER.error("Validation error!")
+        LOGGER.pii(f"Validation error: {error.message}")
         return jsonify(json_message), error_code
     return None
 
