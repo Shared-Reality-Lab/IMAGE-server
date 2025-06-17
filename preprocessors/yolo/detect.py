@@ -251,7 +251,7 @@ def warmup():
                 dummy_image,
                 device=device,
                 conf=CONF_THRESHOLD,
-                imgsz=MAX_IMAGE_SIZE,
+                # imgsz=MAX_IMAGE_SIZE,
                 verbose=False
             )
 
