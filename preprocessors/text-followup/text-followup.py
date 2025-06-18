@@ -408,25 +408,26 @@ def warmup():
     This avoids first-request latency by sending a dummy request.
     """
     try:
-        # construct the target Ollama endpoint for chat
-        api_url = f"{os.environ['OLLAMA_URL']}/chat"
+        # construct the target Ollama endpoint for generate
+        api_url = f"{os.environ['OLLAMA_URL']}/generate"
 
         # authorization headers with API key
         headers = {
-            "Authorization": f"Bearer {os.environ['OLLAMA_API_KEY']}"
+            "Authorization": f"Bearer {os.environ['OLLAMA_API_KEY']}",
+            "Content-Type": "application/json"
         }
 
         # prepare the warmup request data using the configured model
         data = {
             "model": os.environ["OLLAMA_MODEL"],
-            "messages": [{"role": "user", "content": "warmup"}],
-            "stream": False
+            "prompt": "ping",
+            "stream": False,
+            "keep_alive": -1  # instruct Ollama to keep the model in memory
         }
 
         logging.info("[WARMUP] Warmup endpoint triggered.")
-        logging.pii(
-            f"[WARMUP] Posting to {api_url} with model {data['model']}"
-        )
+        logging.pii(f"[WARMUP] Posting to {api_url} with model \
+                    {data['model']}")
 
         # send warmup request (with timeout)
         r = requests.post(api_url, headers=headers, json=data, timeout=60)
@@ -435,8 +436,7 @@ def warmup():
         return jsonify({"status": "warmed"}), 200
 
     except Exception as e:
-        logging.pii(f"[WARMUP] Warmup failed: {str(e)}")
-        logging.exception("[WARMUP] Exception details:")
+        logging.exception(f"[WARMUP] Exception details: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
