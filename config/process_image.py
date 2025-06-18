@@ -67,4 +67,5 @@ def process_image(base64_image_str, output_size, output_format=None):
         return final_image
 
     except Exception:
-        raise logging.exception("Image processing error")
+        logging.exception("Image processing error")
+        raise
