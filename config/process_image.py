@@ -67,6 +67,4 @@ def process_image(base64_image_str, output_size, output_format=None):
         return final_image
 
     except Exception:
-        logging.exception("Image processing error")
-        # Return original image if it exists
-        return image
+        raise logging.exception("Image processing error")
