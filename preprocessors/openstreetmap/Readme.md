@@ -14,7 +14,7 @@ GOOGLE_PLACES_KEY = [INSERT KEY STRING]
 
 This also requires a Docker env variable, SERVERS, whose value is set to the comma-separated urls of Overpass API instances:
 ```
-SERVERS="https://url1,https://url2"
+SERVERS=https://url1,https://url2
 ```
 
 ## Instruction (Docker Setup) - Recommended

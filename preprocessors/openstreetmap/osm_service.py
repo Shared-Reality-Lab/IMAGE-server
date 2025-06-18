@@ -95,13 +95,14 @@ def get_streets(bbox_coord):
         try:
             OSM_data = server_config1(SERVERS[i], bbox_coord)
             break
-        except Exception:
+        except Exception as e:
             if (i+1) < len(SERVERS):
                 error = error = (
-                        f"{SERVERS[i]} not responding, so connecting to "
-                        f"{SERVERS[i+1]}")
+                        f"{SERVERS[i]} not responding ({str(e)}), "
+                        f"so connecting to {SERVERS[i+1]}")
             else:
-                error = 'Unable to get data. All servers down!'
+                error = (f"{SERVERS[i]} not responding ({str(e)}). "
+                         "Unable to get data. All servers down!")
                 OSM_data = None
             LOGGER.debug(error)
     return (OSM_data)
@@ -673,13 +674,14 @@ def get_amenities(bbox_coord):
         try:
             amenities = server_config2(SERVERS[i], bbox_coord)
             break
-        except Exception:
+        except Exception as e:
             if (i+1) < len(SERVERS):
                 error = error = (
-                        f"{SERVERS[i]} not responding, so connecting to "
-                        f"{SERVERS[i+1]}")
+                        f"{SERVERS[i]} not responding ({str(e)}), "
+                        f"so connecting to {SERVERS[i+1]}")
             else:
-                error = 'Unable to get data. All servers down!'
+                error = (f"{SERVERS[i]} not responding ({str(e)}). "
+                         "Unable to get data. All servers down!")
                 amenities = None
             LOGGER.debug(error)
 
