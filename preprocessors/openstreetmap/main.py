@@ -97,6 +97,12 @@ def get_map_data():
     }
     OSM_data = get_streets(bbox_coordinates)
     amenity = get_amenities(bbox_coordinates)
+    # initialize empty response
+    response = {
+        "request_uuid": request_uuid,
+        "timestamp": time_stamp,
+        "name": name
+        }
     if OSM_data is not None:
         processed_OSM_data = process_streets_data(OSM_data, bbox_coordinates)
         if processed_OSM_data is None:
@@ -108,17 +114,24 @@ def get_map_data():
                 intersection_record_updated)
         POIs = enlist_POIs(POD1, amenity)
         if processed_OSM_data is not None and len(processed_OSM_data) != 0:
-            response = OSM_preprocessor(processed_OSM_data, POIs, amenity)
-            response = {
-                "request_uuid": request_uuid,
-                "timestamp": time_stamp,
-                "name": name,
-                "data": {
-                    "bounds": header_info,
-                    "points_of_interest": POIs,
-                    "streets": response
-                }
+            streets = OSM_preprocessor(processed_OSM_data, POIs, amenity)
+            response["data"] = {
+                "bounds": header_info,
+                "points_of_interest": POIs,
+                "streets": streets
             }
+            logging.debug("Validating response data")
+            validated = validate(
+                schema=data_schema,
+                data=response["data"],
+                resolver=resolver,
+                json_message='Invalid Preprocessor JSON format',
+                error_code=500)
+            if validated is not None:
+                return validated
+        """
+        # 'streets', 'points_of_interest' and 'bounds' are
+        #  required fields as per the schema
         elif amenity is not None and len(amenity) != 0:
             response = {
                 "request_uuid": request_uuid,
@@ -148,22 +161,17 @@ def get_map_data():
                 "points_of_interest": amenity
             }
         }
-    else:
-        response = {
-            "request_uuid": request_uuid,
-            "timestamp": time_stamp,
-            "name": name,
-            "data": {
-                "bounds": header_info
-            }
-        }
+    """
+    if "data" not in response:
+        logging.debug("Map data is empty for location. Skipping...")
+        return "", 204
+    logging.debug("Validating response")
     validated = validate(
         schema=schema,
         data=response,
         resolver=resolver,
         json_message='Invalid Preprocessor JSON format',
         error_code=500)
-
     if validated is not None:
         return validated
     logging.debug("Sending final response")
