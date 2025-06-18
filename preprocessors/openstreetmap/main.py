@@ -130,7 +130,8 @@ def get_map_data():
             if validated is not None:
                 return validated
         """
-        # 'streets', 'points_of_interest' and 'bounds' aere required fields as per schema
+        # 'streets', 'points_of_interest' and 'bounds' are
+        #  required fields as per the schema
         elif amenity is not None and len(amenity) != 0:
             response = {
                 "request_uuid": request_uuid,

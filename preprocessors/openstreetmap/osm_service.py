@@ -185,7 +185,7 @@ def process_streets_data(OSM_data, bbox_coordinates):
                                                   "street_type" in way_object):
                     processed_OSM_data.append(way_object)
 
-                # Remove name, highway, lanes, and oneway tags from the tag 
+                # Remove name, highway, lanes, and oneway tags from the tag
                 # list
                 way.tags.pop("name", None)
                 way.tags.pop("highway", None)
@@ -198,7 +198,7 @@ def process_streets_data(OSM_data, bbox_coordinates):
                 way_object["nodes"] = node_list
                 # Delete key if value is empty
                 way_object = dict(x for x in way_object.items() if all(x))
-                if (way_object not in processed_OSM_data and 
+                if (way_object not in processed_OSM_data and
                     "street_id" in way_object and (
                                                    "street_name" in way_object
                                                    or
