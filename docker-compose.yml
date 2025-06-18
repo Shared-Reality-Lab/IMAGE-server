@@ -557,6 +557,7 @@ services:
         - sc-store:/tmp/sc-store
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+      - SERVERS=https://pegasus.cim.mcgill.ca/overpass/api/interpreter?
 
   svg-open-street-map-handler:
     profiles: [test, default]
