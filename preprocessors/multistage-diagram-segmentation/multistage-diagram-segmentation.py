@@ -41,7 +41,7 @@ app = Flask(__name__)
 
 # --- Configuration ---
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro-preview-05-06")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
 if not GOOGLE_API_KEY:
     logging.error("GOOGLE_API_KEY environment variable not set.")
     sys.exit(1)
