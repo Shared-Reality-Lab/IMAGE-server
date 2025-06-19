@@ -94,6 +94,26 @@ def translate_request():
     return jsonify(response), 200
 
 
+@app.route("/warmup", methods=["GET"])
+def warmup():
+    """
+    Trigger a dummy translation to warm up the Hugging Face model.
+    """
+    try:
+        LOGGER.info("[WARMUP] Warmup endpoint triggered.")
+
+        # Instantiate a dummy translator (e.g., English to French)
+        dummy_translator = Translator("en", "fr")
+        _ = dummy_translator.translate(
+            "Internet Multimodal Access to Graphical Exploration")
+
+        LOGGER.info("[WARMUP] Model warmed successfully.")
+        return jsonify({"status": "warmed"}), 200
+    except Exception as e:
+        LOGGER.exception("[WARMUP] Warmup failed.")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.route("/health", methods=["GET"])
 def health():
     """

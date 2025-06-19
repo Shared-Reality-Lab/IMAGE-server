@@ -1,20 +1,33 @@
-FROM pytorch/pytorch:latest
+ARG PYTORCH="2.7.1"
+ARG CUDA="11.8"
+ARG CUDNN="9"
+FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-runtime
 
 # See README.md#docker-image for visualisation of the directory structure
 WORKDIR /app
-RUN apt-get update && apt-get install python3 python3-pip git git-lfs curl -y
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip git git-lfs curl \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements 
+# Install Python dependencies
 COPY services/multilang-support/requirements.txt /app/
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt \
+ && pip install --no-cache-dir "transformers[sentencepiece]"
 
-# Upgrade pip and install requirements
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+# download english -> french model into the image
+RUN python3 -c "\
+from transformers import MarianMTModel, MarianTokenizer; \
+model = MarianMTModel.from_pretrained('Helsinki-NLP/opus-mt-en-fr'); \
+tokenizer = MarianTokenizer.from_pretrained('Helsinki-NLP/opus-mt-en-fr'); \
+model.save_pretrained('/app/models/opus-mt-en-fr'); \
+tokenizer.save_pretrained('/app/models/opus-mt-en-fr')"
 
 # Clone the model
-RUN git lfs install
+# RUN git lfs install
+
 # English -> French
-RUN git clone https://huggingface.co/Helsinki-NLP/opus-mt-en-fr ./models/opus-mt-en-fr
+# RUN git clone https://huggingface.co/Helsinki-NLP/opus-mt-en-fr ./models/opus-mt-en-fr
 
 # English -> German
 # RUN git clone https://huggingface.co/Helsinki-NLP/opus-mt-en-de ./models/opus-mt-en-de

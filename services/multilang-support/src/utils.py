@@ -42,33 +42,24 @@ class Translator:
         - tgt_lang: the target language in ISO 639-1 code
         """
         # Getting model checkpoint from downloaded folder (see Dockerfile)
-        self.CHECKPOINT = f"/app/models/opus-mt-{src_lang}-{tgt_lang}"
+        # self.CHECKPOINT = f"/app/models/opus-mt-{src_lang}-{tgt_lang}"
         self.NAME = f"Translator({src_lang}, {tgt_lang})"
         try:
-            try:
-                self.TOKENIZER = AutoTokenizer.from_pretrained(self.CHECKPOINT)
-                self.MODEL = AutoModelForSeq2SeqLM.from_pretrained(
-                    self.CHECKPOINT)
-            except Exception:
-                LOGGER.warning(
-                    f"Cannot find {self.CHECKPOINT}, is it pre-downloaded?")
-                LOGGER.info("Downloading model from HuggingFace model hub...")
-                self.TOKENIZER = AutoTokenizer.from_pretrained(
-                    f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}")
-                self.MODEL = AutoModelForSeq2SeqLM.from_pretrained(
-                    f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}")
+            model_path = f"/app/models/opus-mt-{src_lang}-{tgt_lang}"
+            LOGGER.info(f"Loading model from local path: {model_path}")
+            self.TOKENIZER = AutoTokenizer.from_pretrained(
+                model_path, local_files_only=True)
+            self.MODEL = AutoModelForSeq2SeqLM.from_pretrained(
+                model_path, local_files_only=True)
 
             LOGGER.info(f"{self.NAME} instantiated!")
-            # set GPU/CPU device
             self.set_model_device()
-            LOGGER.info(
-                f"{self.NAME} running on {self.DEVICE_NAME}")
+            LOGGER.info(f"{self.NAME} running on {self.DEVICE_NAME}")
             Translator.Translators.append(self)
         except Exception as e:
             LOGGER.error(e)
-            LOGGER.info(
-                f"Failed to instantiate {self.NAME}!")
-            LOGGER.debug(f"Failed to start model: {self.CHECKPOINT}")
+            LOGGER.info(f"Failed to instantiate {self.NAME}!")
+            LOGGER.debug(f"Expected model path: {model_path}")
 
     def set_model_device(self):
         num_gpus = torch.cuda.device_count()
