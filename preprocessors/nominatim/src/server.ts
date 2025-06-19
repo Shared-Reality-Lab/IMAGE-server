@@ -51,7 +51,7 @@ app.post("/preprocessor", async (req, res) => {
         return;
     }
 
-    //extract coordinates and enviroment urls
+    //extract coordinates and environment urls
     const coordinates = req.body["coordinates"];
     const nominatimServer = process.env.NOMINATIM_SERVER;
     const fallbackServer = process.env.NOMINATIM_FALLBACK_SERVER;

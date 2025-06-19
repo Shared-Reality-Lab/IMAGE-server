@@ -412,7 +412,8 @@ services:
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - NOMINATIM_SERVER=https://pegasus.cim.mcgill.ca/nominatim
-      - NOMINATIM_FALLBACK_SERVER=https://nominatim.openstreetmap.org
+      # Optional fallback if Pegasus is unreachable
+      # - NOMINATIM_FALLBACK_SERVER=https://nominatim.openstreetmap.org
   
   photo-tactile-svg-handler:
     profiles: [production, test, default]
