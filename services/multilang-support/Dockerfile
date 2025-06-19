@@ -9,12 +9,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip git git-lfs curl \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements 
+# Install Python dependencies
 COPY services/multilang-support/requirements.txt /app/
-
-# Upgrade pip and install requirements
 RUN pip install --upgrade pip \
- && pip install --no-cache-dir -r requirements.txt 
+ && pip install --no-cache-dir -r requirements.txt \
+ && pip install --no-cache-dir "transformers[sentencepiece]"
+
+# download english -> french model into the image
+RUN python3 -c "\
+from transformers import MarianMTModel, MarianTokenizer; \
+model = MarianMTModel.from_pretrained('Helsinki-NLP/opus-mt-en-fr'); \
+tokenizer = MarianTokenizer.from_pretrained('Helsinki-NLP/opus-mt-en-fr'); \
+model.save_pretrained('/app/models/opus-mt-en-fr'); \
+tokenizer.save_pretrained('/app/models/opus-mt-en-fr')"
 
 # Clone the model
 # RUN git lfs install

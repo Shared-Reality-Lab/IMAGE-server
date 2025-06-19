@@ -45,21 +45,21 @@ class Translator:
         # self.CHECKPOINT = f"/app/models/opus-mt-{src_lang}-{tgt_lang}"
         self.NAME = f"Translator({src_lang}, {tgt_lang})"
         try:
-            model_name = f"Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}"
-            LOGGER.info(f"Loading model from Hugging Face: {model_name}")
-            self.TOKENIZER = AutoTokenizer.from_pretrained(model_name)
-            self.MODEL = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+            model_path = f"/app/models/opus-mt-{src_lang}-{tgt_lang}"
+            LOGGER.info(f"Loading model from local path: {model_path}")
+            self.TOKENIZER = AutoTokenizer.from_pretrained(
+                model_path, local_files_only=True)
+            self.MODEL = AutoModelForSeq2SeqLM.from_pretrained(
+                model_path, local_files_only=True)
 
             LOGGER.info(f"{self.NAME} instantiated!")
-            # set GPU/CPU device
             self.set_model_device()
-            LOGGER.info(
-                f"{self.NAME} running on {self.DEVICE_NAME}")
+            LOGGER.info(f"{self.NAME} running on {self.DEVICE_NAME}")
             Translator.Translators.append(self)
         except Exception as e:
             LOGGER.error(e)
             LOGGER.info(f"Failed to instantiate {self.NAME}!")
-            LOGGER.debug(f"Failed to start model: {model_name}")
+            LOGGER.debug(f"Expected model path: {model_path}")
 
     def set_model_device(self):
         num_gpus = torch.cuda.device_count()
