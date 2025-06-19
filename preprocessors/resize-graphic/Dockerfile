@@ -39,7 +39,7 @@ EXPOSE 80
 USER python
 
 # Define the healthcheck command
-HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:5000/health || exit 1
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:80/health || exit 1
 
 # Define the command to run the application using gunicorn
 CMD [ "gunicorn", "resize-graphic:app", "-b", "0.0.0.0:80", "--capture-output", "--timeout=120", "--log-level=debug" ]
