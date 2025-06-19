@@ -35,7 +35,8 @@ app.use(express.json({limit: process.env.MAX_BODY}));
 
 app.post("/preprocessor", async (req, res) => {
     console.debug("Received request");
-    // Validate the request data
+
+    // validate input against request schema
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         console.warn("Request did not pass the schema!");
         piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)}`);
@@ -43,39 +44,53 @@ app.post("/preprocessor", async (req, res) => {
         return;
     }
 
+    // skip if no coordinates are provided
     if (!("coordinates" in req.body)) {
         console.debug("Coordinates not available, cannot make a request for reverse geocode.");
         res.sendStatus(204);
         return;
     }
 
+    //extract coordinates and environment urls
     const coordinates = req.body["coordinates"];
+    const nominatimServer = process.env.NOMINATIM_SERVER;
+    const fallbackServer = process.env.NOMINATIM_FALLBACK_SERVER;
 
-    const nominatimServer = ("NOMINATIM_SERVER" in process.env) ? process.env.NOMINATIM_SERVER : "https://nominatim.openstreetmap.org";
+    // construct both primary and fallback URLs
+    const requestUrl = `${nominatimServer}/reverse?lat=${coordinates.latitude}&lon=${coordinates.longitude}&format=jsonv2`;
+    const fallbackUrl = `${fallbackServer}/reverse?lat=${coordinates.latitude}&lon=${coordinates.longitude}&format=jsonv2`;
 
-    const requestUrl = new URL(`./reverse?lat=${coordinates["latitude"]}&lon=${coordinates["longitude"]}&format=jsonv2`, nominatimServer);
-    console.debug("Sending request to " + requestUrl.href);
+    console.debug("Sending request to " + requestUrl);
 
     try {
-        const json = await fetch(requestUrl.href)
-            .then(async response => {
-                const result = await response.json();
-                if (response.ok) {
-                    return result;
-                } else {
-                    throw new Error(result);
-                }
-            });
-        const response = {
-            "request_uuid": req.body.request_uuid,
-            "timestamp": Math.round(Date.now() / 1000),
-            "name": "ca.mcgill.a11y.image.preprocessor.nominatim",
-            "data": json
+
+        //send request to primary Nominatim server
+        let response = await fetch(requestUrl);
+        let json = await response.json();
+
+        // fallback if primary request fails
+        if (!response.ok && fallbackServer) {
+            console.warn(`Primary Nominatim failed with status ${response.status}, falling back to ${fallbackUrl}`);
+            console.debug("Sending fallback request to " + fallbackUrl);
+            response = await fetch(fallbackUrl);
+            json = await response.json();
+        }
+
+        if (!response.ok) {
+            throw new Error(JSON.stringify(json));
+        }
+
+        const result = {
+            request_uuid: req.body.request_uuid,
+            timestamp: Math.round(Date.now() / 1000),
+            name: "ca.mcgill.a11y.image.preprocessor.nominatim",
+            data: json
         };
-        if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", response)) {
-            if (ajv.validate("https://image.a11y.mcgill.ca/preprocessors/nominatim.schema.json", response["data"])) {
+
+        if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", result)) {
+            if (ajv.validate("https://image.a11y.mcgill.ca/preprocessors/nominatim.schema.json", result.data)) {
                 console.debug("Valid response generated.");
-                res.json(response);
+                res.json(result);
             } else {
                 console.error("Nominatim preprocessor data failed validation (possibly not an object?)");
                 piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)}`);
@@ -83,13 +98,13 @@ app.post("/preprocessor", async (req, res) => {
             }
         } else {
             console.error("Failed to generate a valid response");
-            piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)} | Response: ${JSON.stringify(response)}`);
+            piiLogger.pii(`Validation error: ${JSON.stringify(ajv.errors)} | Response: ${JSON.stringify(result)}`);
             res.status(500).json(ajv.errors);
         }
     } catch (e) {
         console.error("Unexpected error occured.");
         piiLogger.pii(`${(e as Error).message}`);
-        res.status(500).json({"message": (e as Error).message});
+        res.status(500).json({ message: (e as Error).message });
     }
 });
 

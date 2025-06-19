@@ -411,7 +411,10 @@ services:
         ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
-
+      - NOMINATIM_SERVER=https://pegasus.cim.mcgill.ca/nominatim
+      # Optional fallback if Pegasus is unreachable
+      # - NOMINATIM_FALLBACK_SERVER=https://nominatim.openstreetmap.org
+  
   photo-tactile-svg-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-tactile-svg:${REGISTRY_TAG}

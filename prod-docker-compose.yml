@@ -65,3 +65,8 @@ services:
       - traefik.docker.network=traefik
     environment:
       - SERVER_URL=https://image.a11y.mcgill.ca/
+
+  nominatim-preprocessor:
+    environment:
+      # temporary: backup server in place for NFB
+      - NOMINATIM_FALLBACK_SERVER=https://nominatim.openstreetmap.org
