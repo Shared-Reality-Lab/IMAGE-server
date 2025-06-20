@@ -26,7 +26,7 @@ services:
     command: -m 4096 -I 5m
 
   resize-graphic:
-    profiles: [test, default]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-resize-graphic:${REGISTRY_TAG}
     restart: "no"
     labels:
