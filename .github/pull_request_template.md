@@ -2,6 +2,9 @@ Please ensure you've followed the checklist and provide all the required informa
 If you do not have everything applicable to your PR, it will not be reviewed!
 If you don't know what something is or if it applies to you, ask!
 
+Please note that PRs from external contributors who have not agreed to [our Contributor License Agreement](/CLA.md) will not be considered.
+To accept it, include `I agree to the [current Contributor License Agreement](/CLA.md)` in this pull request.
+
 Don't delete below this line.
 
 ---
