@@ -1,0 +1,41 @@
+services:
+  orchestrator:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.orchestrator.rule=Host(`theminimalist.net`)"
+      - "traefik.http.routers.orchestrator.tls.certresolver=myresolver"
+      - "traefik.docker.network=traefik"
+    networks:
+      - default
+      - traefik
+
+  monarch-link-app:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.monarch.rule=Host(`theminimalist.net`) && PathPrefix(`/monarch`)"
+      - "traefik.http.routers.monarch.tls.certresolver=myresolver"
+      - "traefik.http.middlewares.monarch-stripprefix.stripprefix.prefixes=/monarch"
+      - "traefik.http.routers.monarch.middlewares=monarch-stripprefix@docker"
+      - "traefik.docker.network=traefik"
+    networks:
+      - default
+      - traefik
+
+  tat:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tat.rule=Host(`theminimalist.net`) && PathPrefix(`/tat`)"
+      - "traefik.http.routers.tat.tls.certresolver=myresolver"
+      - "traefik.http.middlewares.tat-stripprefix.stripprefix.prefixes=/tat"
+      - "traefik.http.routers.tat.middlewares=tat-stripprefix@docker"
+      - "traefik.docker.network=traefik"
+    environment:
+      - SERVER_URL=https://theminimalist.net/
+    networks:
+      - default
+      - traefik
+
+networks:
+  traefik:
+    external: true
+
