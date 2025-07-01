@@ -18,9 +18,7 @@
 import cv2
 from ultralytics import SAM
 import jsonschema
-from google import genai
-from google.genai import types
-from google.api_core import exceptions as google_exceptions
+from openai import OpenAI
 from io import BytesIO
 import json
 from PIL import Image, UnidentifiedImageError
@@ -34,28 +32,37 @@ from flask import Flask, request, jsonify
 from datetime import datetime
 from config.logging_utils import configure_logging
 import sys
+from qwen_vl_utils import smart_resize
+
 
 configure_logging()
+
+# Disable OpenAI debug logs
+logging.getLogger("openai").setLevel(logging.WARNING)
+# Also disable httpx logs which OpenAI uses
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 app = Flask(__name__)
 
 # --- Configuration ---
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
-if not GOOGLE_API_KEY:
-    logging.error("GOOGLE_API_KEY environment variable not set.")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = "qwen-vl-max"
+BASE_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+if not OPENAI_API_KEY:
+    logging.error("OPENAI_API_KEY environment variable not set.")
+    sys.exit(1)
+
+# Initialize OpenAI Client
+try:
+    client = OpenAI(api_key=OPENAI_API_KEY,
+                    base_url=BASE_URL)
+    logging.debug("OpenAI client initialized")
+except Exception as e:
+    logging.error(f"Failed to initialize OpenAI client: {e}")
+    client = None
     sys.exit(1)
 
 SAM_MODEL_PATH = os.getenv('SAM_MODEL_PATH')
-
-# Initialize Gemini Client
-try:
-    client = genai.Client(api_key=GOOGLE_API_KEY)
-    logging.debug("Google GenAI client initialized")
-except Exception as e:
-    logging.error(f"Failed to initialize Google GenAI client: {e}")
-    client = None
-    sys.exit(1)
 
 # Initialize SAM
 try:
@@ -105,14 +112,6 @@ BASE_SCHEMA_PATH = os.getenv("BASE_SCHEMA")
 with open(BASE_SCHEMA_PATH) as f:
     BASE_SCHEMA_GEMINI = json.load(f)
 
-# Gemini safety settings
-safety_settings = [
-    types.SafetySetting(
-        category="HARM_CATEGORY_DANGEROUS_CONTENT",
-        threshold="BLOCK_ONLY_HIGH",
-    ),
-]
-
 
 def decode_image(source: str) -> Image.Image | None:
     """
@@ -149,143 +148,97 @@ def decode_image(source: str) -> Image.Image | None:
             ), 500
 
 
-def validate_gemini_response(
-        response: types.GenerateContentResponse
-        ) -> str | None:
+def validate_openai_response(response) -> str | None:
     """
-    Validates the Gemini API response for common issues like blocking,
-    safety stops, or missing content. (Copied from new file)
+    Validates the OpenAI API response and extracts the content.
     """
-    # 1. Check for prompt feedback indicating blocking (overall request block)
-    if response.prompt_feedback and response.prompt_feedback.block_reason:
-        logging.error(
-            f"Gemini request blocked. \
-                Reason: {response.prompt_feedback.block_reason}"
-        )
-        if response.prompt_feedback.safety_ratings:
-            for rating in response.prompt_feedback.safety_ratings:
-                logging.error(f"Prompt Safety Rating: {rating}")
+    try:
+        if not response.choices:
+            logging.error("OpenAI response missing choices")
+            return None
+
+        choice = response.choices[0]
+
+        if choice.finish_reason not in ["stop", "length"]:
+            logging.error(
+                f"Generation stopped with reason: {choice.finish_reason}"
+            )
+            return None
+
+        if not choice.message or not choice.message.content:
+            logging.error("OpenAI response missing message content")
+            return None
+
+        logging.debug("OpenAI response validation successful.")
+        return choice.message.content
+
+    except Exception as e:
+        logging.error(f"Error validating OpenAI response: {e}")
         return None
 
-    # 2. Check if candidates list is empty (often indicates blocking)
-    if not response.candidates:
-        logging.error(
-            "Gemini response missing candidates list. \
-            Possible filtering or error."
-        )
-        if response.prompt_feedback:
-            logging.error(f"Prompt Feedback: {response.prompt_feedback}")
-        return None
 
-    candidate = response.candidates[0]
-
-    # 3. Check the finish reason of the first candidate
-    if candidate.finish_reason != types.FinishReason.STOP:
-        logging.error(
-            f"Gemini generation stopped prematurely. \
-                Reason: {candidate.finish_reason.name}"
-        )
-        if (
-            candidate.finish_reason == types.FinishReason.SAFETY
-            and candidate.safety_ratings
-        ):
-            logging.error("Safety Ratings causing stop:")
-            for rating in candidate.safety_ratings:
-                logging.error(
-                    f"Category: {rating.category.name}, \
-                    Probability: {rating.probability.name}"
-                )
-        elif (
-            candidate.finish_reason == types.FinishReason.RECITATION
-            and candidate.citation_metadata
-        ):
-            logging.error(f"The content potentially \
-                          contains copyright violations. \
-                          Citation Metadata: {candidate.citation_metadata}")
-        return None
-
-    # 4. Check if the expected content structure (parts and text) exists
-    if not candidate.content or not candidate.content.parts:
-        logging.error(
-            "Gemini response candidate lacks the 'content' \
-            or 'parts' attribute."
-        )
-        return None
-    # Check if the first part exists before trying to access its text
-    if len(candidate.content.parts) == 0 or not hasattr(
-        candidate.content.parts[0], "text"
-    ):
-        logging.error(
-            "Gemini response candidate's first part lacks 'text' content or \
-                part is missing."
-        )
-        return None
-    # Ensure text is not empty (it might exist but be empty string)
-    if not candidate.content.parts[0].text:
-        logging.warning(
-            "Gemini response candidate's first part has empty 'text' content."
-        )
-
-    logging.debug("Gemini response validation successful.")
-    return candidate.content.parts[0].text
-
-
-def extract(image: Image.Image) -> dict | None:
+def extract(base64_image: str) -> dict | None:
     """
-    Sends an image to the Gemini model to extract structured information
-    (stages and links) based on the `SIMPLE_SCHEMA_GEMINI`.
+    Sends an image to OpenAI to extract structured information
+    (stages and links) based on the schema.
     """
     if not client:
-        logging.error("Gemini client not initialized.")
+        logging.error("OpenAI client not initialized.")
         return None
 
-    logging.info("Requesting base diagram information from Gemini...")
+    logging.info("Requesting base diagram information from OpenAI...")
     try:
-        # Run model to find base information about the diagram
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=[BASE_PROMPT, image],
-            config=types.GenerateContentConfig(
-                temperature=0.5,
-                safety_settings=safety_settings,
-                response_mime_type='application/json',
-                response_schema=BASE_SCHEMA_GEMINI,
-            )
-        )
-        # logging.debug(f"Raw Gemini response object: {response}")
+        # Prepare the messages with schema in the prompt
+        schema_prompt = f'''{BASE_PROMPT}\n\n
+        Return the response according to this JSON schema:\n
+        {json.dumps(BASE_SCHEMA_GEMINI, indent=2)}'''
 
-        response_text = validate_gemini_response(response)
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": schema_prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{base64_image}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            temperature=0.5,
+            response_format={"type": "json_object"}
+        )
+
+        response_text = validate_openai_response(response)
         if response_text is None:
             return None
 
-        logging.info("Gemini request successful. Parsing JSON response.")
+        logging.info("OpenAI request successful. Parsing JSON response.")
         logging.pii(f"Response text to parse: {response_text}")
         parsed_json = json.loads(response_text)
-        logging.info("Successfully parsed Gemini JSON response.")
+        logging.info("Successfully parsed OpenAI JSON response.")
         return parsed_json
 
     except json.JSONDecodeError as e:
-        logging.error(f"Failed to decode JSON response from Gemini: {e}")
-        return None
-    except google_exceptions.ResourceExhausted as e:
-        logging.error(f"Gemini API rate limit exceeded: {e}")
-        return None
-    except google_exceptions.GoogleAPIError as e:
-        logging.error(f"Gemini API error occurred: {e}")
+        logging.error(f"Failed to decode JSON response from OpenAI: {e}")
         return None
     except Exception as e:
         logging.error(
-            f"Unexpected error during Gemini extraction: {e}", exc_info=True
+            f"Unexpected error during OpenAI extraction: {e}", exc_info=True
         )
         return None
 
 
-def point(image: Image.Image, stages: list[str]) -> str | None:
+def point(stages: list[str], base64_image: str) -> str | None:
     """
-    Sends an image and stage labels to Gemini to get bounding boxes.
+    Sends an image and stage labels to OpenAI to get bounding boxes.
     """
     if not client:
-        logging.error("Gemini client not initialized.")
+        logging.error("OpenAI client not initialized.")
         return None
     if not stages:
         logging.warning(
@@ -295,45 +248,44 @@ def point(image: Image.Image, stages: list[str]) -> str | None:
 
     logging.pii(f"Requesting bounding boxes for stages: {stages}")
 
-    BBOX_PROMPT = f'''Give the segmentation masks for the illustrations
+    BBOX_PROMPT = f'''Give the bounding boxes for the illustrations
 of the following stages: {stages}.
-Output a JSON list of bounding boxes where each entry contains
-the 2D bounding box in the key \"box_2d\",
-and the stage name in the key \"label\".
+Output a only JSON list of bounding boxes where each entry contains
+the 2D bounding box in the key "box_2d",
+and the stage name in the key "label".
 '''
 
     try:
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=[BBOX_PROMPT, image],
-            config=types.GenerateContentConfig(
-                # system_instruction=segmentation_instructions,
-                temperature=0.5,
-                safety_settings=safety_settings,
-                # response_mime_type='application/json',
-                # response_schema=segment_schema,
-            )
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": BBOX_PROMPT},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{base64_image}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            temperature=0.1,
+            # response_format={"type": "json_object"}
         )
-        # logging.debug(f"Raw Gemini response object for points: {response}")
 
-        response_text = validate_gemini_response(response)
+        response_text = validate_openai_response(response)
         if response_text is None:
             return None
 
         logging.pii(f"Bounding box response text: {response_text}")
         return response_text
 
-    except google_exceptions.ResourceExhausted as e:
-        logging.error(
-            f"Gemini API rate limit exceeded during point request: {e}"
-            )
-        return None
-    except google_exceptions.GoogleAPIError as e:
-        logging.error(f"Gemini API error occurred during point request: {e}")
-        return None
     except Exception as e:
         logging.error(
-            f"Unexpected error during Gemini point request: {e}", exc_info=True
+            f"Unexpected error during OpenAI point request: {e}", exc_info=True
         )
         return None
 
@@ -342,7 +294,7 @@ def convert_to_sam_coordinates(
         bbox: list[int], width: int, height: int
         ) -> list[int]:
     """
-    Converts Gemini's normalized bbox [y1, x1, y2, x2] (0-1000) to SAM's
+    Converts Gemini's normalized bbox [x1, y1, x2, y2] (0-1000) to SAM's
     absolute pixel [x1, y1, x2, y2].
     """
     try:
@@ -356,10 +308,24 @@ def convert_to_sam_coordinates(
             )
             return None
 
-        abs_y1 = int(bbox[0] / 1000 * height)
-        abs_x1 = int(bbox[1] / 1000 * width)
-        abs_y2 = int(bbox[2] / 1000 * height)
-        abs_x2 = int(bbox[3] / 1000 * width)
+        min_pixels = 512 * 28 * 28
+        max_pixels = 1028 * 28 * 28
+
+        # Input size
+        input_height, input_width = smart_resize(
+            height, width, min_pixels=min_pixels, max_pixels=max_pixels
+        )
+        print(f"Model input size: {input_width, input_height}")
+
+        # abs_x1 = int(x1 / input_width * width)
+        # abs_y1 = int(y1 / input_height * height)
+        # abs_x2 = int(x2 / input_width * width)
+        # abs_y2 = int(y2 / input_height * height)
+
+        abs_x1 = int(bbox[0] / input_width * width)
+        abs_y1 = int(bbox[1] / input_height * height)
+        abs_x2 = int(bbox[2] / input_width * width)
+        abs_y2 = int(bbox[3] / input_height * height)
 
         # Ensure coordinates are within image bounds and valid order
         abs_x1 = max(0, min(width - 1, abs_x1))
@@ -394,7 +360,7 @@ def extract_normalized_contours(
         results: list, img_width: int, img_height: int
         ) -> list[list[list[float]]]:
     """
-    Extracts and normalizes contours from SAM results. (Copied from new file)
+    Extracts and normalizes contours from SAM results.
     """
     if not results or len(results) == 0 or not results[0].masks:
         logging.info("No masks found in SAM results.")
@@ -435,7 +401,7 @@ def extract_normalized_contours(
                     if normalized_contour:
                         normalized_contours_list.append(normalized_contour)
             else:
-                logging.debug(f"No contours found for mask index {i}.")
+                logging.debug(f"No contours found for mask with index {i}.")
 
         return normalized_contours_list
     except Exception as e:
@@ -491,6 +457,8 @@ def segment_stages(
     labels = []
 
     width, height = im.size
+    logging.pii(f"Image dimensions: {width}x{height} =================")
+
     if width <= 0 or height <= 0:
         logging.error(
             f"Invalid image dimensions: {width}x{height}. \
@@ -691,11 +659,12 @@ def process_diagram():
 
     # 2. Decode Base64 Image
     source = content["graphic"]
+    base64_image = source.split(',', 1)[1]
     pil_image = decode_image(source)
 
     try:
         # 3. Extract Base stages and Links using Gemini
-        base_json = extract(pil_image)
+        base_json = extract(base64_image)
         if base_json is None:
             logging.error("Failed to extract base diagram info from Gemini.")
             return jsonify(
@@ -735,7 +704,7 @@ def process_diagram():
             logging.pii(f"Identified stages: {stages}")
 
             # 5. Get Bounding Box Suggestions using Gemini ('point')
-            bounding_box_json_str = point(pil_image, stages)
+            bounding_box_json_str = point(stages, base64_image)
             if bounding_box_json_str is None:
                 logging.error("Failed to get bounding boxes from Gemini.")
                 aggregated_contour_data = {}
@@ -824,19 +793,33 @@ def warmup():
     try:
         logging.info("Warming up Gemini and SAM...")
 
-        # Gemini: dummy image + prompt
+        # OpenAI: dummy image + prompt
         dummy_img = Image.new("RGB", (512, 512), color="white")
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=["{}", dummy_img],
-            config=types.GenerateContentConfig(
-                temperature=0.1,
-                safety_settings=safety_settings,
-                response_mime_type='application/json',
-                response_schema=BASE_SCHEMA_GEMINI,
-            )
+        # Convert dummy image to base64
+        buffered = BytesIO()
+        dummy_img.save(buffered, format="PNG")
+        dummy_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "{}"},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{dummy_base64}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            temperature=0.1,
+            response_format={"type": "json_object"}
         )
-        _ = validate_gemini_response(response)
+        _ = validate_openai_response(response)
 
         # SAM: dummy box
         dummy_cv2 = np.zeros((512, 512, 3), dtype=np.uint8)
