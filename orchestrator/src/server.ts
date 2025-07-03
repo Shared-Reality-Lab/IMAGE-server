@@ -106,6 +106,21 @@ async function measureExecutionTime<T>(label: string, fn: () => Promise<T>): Pro
 }
 
 async function checkCache(preprocessorName: string, hashedKey: string, cacheTimeOut: number): Promise<Response | null> {
+    if (process.env.CACHE_OVERRIDE != undefined && preprocessorName) {
+       const filepath = path.join(process.env.CACHE_OVERRIDE, hashedKey);
+       try {
+            // Load cache override and serve
+            const contents = await fs.readFile(filepath);
+            const override = JSON.parse(contents.toString());
+            return override;
+        } catch (e: any) {
+            if (e.code !== 'ENOENT') {  // Ignoring as this will occur if there is no override
+                console.warn(`While reading the override for ${hashedKey}, an error occurred: ${e.name}`);
+            }
+        }
+    }
+
+    // Timeout only is applicable to regular cache.
     if (cacheTimeOut <= 0) {
         return null; // no caching if timeout is 0, skip lookup
     }
@@ -502,7 +517,7 @@ app.post("/render", (req: express.Request, res: express.Response) => {
             );
 
             const graph = new Graph();
-            //Construct the graph using the handlers and preprocessors 
+            //Construct the graph using the handlers and preprocessors
             const readyToRun =  await graph.constructGraph(
                 preprocessors,
                 handlers,
