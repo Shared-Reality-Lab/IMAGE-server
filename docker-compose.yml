@@ -9,6 +9,7 @@ services:
       - STORE_IMAGE_DATA=ON
       - MEMCACHE_SERVERS=memcached:11211
       - PREPROCESSOR_TIMEOUT=90000
+      - CACHE_OVERRIDE=/var/cache/IMAGE
     env_file:
       - ./config/express-common.env
     group_add:
@@ -17,6 +18,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - user-logs:/var/log/IMAGE
+      - /var/docker/image/cache:/var/cache/IMAGE
 
   memcached:
     profiles: [production, test, default]
