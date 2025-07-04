@@ -45,6 +45,12 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 app = Flask(__name__)
 
 # --- Configuration ---
+ALLOWED_ORIGINS = [
+    "https://image.a11y.mcgill.ca/",
+    "https://github.com/VenissaCarolQuadros/",
+    "https://unicorn.cim.mcgill.ca/",
+]
+
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = "qwen-vl-max"
 BASE_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
@@ -308,19 +314,21 @@ def convert_to_sam_coordinates(
             )
             return None
 
+        # Graphics size used by Qwen
         min_pixels = 512 * 28 * 28
-        max_pixels = 1028 * 28 * 28
+        max_pixels = 1024 * 28 * 28
+        # Qwen splits images into 28x28 patches
+        factor = 28
 
         # Input size
         input_height, input_width = smart_resize(
-            height, width, min_pixels=min_pixels, max_pixels=max_pixels
+            height,
+            width,
+            factor=factor,
+            min_pixels=min_pixels,
+            max_pixels=max_pixels
         )
         print(f"Model input size: {input_width, input_height}")
-
-        # abs_x1 = int(x1 / input_width * width)
-        # abs_y1 = int(y1 / input_height * height)
-        # abs_x2 = int(x2 / input_width * width)
-        # abs_y2 = int(y2 / input_height * height)
 
         abs_x1 = int(bbox[0] / input_width * width)
         abs_y1 = int(bbox[1] / input_height * height)
@@ -635,8 +643,10 @@ def process_diagram():
     if "graphic" not in content:
         logging.info("No graphic content. Skipping...")
         return jsonify({"error": "No graphic content"}), 204
-    if (content["URL"] !=
-            "https://image.a11y.mcgill.ca/pages/multistage_diagrams.html"):
+    if not any(
+        content["URL"].startswith(origin) for origin in ALLOWED_ORIGINS
+            ):
+
         logging.info(
             "Request URL does not match expected endpoint. Skipping."
             )
