@@ -310,17 +310,17 @@ def convert_to_sam_coordinates(
 
         min_pixels = 512 * 28 * 28
         max_pixels = 1028 * 28 * 28
+        factor = 28
 
         # Input size
         input_height, input_width = smart_resize(
-            height, width, min_pixels=min_pixels, max_pixels=max_pixels
+            height,
+            width,
+            factor=factor,
+            min_pixels=min_pixels,
+            max_pixels=max_pixels
         )
         print(f"Model input size: {input_width, input_height}")
-
-        # abs_x1 = int(x1 / input_width * width)
-        # abs_y1 = int(y1 / input_height * height)
-        # abs_x2 = int(x2 / input_width * width)
-        # abs_y2 = int(y2 / input_height * height)
 
         abs_x1 = int(bbox[0] / input_width * width)
         abs_y1 = int(bbox[1] / input_height * height)
