@@ -35,6 +35,10 @@ services:
       - default
       - traefik
 
+  openstreetmap:
+    environment:
+      - SERVERS=https://overpass-api.de/api/interpreter
+
 networks:
   traefik:
     external: true
