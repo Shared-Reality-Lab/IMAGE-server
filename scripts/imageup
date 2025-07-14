@@ -27,6 +27,12 @@ if [[ -z "$COMPOSE_ENV_FILE" || -z "$ENVIRONMENT" ]]; then
   exit 1
 fi
 
+# Skip automatic daily resets in production (we use Pegasus)
+if [[ "$1" == "--auto" && "$ENVIRONMENT" == "production" ]]; then
+  echo "$(date) - Skipping imageup: auto-run skipped in production" >> /tmp/imageup_skip.log
+  exit 0
+fi
+
 delete_override=true  # default to deleting override file
 
 # get command line arguments
