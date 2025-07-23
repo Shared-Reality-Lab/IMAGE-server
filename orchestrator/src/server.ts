@@ -109,6 +109,7 @@ async function checkCache(preprocessorName: string, hashedKey: string, cacheTime
        try {
             // Load cache override and serve
             const contents = await fs.readFile(filepath);
+            console.debug(`Loaded from file ${filepath} for preprocessor ${preprocessorName}`);
             const override = JSON.parse(contents.toString());
             return override;
         } catch (e: any) {
