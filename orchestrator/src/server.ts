@@ -51,8 +51,6 @@ const serverCache = new ServerCache();
 const memjsClient = serverCache.memjsClient;
 
 console.debug("memcached server", memjsClient.servers);
-// variable to store mapping of service (as defined in docker-compose) and preprocessor-id (as returned in the reponse)
-const SERVICE_PREPROCESSOR_MAP : Record<string, string> = {};
 const port = 8080;
 const ajv = new Ajv2020({
     "schemas": [definitionsJSON, querySchemaJSON, responseSchemaJSON, handlerResponseSchemaJSON, preprocessorResponseSchemaJSON]
@@ -101,16 +99,17 @@ async function measureExecutionTime<T>(label: string, fn: () => Promise<T>): Pro
         const normalizedCpuUsage = parseFloat(((cpuTime / (duration * coreCount)) * 100).toFixed(2)); // normalized CPU usage
 
         console.log(`timestamp=${new Date().toISOString()} label=${label} execution_time_ms=${duration}ms cpu_time_ms=${cpuTime}ms normalized_cpu_usage_percent=${normalizedCpuUsage}%`);
-        // To extract the log and store into a dictionary --> log_dict = {item.split('=')[0]: item.split('=')[1] for item in log.split(' ')}  
+        // To extract the log and store into a dictionary --> log_dict = {item.split('=')[0]: item.split('=')[1] for item in log.split(' ')}
     }
 }
 
-async function checkCache(preprocessorName: string, hashedKey: string, cacheTimeOut: number): Promise<Response | null> {
+async function checkCache(preprocessorName: string, hashedKey: string, cacheTimeOut: number): Promise<PreprocessorResponse | null> {
     if (process.env.CACHE_OVERRIDE != undefined && preprocessorName) {
        const filepath = path.join(process.env.CACHE_OVERRIDE, hashedKey);
        try {
             // Load cache override and serve
             const contents = await fs.readFile(filepath);
+            console.debug(`Loaded from file ${filepath} for preprocessor ${preprocessorName}`);
             const override = JSON.parse(contents.toString());
             return override;
         } catch (e: any) {
@@ -129,7 +128,7 @@ async function checkCache(preprocessorName: string, hashedKey: string, cacheTime
     if (cacheValue && preprocessorName) {
         // Return the value from cache if found
         console.debug(`Response for preprocessor "${preprocessorName}" served from cache`);
-        return JSON.parse(cacheValue) as Response;
+        return JSON.parse(cacheValue) as PreprocessorResponse;
     }
 
     return null; // cache miss
@@ -159,14 +158,12 @@ async function processResponse(response: Response, preprocessor: ServiceInfo, da
         if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", jsonResponse)) {
             if (preprocessor[MODIFY_REQUEST_INDEX] == false) {
                 const preprocessorName = jsonResponse["name"];
-                (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = jsonResponse["data"]; 
-                // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP 
-                SERVICE_PREPROCESSOR_MAP[preprocessor[0] as string] = preprocessorName;
+                (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = jsonResponse["data"];
                 // store data in cache
                 // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
                 if (cacheTimeOut > 0) {
                     console.debug(`Saving response for ${preprocessorName} in cache with key ${hashedKey}`);
-                    await serverCache.setResponseInCache(hashedKey, JSON.stringify(jsonResponse["data"]), cacheTimeOut);
+                    await serverCache.setResponseInCache(hashedKey, jsonResponse["name"], jsonResponse["data"], cacheTimeOut);
                 }
             } else {
                 // Verify that name in response matches expectation.
@@ -236,7 +233,7 @@ async function executeHandler(handler: ServiceInfo, data: Record<string, unknown
 }
 
 async function executePreprocessor(preprocessor: ServiceInfo, data: Record<string, unknown>): Promise<void> {
-    const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0] as string] || '';
+    const preprocessorName = preprocessor[0] as string;
     const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
     const cacheTimeOut = preprocessor[3] as number;
     const isModifyRequest = preprocessor[MODIFY_REQUEST_INDEX] as boolean;
@@ -246,14 +243,14 @@ async function executePreprocessor(preprocessor: ServiceInfo, data: Record<strin
         // check if a cached response exists for the current preprocessor
         const cacheResponse = await checkCache(preprocessorName, hashedKey, cacheTimeOut);
         if (cacheResponse && !isModifyRequest) {  // if the response is found in cache, update `data` directly without making any calls
-            (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse;
+            (data["preprocessors"] as Record<string, unknown>)[cacheResponse["name"]] = cacheResponse["data"];
             return; // cache hit, no further processing is needed
         }
 
         // fetch the preprocessor response from its endpoint
         const response = await fetchPreprocessorResponse(preprocessor, data);
 
-        // Delegate response handling to `processResponse` - attempt to process the response, validate it, and update data and the cache (if enabled) 
+        // Delegate response handling to `processResponse` - attempt to process the response, validate it, and update data and the cache (if enabled)
         await processResponse(response, preprocessor, data, hashedKey, cacheTimeOut);
     });
 }
@@ -262,13 +259,13 @@ async function runServicesParallel(data: Record<string, unknown>, preprocessors:
     if (data["preprocessors"] === undefined) {
         data["preprocessors"] = {};
     }
-    
+
     const handlerResults: any[][] = [];
 
     // Get unique set of nodes that are running
     const running = Array.from(R)
         .map((service) => executeGraphNode(service, data, handlerResults));
-        
+
     //Run until no more can run
     await Promise.all(running);
 
@@ -309,7 +306,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
         } catch (error) {
             console.error(`One or more of the promises failed at priority group ${currentPriorityGroup}.`, error);
         }
-        finally {   //empty the queue 
+        finally {   //empty the queue
             queue.length = 0;
         }
     };
@@ -349,14 +346,14 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: Se
         let resp;
         // get value from cache for each preprocessor if it exists
         const cacheTimeOut = preprocessor[3] as number;
-        const preprocessorName = SERVICE_PREPROCESSOR_MAP[preprocessor[0] as string] || '';
+        const preprocessorName = preprocessor[0] as string;
         const hashedKey = serverCache.constructCacheKey(data, preprocessorName);
         const cacheValue = await serverCache.getResponseFromCache(hashedKey);
         if (cacheTimeOut && cacheValue && preprocessorName){
             // add cache value in response
             console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
-            const cacheResponse = JSON.parse(cacheValue) as Response;
-            (data["preprocessors"] as Record<string, unknown>)[preprocessorName] = cacheResponse;
+            const cacheResponse = JSON.parse(cacheValue) as PreprocessorResponse;
+            (data["preprocessors"] as Record<string, unknown>)[cacheResponse["name"]] = cacheResponse["data"];
         }
         else {
             // make fetch call to preprocessor since value not found in cache
@@ -387,14 +384,12 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: Se
                     if (ajv.validate("https://image.a11y.mcgill.ca/preprocessor-response.schema.json", json)) {
                         if (preprocessor[MODIFY_REQUEST_INDEX] == false) {
                             (data["preprocessors"] as Record<string, unknown>)[json["name"]] = json["data"];
-                            // store preprocessor name returned in SERVICE_PREPROCESSOR_MAP
-                            SERVICE_PREPROCESSOR_MAP[preprocessor[0] as string] = json["name"];
                             // store the value in cache
                             // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
                             if(cacheTimeOut > 0){
-                                const hashedKey =  serverCache.constructCacheKey(data, json["name"]);
-                                console.debug(`Saving Response for ${json["name"]} in cache with key ${hashedKey}`);
-                                await serverCache.setResponseInCache(hashedKey, JSON.stringify(json["data"]), cacheTimeOut)
+                                const hashedKey =  serverCache.constructCacheKey(data, preprocessorName);
+                                console.debug(`Saving Response for ${preprocessorName} in cache with key ${hashedKey}`);
+                                await serverCache.setResponseInCache(hashedKey, json["name"], json["data"], cacheTimeOut)
                             }
                         } else {
                             if (json["name"] != NAME_MODIFY_REQUEST) {
@@ -454,7 +449,6 @@ function finalizeResponse(results: any[][],requestBody: any,res: express.Respons
         console.debug("Failed to generate a valid response (did the schema change?)");
         res.status(500).send(ajv.errors);
     }
-    
     return response;
 }
 
@@ -542,14 +536,13 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                     console.debug("Dependency graph passes cycle check.");
                     const { data: processedData, handlerResults } = await runServicesParallel(data, preprocessors, graph, readyToRun);
                     response = finalizeResponse(handlerResults, requestBody, res);
-                    
                 } else {
                     console.debug("Dependency graph passes failed check. Please ensure that the preprocesors don't have cyclic dependencies.");
                     console.debug("Using priority level execution...");
                     data = await runPreprocessorsParallel(data, preprocessors);
                     const handlerResults: any[][] = await Promise.all(
                         handlers.map(handler => executeHandler(handler, data))
-                    );                
+                    );
                     response = finalizeResponse(handlerResults, requestBody, res);
                 }
 
@@ -560,7 +553,7 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                 data = await runPreprocessors(data, preprocessors);
                 const handlerResults: any[][] = await Promise.all(
                     handlers.map(handler => executeHandler(handler, data))
-                );                
+                );
                 response = finalizeResponse(handlerResults, requestBody, res);
             }
             if (process.env.STORE_IMAGE_DATA === "on" || process.env.STORE_IMAGE_DATA === "ON") {
@@ -588,7 +581,6 @@ app.post("/render/preprocess", (req: express.Request, res: express.Response) => 
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
             const preprocessors = getPreprocessorServices(containers, route);
-            
             if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
                 console.debug("Running preprocessors in parallel...");
                 return runPreprocessorsParallel(data, preprocessors);
