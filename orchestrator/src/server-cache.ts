@@ -41,10 +41,10 @@ export class ServerCache {
 
     }
     
-    async setResponseInCache(hashedKey: string, value: string, timeout: number){
-        console.debug(`storing data in memcache with key ${hashedKey}`);
+    async setResponseInCache(hashedKey: string, preprocessorType: string, value: Record<string, unknown>, timeout: number){
+        console.debug(`storing data in memcache with key ${hashedKey}, name ${preprocessorType}`);
         try{
-            await this.memjsClient.set(hashedKey, value, {expires: timeout});
+            await this.memjsClient.set(hashedKey, JSON.stringify({name: preprocessorType, data: value}), {expires: timeout});
         } catch(error){
             console.debug("Error setting response in the cache");
         }
