@@ -46,7 +46,7 @@ app = Flask(__name__)
 
 # --- Configuration ---
 ALLOWED_ORIGINS = [
-    "https://image.a11y.mcgill.ca/",
+    "https://image.a11y.mcgill.ca/pages/multistage_diagrams.html",
     "https://venissacarolquadros.github.io/",
     "https://unicorn.cim.mcgill.ca/",
 ]
