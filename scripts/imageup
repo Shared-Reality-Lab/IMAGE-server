@@ -30,6 +30,7 @@ fi
 # parse flags
 delete_override=true # default to deleting override file
 is_service_run=false # whether the script was invoked by a system/cron job
+update_schemas=true # whether to update the schemas submodule to latest from origin/schemas 
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -38,6 +39,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --service)
       is_service_run=true
+      ;;
+    --no-update-schemas)
+      update_schemas=false
       ;;
     *)
       echo "Unknown option: $1" >&2
@@ -87,6 +91,27 @@ git fetch origin
 git reset --hard origin/main
 git pull
 git submodule update --init
+
+if [ "$update_schemas" = true ]; then
+  echo "Checking schemas submodule for updates..."
+  cd "$IMAGE_SERVER_DIR/schemas"
+  git fetch origin schemas
+  current_hash=$(git rev-parse HEAD)
+  latest_hash=$(git rev-parse origin/schemas)
+
+  if [ "$current_hash" != "$latest_hash" ]; then
+    echo "Schemas submodule is behind by commits."
+    echo "Latest commit: ${latest_hash:0:7} — your checkout: ${current_hash:0:7}"
+    echo "Updating schemas submodule to latest..."
+    git checkout schemas
+    git pull origin schemas
+    cd "$IMAGE_SERVER_DIR"
+    git add schemas
+    git commit -m "Bump schemas submodule to ${latest_hash:0:7}" || echo "No changes to commit."
+  else
+    echo "Schemas submodule is up-to-date (${current_hash:0:7})"
+  fi
+fi
 
 # Pull the latest built images
 docker compose --env-file "$COMPOSE_ENV_FILE" pull
