@@ -95,21 +95,18 @@ git submodule update --init
 
 # Update schemas submodule to latest origin/schemas and commit the pointer
 if [ "$update_schemas" = true ]; then
-  echo "Checking schemas submodule for updates..."
-  cd "$IMAGE_SERVER_DIR/schemas"
-  git fetch origin schemas
-  git checkout schemas
-  git pull origin schemas
+  echo "Updating schemas submodule using git submodule update --remote..."
+ 
+  # fetches the latest commit on 'schemas' branch (as per .gitmodules config, branch = schemas)
+  git submodule update --remote schemas
 
-  new_hash=$(git rev-parse HEAD)
+  # grab latest commit hash of schemas submodule
+  new_hash=$(cd schemas && git rev-parse HEAD)
   echo "Updated schemas submodule to ${new_hash:0:7}"
 
-  cd "$IMAGE_SERVER_DIR"
-  
-  # updates the pointer in .gitmodules + index to tell main to now track that new commit in the schemas submodule.
+  # commit updated pointer in main repo
   git add schemas
   git commit -m "Bump schemas submodule to ${new_hash:0:7}" || echo "No changes to commit."
-
 else
   echo "Skipping schemas submodule update (update_schemas=false)"
 fi
