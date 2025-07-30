@@ -27,15 +27,31 @@ if [[ -z "$COMPOSE_ENV_FILE" || -z "$ENVIRONMENT" ]]; then
   exit 1
 fi
 
-delete_override=true  # default to deleting override file
+# parse flags
+delete_override=true # default to deleting override file
+is_service_run=false # whether the script was invoked by a system/cron job
 
-# get command line arguments
-#  https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/21128172
-while getopts 'k' flag; do
-  case "${flag}" in
-    k) delete_override='false' ;;
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -k|--keep)
+      delete_override=false
+      ;;
+    --service)
+      is_service_run=true
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
   esac
+  shift
 done
+
+# Skip service-triggered runs in production (we use Pegasus)
+if [[ "$is_service_run" == true && "$ENVIRONMENT" == "production" ]]; then
+  echo "$(date) - Skipping imageup: service-run skipped in production" >&2
+  exit 0
+fi
 
 set -o errexit # halt script if anything returns error
 if [ "$delete_override" = true ]; then

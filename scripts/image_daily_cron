@@ -21,8 +21,8 @@ if [ ! -x "$IMAGEUP" ] || [ ! -x "$PP_DAILY_TEST" ]; then
   exit 1
 fi
 
-# Run imageup
-"$IMAGEUP" > "$LOG_DIR/imageup.$(date "+%Y.%m.%d-%H.%M.%S")" 2>&1
+# Run imageup with --service to indicate this is a cron-triggered run
+"$IMAGEUP" --service > "$LOG_DIR/imageup.$(date "+%Y.%m.%d-%H.%M.%S")" 2>&1
 
 # Run pp_daily_test
 "$PP_DAILY_TEST"
