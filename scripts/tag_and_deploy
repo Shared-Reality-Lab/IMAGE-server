@@ -115,17 +115,22 @@ parse_workflow_tag_patterns # fill COMPONENT_TAG_PREFIXES with mappings from wor
 
 echo "Tagging components..."
 
+# case: tag orchestrator root
+if echo "$TAG_AND_DEPLOY_ENABLED_DIRS" | grep -qw "orchestrator"; then
+  [ -d "orchestrator" ] && tag_component "orchestrator"
+fi
+
 # Loop through all defined base directories (like preprocessors/, handlers/)
 for DIR in $TAG_AND_DEPLOY_ENABLED_DIRS; do
   for COMPONENT in "$DIR"/*; do
+    # Skip orchestrator - it's tagged above
+    if [[ "$COMPONENT" == "orchestrator/"* ]]; then
+      continue
+    fi
     [ -d "$COMPONENT" ] && tag_component "$COMPONENT"
   done
 done
 
-# case: tag orchestrator directly
-if echo "$TAG_AND_DEPLOY_ENABLED_DIRS" | grep -qw "orchestrator"; then
-  [ -d "orchestrator" ] && tag_component "orchestrator"
-fi
 
 echo "Done. Check workflows at:"
 echo "  https://github.com/Shared-Reality-Lab/IMAGE-server/actions"
