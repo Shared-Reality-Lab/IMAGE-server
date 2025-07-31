@@ -16,6 +16,11 @@ else
   exit 1
 fi
 
+mkdir -p "$LOG_DIR"
+TIMESTAMP=$(date "+%Y.%m.%d-%H.%M.%S")
+LOG_FILE="$LOG_DIR/tag_and_deploy.$TIMESTAMP"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
 cd "$ROOT_DIR" || exit 1
 
 : "${TAG_AND_DEPLOY_GIT_REMOTE:?}"
