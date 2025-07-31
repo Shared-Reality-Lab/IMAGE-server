@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# tag_and_deploy
+# Tags IMAGE-server components that match GitHub Actions workflows with tag triggers.
+
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ENV_FILE="$ROOT_DIR/config/tag_and_deploy.env"
+
+if [ -f "$ENV_FILE" ]; then
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+  echo "Error: Environment file not found at $ENV_FILE" >&2
+  exit 1
+fi
+
+cd "$ROOT_DIR" || exit 1
+
+: "${TAG_AND_DEPLOY_GIT_REMOTE:?}"
+: "${TAG_AND_DEPLOY_ENABLED_DIRS:=preprocessors handlers services orchestrator}"
+
+declare -A COMPONENT_TAG_PREFIXES
+
+# parse_workflow_tag_patterns
+# Placeholder - should populate COMPONENT_TAG_PREFIXES["path"]="prefix"
+parse_workflow_tag_patterns() {
+  # COMPONENT_TAG_PREFIXES["preprocessors/grouping"]="preprocessor-grouping"
+}
+
+# tag_component
+# Tags a component at HEAD using its latest known tag version
+tag_component() {
+  COMPONENT_PATH="$1"
+  COMPONENT_NAME=$(basename "$COMPONENT_PATH")
+  [ "$COMPONENT_NAME" = "deprecated" ] && return
+
+  TAG_PREFIX="${COMPONENT_TAG_PREFIXES[$COMPONENT_PATH]}"
+  if [ -z "$TAG_PREFIX" ]; then
+    echo "Skipping $COMPONENT_PATH: no matching workflow tag"
+    return
+  fi
+
+  LATEST_TAG=$(git tag -l "${TAG_PREFIX}-*" | sort -V | tail -n1)
+  [ -z "$LATEST_TAG" ] && echo "No existing tags for $TAG_PREFIX" && return
+
+  VERSION="${LATEST_TAG##*-}"
+  NEW_TAG="${TAG_PREFIX}-${VERSION}"
+
+  HEAD_COMMIT=$(git rev-parse HEAD)
+  TAGGED_COMMIT=$(git rev-list -n 1 "$NEW_TAG" 2>/dev/null || echo "")
+
+  if [ "$TAGGED_COMMIT" != "$HEAD_COMMIT" ]; then
+    echo "Tagging $NEW_TAG at HEAD"
+    git tag "$NEW_TAG"
+    git push origin "refs/tags/$NEW_TAG"
+  else
+    echo "$NEW_TAG already exists at HEAD"
+  fi
+}
+
+# --- Main ---
+echo "Updating main branch..."
+git checkout main >/dev/null 2>&1
+git pull origin main
+
+echo "Parsing GitHub workflow tag patterns..."
+parse_workflow_tag_patterns
+
+echo "Tagging components..."
+for DIR in $TAG_AND_DEPLOY_ENABLED_DIRS; do
+  for COMPONENT in "$DIR"/*; do
+    [ -d "$COMPONENT" ] && tag_component "$COMPONENT"
+  done
+done
+
+echo "Done. Check workflows at:"
+echo "  https://github.com/Shared-Reality-Lab/IMAGE-server/actions"
+
