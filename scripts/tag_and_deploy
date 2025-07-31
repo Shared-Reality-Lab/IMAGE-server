@@ -90,7 +90,7 @@ tag_component() {
 
   # If this tag doesn’t already exist at HEAD, create + push it
   if [ "$TAGGED_COMMIT" != "$HEAD_COMMIT" ]; then
-    echo "Tagging $NEW_TAG at HEAD"
+    echo "Tagging $TAG_PREFIX: $VERSION -> $NEW_VERSION at HEAD"
     git tag "$NEW_TAG"
     git push origin "refs/tags/$NEW_TAG"
   else
