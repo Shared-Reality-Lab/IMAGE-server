@@ -30,7 +30,7 @@ cd "$ROOT_DIR" || exit 1
 : "${TAG_AND_DEPLOY_GIT_REMOTE:?}"
 : "${TAG_AND_DEPLOY_ENABLED_DIRS:=preprocessors handlers services orchestrator}"
 
-# explicitly passed services (1 or more) to tag (e.g., preprocessors/semantic-segmentation)
+# explicitly passed services (1 or more) to tag (e.g., preprocessors/mmsemseg)
 EXPLICIT_SERVICES=("$@")
 
 # declare an associative array (key-value map)
