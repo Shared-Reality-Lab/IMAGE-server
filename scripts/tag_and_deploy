@@ -2,6 +2,10 @@
 
 # tag_and_deploy
 # Tags IMAGE-server components that match GitHub Actions workflows with tag triggers
+# Usage:
+#	./scripts/tag_and_deploy # tags all services
+#	./scripts/tag_and_deploy services/tat # tags 1+ services
+
 
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -26,6 +30,8 @@ cd "$ROOT_DIR" || exit 1
 : "${TAG_AND_DEPLOY_GIT_REMOTE:?}"
 : "${TAG_AND_DEPLOY_ENABLED_DIRS:=preprocessors handlers services orchestrator}"
 
+# explicitly passed services (1 or more) to tag (e.g., preprocessors/semantic-segmentation)
+EXPLICIT_SERVICES=("$@")
 
 # declare an associative array (key-value map)
 # e.g., COMPONENT_TAG_PREFIXES["services/tat"]="service-tat"
@@ -126,24 +132,32 @@ git pull origin main
 echo "Parsing GitHub workflow tag patterns..."
 parse_workflow_tag_patterns # fill COMPONENT_TAG_PREFIXES with mappings from workflows
 
-echo "Tagging components..."
+echo "Tagging services..."
 
-# case: tag orchestrator root
-if echo "$TAG_AND_DEPLOY_ENABLED_DIRS" | grep -qw "orchestrator"; then
-  [ -d "orchestrator" ] && tag_component "orchestrator"
-fi
-
-# Loop through all defined base directories (like preprocessors/, handlers/)
-for DIR in $TAG_AND_DEPLOY_ENABLED_DIRS; do
-  for COMPONENT in "$DIR"/*; do
-    # Skip orchestrator - it's tagged above
-    if [[ "$COMPONENT" == "orchestrator/"* ]]; then
-      continue
+if [ "${#EXPLICIT_SERVICES[@]}" -gt 0 ]; then
+  echo "Explicit services provided: ${EXPLICIT_SERVICES[*]}"
+  for SERVICE in "${EXPLICIT_SERVICES[@]}"; do
+    if [ -d "$SERVICE" ]; then
+      tag_component "$SERVICE"
+    else
+      echo "Warning: Service path not found: $SERVICE"
     fi
-    [ -d "$COMPONENT" ] && tag_component "$COMPONENT"
   done
-done
-
+else
+# case: tag orchestrator root
+  if echo "$TAG_AND_DEPLOY_ENABLED_DIRS" | grep -qw "orchestrator"; then
+    [ -d "orchestrator" ] && tag_component "orchestrator"
+  fi
+# Loop through all defined base directories (like preprocessors/, handlers/)
+  for DIR in $TAG_AND_DEPLOY_ENABLED_DIRS; do
+    for COMPONENT in "$DIR"/*; do
+      if [[ "$COMPONENT" == "orchestrator/"* ]]; then
+        continue
+      fi
+      [ -d "$COMPONENT" ] && tag_component "$COMPONENT"
+    done
+  done
+fi
 
 echo "Done. Check workflows at:"
 echo "  https://github.com/Shared-Reality-Lab/IMAGE-server/actions"
