@@ -88,7 +88,20 @@ tag_component() {
   MINOR=$(echo "$VERSION" | cut -d. -f2)
   PATCH=$(echo "$VERSION" | cut -d. -f3)
 
-  NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+
+  # cascading incrementing from the latest existing tag
+  PATCH=$((PATCH + 1))
+  if [ "$PATCH" -ge 10 ]; then
+    PATCH=0
+    MINOR=$((MINOR + 1))
+    if [ "$MINOR" -ge 10 ]; then
+      MINOR=0
+      MAJOR=$((MAJOR + 1))
+    fi
+  fi
+
+  NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+
   NEW_TAG="${TAG_PREFIX}-${NEW_VERSION}"
 
   HEAD_COMMIT=$(git rev-parse HEAD)
