@@ -88,10 +88,6 @@ def categorise():
     source = content["graphic"]
     graphic_b64 = source.split(",")[1]
 
-    # vllm_base_url = f"{os.environ['OLLAMA_URL']}"
-    # api_key = os.environ['OLLAMA_API_KEY']
-    # vllm_model = os.environ['OLLAMA_MODEL']
-
     # prepare vllm request
     vllm_base_url = os.environ['VLLM_URL']
     api_key = os.environ['VLLM_API_KEY']
