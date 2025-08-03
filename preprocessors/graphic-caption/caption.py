@@ -24,6 +24,7 @@ import os
 import html
 from datetime import datetime
 from config.logging_utils import configure_logging
+from openai import OpenAI
 
 configure_logging()
 
@@ -87,53 +88,74 @@ def categorise():
     source = content["graphic"]
     graphic_b64 = source.split(",")[1]
 
-    # prepare ollama request
-    api_url = f"{os.environ['OLLAMA_URL']}/generate"
-    api_key = os.environ['OLLAMA_API_KEY']
-    ollama_model = os.environ['OLLAMA_MODEL']
+    # vllm_base_url = f"{os.environ['OLLAMA_URL']}"
+    # api_key = os.environ['OLLAMA_API_KEY']
+    # vllm_model = os.environ['OLLAMA_MODEL']
 
-    logging.debug("OLLAMA_URL " + api_url)
+    # prepare vllm request
+    vllm_base_url = os.environ['VLLM_URL']
+    api_key = os.environ['VLLM_API_KEY']
+    vllm_model = os.environ['VLLM_MODEL']
+
+    logging.debug("VLLM_URL " + vllm_base_url)
+    logging.debug("VLLM_MODEL " + vllm_model)
     if api_key.startswith("sk-"):
-        logging.debug("OLLAMA_API_KEY looks properly formatted: " +
+        logging.debug("VLLM_API_KEY looks properly formatted: " +
                       api_key[:3] + "[redacted]")
     else:
-        logging.warning(f'''OLLAMA_API_KEY usually starts with sk-,
+        logging.warning(f'''VLLM_API_KEY usually starts with sk-,
                         but this one starts with: {api_key[:3]}.
                         You either entered an incorrect API key,
                         or used a JWT token instead.'''
                         )
 
-    request_data = {
-        "model": ollama_model,
-        "prompt": PROMPT,
-        "images": [graphic_b64],
-        "stream": False,
-        "temperature": 0.0,
-        "keep_alive": -1  # keep model loaded in memory indefinitely
-    }
-    logging.debug("serializing json from request_data dictionary")
-    request_data_json = json.dumps(request_data)
+    # Initialize OpenAI client with custom base URL for vllm
+    client = OpenAI(
+        api_key=api_key,
+        base_url=vllm_base_url
+    )
 
-    request_headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
-    }
+    try:
+        logging.debug("Posting request to vllm model " + vllm_model)
 
-    logging.debug("Posting request to ollama model " + ollama_model)
-    response = requests.post(api_url, headers=request_headers,
-                             data=request_data_json)
-    logging.debug("ollama request response code: " + str(response.status_code))
+        # Make the request using OpenAI client
+        response = client.chat.completions.create(
+            model=vllm_model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": PROMPT},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{graphic_b64}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            temperature=0.0,
+            stream=False
+        )
 
-    if response.status_code == 200:
-        response_text = response.text
-        data = json.loads(response_text)
-        graphic_caption = html.unescape(data['response'])
-    else:
-        logging.error("Error: {response.text}")
-        return jsonify("Invalid response from ollama"), 500
+        # The OpenAI library handles status codes internally
+        # A successful response means status code was 200
+        logging.debug("vllm request response code: 200")
+
+        graphic_caption = html.unescape(response.choices[0].message.content)
+
+    except Exception as e:
+        # The OpenAI library raises exceptions for non-200 status codes
+        status_code = getattr(e, 'status_code', None)
+        if status_code:
+            logging.debug(f"vllm request response code: {status_code}")
+
+        logging.error(f"Error: {str(e)}")
+        return jsonify("Invalid response from vllm"), 500
 
     # create data json and verify the content-categoriser schema is respected
-    graphic_caption_json = {"caption": graphic_caption}
+    graphic_caption_json = {"caption": graphic_caption.strip()}
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(graphic_caption_json)
