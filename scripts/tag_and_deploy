@@ -132,15 +132,15 @@ git pull origin main
 echo "Parsing GitHub workflow tag patterns..."
 parse_workflow_tag_patterns # fill COMPONENT_TAG_PREFIXES with mappings from workflows
 
-echo "Tagging services..."
+echo "Tagging components..."
 
-if [ "${#EXPLICIT_SERVICES[@]}" -gt 0 ]; then
-  echo "Explicit services provided: ${EXPLICIT_SERVICES[*]}"
-  for SERVICE in "${EXPLICIT_SERVICES[@]}"; do
-    if [ -d "$SERVICE" ]; then
-      tag_component "$SERVICE"
+if [ "${#EXPLICIT_COMPONENTS[@]}" -gt 0 ]; then
+  echo "Explicit components provided: ${EXPLICIT_COMPONENTS[*]}"
+  for COMPONENT in "${EXPLICIT_COMPONENTS[@]}"; do
+    if [ -d "$COMPONENT" ]; then
+      tag_component "$COMPONENT"
     else
-      echo "Warning: Service path not found: $SERVICE"
+      echo "Warning: Component path not found: $COMPONENT"
     fi
   done
 else
