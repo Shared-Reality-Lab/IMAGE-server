@@ -87,35 +87,30 @@ def categorise():
     source = content["graphic"]
     graphic_b64 = source.split(",")[1]
 
-    # prepare vllm request
-    vllm_base_url = os.environ['VLLM_URL']
-    api_key = os.environ['VLLM_API_KEY']
-    vllm_model = os.environ['VLLM_MODEL']
+    # prepare llm request
+    llm_base_url = os.environ['LLM_URL']
+    api_key = os.environ['LLM_API_KEY']
+    llm_model = os.environ['LLM_MODEL']
 
-    logging.debug("VLLM_URL " + vllm_base_url)
-    logging.debug("VLLM_MODEL " + vllm_model)
+    logging.debug(f"LLM URL: {llm_base_url}")
+    logging.debug(f"LLM MODEL: {llm_model}")
     if api_key.startswith("sk-"):
-        logging.debug("VLLM_API_KEY looks properly formatted: " +
-                      api_key[:3] + "[redacted]")
+        logging.pii("LLM_API_KEY looks properly formatted: sk-[redacted]")
     else:
-        logging.warning(f'''VLLM_API_KEY usually starts with sk-,
-                        but this one starts with: {api_key[:3]}.
-                        You either entered an incorrect API key,
-                        or used a JWT token instead.'''
-                        )
+        logging.warning("LLM_API_KEY does not start with sk-")
 
-    # Initialize OpenAI client with custom base URL for vllm
+    # Initialize OpenAI client with custom base URL for LLM
     client = OpenAI(
         api_key=api_key,
-        base_url=vllm_base_url
+        base_url=llm_base_url
     )
 
     try:
-        logging.debug("Posting request to vllm model " + vllm_model)
+        logging.debug("Posting request to LLM model: " + llm_model)
 
         # Make the request using OpenAI client
         response = client.chat.completions.create(
-            model=vllm_model,
+            model=llm_model,
             messages=[
                 {
                     "role": "user",
@@ -136,7 +131,7 @@ def categorise():
 
         # The OpenAI library handles status codes internally
         # A successful response means status code was 200
-        logging.debug("vllm request response code: 200")
+        logging.debug("vLLM request response code: 200")
 
         graphic_caption = html.unescape(response.choices[0].message.content)
 
@@ -144,10 +139,10 @@ def categorise():
         # The OpenAI library raises exceptions for non-200 status codes
         status_code = getattr(e, 'status_code', None)
         if status_code:
-            logging.debug(f"vllm request response code: {status_code}")
+            logging.debug(f"vLLM request response code: {status_code}")
 
         logging.error(f"Error: {str(e)}")
-        return jsonify("Invalid response from vllm"), 500
+        return jsonify("Invalid response from LLM"), 500
 
     # create data json and verify the content-categoriser schema is respected
     graphic_caption_json = {"caption": graphic_caption.strip()}
@@ -208,7 +203,7 @@ def warmup():
             timeout=60.0
         )
 
-        logging.debug("Posting request to vllm model " + llm_model)
+        logging.debug("Posting request to LLM model: " + llm_model)
 
         # Make the request using OpenAI client
         client.chat.completions.create(

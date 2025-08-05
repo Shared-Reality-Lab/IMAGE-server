@@ -446,7 +446,7 @@ def warmup():
             timeout=60.0
         )
 
-        logging.debug("Posting request to vllm model " + llm_model)
+        logging.debug("Posting request to LLM model: " + llm_model)
 
         # Make the request using OpenAI client
         client.chat.completions.create(
