@@ -25,6 +25,8 @@ import html
 from datetime import datetime
 from config.logging_utils import configure_logging
 from openai import OpenAI
+from pydantic import BaseModel, Field
+
 
 app = Flask(__name__)
 
@@ -39,6 +41,18 @@ conversation_history = {}
 MAX_HISTORY_LENGTH = int(os.getenv('MAX_HISTORY_LENGTH', '100'))
 # History expiry in seconds after the last message
 HISTORY_EXPIRY = int(os.getenv('HISTORY_EXPIRY', '3600'))
+
+
+# Define the response model schema
+class ResponseModel(BaseModel):
+    response_brief: str = Field(
+        ...,
+        description="One sentence response to the user request."
+    )
+    response_full: str = Field(
+        ...,
+        description="Further details. Maximum three sentences."
+    )
 
 
 # Function to clean up old conversation histories
@@ -164,22 +178,22 @@ def followup():
     general_prompt = os.getenv('TEXT_FOLLOWUP_PROMPT_OVERRIDE', general_prompt)
     user_prompt = content["followup"]["query"]
 
-    # prepare vllm request
-    vllm_base_url = os.environ['VLLM_URL']
-    api_key = os.environ['VLLM_API_KEY']
-    vllm_model = os.environ['VLLM_MODEL']
+    # prepare llm request
+    llm_base_url = os.environ['LLM_URL']
+    api_key = os.environ['LLM_API_KEY']
+    llm_model = os.environ['LLM_MODEL']
 
-    logging.debug("VLLM_URL " + vllm_base_url)
-    logging.debug("VLLM_MODEL " + vllm_model)
+    logging.debug(f"LLM URL: {llm_base_url}")
+    logging.debug(f"LLM MODEL: {llm_model}")
     if api_key.startswith("sk-"):
-        logging.pii("VLLM_API_KEY looks properly formatted: sk-[redacted]")
+        logging.pii("LLM_API_KEY looks properly formatted: sk-[redacted]")
     else:
-        logging.warning("VLLM_API_KEY does not start with sk-")
+        logging.warning("LLM_API_KEY does not start with sk-")
 
-    # Initialize OpenAI client with custom base URL for vllm
+    # Initialize OpenAI client with custom base URL for LLM
     client = OpenAI(
         api_key=api_key,
-        base_url=vllm_base_url
+        base_url=llm_base_url
     )
 
     system_message = {"role": "system", "content": general_prompt}
@@ -252,24 +266,13 @@ def followup():
 
     # Create request data for chat endpoint
     try:
-        logging.debug("Posting request to vllm model " + vllm_model)
+        logging.debug("Posting request to llm model " + llm_model)
 
-        from pydantic import BaseModel, Field
-
-        class ResponseModel(BaseModel):
-            response_brief: str = Field(
-                ...,
-                description="One sentence response to the user request."
-            )
-            response_full: str = Field(
-                ...,
-                description="Further details. Maximum three sentences."
-            )
         json_schema = ResponseModel.model_json_schema()
 
         # Make the request using OpenAI client
         response = client.chat.completions.create(
-            model=vllm_model,
+            model=llm_model,
             messages=messages,
             temperature=0.0,
             stream=False,
@@ -284,12 +287,12 @@ def followup():
 
         # The OpenAI library handles status codes internally
         # A successful response means status code was 200
-        logging.debug("vllm request response code: 200")
+        logging.debug("LLM request response code: 200")
 
         try:
             # Get the response content
             response_text = response.choices[0].message.content.strip()
-            logging.pii("raw vllm response: " + response_text)
+            logging.pii("raw LLM response: " + response_text)
             followup_response_json = json.loads(response_text)
 
             # Format assistant response for history
@@ -322,8 +325,8 @@ def followup():
             return jsonify("Invalid LLM results"), 204
 
     except Exception as e:
-        logging.error(f"Error calling vllm: {str(e)}")
-        return jsonify("Invalid response from vllm"), 204
+        logging.error(f"Error calling LLM: {str(e)}")
+        return jsonify("Invalid response from LLM"), 204
 
     # check if LLM returned valid json that follows schema
     try:
