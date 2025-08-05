@@ -15,7 +15,6 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 from flask import Flask, request, jsonify
-import requests
 import json
 import time
 import jsonschema
@@ -195,32 +194,38 @@ def warmup():
     """
     Trigger a warmup call to load the Ollama LLM into memory.
     This avoids first-request latency by sending a dummy request.
+    vLLM keeps the model in memory after the container startup.
     """
     try:
-        # construct the target Ollama endpoint for generate
-        api_url = f"{os.environ['OLLAMA_URL']}/generate"
+        llm_base_url = os.environ['LLM_URL']
+        api_key = os.environ['LLM_API_KEY']
+        llm_model = os.environ['LLM_MODEL']
 
-        # authorization headers with API key
-        headers = {
-            "Authorization": f"Bearer {os.environ['OLLAMA_API_KEY']}",
-            "Content-Type": "application/json"
-        }
+        # Initialize OpenAI client with custom base URL for vllm
+        client = OpenAI(
+            api_key=api_key,
+            base_url=llm_base_url,
+            timeout=60.0
+        )
 
-        # prepare the warmup request data using the configured model
-        data = {
-            "model": os.environ["OLLAMA_MODEL"],
-            "prompt": "ping",
-            "stream": False,
-            "keep_alive": -1  # instruct Ollama to keep the model in memory
-        }
+        logging.debug("Posting request to vllm model " + llm_model)
+
+        # Make the request using OpenAI client
+        client.chat.completions.create(
+            model=llm_model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": "ping"
+                }
+            ],
+            temperature=0.0,
+            stream=False
+        )
 
         logging.info("[WARMUP] Warmup endpoint triggered.")
-        logging.pii(f"[WARMUP] Posting to {api_url} with model \
-                    {data['model']}")
-
-        # send warmup request (with timeout)
-        r = requests.post(api_url, headers=headers, json=data, timeout=60)
-        r.raise_for_status()
+        logging.pii(f"[WARMUP] Posting to {llm_base_url} with model \
+                    {llm_model}")
 
         return jsonify({"status": "warmed"}), 200
 
