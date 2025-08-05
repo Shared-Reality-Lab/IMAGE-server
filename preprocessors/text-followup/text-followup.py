@@ -24,6 +24,7 @@ import os
 import html
 from datetime import datetime
 from config.logging_utils import configure_logging
+from openai import OpenAI
 
 app = Flask(__name__)
 
@@ -153,8 +154,8 @@ def followup():
               Here is an example of the output JSON in the format you
               are REQUIRED to follow:
               {
-                "response_brief": "One sentence response to the user request.",
-                "response_full": "Further details. Maximum three sentences."
+              "response_brief": "One sentence response to the user request.",
+              "response_full": "Further details. Maximum three sentences."
               }
               Note that the first character of output MUST be "{".
               Remove all whitespace before and after the JSON.
@@ -163,37 +164,51 @@ def followup():
     general_prompt = os.getenv('TEXT_FOLLOWUP_PROMPT_OVERRIDE', general_prompt)
     user_prompt = content["followup"]["query"]
 
-    # prepare ollama request
-    api_url = f"{os.environ['OLLAMA_URL']}/chat"
-    api_key = os.environ['OLLAMA_API_KEY']
-    ollama_model = os.environ['OLLAMA_MODEL']
+    # prepare vllm request
+    vllm_base_url = os.environ['VLLM_URL']
+    api_key = os.environ['VLLM_API_KEY']
+    vllm_model = os.environ['VLLM_MODEL']
 
-    logging.debug("OLLAMA_URL " + api_url)
+    logging.debug("VLLM_URL " + vllm_base_url)
+    logging.debug("VLLM_MODEL " + vllm_model)
     if api_key.startswith("sk-"):
-        logging.pii("OLLAMA_API_KEY looks properly formatted: sk-[redacted]")
+        logging.pii("VLLM_API_KEY looks properly formatted: sk-[redacted]")
     else:
-        logging.warning("OLLAMA_API_KEY does not start with sk-")
+        logging.warning("VLLM_API_KEY does not start with sk-")
 
-    # Create messages list for chat endpoint instead of single prompt
-    system_message = {
-        "role": "system",
-        "content": general_prompt
-    }
+    # Initialize OpenAI client with custom base URL for vllm
+    client = OpenAI(
+        api_key=api_key,
+        base_url=vllm_base_url
+    )
 
-    user_message = {
-        "role": "user",
-        "content": user_prompt,
-    }
+    system_message = {"role": "system", "content": general_prompt}
 
     # Retrieve existing conversation history or create new one
     if uuid_exists:
-        # Add new user message
+        # For follow-up messages, add the new user prompt
+        user_message = {
+            "role": "user",
+            "content": user_prompt
+        }
         conversation_history[request_uuid]['messages'].append(user_message)
         conversation_history[request_uuid]['last_updated'] = timestamp
     else:
-        # Attach the image to the first request
-        user_message["images"] = [graphic_b64]
-        # Start a new conversation with system and user messages
+        # For the first message, create a new history entry
+        # include the system prompt, the user's text, and the image
+        user_message = {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": user_prompt},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/png;base64,{graphic_b64}"
+                    }
+                }
+            ]
+        }
+
         conversation_history[request_uuid] = {
             'messages': [system_message, user_message],
             'last_updated': timestamp
@@ -216,55 +231,65 @@ def followup():
     for msg in messages:
         # Create a copy to avoid modifying the original
         log_msg = msg.copy()
-        if 'images' in log_msg:
-            # Replace image content with placeholder or truncate it
-            log_msg['images'] = [
-                    f"[BASE64_IMAGE:{len(img)} bytes]"
-                    for img in log_msg['images']
-                ]
+        if isinstance(msg.get('content'), list):
+            # Handle multi-part content (text + image)
+            log_content = []
+            for part in msg['content']:
+                if part['type'] == 'image_url':
+                    log_content.append({
+                        'type': 'image_url',
+                        'image_url': {'url': '[BASE64_IMAGE]'}
+                    })
+                else:
+                    log_content.append(part)
+            log_msg['content'] = log_content
         log_friendly_messages.append(log_msg)
+
     logging.pii(
         f"Message history: {json.dumps(log_friendly_messages, indent=2)}"
         )
     logging.debug(f"User followup prompt: {general_prompt} [redacted]")
 
     # Create request data for chat endpoint
-    request_data = {
-        "model": ollama_model,
-        "messages": messages,
-        "stream": False,
-        "temperature": 0.0,
-        "format": {
-            "type": "object",
-            "properties": {
-                "response_brief": {"type": "string"},
-                "response_full": {"type": "string"},
-            },
-            "required": ["response_brief", "response_full"],
-        },
-        "keep_alive": -1,  # keep model loaded in memory indefinitely
-    }
+    try:
+        logging.debug("Posting request to vllm model " + vllm_model)
 
-    logging.debug("serializing json from request_data dictionary")
-    request_data_json = json.dumps(request_data)
+        from pydantic import BaseModel, Field
 
-    request_headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
-    }
+        class ResponseModel(BaseModel):
+            response_brief: str = Field(
+                ...,
+                description="One sentence response to the user request."
+            )
+            response_full: str = Field(
+                ...,
+                description="Further details. Maximum three sentences."
+            )
+        json_schema = ResponseModel.model_json_schema()
 
-    logging.debug("Posting request to ollama model " + ollama_model)
-    response = requests.post(api_url, headers=request_headers,
-                             data=request_data_json)
-    logging.debug("ollama request response code: " + str(response.status_code))
+        # Make the request using OpenAI client
+        response = client.chat.completions.create(
+            model=vllm_model,
+            messages=messages,
+            temperature=0.0,
+            stream=False,
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "response-format",
+                    "schema": json_schema
+                },
+            }
+        )
 
-    if response.status_code == 200:
-        ollama_error_msg = None
+        # The OpenAI library handles status codes internally
+        # A successful response means status code was 200
+        logging.debug("vllm request response code: 200")
+
         try:
-            response_json = json.loads(response.text)
-            # strip() at end since llama often puts a newline before json
-            response_text = response_json['message']['content'].strip()
-            logging.pii("raw ollama response: " + response_text)
+            # Get the response content
+            response_text = response.choices[0].message.content.strip()
+            logging.pii("raw vllm response: " + response_text)
             followup_response_json = json.loads(response_text)
 
             # Format assistant response for history
@@ -287,21 +312,20 @@ def followup():
                 )
 
         except json.JSONDecodeError:
-            ollama_error_msg = "raw response does not look like json"
-        except KeyError:
-            ollama_error_msg = "no response tag found in returned json"
-        except TypeError:  # have seen this when we just get a string back
-            # TODO: investigate what is actually happening here!
-            ollama_error_msg = "unknown error decoding json. investigate!"
-        finally:
-            if ollama_error_msg is not None:
-                logging.error(ollama_error_msg + " returning 204")
-                return jsonify("Invalid LLM results"), 204
-    else:
-        logging.error(f"Error {response.status_code}: \
-                      [response text redacted]")
-        return jsonify("Invalid response from ollama"), 204
-    # check if ollama returned valid json that follows schema
+            logging.error("raw response does not look like json")
+            return jsonify("Invalid LLM results"), 204
+        except (KeyError, AttributeError):
+            logging.error("no response content found in returned object") 
+            return jsonify("Invalid LLM results"), 204
+        except TypeError:
+            logging.error("unknown error decoding json, returning 204")
+            return jsonify("Invalid LLM results"), 204
+
+    except Exception as e:
+        logging.error(f"Error calling vllm: {str(e)}")
+        return jsonify("Invalid response from vllm"), 204
+
+    # check if LLM returned valid json that follows schema
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(followup_response_json)

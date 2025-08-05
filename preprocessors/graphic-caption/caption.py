@@ -125,7 +125,7 @@ def categorise():
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/jpeg;base64,{graphic_b64}"
+                                "url": f"data:image/png;base64,{graphic_b64}"
                             }
                         }
                     ]
