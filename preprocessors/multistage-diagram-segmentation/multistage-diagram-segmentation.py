@@ -702,7 +702,7 @@ def process_diagram():
             if isinstance(stage, dict) and "label" in stage
             ]
         if not stages or len(stages) == 0:
-            logging.warning(
+            logging.info(
                 "No stage labels found. Cannot request bounding boxes."
                 )
             return jsonify(
