@@ -701,14 +701,13 @@ def process_diagram():
             for stage in base_json.get("stages", [])
             if isinstance(stage, dict) and "label" in stage
             ]
-        if not stages:
-            logging.warning(
+        if not stages or len(stages) == 0:
+            logging.info(
                 "No stage labels found. Cannot request bounding boxes."
                 )
-            aggregated_contour_data = {}
-            final_data_json = update_json_with_contours(
-                base_json, aggregated_contour_data
-                )
+            return jsonify(
+                {"error": "No valid stage labels found in the diagram"}
+                ), 204
 
         else:
             logging.pii(f"Identified stages: {stages}")
