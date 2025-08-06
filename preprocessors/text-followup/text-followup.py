@@ -25,6 +25,7 @@ from datetime import datetime
 from config.logging_utils import configure_logging
 from openai import OpenAI
 from pydantic import BaseModel, Field
+from typing import Optional
 
 
 app = Flask(__name__)
@@ -48,9 +49,10 @@ class ResponseModel(BaseModel):
         ...,
         description="One sentence response to the user request."
     )
-    response_full: str = Field(
-        ...,
-        description="Further details. Maximum three sentences."
+    response_full: Optional[str] = Field(
+        None,
+        description="Further details. Maximum three sentences. "
+        "This field can be omitted entirely."
     )
 
 
