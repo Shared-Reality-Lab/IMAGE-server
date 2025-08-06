@@ -14,8 +14,8 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
+import html
 from flask import Flask, request, jsonify
-import requests
 import json
 import time
 import jsonschema
@@ -23,10 +23,28 @@ import logging
 import os
 from datetime import datetime
 from config.logging_utils import configure_logging
+from openai import OpenAI
+from pydantic import BaseModel, Field
+from enum import Enum
 
 configure_logging()
 
 app = Flask(__name__)
+
+
+# Define the response model schema
+class CategoryType(str, Enum):
+    PHOTOGRAPH = "photograph"
+    CHART = "chart"
+    TEXT = "text"
+    OTHER = "other"
+
+
+class ResponseModel(BaseModel):
+    category: CategoryType = Field(
+        ...,
+        description="The type of content being categorized"
+    )
 
 
 @app.route("/preprocessor", methods=['POST', ])
@@ -76,21 +94,17 @@ def categorise():
     source = content["graphic"]
     graphic_b64 = source.split(",")[1]
 
-    # prepare ollama request
-    api_url = f"{os.environ['OLLAMA_URL']}/generate"
-    api_key = os.environ['OLLAMA_API_KEY']
-    ollama_model = os.environ['OLLAMA_MODEL']
+    # prepare llm request
+    llm_base_url = os.environ['LLM_URL']
+    api_key = os.environ['LLM_API_KEY']
+    llm_model = os.environ['LLM_MODEL']
 
-    logging.debug("OLLAMA_URL " + api_url)
+    logging.debug(f"LLM URL: {llm_base_url}")
+    logging.debug(f"LLM MODEL: {llm_model}")
     if api_key.startswith("sk-"):
-        logging.pii("OLLAMA_API_KEY looks properly formatted: " +
-                    api_key[:3] + "[redacted]")
+        logging.pii("LLM_API_KEY looks properly formatted: sk-[redacted]")
     else:
-        logging.warning(f'''OLLAMA_API_KEY usually starts with sk-,
-                        but this one starts with: {api_key[:3]}.
-                        You either entered an incorrect API key,
-                        or used a JWT token instead.'''
-                        )
+        logging.warning("LLM_API_KEY does not start with sk-")
 
     prompt = "Answer only in JSON with the format " \
              '{"category": "YOUR_ANSWER"}. ' \
@@ -99,63 +113,75 @@ def categorise():
     possible_categories = "photograph, chart, text, other"
     # override with prompt from environment variable only if it exists
     prompt = os.getenv('CONTENT_CATEGORISER_PROMPT_OVERRIDE', prompt)
-    prompt += "[" + possible_categories + "]"
-    logging.debug("prompt: " + prompt)
 
-    request_data = {
-        "model": ollama_model,
-        "prompt": prompt,
-        "images": [graphic_b64],
-        "stream": False,
-        "format": "json",
-        "temperature": 0.0,
-        "keep_alive": -1  # keep model loaded in memory indefinitely
-    }
-    logging.debug("serializing json from request_data dictionary")
-    request_data_json = json.dumps(request_data)
-    logging.debug("serialization complete")
+    # Initialize OpenAI client with custom base URL for LLM
+    client = OpenAI(
+        api_key=api_key,
+        base_url=llm_base_url
+    )
 
-    request_headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
-    }
+    try:
+        logging.debug("Posting request to LLM model: " + llm_model)
 
-    logging.debug("Posting request to ollama model " + ollama_model)
-    response = requests.post(api_url, headers=request_headers,
-                             data=request_data_json)
-    logging.debug("ollama request response code: " + str(response.status_code))
+        json_schema = ResponseModel.model_json_schema()
 
-    if response.status_code == 200:
-        graphic_category_json = json.loads(response.text)['response']
+        # Make the request using OpenAI client
+        response = client.chat.completions.create(
+            model=llm_model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt + possible_categories},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{graphic_b64}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            temperature=0.0,
+            stream=False,
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "response-format",
+                    "schema": json_schema
+                },
+            }
+        )
 
-        # extract the category value from the json returned by the LMM
-        ollama_error_msg = None
+        # The OpenAI library handles status codes internally
+        # A successful response means status code was 200
+        logging.debug("LLM request response code: 200")
+
         try:
+            # Get the response content
+            response_text = html.unescape(response.choices[0].message.content)
+            graphic_category_json = response_text.strip().lower()
             graphic_category = json.loads(graphic_category_json)['category']
-        except json.JSONDecodeError:
-            ollama_error_msg = "this does not look like json"
-        except KeyError:
-            ollama_error_msg = "no category tag found in returned json"
-        except TypeError:  # have seen this when we just get a string back
-            # TODO: investigate what is actually happening here!
-            ollama_error_msg = "unknown error decoding json. investigate!"
-        finally:
-            if ollama_error_msg is not None:
-                logging.pii(
-                    f"{ollama_error_msg}. Raw response: \
-                    {graphic_category_json}")
+            if graphic_category in possible_categories.split(", "):
+                logging.debug("category: " + graphic_category)
+            # LLMs are not to be trusted to pay attention to instructions
+            else:
+                logging.error(f"'{graphic_category}' not a valid category")
                 return jsonify("Invalid LLM results"), 204
 
-        # is the found category  one of the ones we require?
-        graphic_category = graphic_category.strip().lower()
-        if graphic_category in possible_categories.split(", "):
-            logging.debug("category: " + graphic_category)
-        else:  # llamas are not to be trusted to pay attention to instructions
-            logging.error(f"category [{graphic_category}] not a valid option")
+        except json.JSONDecodeError:
+            logging.error("raw response does not look like json")
             return jsonify("Invalid LLM results"), 204
-    else:
-        logging.error(f"Error: {response.text}")
-        return jsonify("Invalid response from ollama"), 204
+        except (KeyError, AttributeError):
+            logging.error("no response content found in returned object")
+            return jsonify("Invalid LLM results"), 204
+        except TypeError:
+            logging.error("unknown error decoding json, returning 204")
+            return jsonify("Invalid LLM results"), 204
+
+    except Exception as e:
+        logging.error(f"Error calling LLM: {str(e)}")
+        return jsonify("Invalid response from LLM"), 204
 
     # create data json and verify the content-categoriser schema is respected
     graphic_category_json = {"category": graphic_category}
@@ -182,8 +208,6 @@ def categorise():
         logging.pii(f"Validation error: {e.message}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
-    # all done. give final category information and return to orchestrator
-    logging.info(graphic_category_json)
     return response
 
 
@@ -203,32 +227,38 @@ def warmup():
     """
     Trigger a warmup call to load the Ollama LLM into memory.
     This avoids first-request latency by sending a dummy request.
+    vLLM keeps the model in memory after the container startup.
     """
     try:
-        # construct the target Ollama endpoint for generate
-        api_url = f"{os.environ['OLLAMA_URL']}/generate"
+        llm_base_url = os.environ['LLM_URL']
+        api_key = os.environ['LLM_API_KEY']
+        llm_model = os.environ['LLM_MODEL']
 
-        # authorization headers with API key
-        headers = {
-            "Authorization": f"Bearer {os.environ['OLLAMA_API_KEY']}",
-            "Content-Type": "application/json"
-        }
+        # Initialize OpenAI client with custom base URL for vllm
+        client = OpenAI(
+            api_key=api_key,
+            base_url=llm_base_url,
+            timeout=60.0
+        )
 
-        # prepare the warmup request data using the configured model
-        data = {
-            "model": os.environ["OLLAMA_MODEL"],
-            "prompt": "ping",
-            "stream": False,
-            "keep_alive": -1  # instruct Ollama to keep the model in memory
-        }
+        logging.debug("Posting request to LLM model: " + llm_model)
+
+        # Make the request using OpenAI client
+        client.chat.completions.create(
+            model=llm_model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": "ping"
+                }
+            ],
+            temperature=0.0,
+            stream=False
+        )
 
         logging.info("[WARMUP] Warmup endpoint triggered.")
-        logging.pii(f"[WARMUP] Posting to {api_url} with model \
-                    {data['model']}")
-
-        # send warmup request (with timeout)
-        r = requests.post(api_url, headers=headers, json=data, timeout=60)
-        r.raise_for_status()
+        logging.pii(f"[WARMUP] Posting to {llm_base_url} with model \
+                    {llm_model}")
 
         return jsonify({"status": "warmed"}), 200
 
