@@ -98,7 +98,7 @@ schemas_remote=$(git ls-remote origin refs/heads/schemas | cut -f1)
 
 if [[ "$schemas_local" != "$schemas_remote" ]]; then
   echo "Schemas submodule is not at the most current version."
-  echo "To update, re-run imageup with --update-schemas (after staging code changes if needed)."
+  echo "To update, re-run imageup with --update-schemas."
 fi
 
 # Update schemas submodule to latest origin/schemas and commit the pointer
