@@ -372,7 +372,7 @@ services:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   depth-map-generator:
-    profiles: [production, test, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-depth-map-generator:${REGISTRY_TAG}
     restart: "no"
     deploy:
@@ -392,7 +392,7 @@ services:
       - WARMUP_ENABLED=true
 
   svg-depth-map:
-    profiles: [production, test, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-svg-depth-map:${REGISTRY_TAG}
     restart: "no"
     labels:

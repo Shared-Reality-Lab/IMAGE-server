@@ -34,3 +34,13 @@ def configure_logging():
         logging.getLogger().setLevel(PII_LOG_LEVEL)  # Lower log level to PII
     else:
         logging.info("Environment Pegasus: PII logging is disabled.")
+
+    # Suppress verbose logging from OpenAI and its dependencies
+    # Prevents logging of request bodies which contain base64 images and PII
+    logging.getLogger("openai").setLevel(logging.WARNING)
+    logging.getLogger("openai._base_client").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+
+    # Optional: Add info about suppressed loggers
+    logging.debug("Suppressed verbose logging for OpenAI client libraries")

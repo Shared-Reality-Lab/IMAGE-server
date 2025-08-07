@@ -15,7 +15,6 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 from flask import Flask, request, jsonify
-import requests
 import json
 import time
 import jsonschema
@@ -24,6 +23,7 @@ import os
 import html
 from datetime import datetime
 from config.logging_utils import configure_logging
+from openai import OpenAI
 
 configure_logging()
 
@@ -87,53 +87,65 @@ def categorise():
     source = content["graphic"]
     graphic_b64 = source.split(",")[1]
 
-    # prepare ollama request
-    api_url = f"{os.environ['OLLAMA_URL']}/generate"
-    api_key = os.environ['OLLAMA_API_KEY']
-    ollama_model = os.environ['OLLAMA_MODEL']
+    # prepare llm request
+    llm_base_url = os.environ['LLM_URL']
+    api_key = os.environ['LLM_API_KEY']
+    llm_model = os.environ['LLM_MODEL']
 
-    logging.debug("OLLAMA_URL " + api_url)
+    logging.debug(f"LLM URL: {llm_base_url}")
+    logging.debug(f"LLM MODEL: {llm_model}")
     if api_key.startswith("sk-"):
-        logging.debug("OLLAMA_API_KEY looks properly formatted: " +
-                      api_key[:3] + "[redacted]")
+        logging.pii("LLM_API_KEY looks properly formatted: sk-[redacted]")
     else:
-        logging.warning(f'''OLLAMA_API_KEY usually starts with sk-,
-                        but this one starts with: {api_key[:3]}.
-                        You either entered an incorrect API key,
-                        or used a JWT token instead.'''
-                        )
+        logging.warning("LLM_API_KEY does not start with sk-")
 
-    request_data = {
-        "model": ollama_model,
-        "prompt": PROMPT,
-        "images": [graphic_b64],
-        "stream": False,
-        "temperature": 0.0,
-        "keep_alive": -1  # keep model loaded in memory indefinitely
-    }
-    logging.debug("serializing json from request_data dictionary")
-    request_data_json = json.dumps(request_data)
+    # Initialize OpenAI client with custom base URL for LLM
+    client = OpenAI(
+        api_key=api_key,
+        base_url=llm_base_url
+    )
 
-    request_headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
-    }
+    try:
+        logging.debug("Posting request to LLM model: " + llm_model)
 
-    logging.debug("Posting request to ollama model " + ollama_model)
-    response = requests.post(api_url, headers=request_headers,
-                             data=request_data_json)
-    logging.debug("ollama request response code: " + str(response.status_code))
+        # Make the request using OpenAI client
+        response = client.chat.completions.create(
+            model=llm_model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": PROMPT},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{graphic_b64}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            temperature=0.0,
+            stream=False
+        )
 
-    if response.status_code == 200:
-        response_text = response.text
-        data = json.loads(response_text)
-        graphic_caption = html.unescape(data['response'])
-    else:
-        logging.error("Error: {response.text}")
-        return jsonify("Invalid response from ollama"), 500
+        # The OpenAI library handles status codes internally
+        # A successful response means status code was 200
+        logging.debug("vLLM request response code: 200")
+
+        graphic_caption = html.unescape(response.choices[0].message.content)
+
+    except Exception as e:
+        # The OpenAI library raises exceptions for non-200 status codes
+        status_code = getattr(e, 'status_code', None)
+        if status_code:
+            logging.debug(f"vLLM request response code: {status_code}")
+
+        logging.error(f"Error: {str(e)}")
+        return jsonify("Invalid response from LLM"), 500
 
     # create data json and verify the content-categoriser schema is respected
-    graphic_caption_json = {"caption": graphic_caption}
+    graphic_caption_json = {"caption": graphic_caption.strip()}
     try:
         validator = jsonschema.Draft7Validator(data_schema)
         validator.validate(graphic_caption_json)
@@ -177,32 +189,38 @@ def warmup():
     """
     Trigger a warmup call to load the Ollama LLM into memory.
     This avoids first-request latency by sending a dummy request.
+    vLLM keeps the model in memory after the container startup.
     """
     try:
-        # construct the target Ollama endpoint for generate
-        api_url = f"{os.environ['OLLAMA_URL']}/generate"
+        llm_base_url = os.environ['LLM_URL']
+        api_key = os.environ['LLM_API_KEY']
+        llm_model = os.environ['LLM_MODEL']
 
-        # authorization headers with API key
-        headers = {
-            "Authorization": f"Bearer {os.environ['OLLAMA_API_KEY']}",
-            "Content-Type": "application/json"
-        }
+        # Initialize OpenAI client with custom base URL for vllm
+        client = OpenAI(
+            api_key=api_key,
+            base_url=llm_base_url,
+            timeout=60.0
+        )
 
-        # prepare the warmup request data using the configured model
-        data = {
-            "model": os.environ["OLLAMA_MODEL"],
-            "prompt": "ping",
-            "stream": False,
-            "keep_alive": -1  # instruct Ollama to keep the model in memory
-        }
+        logging.debug("Posting request to LLM model: " + llm_model)
+
+        # Make the request using OpenAI client
+        client.chat.completions.create(
+            model=llm_model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": "ping"
+                }
+            ],
+            temperature=0.0,
+            stream=False
+        )
 
         logging.info("[WARMUP] Warmup endpoint triggered.")
-        logging.pii(f"[WARMUP] Posting to {api_url} with model \
-                    {data['model']}")
-
-        # send warmup request (with timeout)
-        r = requests.post(api_url, headers=headers, json=data, timeout=60)
-        r.raise_for_status()
+        logging.pii(f"[WARMUP] Posting to {llm_base_url} with model \
+                    {llm_model}")
 
         return jsonify({"status": "warmed"}), 200
 
