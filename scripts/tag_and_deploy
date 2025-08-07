@@ -115,18 +115,19 @@ tag_component() {
   fi
 
   LATEST_TAG=$(git tag -l "${TAG_PREFIX}-*" | sort -V | tail -n1)
+
   if [ -z "$LATEST_TAG" ]; then
-    echo "No existing tags for $TAG_PREFIX, skipping."
-    return
+    echo "No existing tags for $TAG_PREFIX, starting at 0.0.1"
+    MAJOR=0
+    MINOR=0
+    PATCH=0
+  else
+    VERSION="${LATEST_TAG##*-}" # extract just the version (e.g., from service-tat-1.2.3, extract 1.2.3)
+    MAJOR=$(echo "$VERSION" | cut -d. -f1)
+    MINOR=$(echo "$VERSION" | cut -d. -f2)
+    PATCH=$(echo "$VERSION" | cut -d. -f3)
   fi
 
-  VERSION="${LATEST_TAG##*-}" # extract just the version (e.g., from service-tat-1.2.3, extract 1.2.3)
-  # Break version into components: MAJOR.MINOR.PATCH
-  MAJOR=$(echo "$VERSION" | cut -d. -f1)
-  MINOR=$(echo "$VERSION" | cut -d. -f2)
-  PATCH=$(echo "$VERSION" | cut -d. -f3)
-
-  
   #  bump logic based on selected --bump-* flag
   case "$BUMP_TYPE" in
     major)
