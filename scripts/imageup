@@ -40,8 +40,8 @@ while [[ $# -gt 0 ]]; do
     --service)
       is_service_run=true
       ;;
-    --no-update-schemas)
-      update_schemas=false
+    --update-schemas)
+      update_schemas=true
       ;;
     *)
       echo "Unknown option: $1" >&2
