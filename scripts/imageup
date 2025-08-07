@@ -115,7 +115,8 @@ if [ "$update_schemas" = true ]; then
   # commit updated pointer in main repo
   git add schemas
   git commit -m "Bump schemas submodule to ${new_hash:0:7}" || echo "No changes to commit."
-  echo "Reminder: Don't forget to push the schemas submodule bump if committed!"
+  echo "Pushing updated schemas submodule pointer to origin/main..."
+  git push origin main
 else
   echo "Skipping schemas submodule update (update_schemas=false)"
 fi
