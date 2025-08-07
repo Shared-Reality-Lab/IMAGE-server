@@ -3,8 +3,11 @@
 # tag_and_deploy
 # Tags IMAGE-server components that match GitHub Actions workflows with tag triggers
 # Usage:
-#	./scripts/tag_and_deploy # tags all services
-#	./scripts/tag_and_deploy services/tat # tags 1+ services
+#	./scripts/tag_and_deploy                    # tags all components, bumps patch by default
+#	./scripts/tag_and_deploy --bump-minor       # tags all components, bumps minor
+#	./scripts/tag_and_deploy --bump-major       # tags all components, bumps major
+#	./scripts/tag_and_deploy services/tat       # tags one component (patch default) - can add more components to tag
+#	./scripts/tag_and_deploy --bump-minor services/tat handlers/multistage-diagram-tactile-svg # tags two components with minor bump
 
 
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
@@ -30,8 +33,37 @@ cd "$ROOT_DIR" || exit 1
 : "${TAG_AND_DEPLOY_GIT_REMOTE:?}"
 : "${TAG_AND_DEPLOY_ENABLED_DIRS:=preprocessors handlers services orchestrator}"
 
+# Parse optional version bump flags
+# Default: bump patch
+BUMP_TYPE="patch"
+POSITIONAL_ARGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --bump-major)
+      BUMP_TYPE="major"
+      shift
+      ;;
+    --bump-minor)
+      BUMP_TYPE="minor"
+      shift
+      ;;
+    --bump-patch)
+      BUMP_TYPE="patch"
+      shift
+      ;;
+    -*)
+      echo "Unknown flag: $1"
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
 # explicitly passed services (1 or more) to tag (e.g., preprocessors/mmsemseg)
-EXPLICIT_SERVICES=("$@")
+EXPLICIT_COMPONENTS=("${POSITIONAL_ARGS[@]}") # filters out flags
 
 # declare an associative array (key-value map)
 # e.g., COMPONENT_TAG_PREFIXES["services/tat"]="service-tat"
@@ -94,25 +126,28 @@ tag_component() {
   MINOR=$(echo "$VERSION" | cut -d. -f2)
   PATCH=$(echo "$VERSION" | cut -d. -f3)
 
-
-  # cascading incrementing from the latest existing tag
-  PATCH=$((PATCH + 1))
-  if [ "$PATCH" -ge 10 ]; then
-    PATCH=0
-    MINOR=$((MINOR + 1))
-    if [ "$MINOR" -ge 10 ]; then
-      MINOR=0
+  
+  #  bump logic based on selected --bump-* flag
+  case "$BUMP_TYPE" in
+    major)
       MAJOR=$((MAJOR + 1))
-    fi
-  fi
+      MINOR=0
+      PATCH=0
+      ;;
+    minor)
+      MINOR=$((MINOR + 1))
+      PATCH=0
+      ;;
+    patch)
+      PATCH=$((PATCH + 1))
+      ;;
+  esac
 
   NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-
   NEW_TAG="${TAG_PREFIX}-${NEW_VERSION}"
 
   HEAD_COMMIT=$(git rev-parse HEAD)
   TAGGED_COMMIT=$(git rev-list -n 1 "$NEW_TAG" 2>/dev/null || echo "")
-
 
   # If this tag doesn’t already exist at HEAD, create + push it
   if [ "$TAGGED_COMMIT" != "$HEAD_COMMIT" ]; then
@@ -162,3 +197,4 @@ fi
 echo "Done. Check workflows at:"
 echo "  https://github.com/Shared-Reality-Lab/IMAGE-server/actions"
 echo "Please note, to complete deployment to Pegasus, run imageup after the above workflows complete! :)"
+
