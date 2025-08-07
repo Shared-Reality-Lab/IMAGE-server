@@ -30,7 +30,7 @@ fi
 # parse flags
 delete_override=true # default to deleting override file
 is_service_run=false # whether the script was invoked by a system/cron job
-update_schemas=true # whether to update the schemas submodule to latest from origin/schemas 
+update_schemas=false # whether to update the schemas submodule to latest from origin/schemas 
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -92,11 +92,19 @@ git reset --hard origin/main
 git pull
 git submodule update --init
 
+# Check if schemas submodule is behind
+schemas_local=$(cd schemas && git rev-parse HEAD)
+schemas_remote=$(git ls-remote origin refs/heads/schemas | cut -f1)
+
+if [[ "$schemas_local" != "$schemas_remote" ]]; then
+  echo "Schemas submodule is not at the most current version."
+  echo "To update, re-run imageup with --update-schemas (after staging code changes if needed)."
+fi
 
 # Update schemas submodule to latest origin/schemas and commit the pointer
 if [ "$update_schemas" = true ]; then
   echo "Updating schemas submodule using git submodule update --remote..."
- 
+
   # fetches the latest commit on 'schemas' branch (as per .gitmodules config, branch = schemas)
   git submodule update --remote schemas
 
@@ -107,10 +115,10 @@ if [ "$update_schemas" = true ]; then
   # commit updated pointer in main repo
   git add schemas
   git commit -m "Bump schemas submodule to ${new_hash:0:7}" || echo "No changes to commit."
+  echo "Reminder: Don't forget to push the schemas submodule bump if committed!"
 else
   echo "Skipping schemas submodule update (update_schemas=false)"
 fi
-
 
 # Pull the latest built images
 docker compose --env-file "$COMPOSE_ENV_FILE" pull
@@ -148,3 +156,4 @@ echo "Running warmup for critical services..."
 "${SCRIPT_DIR}/warmup"
 
 cd -
+
