@@ -213,7 +213,7 @@ services:
       - BASE_SCHEMA=/usr/src/app/base_schema.json
       - WARMUP_ENABLED=true
     env_file:
-      ./config/gemini.env   
+      ./config/ollama.env  
 
   object-grouping:
     profiles: [production, test, default]

@@ -15,6 +15,7 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
+import io
 import cv2
 from ultralytics import SAM
 import jsonschema
@@ -33,6 +34,8 @@ from datetime import datetime
 from config.logging_utils import configure_logging
 import sys
 from qwen_vl_utils import smart_resize
+from utils.image_processing import decode_and_resize_image
+from utils.llm import LLMClient, MULTISTAGE_DIAGRAM_BASE_PROMPT, BOUNDING_BOX_PROMPT_TEMPLATE
 
 
 configure_logging()
@@ -51,22 +54,40 @@ ALLOWED_ORIGINS = [
     "https://unicorn.cim.mcgill.ca/",
 ]
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = "qwen-vl-max"
-BASE_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
-if not OPENAI_API_KEY:
-    logging.error("OPENAI_API_KEY environment variable not set.")
+# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# OPENAI_MODEL = "qwen-vl-max"
+# BASE_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+# BASE_URL = os.environ['LLM_URL']
+# OPENAI_API_KEY = os.environ['LLM_API_KEY']
+# OPENAI_MODEL = os.environ['LLM_MODEL']
+# logging.debug(f"Using LLM model: {OPENAI_MODEL}")
+# logging.debug(f"Using LLM base URL: {BASE_URL}")
+# logging.debug(f"API Key starts with: {OPENAI_API_KEY[:5]}...")
+# logging.debug("LOCAL QWEN LET'S GOOOOOOOOOOOOOOOOOOO")
+# if not OPENAI_API_KEY:
+#     logging.error("OPENAI_API_KEY environment variable not set.")
+#     sys.exit(1)
+
+# # Initialize OpenAI Client
+# try:
+#     client = OpenAI(api_key=OPENAI_API_KEY,
+#                     base_url=BASE_URL)
+#     logging.debug("OpenAI client initialized")
+# except Exception as e:
+#     logging.error(f"Failed to initialize OpenAI client: {e}")
+#     client = None
+#     sys.exit(1)
+
+# experimental -- use LLMClient wrapper instead of OpenAI directly
+
+try:
+    llm_client = LLMClient()  # Uses environment variables automatically
+    logging.debug("LLM client initialized")
+except Exception as e:
+    logging.error(f"Failed to initialize LLM client: {e}")
     sys.exit(1)
 
-# Initialize OpenAI Client
-try:
-    client = OpenAI(api_key=OPENAI_API_KEY,
-                    base_url=BASE_URL)
-    logging.debug("OpenAI client initialized")
-except Exception as e:
-    logging.error(f"Failed to initialize OpenAI client: {e}")
-    client = None
-    sys.exit(1)
+###
 
 SAM_MODEL_PATH = os.getenv('SAM_MODEL_PATH')
 
@@ -138,7 +159,37 @@ def decode_image(source: str) -> Image.Image | None:
             f"Decoded image successfully. Format: {pil_image.format}, \
                 Size: {pil_image.size}"
             )
-        return pil_image
+
+        width, height = pil_image.size
+
+        # Graphics size used by Qwen
+        # min_pixels = 512 * 28 * 28
+        # max_pixels = 1024 * 28 * 28
+        # Qwen splits images into 28x28 patches
+        factor = 28
+
+        # Input size
+        input_height, input_width = smart_resize(
+            height,
+            width,
+            factor=factor,
+            # min_pixels=min_pixels,
+            # max_pixels=max_pixels
+        )
+
+        # resize to the size expected by the model
+        pil_image.resize((input_width, input_height))
+        logging.debug(
+            f"Resized image to model input size: {input_width}x{input_height}"
+            )
+
+        # produce base64 versiion of resized graphic
+        buffer = io.BytesIO()
+        pil_image.save(buffer, format='PNG')
+        img_bytes = buffer.getvalue()
+        img_base64 = base64.b64encode(img_bytes).decode('utf-8')
+        return pil_image, img_base64
+
     except (ValueError, TypeError) as e:
         logging.error(f"Failed to decode base64 image data: {e}")
         return jsonify({"error": "Invalid base64 image data"}), 400
@@ -216,7 +267,7 @@ def extract(base64_image: str) -> dict | None:
                 }
             ],
             temperature=0.5,
-            response_format={"type": "json_object"}
+            # response_format={"type": "json_object"}
         )
 
         response_text = validate_openai_response(response)
@@ -315,25 +366,30 @@ def convert_to_sam_coordinates(
             return None
 
         # Graphics size used by Qwen
-        min_pixels = 512 * 28 * 28
-        max_pixels = 1024 * 28 * 28
-        # Qwen splits images into 28x28 patches
-        factor = 28
+        # min_pixels = 512 * 28 * 28
+        # max_pixels = 1024 * 28 * 28
+        # # Qwen splits images into 28x28 patches
+        # factor = 28
 
-        # Input size
-        input_height, input_width = smart_resize(
-            height,
-            width,
-            factor=factor,
-            min_pixels=min_pixels,
-            max_pixels=max_pixels
-        )
-        print(f"Model input size: {input_width, input_height}")
+        # # Input size
+        # input_height, input_width = smart_resize(
+        #     height,
+        #     width,
+        #     factor=factor,
+        #     min_pixels=min_pixels,
+        #     max_pixels=max_pixels
+        # )
+        # print(f"Model input size: {input_width, input_height}")
 
-        abs_x1 = int(bbox[0] / input_width * width)
-        abs_y1 = int(bbox[1] / input_height * height)
-        abs_x2 = int(bbox[2] / input_width * width)
-        abs_y2 = int(bbox[3] / input_height * height)
+        # abs_x1 = int(bbox[0] / input_width * width)
+        # abs_y1 = int(bbox[1] / input_height * height)
+        # abs_x2 = int(bbox[2] / input_width * width)
+        # abs_y2 = int(bbox[3] / input_height * height)
+
+        abs_x1 = int(bbox[0])
+        abs_y1 = int(bbox[1])
+        abs_x2 = int(bbox[2])
+        abs_y2 = int(bbox[3])
 
         # Ensure coordinates are within image bounds and valid order
         abs_x1 = max(0, min(width - 1, abs_x1))
@@ -433,12 +489,13 @@ def segment_stages(
         return {}
 
     # Clean the JSON string (remove potential markdown backticks)
-    cleaned_json_str = bounding_box_json_str.strip()
-    if cleaned_json_str.startswith('```json'):
-        cleaned_json_str = cleaned_json_str[7:]
-    if cleaned_json_str.endswith('```'):
-        cleaned_json_str = cleaned_json_str[:-3]
-    cleaned_json_str = cleaned_json_str.strip()
+    # cleaned_json_str = bounding_box_json_str.strip()
+    # if cleaned_json_str.startswith('```json'):
+    #     cleaned_json_str = cleaned_json_str[7:]
+    # if cleaned_json_str.endswith('```'):
+    #     cleaned_json_str = cleaned_json_str[:-3]
+    # cleaned_json_str = cleaned_json_str.strip()
+    cleaned_json_str = json.dumps(bounding_box_json_str)
 
     try:
         # Handle potential empty string after cleaning
@@ -669,17 +726,39 @@ def process_diagram():
 
     # 2. Decode Base64 Image
     source = content["graphic"]
-    base64_image = source.split(',', 1)[1]
-    pil_image = decode_image(source)
+    # base64_image = source.split(',', 1)[1]
+    # pil_image, base64_image = decode_image(source)
+    base64_image, pil_image, error = decode_and_resize_image(source)
+    if error:
+        return jsonify(error), error["code"]
 
+    # try:
+    #     # 3. Extract Base stages and Links using Gemini
+    #     base_json = extract(base64_image)
+    #     if base_json is None:
+    #         logging.error("Failed to extract base diagram info from Gemini.")
+    #         return jsonify(
+    #             {"error": "Failed to get initial analysis from vision model"}
+    #             ), 503
+
+    # experimental
     try:
-        # 3. Extract Base stages and Links using Gemini
-        base_json = extract(base64_image)
+        # Use the LLM client
+        base_json = llm_client.chat_completion(
+            prompt=MULTISTAGE_DIAGRAM_BASE_PROMPT,
+            image_base64=base64_image,
+            schema=BASE_SCHEMA_GEMINI,
+            temperature=0.0,
+            parse_json=True
+        )
+
         if base_json is None:
-            logging.error("Failed to extract base diagram info from Gemini.")
+            logging.error("Failed to extract base diagram info from LLM.")
             return jsonify(
                 {"error": "Failed to get initial analysis from vision model"}
-                ), 503
+            ), 503
+
+    ###
 
         # Validate the structure received from 'extract'
         if (
@@ -712,30 +791,40 @@ def process_diagram():
         else:
             logging.pii(f"Identified stages: {stages}")
 
-            # 5. Get Bounding Box Suggestions using Gemini ('point')
-            bounding_box_json_str = point(stages, base64_image)
-            if bounding_box_json_str is None:
-                logging.error("Failed to get bounding boxes from Gemini.")
-                aggregated_contour_data = {}
-                final_data_json = update_json_with_contours(
-                    base_json, aggregated_contour_data
-                    )
+        # 5. Get Bounding Box Suggestions using Gemini ('point')
+        # experimental
+        # bounding_box_json_str = point(stages, base64_image)
+        bbox_prompt = BOUNDING_BOX_PROMPT_TEMPLATE.format(stages=stages)
 
-            else:
-                # 6. Segment Stages using SAM
-                aggregated_contour_data = segment_stages(
-                    bounding_box_json_str, pil_image
-                    )
-                if not aggregated_contour_data:
-                    logging.warning(
-                        "Segmentation process did not yield any contour data."
-                        )
-                    # Continue with base_json, contours will be empty
+        bounding_box_json_str = llm_client.chat_completion(
+            prompt=bbox_prompt,
+            image_base64=base64_image,
+            temperature=0.0,
+            parse_json=True
+        )
 
-                # 7. Combine Base JSON with Contour Data
-                final_data_json = update_json_with_contours(
-                    base_json, aggregated_contour_data
+        if bounding_box_json_str is None:
+            logging.error("Failed to get bounding boxes from LLM.")
+            aggregated_contour_data = {}
+            final_data_json = update_json_with_contours(
+                base_json, aggregated_contour_data
+                )
+
+        else:
+            # 6. Segment Stages using SAM
+            aggregated_contour_data = segment_stages(
+                bounding_box_json_str, pil_image
+                )
+            if not aggregated_contour_data:
+                logging.warning(
+                    "Segmentation process did not yield any contour data."
                     )
+                # Continue with base_json, contours will be empty
+
+            # 7. Combine Base JSON with Contour Data
+            final_data_json = update_json_with_contours(
+                base_json, aggregated_contour_data
+                )
 
         # 8. Validate the Generated Data against its specific schema
         try:
@@ -802,40 +891,45 @@ def warmup():
     try:
         logging.info("Warming up Gemini and SAM...")
 
-        # OpenAI: dummy image + prompt
-        dummy_img = Image.new("RGB", (512, 512), color="white")
-        # Convert dummy image to base64
-        buffered = BytesIO()
-        dummy_img.save(buffered, format="PNG")
-        dummy_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+        # # OpenAI: dummy image + prompt
+        # dummy_img = Image.new("RGB", (512, 512), color="white")
+        # # Convert dummy image to base64
+        # buffered = BytesIO()
+        # dummy_img.save(buffered, format="PNG")
+        # dummy_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "{}"},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/png;base64,{dummy_base64}"
-                            }
-                        }
-                    ]
-                }
-            ],
-            temperature=0.1,
-            response_format={"type": "json_object"}
-        )
-        _ = validate_openai_response(response)
+        # response = client.chat.completions.create(
+        #     model=OPENAI_MODEL,
+        #     messages=[
+        #         {
+        #             "role": "user",
+        #             "content": [
+        #                 {"type": "text", "text": "{}"},
+        #                 {
+        #                     "type": "image_url",
+        #                     "image_url": {
+        #                         "url": f"data:image/png;base64,{dummy_base64}"
+        #                     }
+        #                 }
+        #             ]
+        #         }
+        #     ],
+        #     temperature=0.1,
+        #     response_format={"type": "json_object"}
+        # )
+        # _ = validate_openai_response(response)
+
+        # experimental
+        llm_success = llm_client.warmup()
 
         # SAM: dummy box
         dummy_cv2 = np.zeros((512, 512, 3), dtype=np.uint8)
         dummy_pil = Image.fromarray(dummy_cv2)
         _ = sam_model(dummy_pil, bboxes=[[100, 100, 200, 200]])
 
-        return jsonify({"status": "ok"}), 200
+        # return jsonify({"status": "ok"}), 200
+        return jsonify({"status": "ok" if llm_success else "partial"}), 200
+
     except Exception as e:
         logging.pii(f"Warmup failed: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
