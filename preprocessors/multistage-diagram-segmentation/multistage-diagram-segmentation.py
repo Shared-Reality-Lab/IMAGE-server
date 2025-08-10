@@ -15,16 +15,12 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
-import io
 import cv2
 from ultralytics import SAM
 import jsonschema
-from openai import OpenAI
-from io import BytesIO
 import json
-from PIL import Image, UnidentifiedImageError
+from PIL import Image
 import numpy as np
-import base64
 import logging
 import os
 import time
@@ -33,17 +29,16 @@ from flask import Flask, request, jsonify
 from datetime import datetime
 from config.logging_utils import configure_logging
 import sys
-from qwen_vl_utils import smart_resize
 from utils.image_processing import decode_and_resize_image
-from utils.llm import LLMClient, MULTISTAGE_DIAGRAM_BASE_PROMPT, BOUNDING_BOX_PROMPT_TEMPLATE
-
+from utils.llm import (
+    LLMClient,
+    MULTISTAGE_DIAGRAM_BASE_PROMPT,
+    BOUNDING_BOX_PROMPT_TEMPLATE,
+    BOUNDING_BOX_PROMPT_EXAMPLE
+    )
+from utils.segmentation import SAMClient
 
 configure_logging()
-
-# Disable OpenAI debug logs
-logging.getLogger("openai").setLevel(logging.WARNING)
-# Also disable httpx logs which OpenAI uses
-logging.getLogger("httpx").setLevel(logging.WARNING)
 
 app = Flask(__name__)
 
@@ -54,40 +49,13 @@ ALLOWED_ORIGINS = [
     "https://unicorn.cim.mcgill.ca/",
 ]
 
-# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-# OPENAI_MODEL = "qwen-vl-max"
-# BASE_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
-# BASE_URL = os.environ['LLM_URL']
-# OPENAI_API_KEY = os.environ['LLM_API_KEY']
-# OPENAI_MODEL = os.environ['LLM_MODEL']
-# logging.debug(f"Using LLM model: {OPENAI_MODEL}")
-# logging.debug(f"Using LLM base URL: {BASE_URL}")
-# logging.debug(f"API Key starts with: {OPENAI_API_KEY[:5]}...")
-# logging.debug("LOCAL QWEN LET'S GOOOOOOOOOOOOOOOOOOO")
-# if not OPENAI_API_KEY:
-#     logging.error("OPENAI_API_KEY environment variable not set.")
-#     sys.exit(1)
-
-# # Initialize OpenAI Client
-# try:
-#     client = OpenAI(api_key=OPENAI_API_KEY,
-#                     base_url=BASE_URL)
-#     logging.debug("OpenAI client initialized")
-# except Exception as e:
-#     logging.error(f"Failed to initialize OpenAI client: {e}")
-#     client = None
-#     sys.exit(1)
-
-# experimental -- use LLMClient wrapper instead of OpenAI directly
-
 try:
-    llm_client = LLMClient()  # Uses environment variables automatically
-    logging.debug("LLM client initialized")
+    llm_client = LLMClient()
+    sam_client = SAMClient()
+    logging.debug("LLM and SAM clients initialized")
 except Exception as e:
-    logging.error(f"Failed to initialize LLM client: {e}")
+    logging.error(f"Failed to initialize clients: {e}")
     sys.exit(1)
-
-###
 
 SAM_MODEL_PATH = os.getenv('SAM_MODEL_PATH')
 
@@ -138,286 +106,6 @@ If some of the properties can't be identified, assign empty value to them.
 BASE_SCHEMA_PATH = os.getenv("BASE_SCHEMA")
 with open(BASE_SCHEMA_PATH) as f:
     BASE_SCHEMA_GEMINI = json.load(f)
-
-
-def decode_image(source: str) -> Image.Image | None:
-    """
-    Decode base64 image data to Pillow image for processing
-    """
-    try:
-        # Remove header (e.g. 'data:image/jpeg;base64,')
-        if not isinstance(source, str) or "," not in source:
-            raise ValueError(
-                "Invalid graphic format: expected data URI string."
-                )
-        graphic_b64 = source.split(',', 1)[1]
-        img_data = base64.b64decode(graphic_b64)
-        pil_image = Image.open(BytesIO(img_data))
-        # Ensure image is in RGB or a format SAM/Gemini can handle
-        pil_image = pil_image.convert("RGB")
-        logging.debug(
-            f"Decoded image successfully. Format: {pil_image.format}, \
-                Size: {pil_image.size}"
-            )
-
-        width, height = pil_image.size
-
-        # Graphics size used by Qwen
-        # min_pixels = 512 * 28 * 28
-        # max_pixels = 1024 * 28 * 28
-        # Qwen splits images into 28x28 patches
-        factor = 28
-
-        # Input size
-        input_height, input_width = smart_resize(
-            height,
-            width,
-            factor=factor,
-            # min_pixels=min_pixels,
-            # max_pixels=max_pixels
-        )
-
-        # resize to the size expected by the model
-        pil_image.resize((input_width, input_height))
-        logging.debug(
-            f"Resized image to model input size: {input_width}x{input_height}"
-            )
-
-        # produce base64 versiion of resized graphic
-        buffer = io.BytesIO()
-        pil_image.save(buffer, format='PNG')
-        img_bytes = buffer.getvalue()
-        img_base64 = base64.b64encode(img_bytes).decode('utf-8')
-        return pil_image, img_base64
-
-    except (ValueError, TypeError) as e:
-        logging.error(f"Failed to decode base64 image data: {e}")
-        return jsonify({"error": "Invalid base64 image data"}), 400
-    except UnidentifiedImageError:
-        logging.error("Cannot identify image file format from decoded data.")
-        return jsonify({"error": "Invalid or unsupported image format"}), 400
-    except Exception as e:
-        logging.error(
-            f"Unexpected error during image decoding: {e}", exc_info=True
-            )
-        return jsonify(
-            {"error": "Internal server error during image processing"}
-            ), 500
-
-
-def validate_openai_response(response) -> str | None:
-    """
-    Validates the OpenAI API response and extracts the content.
-    """
-    try:
-        if not response.choices:
-            logging.error("OpenAI response missing choices")
-            return None
-
-        choice = response.choices[0]
-
-        if choice.finish_reason not in ["stop", "length"]:
-            logging.error(
-                f"Generation stopped with reason: {choice.finish_reason}"
-            )
-            return None
-
-        if not choice.message or not choice.message.content:
-            logging.error("OpenAI response missing message content")
-            return None
-
-        logging.debug("OpenAI response validation successful.")
-        return choice.message.content
-
-    except Exception as e:
-        logging.error(f"Error validating OpenAI response: {e}")
-        return None
-
-
-def extract(base64_image: str) -> dict | None:
-    """
-    Sends an image to OpenAI to extract structured information
-    (stages and links) based on the schema.
-    """
-    if not client:
-        logging.error("OpenAI client not initialized.")
-        return None
-
-    logging.info("Requesting base diagram information from OpenAI...")
-    try:
-        # Prepare the messages with schema in the prompt
-        schema_prompt = f'''{BASE_PROMPT}\n\n
-        Return the response according to this JSON schema:\n
-        {json.dumps(BASE_SCHEMA_GEMINI, indent=2)}'''
-
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": schema_prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/png;base64,{base64_image}"
-                            }
-                        }
-                    ]
-                }
-            ],
-            temperature=0.5,
-            # response_format={"type": "json_object"}
-        )
-
-        response_text = validate_openai_response(response)
-        if response_text is None:
-            return None
-
-        logging.info("OpenAI request successful. Parsing JSON response.")
-        logging.pii(f"Response text to parse: {response_text}")
-        parsed_json = json.loads(response_text)
-        logging.info("Successfully parsed OpenAI JSON response.")
-        return parsed_json
-
-    except json.JSONDecodeError as e:
-        logging.error(f"Failed to decode JSON response from OpenAI: {e}")
-        return None
-    except Exception as e:
-        logging.error(
-            f"Unexpected error during OpenAI extraction: {e}", exc_info=True
-        )
-        return None
-
-
-def point(stages: list[str], base64_image: str) -> str | None:
-    """
-    Sends an image and stage labels to OpenAI to get bounding boxes.
-    """
-    if not client:
-        logging.error("OpenAI client not initialized.")
-        return None
-    if not stages:
-        logging.warning(
-            "No stages provided. Skipping bounding box request."
-        )
-        return "{}"
-
-    logging.pii(f"Requesting bounding boxes for stages: {stages}")
-
-    BBOX_PROMPT = f'''Give the bounding boxes for the illustrations
-of the following stages: {stages}.
-Output a only JSON list of bounding boxes where each entry contains
-the 2D bounding box in the key "box_2d",
-and the stage name in the key "label".
-'''
-
-    try:
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": BBOX_PROMPT},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/png;base64,{base64_image}"
-                            }
-                        }
-                    ]
-                }
-            ],
-            temperature=0.1,
-            # response_format={"type": "json_object"}
-        )
-
-        response_text = validate_openai_response(response)
-        if response_text is None:
-            return None
-
-        logging.pii(f"Bounding box response text: {response_text}")
-        return response_text
-
-    except Exception as e:
-        logging.error(
-            f"Unexpected error during OpenAI point request: {e}", exc_info=True
-        )
-        return None
-
-
-def convert_to_sam_coordinates(
-        bbox: list[int], width: int, height: int
-        ) -> list[int]:
-    """
-    Converts Gemini's normalized bbox [x1, y1, x2, y2] (0-1000) to SAM's
-    absolute pixel [x1, y1, x2, y2].
-    """
-    try:
-        # Check if bbox has 4 numeric elements
-        if not (isinstance(bbox, list)
-                and len(bbox) == 4
-                and all(isinstance(n, (int, float)) for n in bbox)):
-            logging.warning(
-                f"Invalid bbox format received: {bbox}. \
-                    Expected list of 4 numbers."
-            )
-            return None
-
-        # Graphics size used by Qwen
-        # min_pixels = 512 * 28 * 28
-        # max_pixels = 1024 * 28 * 28
-        # # Qwen splits images into 28x28 patches
-        # factor = 28
-
-        # # Input size
-        # input_height, input_width = smart_resize(
-        #     height,
-        #     width,
-        #     factor=factor,
-        #     min_pixels=min_pixels,
-        #     max_pixels=max_pixels
-        # )
-        # print(f"Model input size: {input_width, input_height}")
-
-        # abs_x1 = int(bbox[0] / input_width * width)
-        # abs_y1 = int(bbox[1] / input_height * height)
-        # abs_x2 = int(bbox[2] / input_width * width)
-        # abs_y2 = int(bbox[3] / input_height * height)
-
-        abs_x1 = int(bbox[0])
-        abs_y1 = int(bbox[1])
-        abs_x2 = int(bbox[2])
-        abs_y2 = int(bbox[3])
-
-        # Ensure coordinates are within image bounds and valid order
-        abs_x1 = max(0, min(width - 1, abs_x1))
-        abs_y1 = max(0, min(height - 1, abs_y1))
-        abs_x2 = max(0, min(width - 1, abs_x2))
-        abs_y2 = max(0, min(height - 1, abs_y2))
-
-        # Swap if order is wrong
-        if abs_x1 > abs_x2:
-            abs_x1, abs_x2 = abs_x2, abs_x1
-        if abs_y1 > abs_y2:
-            abs_y1, abs_y2 = abs_y2, abs_y1
-
-        # Ensure non-zero width/height for SAM bbox
-        if abs_x1 >= abs_x2 or abs_y1 >= abs_y2:
-            logging.warning(
-                f"Converted SAM bbox has zero width/height: \
-                    [{abs_x1}, {abs_y1}, {abs_x2}, {abs_y2}] from {bbox}. \
-                        Skipping."
-            )
-            return None
-
-        sam_coords = [abs_x1, abs_y1, abs_x2, abs_y2]
-        return sam_coords
-
-    except (TypeError, IndexError, ValueError) as e:
-        logging.error(f"Error converting bbox {bbox} to SAM coordinates: {e}")
-        return None
 
 
 def extract_normalized_contours(
@@ -476,45 +164,25 @@ def extract_normalized_contours(
 
 
 def segment_stages(
-        bounding_box_json_str: str, im: Image.Image
+        bounding_boxes_data, im: Image.Image
         ) -> dict[str, list[list[list[float]]]]:
     """
     Processes bounding box JSON, runs SAM, aggregates contours.
     """
 
-    if not bounding_box_json_str:
-        logging.warning(
-            "Received empty or None bounding_box_json_str for segmentation."
-            )
-        return {}
-
-    # Clean the JSON string (remove potential markdown backticks)
-    # cleaned_json_str = bounding_box_json_str.strip()
-    # if cleaned_json_str.startswith('```json'):
-    #     cleaned_json_str = cleaned_json_str[7:]
-    # if cleaned_json_str.endswith('```'):
-    #     cleaned_json_str = cleaned_json_str[:-3]
-    # cleaned_json_str = cleaned_json_str.strip()
-    cleaned_json_str = json.dumps(bounding_box_json_str)
-
     try:
-        # Handle potential empty string after cleaning
-        if not cleaned_json_str:
-            logging.warning("Bounding box string is empty after cleaning.")
-            return {}
-        bounding_boxes_data = json.loads(cleaned_json_str)
         if not isinstance(bounding_boxes_data, list):
             raise ValueError("Expected a list of bounding box objects.")
     except json.JSONDecodeError as e:
         logging.error(f"Error decoding bounding box JSON: {e}")
         logging.pii(
-            f"Received string for segmentation: '{bounding_box_json_str}'"
+            f"Received data for segmentation: '{bounding_boxes_data}'"
             )
         return {}
     except ValueError as e:
         logging.error(f"Bounding box JSON structure incorrect: {e}")
         logging.pii(
-            f"Received string for segmentation: '{bounding_box_json_str}'"
+            f"Received data for segmentation: '{bounding_boxes_data}'"
             )
         return {}
 
@@ -540,33 +208,22 @@ def segment_stages(
             continue
 
         label = item.get("label")
-        bbox_norm = item.get("box_2d")
+        bbox = item.get("bbox_2d")
 
         if not label or not isinstance(label, str):
             logging.pii(
                 f"Skipping item with missing or invalid label: {item}"
                 )
             continue
-        if not bbox_norm:
-            logging.pii(f"Skipping item with missing 'box_2d': {item}")
+        if not bbox:
+            logging.pii(f"Skipping item with missing 'bbox_2d': {item}")
             continue
 
         logging.pii(f"Processing bounding box for label: '{label}'")
-        sam_bbox = convert_to_sam_coordinates(bbox_norm, width, height)
-
-        if sam_bbox is None:
-            logging.pii(
-                f"Skipping label '{label}' due to \
-                    invalid bounding box conversion from {bbox_norm}."
-                )
-            continue
 
         # After all checks add data to respective lists
-        bboxes.append(sam_bbox)
+        bboxes.append(bbox)
         labels.append(label)
-
-        logging.debug(f"Input Norm BBox (0-1000): {bbox_norm}")
-        logging.debug(f"Converted SAM BBox (pixels): {sam_bbox}")
 
     # Run SAM model for this all bounding boxes at once
     try:
@@ -585,7 +242,7 @@ def segment_stages(
     except Exception as e:
         logging.pii(
             f"Error during SAM processing for label '{label}' \
-                with bbox {sam_bbox}: {e}", exc_info=True
+                with bbox {bbox}: {e}", exc_info=True
             )
         # Continue processing other boxes
 
@@ -732,16 +389,6 @@ def process_diagram():
     if error:
         return jsonify(error), error["code"]
 
-    # try:
-    #     # 3. Extract Base stages and Links using Gemini
-    #     base_json = extract(base64_image)
-    #     if base_json is None:
-    #         logging.error("Failed to extract base diagram info from Gemini.")
-    #         return jsonify(
-    #             {"error": "Failed to get initial analysis from vision model"}
-    #             ), 503
-
-    # experimental
     try:
         # Use the LLM client
         base_json = llm_client.chat_completion(
@@ -757,21 +404,6 @@ def process_diagram():
             return jsonify(
                 {"error": "Failed to get initial analysis from vision model"}
             ), 503
-
-    ###
-
-        # Validate the structure received from 'extract'
-        if (
-            not isinstance(base_json, dict)
-            or "stages" not in base_json
-            or "links" not in base_json
-        ):
-            logging.pii(
-                f"Invalid structure received from Gemini: {base_json}"
-                )
-            return jsonify(
-                {"error": "Received invalid initial analysis structure"}
-                ), 500
 
         # 4. Get Stage Labels for Bounding Box Request
         # Ensure stages is a list and items have 'label'
@@ -791,40 +423,30 @@ def process_diagram():
         else:
             logging.pii(f"Identified stages: {stages}")
 
-        # 5. Get Bounding Box Suggestions using Gemini ('point')
-        # experimental
-        # bounding_box_json_str = point(stages, base64_image)
-        bbox_prompt = BOUNDING_BOX_PROMPT_TEMPLATE.format(stages=stages)
+        bbox_prompt = BOUNDING_BOX_PROMPT_TEMPLATE.format(stages=stages) + BOUNDING_BOX_PROMPT_EXAMPLE
 
-        bounding_box_json_str = llm_client.chat_completion(
+        bounding_boxes_data = llm_client.chat_completion(
             prompt=bbox_prompt,
             image_base64=base64_image,
             temperature=0.0,
             parse_json=True
         )
 
-        if bounding_box_json_str is None:
-            logging.error("Failed to get bounding boxes from LLM.")
-            aggregated_contour_data = {}
-            final_data_json = update_json_with_contours(
-                base_json, aggregated_contour_data
-                )
+        if bounding_boxes_data is None:
+            logging.info("Failed to get bounding boxes from LLM.")
 
-        else:
-            # 6. Segment Stages using SAM
-            aggregated_contour_data = segment_stages(
-                bounding_box_json_str, pil_image
-                )
-            if not aggregated_contour_data:
-                logging.warning(
-                    "Segmentation process did not yield any contour data."
-                    )
-                # Continue with base_json, contours will be empty
+        final_data_json = sam_client.segment_with_boxes(
+            pil_image,
+            bounding_boxes_data,
+            use_prompts=True,  # Set to True to enable prompted segmentation
+            aggregate_by_label=True,
+            return_structured=True,  # Return data in schema-compatible format
+            base_data=base_json
+            )
 
-            # 7. Combine Base JSON with Contour Data
-            final_data_json = update_json_with_contours(
-                base_json, aggregated_contour_data
-                )
+        if not final_data_json:
+            logging.info("Segmentation process did not yield any data.")
+            final_data_json = base_json
 
         # 8. Validate the Generated Data against its specific schema
         try:
@@ -873,6 +495,150 @@ def process_diagram():
         return jsonify(
             {"error": "An unexpected internal server error occurred"}
             ), 500
+
+# @app.route("/preprocessor", methods=['POST'])
+# def process_diagram():
+#     """
+#     Main endpoint to process multi-stage textbook diagrams.
+#     """
+#     logging.debug("Received request for multi-stage diagram processing.")
+
+#     # Get JSON content from the request
+#     content = request.get_json()
+
+#     # Validate request
+#     if "graphic" not in content:
+#         logging.info("No graphic content. Skipping...")
+#         return jsonify({"error": "No graphic content"}), 204
+    
+#     if not any(content["URL"].startswith(origin) for origin in ALLOWED_ORIGINS):
+#         logging.info("Request URL does not match expected endpoint. Skipping.")
+#         return jsonify({"error": "Invalid request URL"}), 403
+
+#     # Validate input against REQUEST_SCHEMA
+#     try:
+#         validator = jsonschema.Draft7Validator(REQUEST_SCHEMA, resolver=RESOLVER)
+#         validator.validate(content)
+#     except jsonschema.exceptions.ValidationError as e:
+#         logging.error("Validation failed for incoming request")
+#         logging.pii(f"Validation error: {e.message} | Data: {content}")
+#         return jsonify({"error": "Invalid Preprocessor JSON format"}), 400
+
+#     request_uuid = content["request_uuid"]
+#     timestamp = time.time()
+
+#     # Decode and resize image
+#     source = content["graphic"]
+#     base64_image, pil_image, error = decode_and_resize_image(source)
+#     if error:
+#         return jsonify(error), error["code"]
+
+#     try:
+#         # 1. Extract base diagram information using LLM
+#         base_json = llm_client.chat_completion(
+#             prompt=MULTISTAGE_DIAGRAM_BASE_PROMPT,
+#             image_base64=base64_image,
+#             schema=BASE_SCHEMA_GEMINI,
+#             temperature=0.0,
+#             parse_json=True
+#         )
+
+#         if base_json is None:
+#             logging.error("Failed to extract base diagram info from LLM.")
+#             return jsonify(
+#                 {"error": "Failed to get initial analysis from vision model"}
+#             ), 503
+
+#         # 2. Get stage labels for bounding box request
+#         stages = [
+#             stage["label"]
+#             for stage in base_json.get("stages", [])
+#             if isinstance(stage, dict) and "label" in stage
+#         ]
+        
+#         if not stages:
+#             logging.info("No stage labels found. Cannot request bounding boxes.")
+#             return jsonify(
+#                 {"error": "No valid stage labels found in the diagram"}
+#             ), 204
+
+#         logging.pii(f"Identified stages: {stages}")
+
+#         # 3. Get bounding boxes from LLM
+#         bbox_prompt = BOUNDING_BOX_PROMPT_TEMPLATE.format(stages=stages) + BOUNDING_BOX_PROMPT_EXAMPLE
+        
+#         bounding_boxes_data = llm_client.chat_completion(
+#             prompt=bbox_prompt,
+#             image_base64=base64_image,
+#             temperature=0.0,
+#             parse_json=True
+#         )
+
+#         if bounding_boxes_data is None:
+#             logging.error("Failed to get bounding boxes from LLM.")
+#             # Continue without segmentation - return base_json with empty segments
+#             # Use the return_structured option to get properly formatted data
+#             final_data_json = sam_client.segment_with_boxes(
+#                 pil_image,
+#                 [],  # Empty bounding boxes
+#                 return_structured=True,
+#                 base_data=base_json
+#             )
+#         else:
+#             # 4. Perform segmentation using the new SAMClient
+#             # The bounding_boxes_data should already be in the right format:
+#             # [{'bbox_2d': [...], 'label': '...'}, ...]
+            
+#             # Use the SAM client with optional prompting and structured output
+#             # Set use_prompts=True if you want to use labels as text prompts
+#             final_data_json = sam_client.segment_with_boxes(
+#                 pil_image,
+#                 bounding_boxes_data,
+#                 use_prompts=False,  # Set to True to enable prompted segmentation
+#                 aggregate_by_label=True,
+#                 return_structured=True,  # Return data in schema-compatible format
+#                 base_data=base_json
+#             )
+            
+#             if not final_data_json:
+#                 logging.warning("Segmentation process did not yield any data.")
+#                 final_data_json = base_json
+
+#         # 6. Validate the generated data
+#         try:
+#             validator = jsonschema.Draft7Validator(DATA_SCHEMA)
+#             validator.validate(final_data_json)
+#         except jsonschema.exceptions.ValidationError as e:
+#             logging.error("Validation failed for detection data")
+#             logging.pii(f"Validation error: {e.message} | Data: {final_data_json}")
+#             return jsonify("Invalid Preprocessor JSON format"), 500
+
+#         # 7. Construct final response
+#         response = {
+#             "request_uuid": request_uuid,
+#             "timestamp": int(timestamp),
+#             "name": PREPROCESSOR_NAME,
+#             "data": final_data_json
+#         }
+
+#         # 8. Validate final response
+#         try:
+#             validator = jsonschema.Draft7Validator(RESPONSE_SCHEMA, resolver=RESOLVER)
+#             validator.validate(response)
+#         except jsonschema.exceptions.ValidationError as e:
+#             logging.error("Validation failed for full response")
+#             logging.pii(f"Validation error: {e.message} | Response: {response}")
+#             return jsonify("Invalid Preprocessor JSON format"), 500
+
+#         logging.info(f"Successfully processed diagram for request {request_uuid}.")
+#         return jsonify(response), 200
+
+#     except Exception as e:
+#         logging.error(
+#             f"An unexpected error occurred during diagram processing for {request_uuid}: {e}",
+#             exc_info=True
+#         )
+#         return jsonify({"error": "An unexpected internal server error occurred"}), 500
 
 
 @app.route("/health", methods=["GET"])

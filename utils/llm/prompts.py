@@ -27,4 +27,21 @@ of the following stages: {stages}.
 Output a only JSON list of bounding boxes where each entry contains
 the 2D bounding box in the key "box_2d",
 and the stage name in the key "label".
+
+"""
+
+BOUNDING_BOX_PROMPT_EXAMPLE = """
+Example:
+```json
+    {
+        "bbox_2d": [x1, y1, x2, y2],
+        "label": "Label 1"
+    },
+    {
+        "bbox_2d": [x1, y1, x2, y2],
+        "label": "Label 2"
+    }
+]
+```
+Ensure that the bounding boxes are in the format [x1, y1, x2, y2]
 """

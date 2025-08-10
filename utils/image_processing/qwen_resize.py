@@ -24,9 +24,6 @@ import logging
 from typing import Tuple, Optional
 from PIL import Image, UnidentifiedImageError
 from io import BytesIO
-
-# Import the smart_resize function from qwen_vl_utils
-# Assuming this is available in the project
 from qwen_vl_utils import smart_resize
 
 
