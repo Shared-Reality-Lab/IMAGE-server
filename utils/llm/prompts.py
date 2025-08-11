@@ -19,6 +19,16 @@ the graphic type is significant (like oil painting or aerial photo).
 Instead, start describing the graphic right away.
 """
 
+# Content categoriser
+CATEGORISER_PROMPT = """
+Answer only in JSON with the following format:
+'{"category": "YOUR_ANSWER"}.'
+Which of the following categories best
+describes this image, selecting from this enum:
+"""
+
+POSSIBLE_CATEGORIES = "photograph, chart, text, other"
+
 # Base prompts for diagram analysis
 MULTISTAGE_DIAGRAM_BASE_PROMPT = """
 Look at the attached flow diagram and parse the information
