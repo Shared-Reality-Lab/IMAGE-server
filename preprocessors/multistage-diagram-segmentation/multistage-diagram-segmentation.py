@@ -16,9 +16,7 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 import jsonschema
-import json
 import logging
-import os
 import time
 from flask import Flask, request, jsonify
 from datetime import datetime
@@ -33,6 +31,10 @@ from utils.llm import (
     )
 from utils.segmentation import SAMClient
 from utils.validation import Validator
+from utils.llm.response_schemas import (
+    STAGE_RESPONSE_SCHEMA,
+    BBOX_RESPONSE_SCHEMA
+    )
 
 configure_logging()
 
@@ -57,11 +59,6 @@ try:
 except Exception as e:
     logging.error(f"Failed to initialize clients: {e}")
     sys.exit(1)
-
-# Schema Gemini should follow for the initial extraction
-BASE_SCHEMA_PATH = os.getenv("BASE_SCHEMA")
-with open(BASE_SCHEMA_PATH) as f:
-    BASE_SCHEMA_GEMINI = json.load(f)
 
 
 @app.route("/preprocessor", methods=['POST'])
@@ -108,7 +105,7 @@ def process_diagram():
         base_json = llm_client.chat_completion(
             prompt=MULTISTAGE_DIAGRAM_BASE_PROMPT,
             image_base64=base64_image,
-            schema=BASE_SCHEMA_GEMINI,
+            json_schema=STAGE_RESPONSE_SCHEMA,
             temperature=0.0,
             parse_json=True
         )
@@ -144,6 +141,7 @@ def process_diagram():
         bounding_boxes_data = llm_client.chat_completion(
             prompt=bbox_prompt,
             image_base64=base64_image,
+            json_schema=BBOX_RESPONSE_SCHEMA,
             temperature=0.0,
             parse_json=True
         )

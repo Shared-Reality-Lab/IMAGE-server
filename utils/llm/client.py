@@ -18,8 +18,8 @@ Provides a generic interface for all LLM interactions.
 import os
 import json
 import logging
-from typing import Optional, Dict, Any, Union
 from openai import OpenAI
+from typing import Optional, Dict, Any, Union
 
 
 class LLMClient:
@@ -66,7 +66,8 @@ class LLMClient:
         self,
         prompt: str,
         image_base64: Optional[str] = None,
-        schema: Optional[Dict[str, Any]] = None,
+        json_schema: Optional[Dict[str, Any]] = None,
+        schema_name: str = "response-format",
         temperature: float = 0.5,
         max_tokens: Optional[int] = None,
         response_format: Optional[Dict[str, str]] = None,
@@ -81,7 +82,9 @@ class LLMClient:
             prompt: The main prompt text
             image_base64: Optional base64 encoded image
                 (without data URI prefix)
-            schema: Optional JSON schema to append to prompt
+            json_schema: Optional JSON schema for structured output
+                (e.g., from Pydantic model.model_json_schema())
+            schema_name: Name for the JSON schema (default: "response-format")
             temperature: Temperature for generation (0.0-1.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional response format
@@ -96,11 +99,19 @@ class LLMClient:
             - None if the request fails
         """
         try:
-            # Build the full prompt with schema if provided
-            full_prompt = prompt
-            if schema:
-                schema_text = json.dumps(schema, indent=2)
-                full_prompt = f"{prompt}\n\nReturn the response according to this JSON schema:\n{schema_text}"
+            # compose response format from Pydantic model if provided
+            if json_schema:
+                # Set up structured output response format
+                response_format = {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": schema_name,
+                        "schema": json_schema
+                    }
+                }
+
+                # parse output JSON
+                parse_json = True
 
             # Build messages list
             messages = []
@@ -111,7 +122,7 @@ class LLMClient:
 
             # Build user message content
             user_content = []
-            user_content.append({"type": "text", "text": full_prompt})
+            user_content.append({"type": "text", "text": prompt})
 
             # Add image if provided
             if image_base64:
@@ -192,7 +203,10 @@ class LLMClient:
             logging.error(f"Error validating LLM response: {e}")
             return None
 
-    def _parse_json_response(self, response_text: str) -> Optional[Dict[str, Any]]:
+    def _parse_json_response(
+            self,
+            response_text: str
+            ) -> Optional[Dict[str, Any]]:
         """
         Parse a JSON response, handling common formatting issues.
 

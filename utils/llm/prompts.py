@@ -33,6 +33,7 @@ and the stage name in the key "label".
 BOUNDING_BOX_PROMPT_EXAMPLE = """
 Example:
 ```json
+[
     {
         "bbox_2d": [x1, y1, x2, y2],
         "label": "Label 1"

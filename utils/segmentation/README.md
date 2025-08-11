@@ -102,7 +102,7 @@ Segment image using bounding boxes.
 - `return_structured`: Return data in schema-compatible format
 - `base_data`: Base data structure to update (required if return_structured=True)
 
-Returns: 
+Returns:
 - If `return_structured=False`: Dictionary mapping labels to lists of normalized contours
 - If `return_structured=True`: Updated base_data with contours integrated in schema-compatible format
 
