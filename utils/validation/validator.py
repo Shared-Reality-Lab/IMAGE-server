@@ -58,8 +58,11 @@ class Validator:
         """Setup JSON schema resolver for handling $ref references."""
         schema_store = {
             self.response_schema['$id']: self.response_schema,
-            self.definitions_schema['$id']: self.definitions_schema
+            self.definitions_schema['$id']: self.definitions_schema,
+            self.request_schema['$id']: self.request_schema,
+            self.data_schema['$id']: self.data_schema
         }
+
         self.resolver = jsonschema.RefResolver.from_schema(
             self.response_schema, store=schema_store
         )
