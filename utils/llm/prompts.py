@@ -18,6 +18,7 @@ Do not give any intro like "Here's what in this image:",
 the graphic type is significant (like oil painting or aerial photo).
 Instead, start describing the graphic right away.
 """
+###
 
 # Content categoriser
 CATEGORISER_PROMPT = """
@@ -28,6 +29,34 @@ describes this image, selecting from this enum:
 """
 
 POSSIBLE_CATEGORIES = "photograph, chart, text, other"
+###
+
+# Followup
+FOLLOWUP_PROMPT = """
+The user cannot see this image. Answer user's question about it.
+Answer in a single JSON object containing two keys.
+The first key is "response_brief" and its value is a single
+sentence that can stand on its own. It directly answers the
+specific request at the end of this prompt.
+The second key is "response_full" and its value provides maximum
+three sentences of additional detail,
+without repeating the information in the first key.
+If there is no more detail you can provide,
+omit the "response_full" key instead of having an empty key.
+IMPORTANT: answer only in JSON.
+Do not put anything before or after the JSON,
+and make sure the entire response is only a single JSON block,
+with both keys in the same JSON object.
+Here is an example of the output JSON in the format you
+are REQUIRED to follow:
+{
+"response_brief": "One sentence response to the user request.",
+"response_full": "Further details. Maximum three sentences."
+}
+Note that the first character of output MUST be "{".
+Remove all whitespace before and after the JSON.
+"""
+###
 
 # Base prompts for diagram analysis
 MULTISTAGE_DIAGRAM_BASE_PROMPT = """
@@ -66,3 +95,4 @@ Example:
 ```
 Ensure that the bounding boxes are in the format [x1, y1, x2, y2]
 """
+###
