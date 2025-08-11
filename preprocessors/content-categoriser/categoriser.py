@@ -86,11 +86,8 @@ def categorise():
             {"error": "Failed to get graphic category from LLM"}
         ), 500
 
-<<<<<<< HEAD
-=======
     logging.pii(f"Graphic category JSON: {graphic_category}")
 
->>>>>>> 9957d356 (refactor categoriser)
     # create data json and verify the content-categoriser schema is respected
     graphic_category_json = {"category": graphic_category}
 
