@@ -23,8 +23,6 @@ __all__ = [
     'SAMClient',
     'segment_stages',
     'segment_image_with_boxes',
-    
-    # Contour utilities
     'extract_normalized_contours',
     'normalize_contour',
     'calculate_contour_properties',

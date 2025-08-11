@@ -32,50 +32,31 @@ from utils.llm import (
     BOUNDING_BOX_PROMPT_EXAMPLE
     )
 from utils.segmentation import SAMClient
+from utils.validation import Validator
 
 configure_logging()
 
 app = Flask(__name__)
 
-# --- Configuration ---
+PREPROCESSOR_NAME = \
+    "ca.mcgill.a11y.image.preprocessor.multistage-diagram-segmentation"
+
 ALLOWED_ORIGINS = [
     "https://image.a11y.mcgill.ca/pages/multistage_diagrams.html",
     "https://venissacarolquadros.github.io/",
     "https://unicorn.cim.mcgill.ca/",
 ]
 
+DATA_SCHEMA = './schemas/preprocessors/multistage-diagram.schema.json'
+
 try:
     llm_client = LLMClient()
     sam_client = SAMClient()
-    logging.debug("LLM and SAM clients initialized")
+    validator = Validator(data_schema=DATA_SCHEMA)
+    logging.debug("LLM, SAM clients and validator initialized")
 except Exception as e:
     logging.error(f"Failed to initialize clients: {e}")
     sys.exit(1)
-
-# Preprocessor Name
-PREPROCESSOR_NAME = \
-    "ca.mcgill.a11y.image.preprocessor.multistage-diagram-segmentation"
-
-# Load schemas once at startup
-with open('./schemas/preprocessors/multistage-diagram.schema.json') as f:
-    DATA_SCHEMA = json.load(f)
-with open('./schemas/preprocessor-response.schema.json') as f:
-    RESPONSE_SCHEMA = json.load(f)
-with open('./schemas/definitions.json') as f:
-    DEFINITIONS_SCHEMA = json.load(f)
-with open('./schemas/request.schema.json') as f:
-    REQUEST_SCHEMA = json.load(f)
-
-# Build resolver store using loaded schemas
-# Following 7 lines of code are referred from
-# https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
-SCHEMA_STORE = {
-    RESPONSE_SCHEMA['$id']: RESPONSE_SCHEMA,
-    DEFINITIONS_SCHEMA['$id']: DEFINITIONS_SCHEMA
-    }
-RESOLVER = jsonschema.RefResolver.from_schema(
-    RESPONSE_SCHEMA, store=SCHEMA_STORE
-    )
 
 # Schema Gemini should follow for the initial extraction
 BASE_SCHEMA_PATH = os.getenv("BASE_SCHEMA")
@@ -94,7 +75,6 @@ def process_diagram():
     content = request.get_json()
 
     # 0. Check the URL of the request to avoid processing PII in production
-    # until the Google API is approved for use
     # Check if there is graphic content to process
     if "graphic" not in content:
         logging.info("No graphic content. Skipping...")
@@ -110,20 +90,14 @@ def process_diagram():
 
     # 1. Validate Incoming Request
     try:
-        # Validate input against REQUEST_SCHEMA
-        validator = jsonschema.Draft7Validator(
-            REQUEST_SCHEMA, resolver=RESOLVER
-            )
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {e.message} | Data: {content}")
+        validator.validate_request(content)
+    except jsonschema.exceptions.ValidationError:
         return jsonify({"error": "Invalid Preprocessor JSON format"}), 400
 
     request_uuid = content["request_uuid"]
     timestamp = time.time()
 
-    # 2. Decode Base64 Image
+    # 2. Resize Base64 Image + create PIL Image
     source = content["graphic"]
     base64_image, pil_image, error = decode_and_resize_image(source)
     if error:
@@ -193,13 +167,8 @@ def process_diagram():
 
         # 7. Validate the Generated Data against its specific schema
         try:
-            validator = jsonschema.Draft7Validator(DATA_SCHEMA)
-            validator.validate(final_data_json)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error("Validation failed for detection data")
-            logging.pii(
-                f"Validation error: {e.message} | Data: {final_data_json}"
-                )
+            validator.validate_data(final_data_json)
+        except jsonschema.exceptions.ValidationError:
             return jsonify("Invalid Preprocessor JSON format"), 500
 
         # 8. Construct the Final Response
@@ -212,15 +181,8 @@ def process_diagram():
 
         # 9. Validate Final Response against System Schema
         try:
-            validator = jsonschema.Draft7Validator(
-                RESPONSE_SCHEMA, resolver=RESOLVER
-                )
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error("Validation failed for full response")
-            logging.pii(
-                f"Validation error: {e.message} | Response: {response}"
-                )
+            validator.validate_response(response)
+        except jsonschema.exceptions.ValidationError:
             return jsonify("Invalid Preprocessor JSON format"), 500
 
         logging.info(
