@@ -3,6 +3,7 @@ import base64
 from io import BytesIO
 import logging
 import math
+from typing import Optional, Literal
 
 
 def process_image(base64_image_str, output_size, output_format=None):
@@ -77,11 +78,11 @@ def process_image(base64_image_str, output_size, output_format=None):
 
 
 def gif_to_collage(
-    gif,
-    max_frames=9,
-    grid_cols=None,
-    sample_method="interval"
-):
+    gif: Image.Image,
+    max_frames: Optional[int] = None,
+    grid_cols: Optional[int] = None,
+    sample_method: Literal['interval', 'sequential'] = 'interval'
+) -> Image.Image:
     """
     Convert a GIF to a PNG collage showing multiple frames.
 
@@ -92,6 +93,8 @@ def gif_to_collage(
             (None = auto-calculate square-ish grid)
         sample_method: 'interval' (evenly spaced)
             or 'sequential' (first N frames)
+    Returns:
+        Collage Image object in RGB mode
     """
 
     # Set loading strategy for consistent RGB mode
