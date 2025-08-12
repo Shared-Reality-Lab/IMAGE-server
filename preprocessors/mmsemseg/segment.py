@@ -263,66 +263,6 @@ def health():
     }), 200
 
 
-@app.route("/health/gpu", methods=["GET"])
-def gpu_driver_health_check():
-    """
-    Enhanced health check:
-    - Verifies CUDA & NVIDIA drivers are working
-    - Detects if the loaded NVIDIA driver matches `nvidia-smi`
-    - Ensures the container is using the correct GPU runtime
-    """
-
-    # Check if CUDA is available
-    if not torch.cuda.is_available():
-        return jsonify({
-            "status": "unhealthy",
-            "message": "CUDA not available inside the container",
-            "recommendation": "Check if the container is running with GPU \
-                access (--gpus all)"
-        }), 500
-
-    try:
-        # Get installed NVIDIA driver version from nvidia-smi
-        nvidia_smi_version = subprocess.check_output(
-            [
-                "nvidia-smi",
-                "--query-gpu=driver_version",
-                "--format=csv,noheader"
-            ],
-            text=True
-        ).strip().split("\n")[0]
-
-        # Get loaded driver version from /proc/driver/nvidia/version
-        loaded_driver_version = subprocess.check_output(
-            ["cat", "/proc/driver/nvidia/version"], text=True
-        ).split("\n")[0]
-
-        # Ensure they match
-        if nvidia_smi_version not in loaded_driver_version:
-            return jsonify({
-                "status": "unhealthy",
-                "message": "NVIDIA driver mismatch detected",
-                "nvidia_smi_version": nvidia_smi_version,
-                "loaded_driver_version": loaded_driver_version,
-                "recommendation": "Reboot the system to ensure the correct \
-                    driver is loaded?"
-            }), 500
-
-        return jsonify({
-            "status": "healthy",
-            "message": "NVIDIA drivers and CUDA are working correctly",
-            "nvidia_smi_version": nvidia_smi_version,
-            "loaded_driver_version": loaded_driver_version
-        }), 200
-
-    except Exception as e:
-        return jsonify({
-            "status": "unhealthy",
-            "message": f"NVIDIA driver check failed: {str(e)}",
-            "recommendation": "Check driver installation and restart system"
-        }), 500
-
-
 @app.route("/warmup", methods=["GET"])
 def warmup():
     """

@@ -32,6 +32,44 @@ echo "ALL RUNNING CONTAINERS ON $SERVER_NAME: $RUNNING_CONTAINERS" >> "$LOG_FILE
 
 MESSAGES=""
 
+# --- HOST GPU HEALTH (NVML + driver version mismatch) ------------------------
+# We check GPU health at the *host* level (not inside containers) to avoid
+# container-specific false positives. Any issues found are appended to MESSAGES
+# and logged to $LOG_FILE; container polling continues as usual.
+
+# 1) NVML / nvidia-smi availability
+if ! nvidia-smi >/dev/null 2>&1; then
+  MSG=":warning: Host *$SERVER_NAME* GPU *unhealthy*: NVML unavailable (nvidia-smi failed)."
+  MESSAGES+="$MSG"$'\n'
+  echo "$(date) - $MSG" >> "$LOG_FILE"
+else
+  # 2) Compare numeric driver versions from nvidia-smi vs kernel module
+  SMI_VER="$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | sort -u | head -n1)"
+  PROC_VER="$(grep -Po '\d+\.\d+\.\d+' /proc/driver/nvidia/version 2>/dev/null | head -n1)"
+
+  if [ -z "$SMI_VER" ] || [ -z "$PROC_VER" ]; then
+    MSG=":warning: Host *$SERVER_NAME* GPU *warning*: could not read driver versions (smi='${SMI_VER:-NA}', proc='${PROC_VER:-NA}')."
+    MESSAGES+="$MSG"$'\n'
+    echo "$(date) - $MSG" >> "$LOG_FILE"
+  elif [ "$SMI_VER" != "$PROC_VER" ]; then
+    # (Optional) also record CUDA version from the nvidia-smi header
+    SMI_HEAD="$(nvidia-smi | head -n1 2>/dev/null)"
+    CUDA_VER="$(echo "$SMI_HEAD" | sed -n 's/.*CUDA Version: *\([0-9.]\+\).*/\1/p')"
+
+    MSG=":warning: Host *$SERVER_NAME* – NVIDIA driver *mismatch* detected:
+• nvidia-smi: ${SMI_VER}
+• kernel:     ${PROC_VER}"
+    if [ -n "$CUDA_VER" ]; then
+      MSG="$MSG"$'\n'"• CUDA:       ${CUDA_VER}"
+    fi
+    MSG="$MSG"$'\n'"Consider scheduling a reboot to reconcile."
+
+    MESSAGES+="$MSG"$'\n'
+    echo "$(date) - NVIDIA driver mismatch on $SERVER_NAME (smi=${SMI_VER}, kernel=${PROC_VER}${CUDA_VER:+, cuda=${CUDA_VER}})" >> "$LOG_FILE"
+  fi
+fi
+# -----------------------------------------------------------------------------
+
 # Loop through the list of all containers on the "image" network
 for EXPECTED_CONTAINER in $ALL_IMAGE_CONTAINERS; do
   FOUND=0
@@ -80,3 +118,4 @@ if [ -n "$MESSAGES" ]; then
 else
   echo "$(date) - No issues detected. No notifications sent." >> "$LOG_FILE"
 fi
+
