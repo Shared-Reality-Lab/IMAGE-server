@@ -165,5 +165,5 @@ def gif_to_collage(
         y = row * frame_height
         collage.paste(frame, (x, y))
 
-    logging.info(f"Converted GIG into a collage of {len(frames)} frames")
+    logging.info(f"Converted GIF into a collage of {len(frames)} frames")
     return collage
