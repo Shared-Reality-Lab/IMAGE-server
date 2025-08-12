@@ -37,23 +37,29 @@ MESSAGES=""
 # container-specific false positives. Any issues found are appended to MESSAGES
 # and logged to $LOG_FILE; container polling continues as usual.
 
+SMI_BIN="$(command -v nvidia-smi || true)"
+TIMEOUT_SEC=5
+
 # 1) NVML / nvidia-smi availability
-if ! nvidia-smi >/dev/null 2>&1; then
+if [ -z "$SMI_BIN" ] || ! timeout "${TIMEOUT_SEC}s" "$SMI_BIN" >/dev/null 2>&1; then
   MSG=":warning: Host *$SERVER_NAME* GPU *unhealthy*: NVML unavailable (nvidia-smi failed)."
   MESSAGES+="$MSG"$'\n'
   echo "$(date) - $MSG" >> "$LOG_FILE"
 else
   # 2) Compare numeric driver versions from nvidia-smi vs kernel module
-  SMI_VER="$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | sort -u | head -n1)"
-  PROC_VER="$(grep -Po '\d+\.\d+\.\d+' /proc/driver/nvidia/version 2>/dev/null | head -n1)"
+  SMI_VER="$(timeout "${TIMEOUT_SEC}s" "$SMI_BIN" --query-gpu=driver_version --format=csv,noheader 2>/dev/null \
+            | awk 'NF' | sort -u | head -n1)"
+
+  # parse kernel module's version from /proc
+  PROC_VER="$(sed -nE 's/.*Kernel Module[[:space:]]+([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' /proc/driver/nvidia/version 2>/dev/null | head -n1)"
 
   if [ -z "$SMI_VER" ] || [ -z "$PROC_VER" ]; then
     MSG=":warning: Host *$SERVER_NAME* GPU *warning*: could not read driver versions (smi='${SMI_VER:-NA}', proc='${PROC_VER:-NA}')."
     MESSAGES+="$MSG"$'\n'
     echo "$(date) - $MSG" >> "$LOG_FILE"
   elif [ "$SMI_VER" != "$PROC_VER" ]; then
-    # (Optional) also record CUDA version from the nvidia-smi header
-    SMI_HEAD="$(nvidia-smi | head -n1 2>/dev/null)"
+    # Capture the CUDA API version (from nvidia-smi header).
+    SMI_HEAD="$(timeout "${TIMEOUT_SEC}s" "$SMI_BIN" | head -n1 2>/dev/null)"
     CUDA_VER="$(echo "$SMI_HEAD" | sed -n 's/.*CUDA Version: *\([0-9.]\+\).*/\1/p')"
 
     MSG=":warning: Host *$SERVER_NAME* – NVIDIA driver *mismatch* detected:
