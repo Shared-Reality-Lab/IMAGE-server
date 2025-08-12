@@ -43,7 +43,7 @@ interface HandlerResponse {
     }>;
 }
 
-export type ServiceInfo = (string | number | boolean)[]
+export type ServiceInfo = (string | number | boolean)[];
 import { Graph, GraphNode, printGraph } from "./graph";
 
 const app = express();
@@ -70,7 +70,15 @@ const RESTRICTED_FIELDS = [
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
-async function measureExecutionTime<T>(label: string, fn: () => Promise<T>): Promise<T> {
+
+// build a consistent log tag "req=<id> " (uses the existing request_uuid in the schema)
+function reqTag(data: Record<string, unknown>): string {
+    const id = (data as any)?.request_uuid as string | undefined;
+    return id ? `req=${id} ` : "";
+}
+
+
+async function measureExecutionTime<T>(label: string, fn: () => Promise<T>, tagPrefix = ""): Promise<T> {
     /*
     Organized Metrics Logged with Units:
     - timestamp:  timestamp of the log entry
@@ -98,7 +106,7 @@ async function measureExecutionTime<T>(label: string, fn: () => Promise<T>): Pro
         // Normalize CPU Usage as a percentage of wall-clock duration and number of cores -- https://stackoverflow.com/questions/74776323/trying-to-get-normalized-cpu-usage-for-node-process
         const normalizedCpuUsage = parseFloat(((cpuTime / (duration * coreCount)) * 100).toFixed(2)); // normalized CPU usage
 
-        console.log(`timestamp=${new Date().toISOString()} label=${label} execution_time_ms=${duration}ms cpu_time_ms=${cpuTime}ms normalized_cpu_usage_percent=${normalizedCpuUsage}%`);
+        console.log(`${tagPrefix}timestamp=${new Date().toISOString()} label=${label} execution_time_ms=${duration}ms cpu_time_ms=${cpuTime}ms normalized_cpu_usage_percent=${normalizedCpuUsage}%`);
         // To extract the log and store into a dictionary --> log_dict = {item.split('=')[0]: item.split('=')[1] for item in log.split(' ')}
     }
 }
@@ -140,14 +148,17 @@ async function fetchPreprocessorResponse(preprocessor: ServiceInfo, data: Record
     try {
         const response = await fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+                "Content-Type": "application/json",
+                "X-Request-ID": ((data as any)?.request_uuid ?? "") // pass client request_uuid downstream; ok if empty
+            },
             body: JSON.stringify(data),
             signal: controller.signal,
         });
         clearTimeout(timeout);
         return response;
     } catch (err) {
-        console.error(`Error occurred while fetching from preprocessor "${preprocessor[0]}"`);
+        console.error(`${reqTag(data)}Error occurred while fetching from preprocessor "${preprocessor[0]}"`);
         throw err;
     }
 }
@@ -162,18 +173,18 @@ async function processResponse(response: Response, preprocessor: ServiceInfo, da
                 // store data in cache
                 // disable the cache if "ca.mcgill.a11y.image.cacheTimeout" is 0
                 if (cacheTimeOut > 0) {
-                    console.debug(`Saving response for ${preprocessorName} in cache with key ${hashedKey}`);
+                    console.debug(`${reqTag(data)}Saving response for ${preprocessorName} in cache with key ${hashedKey}`);
                     await serverCache.setResponseInCache(hashedKey, jsonResponse["name"], jsonResponse["data"], cacheTimeOut);
                 }
             } else {
                 // Verify that name in response matches expectation.
                 if (jsonResponse["name"] != NAME_MODIFY_REQUEST) {
-                    console.debug(`Pseudo-preprocessor ${preprocessor[0]} attempted to modify the request, but returned unexpected name ${jsonResponse["name"]}. Ignoring response.`);
+                    console.debug(`${reqTag(data)}Pseudo-preprocessor ${preprocessor[0]} attempted to modify the request, but returned unexpected name ${jsonResponse["name"]}. Ignoring response.`);
                 } else {
                     // Make transmitted modifications, within reason.
                     for (const [field, value] of Object.entries(jsonResponse["data"])) {
                         if (RESTRICTED_FIELDS.includes(field)) {
-                            console.debug(`Pseudo-preprocessor ${preprocessor[0]} attempted to modify restricted request field '${field}'. Ignoring modification.`);
+                            console.debug(`${reqTag(data)}Pseudo-preprocessor ${preprocessor[0]} attempted to modify restricted request field '${field}'. Ignoring modification.`);
                         } else {
                             data[field] = value;
                         }
@@ -182,13 +193,13 @@ async function processResponse(response: Response, preprocessor: ServiceInfo, da
                 }
             }
         } else {
-            console.error(`Preprocessor "${preprocessor[0]}" response validation failed!`);
-            console.error(JSON.stringify(ajv.errors));
+            console.error(`${reqTag(data)}Preprocessor "${preprocessor[0]}" response validation failed!`);
+            console.error(`${reqTag(data)}${JSON.stringify(ajv.errors)}`);
         }
     } else if (response.status === 204) {
-        console.debug(`Preprocessor "${preprocessor[0]}" not applicable`);
+        console.debug(`${reqTag(data)}Preprocessor "${preprocessor[0]}" not applicable`);
     } else {
-        console.error(`Preprocessor "${preprocessor[0]}" responded with status ${response.status}`);
+        console.error(`${reqTag(data)}Preprocessor "${preprocessor[0]}" responded with status ${response.status}`);
     }
 }
 
@@ -197,12 +208,15 @@ async function executeHandler(handler: ServiceInfo, data: Record<string, unknown
         try {
             const resp = await fetch(`http://${handler[0]}:${handler[1]}/handler`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "X-Request-ID": ((data as any)?.request_uuid ?? "") // pass client request_uuid downstream; ok if empty
+                },
                 body: JSON.stringify(data)
             });
 
             if (!resp.ok) {
-                console.error(`Received ${resp.status} ${resp.statusText} from ${handler[0]}`);
+                console.error(`${reqTag(data)}Received ${resp.status} ${resp.statusText} from ${handler[0]}`);
                 const result = await resp.json();
                 throw result;
             }
@@ -222,14 +236,14 @@ async function executeHandler(handler: ServiceInfo, data: Record<string, unknown
                     return inList;
                 });
             } else {
-                console.error("Handler response failed validation!");
+                console.error(`${reqTag(data)}Handler response failed validation!`);
                 throw Error(JSON.stringify(ajv.errors));
             }
         } catch (err) {
-            console.error(`Handler "${handler[0]}" execution failed:`, err);
+            console.error(`${reqTag(data)}Handler "${handler[0]}" execution failed:`, err);
             return [];
         }
-    });
+    }, reqTag(data));
 }
 
 async function executePreprocessor(preprocessor: ServiceInfo, data: Record<string, unknown>): Promise<void> {
@@ -252,7 +266,7 @@ async function executePreprocessor(preprocessor: ServiceInfo, data: Record<strin
 
         // Delegate response handling to `processResponse` - attempt to process the response, validate it, and update data and the cache (if enabled)
         await processResponse(response, preprocessor, data, hashedKey, cacheTimeOut);
-    });
+    }, reqTag(data));
 }
 
 async function runServicesParallel(data: Record<string, unknown>, preprocessors: ServiceInfo[], G: Graph, R: Set<GraphNode>): Promise<{ data: Record<string, unknown>, handlerResults: any[][] }> {
@@ -304,7 +318,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
         try {
             await Promise.all(queue.map(preprocessor => executePreprocessor(preprocessor, data)));
         } catch (error) {
-            console.error(`One or more of the promises failed at priority group ${currentPriorityGroup}.`, error);
+            console.error(`${reqTag(data)}One or more promises failed at priority group ${currentPriorityGroup}.`, error);
         }
         finally {   //empty the queue
             queue.length = 0;
@@ -318,7 +332,7 @@ async function runPreprocessorsParallel(data: Record<string, unknown>, preproces
                 await processQueue(); //Process everything in the queue
             }
             currentPriorityGroup = Number(preprocessor[2]);
-            console.debug(`Now on priority group ${currentPriorityGroup}`);
+            console.debug(`${reqTag(data)}Now on priority group ${currentPriorityGroup}`);
         }
 
         //Add the preprocessor to the queue
@@ -351,28 +365,29 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: Se
         const cacheValue = await serverCache.getResponseFromCache(hashedKey);
         if (cacheTimeOut && cacheValue && preprocessorName){
             // add cache value in response
-            console.debug(`Response for preprocessor ${preprocessorName} served from cache`);
+            console.debug(`${reqTag(data)}Response for preprocessor ${preprocessorName} served from cache`);
             const cacheResponse = JSON.parse(cacheValue) as PreprocessorResponse;
             (data["preprocessors"] as Record<string, unknown>)[cacheResponse["name"]] = cacheResponse["data"];
         }
         else {
             // make fetch call to preprocessor since value not found in cache
             try {
-                console.debug("Sending to preprocessor \"" + preprocessor[0] + "\"");
+                console.debug(`${reqTag(data)}Sending to preprocessor "${preprocessor[0]}"`);
                 resp = await measureExecutionTime(`Preprocessor "${preprocessor[0]}"`, async () =>
                     fetch(`http://${preprocessor[0]}:${preprocessor[1]}/preprocessor`, {
                         "method": "POST",
                         "headers": {
-                            "Content-Type": "application/json"
+                            "Content-Type": "application/json",
+                            "X-Request-ID": ((data as any)?.request_uuid ?? "")
                         },
                         "body": JSON.stringify(data),
                         "signal": controller.signal
-                    })
+                    }), reqTag(data)
                 );
                 clearTimeout(timeout);
             } catch (err) {
                 // Most likely a timeout
-                console.error("Error occured fetching from " + preprocessor[0]);
+                console.error(`${reqTag(data)}Error occured fetching from ${preprocessor[0]}`);
                 console.error(err);
                 continue;
             }
@@ -406,12 +421,12 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: Se
                             }
                         }
                     } else {
-                        console.error("Preprocessor response failed validation!");
-                        console.error(JSON.stringify(ajv.errors));
+                        console.error(`${reqTag(data)}Preprocessor response failed validation!`);
+                        console.error(`${reqTag(data)}${JSON.stringify(ajv.errors)}`);
                     }
                 } catch (err) {
-                    console.error("Error occured on fetch from " + preprocessor[0]);
-                    console.error(err);
+                    console.error(`${reqTag(data)}Error occured on fetch from ${preprocessor[0]}`);
+                    console.error(`${reqTag(data)}`, err);
                 }
             }
             // No Content preprocessor not applicable
@@ -422,8 +437,8 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: Se
                     const result = await resp.json();
                     throw result;
                 } catch (err) {
-                    console.error("Error occured on fetch from " + preprocessor[0]);
-                    console.error(err);
+                    console.error(`${reqTag(data)}Error occured on fetch from ${preprocessor[0]}`);
+                    console.error(`${reqTag(data)}`, err);
                 }
             }
         }
@@ -432,6 +447,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: Se
 }
 
 function finalizeResponse(results: any[][],requestBody: any,res: express.Response): Record<string, unknown> {
+    const tag = reqTag(requestBody);
     const renderings = (results as HandlerResponse["renderings"][])
         .reduce((a, b) => a.concat(b), [])
         .sort((a) => (a.description === "Server status message.") ? -1 : 0);
@@ -443,10 +459,10 @@ function finalizeResponse(results: any[][],requestBody: any,res: express.Respons
     };
 
     if (ajv.validate("https://image.a11y.mcgill.ca/response.schema.json", response)) {
-        console.debug("Valid response generated.");
+        console.debug(`${tag}Valid response generated.`);
         res.json(response);
     } else {
-        console.debug("Failed to generate a valid response (did the schema change?)");
+        console.debug(`${tag}Failed to generate a valid response (did the schema change?)`);
         res.status(500).send(ajv.errors);
     }
     return response;
@@ -464,9 +480,9 @@ async function storeResponse(requestBody: any, req: express.Request, response: R
             path.join(requestPath, "response.json"),
             JSON.stringify(response)
         );
-        console.debug("Wrote temporary files to " + requestPath);
+        console.debug(`${reqTag(requestBody)}Wrote temporary files to ${requestPath}`);
     } catch (e) {
-        console.error("Error occurred while logging to " + requestPath);
+        console.error(`${reqTag(requestBody)}Error occurred while logging to ${requestPath}`);
         console.error(e);
     }
 }
@@ -475,27 +491,34 @@ async function storeResponse(requestBody: any, req: express.Request, response: R
 
 function getRoute(data: Record<string, unknown>): string {
     if (data["route"] === undefined) {
-        console.debug("No route defined in request. Setting default value.");
+        console.debug(`${reqTag(data)}No route defined in request. Setting default value.`);
         return DEFAULT_ROUTE_NAME;
     } else {
-        console.debug("Route for request set to " + data["route"]);
+        console.debug(`${reqTag(data)}Route for request set to ${data["route"]}`);
         return data["route"] as string;
     }
 }
 
 app.post("/render", (req: express.Request, res: express.Response) => {
-    console.debug("Received request");
     const requestBody = req.body; // capture req.body early
     const totalRequestStartTime = performance.now();
+
+    // build a tag directly from the body (request_uuid) for early logs/catch blocks
+    const bodyTag = reqTag(requestBody); // this makes early logs traceable before we clone to `data`
+
+    console.debug(`${bodyTag}Received request`); // prefix the first request log with req id (from body)
 
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", requestBody)) {
         // get route variable or set to default
         let data = JSON.parse(JSON.stringify(requestBody));
         const route = getRoute(data);
+
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
             let response: Record<string, unknown> | null = null;
             //Get the list of filtered containers that are connected to one of the Orchestrator networks
+
+            const tag = reqTag(data);
             const connectedContainers = getFilteredContainers(containers);
             const allPreprocessors = getPreprocessorServices(connectedContainers, route);
             const pseudopreprocessors = allPreprocessors.filter(p => p[MODIFY_REQUEST_INDEX] == true);
@@ -517,28 +540,28 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                 handlers,
                 connectedContainers
             );
-            console.debug("Preprocessor graph produced successfully.");
+            console.debug(`${reqTag(data)}Preprocessor graph produced successfully.`);
 
             // Preprocessors
             if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
                 // Deal with pseudo-preprocessors first, if any
                 if (pseudoGraph.isAcyclic()) {
-                    console.debug("Running pseudo-preprocessors in parallel...");
-                    const { data: modifiedData, handlerResults: tmpHResults} = await runServicesParallel(data, pseudopreprocessors, pseudoGraph, pseudoReady);
+                    console.debug(`${reqTag(data)}Running pseudo-preprocessors in parallel...`);
+                    const { data: modifiedData } = await runServicesParallel(data, pseudopreprocessors, pseudoGraph, pseudoReady);
                     data = modifiedData;
                 } else {
-                    console.debug("Dependency graph has cycles, please check for cyclic dependencies in pseudopreprocessors.");
-                    console.debug("Defaulting to serial execution.");
+                    console.debug(`${reqTag(data)}Dependency graph has cycles, please check for cyclic dependencies in pseudopreprocessors.`);
+                    console.debug(`${reqTag(data)}Defaulting to serial execution.`);
                     data = await runPreprocessors(data, pseudopreprocessors);
                 }
-                console.debug("Running preprocessors in parallel...");
-                if(graph.isAcyclic()){
-                    console.debug("Dependency graph passes cycle check.");
-                    const { data: processedData, handlerResults } = await runServicesParallel(data, preprocessors, graph, readyToRun);
+                console.debug(`${reqTag(data)}Running preprocessors in parallel...`);
+                if (graph.isAcyclic()) {
+                    console.debug(`${reqTag(data)}Dependency graph passes cycle check.`);
+                    const { handlerResults } = await runServicesParallel(data, preprocessors, graph, readyToRun);
                     response = finalizeResponse(handlerResults, requestBody, res);
                 } else {
-                    console.debug("Dependency graph passes failed check. Please ensure that the preprocesors don't have cyclic dependencies.");
-                    console.debug("Using priority level execution...");
+                    console.debug(`${reqTag(data)}Dependency graph has cycles, please check for cyclic dependencies in preprocessors.`);
+                    console.debug(`${reqTag(data)}Defaulting to serial execution.`);
                     data = await runPreprocessorsParallel(data, preprocessors);
                     const handlerResults: any[][] = await Promise.all(
                         handlers.map(handler => executeHandler(handler, data))
@@ -547,9 +570,9 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                 }
 
             } else {
-                console.debug("Running pseudo-preprocessors in series...");
+                console.debug(`${reqTag(data)}Running pseudo-preprocessors in series...`);
                 data = await runPreprocessors(data, pseudopreprocessors);
-                console.debug("Running preprocessors in series...");
+                console.debug(`${reqTag(data)}Running preprocessors in series...`);
                 data = await runPreprocessors(data, preprocessors);
                 const handlerResults: any[][] = await Promise.all(
                     handlers.map(handler => executeHandler(handler, data))
@@ -560,44 +583,48 @@ app.post("/render", (req: express.Request, res: express.Response) => {
                 await storeResponse(requestBody, req, response as Record<string, unknown>);
             }
             const totalRequestEndTime = performance.now();
-            console.log(`TotalRequestExecutionTime execution_time_ms=${(totalRequestEndTime - totalRequestStartTime).toFixed(2)}ms`);
+            console.log(`${reqTag(data)}TotalRequestExecutionTime execution_time_ms=${(totalRequestEndTime - totalRequestStartTime).toFixed(2)}ms`);
 
         }).catch(e => {
-            console.error(e);
+            // use the bodyTag derived from requestBody for early/exception logs
+            console.error(`${bodyTag}${e}`);
             res.status(500).send(e.name + ": " + e.message);
             const totalRequestEndTime = performance.now();
-            console.log(`TotalRequestExecutionTime execution_time_ms=${(totalRequestEndTime - totalRequestStartTime).toFixed(2)}ms`);
-
+            console.log(`${bodyTag}TotalRequestExecutionTime execution_time_ms=${(totalRequestEndTime - totalRequestStartTime).toFixed(2)}ms`);
         });
+
     } else {
         res.status(400).send(ajv.errors);
     }
 });
 
+
 app.post("/render/preprocess", (req: express.Request, res: express.Response) => {
     if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
         const data = req.body;
         const route = getRoute(data);
+
+        
         // get list of preprocessors and handlers
         docker.listContainers().then(async (containers) => {
             const preprocessors = getPreprocessorServices(containers, route);
             if (process.env.PARALLEL_PREPROCESSORS === "ON" || process.env.PARALLEL_PREPROCESSORS === "on") {
-                console.debug("Running preprocessors in parallel...");
+                console.debug(`${reqTag(data)}Running preprocessors in parallel...`);
                 return runPreprocessorsParallel(data, preprocessors);
             } else {
-                console.debug("Running preprocessors in series...");
+                console.debug(`${reqTag(data)}Running preprocessors in series...`);
                 return runPreprocessors(data, preprocessors);
             }
         }).then(data => {
             if (ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", data)) {
-                console.debug("Valid response generated.");
+                console.debug(`${reqTag(data)}Valid response generated.`);
                 res.json(data);
             } else {
-                console.debug("Failed to generate a valid response.");
+                console.debug(`${reqTag(data)}Failed to generate a valid response.`);
                 res.status(500).send(ajv.errors);
             }
         }).catch(e => {
-            console.error(e);
+            console.error(`${reqTag(data)}${e}`);
             res.status(500).send(e.name + ":" + e.message);
         });
     } else {
