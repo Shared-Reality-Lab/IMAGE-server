@@ -35,7 +35,6 @@ from time import time
 import logging
 from config.logging_utils import configure_logging
 from datetime import datetime
-import subprocess
 
 configure_logging()
 # configuration and checkpoint files
