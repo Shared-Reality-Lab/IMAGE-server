@@ -33,9 +33,9 @@ echo "ALL RUNNING CONTAINERS ON $SERVER_NAME: $RUNNING_CONTAINERS" >> "$LOG_FILE
 MESSAGES=""
 
 # --- HOST GPU HEALTH (NVML + driver version mismatch) ------------------------
-# We check GPU health at the *host* level (not inside containers) to avoid
-# container-specific false positives. Any issues found are appended to MESSAGES
-# and logged to $LOG_FILE; container polling continues as usual.
+# Host-side GPU check:
+# - run nvidia-smi (NVML) with a short timeout
+# - compare driver version from nvidia-smi vs kernel module
 
 SMI_BIN="$(command -v nvidia-smi || true)"
 TIMEOUT_SEC=5
@@ -58,7 +58,7 @@ else
     MESSAGES+="$MSG"$'\n'
     echo "$(date) - $MSG" >> "$LOG_FILE"
   elif [ "$SMI_VER" != "$PROC_VER" ]; then
-    # Capture the CUDA API version (from nvidia-smi header).
+    # grab CUDA version from the nvidia-smi header
     SMI_HEAD="$(timeout "${TIMEOUT_SEC}s" "$SMI_BIN" | head -n1 2>/dev/null)"
     CUDA_VER="$(echo "$SMI_HEAD" | sed -n 's/.*CUDA Version: *\([0-9.]\+\).*/\1/p')"
 
@@ -72,9 +72,13 @@ else
 
     MESSAGES+="$MSG"$'\n'
     echo "$(date) - NVIDIA driver mismatch on $SERVER_NAME (smi=${SMI_VER}, kernel=${PROC_VER}${CUDA_VER:+, cuda=${CUDA_VER}})" >> "$LOG_FILE"
+  else
+    # versions match — log a simple OK line (no Slack)
+    SMI_HEAD="$(timeout "${TIMEOUT_SEC}s" "$SMI_BIN" | head -n1 2>/dev/null)"
+    CUDA_VER="$(echo "$SMI_HEAD" | sed -n 's/.*CUDA Version: *\([0-9.]\+\).*/\1/p')"
+    echo "$(date) - Host GPU healthy (driver=${SMI_VER}${CUDA_VER:+, cuda=${CUDA_VER}})." >> "$LOG_FILE"
   fi
 fi
-# -----------------------------------------------------------------------------
 
 # Loop through the list of all containers on the "image" network
 for EXPECTED_CONTAINER in $ALL_IMAGE_CONTAINERS; do
