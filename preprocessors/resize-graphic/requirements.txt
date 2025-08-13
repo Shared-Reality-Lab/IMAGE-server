@@ -2,4 +2,4 @@ Flask==3.1.0
 requests==2.32.3
 jsonschema==4.23.0
 gunicorn==23.0.0
-pillow==11.1.0
+pillow==11.3.0
