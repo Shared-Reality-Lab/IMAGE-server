@@ -31,10 +31,11 @@ from utils.llm import (
     )
 from utils.segmentation import SAMClient
 from utils.validation import Validator
-from utils.llm.response_schemas import (
-    STAGE_RESPONSE_SCHEMA,
-    BBOX_RESPONSE_SCHEMA
-    )
+# from utils.llm.response_schemas import (
+#     STAGE_RESPONSE_SCHEMA,
+#     BBOX_RESPONSE_SCHEMA
+#     )
+import json
 
 configure_logging()
 
@@ -50,6 +51,13 @@ ALLOWED_ORIGINS = [
 ]
 
 DATA_SCHEMA = './schemas/preprocessors/multistage-diagram.schema.json'
+
+STAGE_SCHEMA = 'stages.schema.json'
+BBOX_SCHEMA = 'bboxes.schema.json'
+with open(STAGE_SCHEMA, 'r') as f:
+    STAGE_RESPONSE_SCHEMA = json.load(f)
+with open(BBOX_SCHEMA, 'r') as f:
+    BBOX_RESPONSE_SCHEMA = json.load(f)
 
 try:
     llm_client = LLMClient()

@@ -1,0 +1,29 @@
+{
+    "$defs": {
+        "BoundingBoxItem": {
+            "properties": {
+                "bbox_2d": {
+                    "items": {"type": "number"},
+                    "maxItems": 4,
+                    "minItems": 4,
+                    "title": "Bbox 2D",
+                    "type": "array",
+                    "description": "Bounding box coordinates [x1, y1, x2, y2]"
+                },
+                "label": {
+                    "title": "Label",
+                    "type": "string",
+                    "description": "Label for the bounding box"
+                }
+            },
+            "required": ["bbox_2d", "label"],
+            "title": "BoundingBoxItem",
+            "type": "object"
+        }
+    },
+    "items": {
+        "$ref": "#/$defs/BoundingBoxItem"
+    },
+    "title": "BoundingBoxResponse",
+    "type": "array"
+}

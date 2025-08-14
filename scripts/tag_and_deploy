@@ -1,0 +1,201 @@
+#!/bin/bash
+
+# tag_and_deploy
+# Tags IMAGE-server components that match GitHub Actions workflows with tag triggers
+# Usage:
+#	./scripts/tag_and_deploy                    # tags all components, bumps patch by default
+#	./scripts/tag_and_deploy --bump-minor       # tags all components, bumps minor
+#	./scripts/tag_and_deploy --bump-major       # tags all components, bumps major
+#	./scripts/tag_and_deploy services/tat       # tags one component (patch default) - can add more components to tag
+#	./scripts/tag_and_deploy --bump-minor services/tat handlers/multistage-diagram-tactile-svg # tags two components with minor bump
+
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ENV_FILE="$ROOT_DIR/config/tag_and_deploy.env"
+
+if [ -f "$ENV_FILE" ]; then
+  set -a
+  source <(grep -v '^#' "$ENV_FILE")
+  set +a
+else
+  echo "Error: Environment file not found at $ENV_FILE" >&2
+  exit 1
+fi
+
+mkdir -p "$LOG_DIR"
+TIMESTAMP=$(date "+%Y.%m.%d-%H.%M.%S")
+LOG_FILE="$LOG_DIR/tag_and_deploy.$TIMESTAMP"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+cd "$ROOT_DIR" || exit 1
+
+: "${TAG_AND_DEPLOY_GIT_REMOTE:?}"
+: "${TAG_AND_DEPLOY_ENABLED_DIRS:=preprocessors handlers services orchestrator}"
+
+# Parse optional version bump flags
+# Default: bump patch
+BUMP_TYPE="patch"
+POSITIONAL_ARGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --bump-major)
+      BUMP_TYPE="major"
+      shift
+      ;;
+    --bump-minor)
+      BUMP_TYPE="minor"
+      shift
+      ;;
+    --bump-patch)
+      BUMP_TYPE="patch"
+      shift
+      ;;
+    -*)
+      echo "Unknown flag: $1"
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+# explicitly passed services (1 or more) to tag (e.g., preprocessors/mmsemseg)
+EXPLICIT_COMPONENTS=("${POSITIONAL_ARGS[@]}") # filters out flags
+
+# declare an associative array (key-value map)
+# e.g., COMPONENT_TAG_PREFIXES["services/tat"]="service-tat"
+declare -A COMPONENT_TAG_PREFIXES
+
+
+# parse_workflow_tag_patterns
+# scans all .github/workflows/*.yml files and extracts:
+# - Tag prefix (e.g., service-tat-[0-9]+.[0-9]+.[0-9]+ -> service-tat)
+# - Watched directory (e.g., services/tat/** → services/tat) 
+# populates COMPONENT_TAG_PREFIXES[path]="prefix"
+parse_workflow_tag_patterns() {
+  WORKFLOW_DIR="$ROOT_DIR/.github/workflows"
+
+  # WF will hold the path to the current workflow file
+  for WF in "$WORKFLOW_DIR"/*.yml; do
+    
+    # the pattern used to match tags (e.g. "service-tat-[0-9]+.[0-9]+.[0-9]+")
+    TAG_REGEX=$(grep -E 'tags:\s+\[\s*"' "$WF" | grep -oE '"[^"]+"' | tr -d '"')
+    #  the path (e.g., "services/tat/**")
+    PATH_GLOB=$(grep -A2 'paths:' "$WF" | grep -oE '"[^"]+"' | head -1 | tr -d '"')
+    
+    # if either value was empty (workflow didnt define tags or paths), skip this file
+    [ -z "$TAG_REGEX" ] || [ -z "$PATH_GLOB" ] && continue
+
+    TAG_PREFIX=$(echo "$TAG_REGEX" | sed -E 's/-\[.*//') # trims the pattern to just "service-tat"
+    CLEAN_PATH=$(echo "$PATH_GLOB" | sed -E 's|/\*\*$||') # trims "**" from the directory path
+
+    # the script dynamically builds the correct tag-prefix map from the workflow files
+    # e.g., COMPONENT_TAG_PREFIXES["handlers/multistage-diagram-tactile-svg"]="handler-multistage-diagram-tactile-svg"
+    
+    COMPONENT_TAG_PREFIXES["$CLEAN_PATH"]="$TAG_PREFIX" # e.g., COMPONENT_TAG_PREFIXES["services/tat"] -> service-tat
+  done
+}
+
+# tag_component
+# Given a directory path, looks up its tag prefix, finds the latest tag,
+# increments the patch version (1.2.3->1.2.4) and creates a new Git tag
+# if HEAD hasn’t already been tagged with it
+tag_component() {
+  COMPONENT_PATH="$1"
+  COMPONENT_NAME=$(basename "$COMPONENT_PATH")
+  [ "$COMPONENT_NAME" = "deprecated" ] && return
+
+  TAG_PREFIX="${COMPONENT_TAG_PREFIXES[$COMPONENT_PATH]}"
+  if [ -z "$TAG_PREFIX" ]; then
+    echo "Skipping $COMPONENT_PATH: no matching workflow tag"
+    return
+  fi
+
+  LATEST_TAG=$(git tag -l "${TAG_PREFIX}-*" | sort -V | tail -n1)
+
+  if [ -z "$LATEST_TAG" ]; then
+    echo "No existing tags for $TAG_PREFIX, starting at 0.0.1"
+    MAJOR=0
+    MINOR=0
+    PATCH=0
+  else
+    VERSION="${LATEST_TAG##*-}" # extract just the version (e.g., from service-tat-1.2.3, extract 1.2.3)
+    MAJOR=$(echo "$VERSION" | cut -d. -f1)
+    MINOR=$(echo "$VERSION" | cut -d. -f2)
+    PATCH=$(echo "$VERSION" | cut -d. -f3)
+  fi
+
+  #  bump logic based on selected --bump-* flag
+  case "$BUMP_TYPE" in
+    major)
+      MAJOR=$((MAJOR + 1))
+      MINOR=0
+      PATCH=0
+      ;;
+    minor)
+      MINOR=$((MINOR + 1))
+      PATCH=0
+      ;;
+    patch)
+      PATCH=$((PATCH + 1))
+      ;;
+  esac
+
+  NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+  NEW_TAG="${TAG_PREFIX}-${NEW_VERSION}"
+
+  HEAD_COMMIT=$(git rev-parse HEAD)
+  TAGGED_COMMIT=$(git rev-list -n 1 "$NEW_TAG" 2>/dev/null || echo "")
+
+  # If this tag doesn’t already exist at HEAD, create + push it
+  if [ "$TAGGED_COMMIT" != "$HEAD_COMMIT" ]; then
+    echo "Tagging $TAG_PREFIX: $VERSION -> $NEW_VERSION at HEAD"
+    git tag "$NEW_TAG"
+    git push origin "refs/tags/$NEW_TAG"
+  else
+    echo "$NEW_TAG already exists at HEAD"
+  fi
+}
+
+# - Main script execution begins here -
+echo "Updating main branch..."
+git checkout main >/dev/null 2>&1
+git pull origin main
+
+echo "Parsing GitHub workflow tag patterns..."
+parse_workflow_tag_patterns # fill COMPONENT_TAG_PREFIXES with mappings from workflows
+
+echo "Tagging components..."
+
+if [ "${#EXPLICIT_COMPONENTS[@]}" -gt 0 ]; then
+  echo "Explicit components provided: ${EXPLICIT_COMPONENTS[*]}"
+  for COMPONENT in "${EXPLICIT_COMPONENTS[@]}"; do
+    if [ -d "$COMPONENT" ]; then
+      tag_component "$COMPONENT"
+    else
+      echo "Warning: Component path not found: $COMPONENT"
+    fi
+  done
+else
+# case: tag orchestrator root
+  if echo "$TAG_AND_DEPLOY_ENABLED_DIRS" | grep -qw "orchestrator"; then
+    [ -d "orchestrator" ] && tag_component "orchestrator"
+  fi
+# Loop through all defined base directories (like preprocessors/, handlers/)
+  for DIR in $TAG_AND_DEPLOY_ENABLED_DIRS; do
+    for COMPONENT in "$DIR"/*; do
+      if [[ "$COMPONENT" == "orchestrator/"* ]]; then
+        continue
+      fi
+      [ -d "$COMPONENT" ] && tag_component "$COMPONENT"
+    done
+  done
+fi
+
+echo "Done. Check workflows at:"
+echo "  https://github.com/Shared-Reality-Lab/IMAGE-server/actions"
+echo "Please note, to complete deployment to Pegasus, run imageup after the above workflows complete! :)"
+

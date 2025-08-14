@@ -151,7 +151,7 @@ class LLMClient:
             # Add any additional kwargs
             params.update(kwargs)
 
-            logging.debug(f"Making LLM request with temperature={temperature}")
+            logging.debug(f"Making LLM request to model: {self.model}")
             response = self.client.chat.completions.create(**params)
 
             # Validate and extract response

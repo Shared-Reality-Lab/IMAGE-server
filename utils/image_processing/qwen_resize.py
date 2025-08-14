@@ -32,7 +32,7 @@ def decode_and_resize_image(
     factor: int = 28,
     min_pixels: Optional[int] = None,
     max_pixels: Optional[int] = None
-) -> Tuple[Optional[Image.Image], Optional[str], Optional[dict]]:
+) -> Tuple[Optional[str], Optional[Image.Image], Optional[dict]]:
     """
     Decode base64 image data and resize it for Qwen model input.
 
