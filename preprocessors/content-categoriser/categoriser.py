@@ -183,6 +183,7 @@ def categorise():
         logging.error(f"Error calling LLM: {str(e)}")
         return jsonify("Invalid response from LLM"), 204
 
+    logging.pii(f"Graphic category JSON: {graphic_category}")
     # create data json and verify the content-categoriser schema is respected
     graphic_category_json = {"category": graphic_category}
     try:
