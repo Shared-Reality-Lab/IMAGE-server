@@ -1,4 +1,4 @@
-FROM python:3.11-alpine3.20	
+FROM python:3.11-alpine3.20
 
 RUN apk add --no-cache curl && \
     adduser --disabled-password python
@@ -12,6 +12,7 @@ RUN pip3 install --upgrade pip && \
 
 COPY /schemas /app/schemas
 COPY /config /app/config
+COPY /utils /app/utils
 COPY /preprocessors/content-categoriser/ /app
 
 EXPOSE 5000
