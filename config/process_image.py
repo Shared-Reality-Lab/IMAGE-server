@@ -111,6 +111,10 @@ def gif_to_collage(
 
     logging.info(f"Total frames in GIF: {total_frames}")
 
+    if total_frames == 1:
+        logging.info("GIF has only one frame, returning as is.")
+        return gif
+
     # Determine which frames to extract
     if max_frames is None or max_frames >= total_frames:
         frame_indices = list(range(total_frames))
