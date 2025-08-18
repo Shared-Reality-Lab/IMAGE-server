@@ -45,7 +45,13 @@ def process_image(base64_image_str, output_size, output_format=None):
 
         if original_format == 'GIF':
             logging.info("Converting GIF into a collage.")
-            image = gif_to_collage(image, max_frames=9)
+            # Currently, we transform GIFs into a single-graphic image
+            # containing the middle frame (max_frames=1).
+            # The function supports the creation of collages from GIFs
+            # by setting max_frames to a value greater than 1,
+            # but it requires schema changes to inform the user
+            # that the original graphic was a GIF and not a collage.
+            image = gif_to_collage(image, max_frames=1)
 
         # Process the image
         if needs_resize:
