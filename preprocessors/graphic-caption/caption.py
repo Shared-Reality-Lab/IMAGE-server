@@ -123,7 +123,7 @@ def health():
 @app.route("/warmup", methods=["GET"])
 def warmup():
     """
-    vLLM keeps the model in memory after the container startup,
+    vLLM loads and keeps the specified model in memory on container startup,
     but we keep this endpoint as a health check.
     """
     try:

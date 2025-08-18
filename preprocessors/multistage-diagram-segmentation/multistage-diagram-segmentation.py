@@ -221,6 +221,10 @@ def health():
 
 @app.route("/warmup", methods=["GET"])
 def warmup():
+    """
+    vLLM loads and keeps the specified model in memory on container startup,
+    but we keep this endpoint as a health check.
+    """
     try:
         logging.info("Warming up LLM and SAM...")
 

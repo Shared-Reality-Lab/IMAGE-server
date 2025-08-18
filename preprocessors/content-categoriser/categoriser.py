@@ -89,8 +89,6 @@ def categorise():
         ), 500
 
     logging.pii(f"Graphic category JSON: {graphic_category}")
-
-    logging.pii(f"Graphic category JSON: {graphic_category}")
     # create data json and verify the content-categoriser schema is respected
     graphic_category_json = {"category": graphic_category}
 
@@ -129,7 +127,7 @@ def health():
 @app.route("/warmup", methods=["GET"])
 def warmup():
     """
-    vLLM keeps the model in memory after the container startup,
+    vLLM loads and keeps the specified model in memory on container startup,
     but we keep this endpoint as a health check.
     """
     try:
