@@ -74,12 +74,15 @@ def categorise():
     base64_image = source.split(",")[1]
 
     graphic_category = llm_client.chat_completion(
-        prompt=CATEGORISER_PROMPT + POSSIBLE_CATEGORIES,
+        prompt=f"{CATEGORISER_PROMPT} {POSSIBLE_CATEGORIES}",
         image_base64=base64_image,
         temperature=0.0,
         json_schema=CATEGORISER_RESPONSE_SCHEMA,
         parse_json=True
     )
+
+    logging.debug(f"PROMPT: {CATEGORISER_PROMPT} {POSSIBLE_CATEGORIES}")
+    logging.debug(f"Schema: {CATEGORISER_RESPONSE_SCHEMA}")
 
     if graphic_category is None:
         logging.error("Failed to receive response from LLM.")
