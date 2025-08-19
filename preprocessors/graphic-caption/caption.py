@@ -15,62 +15,48 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 from flask import Flask, request, jsonify
-import json
+import sys
 import time
 import jsonschema
 import logging
-import os
-import html
 from datetime import datetime
 from config.logging_utils import configure_logging
-from openai import OpenAI
+from utils.llm import (
+    LLMClient,
+    GRAPHIC_CAPTION_PROMPT
+    )
+from utils.validation import Validator
 
 configure_logging()
 
 app = Flask(__name__)
 
-PROMPT = """Describe this image to a person who cannot see it.
-    Use simple, descriptive, clear, and concise language.
-    Answer with only one sentence.
-    Do not give any intro like "Here's what in this image:",
-    "The image depicts", or "This photograph showcases" unless
-    the graphic type is significant (like oil painting or aerial photo).
-    Instead, start describing the graphic right away."""
+DATA_SCHEMA = './schemas/preprocessors/caption.schema.json'
 
-logging.debug(f"Graphic caption prompt: {PROMPT}")
+PREPROCESSOR_NAME = "ca.mcgill.a11y.image.preprocessor.graphic-caption"
+
+try:
+    llm_client = LLMClient()
+    validator = Validator(data_schema=DATA_SCHEMA)
+    logging.debug("LLM client and validator initialized")
+except Exception as e:
+    logging.error(f"Failed to initialize clients: {e}")
+    sys.exit(1)
+
+logging.debug(f"Graphic caption prompt: {GRAPHIC_CAPTION_PROMPT}")
 
 
 @app.route("/preprocessor", methods=['POST'])
 def categorise():
     logging.debug("Received request")
 
-    # load the schemas and verify incoming data
-    with open('./schemas/preprocessors/caption.schema.json') \
-            as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') \
-            as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definitionSchema = json.load(jsonfile)
-    with open('./schemas/request.schema.json') as jsonfile:
-        first_schema = json.load(jsonfile)
-    # Following 6 lines of code from
-    # https://stackoverflow.com/questions/42159346
-    schema_store = {
-        schema['$id']: schema,
-        definitionSchema['$id']: definitionSchema
-    }
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
+    # load the content and verify incoming data
     content = request.get_json()
+
     try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {e.message}")
-        return jsonify("Invalid Preprocessor JSON format"), 400
+        validator.validate_request(content)
+    except jsonschema.exceptions.ValidationError:
+        return jsonify({"error": "Invalid Preprocessor JSON format"}), 400
 
     # check we received a graphic (e.g., not a map or chart request)
     if "graphic" not in content:
@@ -79,94 +65,44 @@ def categorise():
 
     request_uuid = content["request_uuid"]
     timestamp = time.time()
-    name = "ca.mcgill.a11y.image.preprocessor.graphic-caption"
 
     # convert the uri to processable image
     # source.split code referred from
     # https://gist.github.com/daino3/b671b2d171b3948692887e4c484caf47
     source = content["graphic"]
-    graphic_b64 = source.split(",")[1]
+    base64_image = source.split(",")[1]
 
-    # prepare llm request
-    llm_base_url = os.environ['LLM_URL']
-    api_key = os.environ['LLM_API_KEY']
-    llm_model = os.environ['LLM_MODEL']
-
-    logging.debug(f"LLM URL: {llm_base_url}")
-    logging.debug(f"LLM MODEL: {llm_model}")
-    if api_key.startswith("sk-"):
-        logging.pii("LLM_API_KEY looks properly formatted: sk-[redacted]")
-    else:
-        logging.warning("LLM_API_KEY does not start with sk-")
-
-    # Initialize OpenAI client with custom base URL for LLM
-    client = OpenAI(
-        api_key=api_key,
-        base_url=llm_base_url
+    graphic_caption = llm_client.chat_completion(
+        prompt=GRAPHIC_CAPTION_PROMPT,
+        image_base64=base64_image,
+        temperature=0.0
     )
 
-    try:
-        logging.debug("Posting request to LLM model: " + llm_model)
-
-        # Make the request using OpenAI client
-        response = client.chat.completions.create(
-            model=llm_model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": PROMPT},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/png;base64,{graphic_b64}"
-                            }
-                        }
-                    ]
-                }
-            ],
-            temperature=0.0,
-            stream=False
-        )
-
-        # The OpenAI library handles status codes internally
-        # A successful response means status code was 200
-        logging.debug("vLLM request response code: 200")
-
-        graphic_caption = html.unescape(response.choices[0].message.content)
-
-    except Exception as e:
-        # The OpenAI library raises exceptions for non-200 status codes
-        status_code = getattr(e, 'status_code', None)
-        if status_code:
-            logging.debug(f"vLLM request response code: {status_code}")
-
-        logging.error(f"Error: {str(e)}")
-        return jsonify("Invalid response from LLM"), 500
+    if graphic_caption is None:
+        logging.error("Failed to receive response from LLM.")
+        return jsonify(
+            {"error": "Failed to get graphic caption from LLM"}
+        ), 500
 
     # create data json and verify the content-categoriser schema is respected
     graphic_caption_json = {"caption": graphic_caption.strip()}
+
     try:
-        validator = jsonschema.Draft7Validator(data_schema)
-        validator.validate(graphic_caption_json)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for graphic caption data")
-        logging.pii(f"Validation error: {e.message}")
+        validator.validate_data(graphic_caption_json)
+    except jsonschema.exceptions.ValidationError:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # create full response & check meets overall preprocessor response schema
     response = {
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
-        "name": name,
+        "name": PREPROCESSOR_NAME,
         "data": graphic_caption_json
     }
+
     try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for final response")
-        logging.pii(f"Validation error: {e.message}")
+        validator.validate_response(response)
+    except jsonschema.exceptions.ValidationError:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # all done; return to orchestrator
@@ -187,45 +123,18 @@ def health():
 @app.route("/warmup", methods=["GET"])
 def warmup():
     """
-    Trigger a warmup call to load the Ollama LLM into memory.
-    This avoids first-request latency by sending a dummy request.
-    vLLM keeps the model in memory after the container startup.
+    vLLM loads and keeps the specified model in memory on container startup,
+    but we keep this endpoint as a health check.
     """
     try:
-        llm_base_url = os.environ['LLM_URL']
-        api_key = os.environ['LLM_API_KEY']
-        llm_model = os.environ['LLM_MODEL']
-
-        # Initialize OpenAI client with custom base URL for vllm
-        client = OpenAI(
-            api_key=api_key,
-            base_url=llm_base_url,
-            timeout=60.0
-        )
-
-        logging.debug("Posting request to LLM model: " + llm_model)
-
-        # Make the request using OpenAI client
-        client.chat.completions.create(
-            model=llm_model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": "ping"
-                }
-            ],
-            temperature=0.0,
-            stream=False
-        )
-
-        logging.info("[WARMUP] Warmup endpoint triggered.")
-        logging.pii(f"[WARMUP] Posting to {llm_base_url} with model \
-                    {llm_model}")
-
-        return jsonify({"status": "warmed"}), 200
-
+        if llm_client.warmup():
+            return jsonify({"status": "ok"}), 200
+        else:
+            return jsonify(
+                {"status": "error", "message": "Warmup failed"}
+                ), 500
     except Exception as e:
-        logging.exception(f"[WARMUP] Exception details: {str(e)}")
+        logging.error(f"Warmup endpoint failed: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 

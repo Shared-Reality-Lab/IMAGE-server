@@ -113,7 +113,7 @@ services:
       ca.mcgill.a11y.image.required_dependencies: ""
       ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
-      ./config/ollama.env
+      ./config/llm.env
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - WARMUP_ENABLED=true
@@ -129,7 +129,7 @@ services:
       ca.mcgill.a11y.image.required_dependencies: ""
       ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
-      ./config/ollama.env
+      ./config/llm.env
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - WARMUP_ENABLED=true
@@ -151,8 +151,8 @@ services:
       ca.mcgill.a11y.image.required_dependencies: ""
       ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
-      ./config/ollama.env      
-  
+      ./config/llm.env
+
   graphic-tagger:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:${REGISTRY_TAG}
@@ -167,7 +167,7 @@ services:
       ca.mcgill.a11y.image.optional_dependencies: "content-categoriser"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
-  
+
   object-detection:
     profiles: [production, default, test]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-yolo:${REGISTRY_TAG}
@@ -209,11 +209,9 @@ services:
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - SAM_MODEL_PATH=/usr/src/app/models/sam2.1_l.pt
-      - GEMINI_MODEL=gemini-2.5-pro
-      - BASE_SCHEMA=/usr/src/app/base_schema.json
       - WARMUP_ENABLED=true
     env_file:
-      ./config/gemini.env   
+      ./config/llm.env
 
   object-grouping:
     profiles: [production, test, default]
@@ -276,7 +274,7 @@ services:
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - WARMUP_ENABLED=true
-  
+
   supercollider:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-supercollider:${REGISTRY_TAG}
@@ -358,7 +356,7 @@ services:
         ca.mcgill.a11y.image.required_dependencies: "object-detection,object-grouping"
         ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
-      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}       
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   svg-semantic-seg-handler:
     profiles: [production, test, default]
@@ -418,7 +416,7 @@ services:
       - NOMINATIM_SERVER=https://pegasus.cim.mcgill.ca/nominatim
       # Optional fallback if Pegasus is unreachable
       # - NOMINATIM_FALLBACK_SERVER=https://nominatim.openstreetmap.org
-  
+
   photo-tactile-svg-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-tactile-svg:${REGISTRY_TAG}
@@ -494,7 +492,7 @@ services:
       ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
-  
+
   # For environment setup refer to https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/ocr
   ocr-clouds-preprocessor:
     profiles: [test, default]
@@ -590,21 +588,21 @@ services:
         ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
- 
+
   monarch-link-app:
     profiles: [production, test, default]
     image: "ghcr.io/shared-reality-lab/image-service-monarch-link-app:${REGISTRY_TAG}"
     restart: "no"
     networks:
       - traefik
-  
+
   tat:
     profiles: [production, test, default]
     image: "ghcr.io/shared-reality-lab/image-service-tat:${REGISTRY_TAG}"
     restart: "no"
     networks:
       - traefik
-# end - unicorn exclusive services        
+# end - unicorn exclusive services
 volumes:
   sc-store:
   user-logs:
@@ -612,7 +610,7 @@ volumes:
 # https://docs.docker.com/compose/networking/
 networks:
 # start - reverse proxy setup
-# traefik is a reverse proxy used, any other reverse proxy (nginx, HAProxy) can be used as well  
+# traefik is a reverse proxy used, any other reverse proxy (nginx, HAProxy) can be used as well
 # following section is not required if the server is hosted in another way
   traefik:
     external: true
