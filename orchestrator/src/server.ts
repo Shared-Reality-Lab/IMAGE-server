@@ -388,7 +388,7 @@ async function runPreprocessors(data: Record<string, unknown>, preprocessors: Se
             } catch (err) {
                 // Most likely a timeout
                 console.error(`${reqTag(data)}Error occured fetching from ${preprocessor[0]}`);
-                console.error(err);
+                console.error(`${reqTag(data)}`, err);
                 continue;
             }
 
@@ -483,10 +483,9 @@ async function storeResponse(requestBody: any, req: express.Request, response: R
         console.debug(`${reqTag(requestBody)}Wrote temporary files to ${requestPath}`);
     } catch (e) {
         console.error(`${reqTag(requestBody)}Error occurred while logging to ${requestPath}`);
-        console.error(e);
+        console.error(`${reqTag(requestBody)}`, e);
     }
 }
-
 
 
 function getRoute(data: Record<string, unknown>): string {
