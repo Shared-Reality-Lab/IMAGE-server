@@ -1,9 +1,9 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://image.a11y.mcgill.ca/preprocessors/mutistage-diagram.schema.json",
+    "$id": "https://image.a11y.mcgill.ca/preprocessors/multistage-diagram.schema.json",
     "type": "object",
     "title": "Multistage Diagram Data",
-    "description": "JSON containing pixel coordinates of different stages in a mutistage diagram and the links between them",
+    "description": "JSON containing pixel coordinates of different stages in a multistage diagram and the links between them",
     "definitions": {
         "normCoord": {
             "description": "A pair of normalized coordinates.",
