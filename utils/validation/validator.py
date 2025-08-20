@@ -1,6 +1,16 @@
 """
 Simple validator module for IMAGE project components.
 Provides a lightweight validator class for JSON schema validation.
+
+validate_*:
+- raises jsonschema.ValidationError on failure (try/except style)
+- logs failures
+check_*:
+- calls validate_*
+- catches the exception and instead returns a (ok, err) tuple
+- avoids duplicate “Validation failed” lines (since validate_* logs).
+
+In the route you just map failure -> HTTP status.
 """
 
 import json
@@ -133,3 +143,36 @@ class Validator:
             logging.error("Validation failed for full response")
             logging.pii(f"Validation error: {e.message} | Response: {data}")
             raise
+
+    def check_request(self, data):
+        """
+        Validate request data; return (ok, err).
+        Logs on failure via validate_request().
+        """
+        try:
+            self.validate_request(data)
+            return True, None
+        except jsonschema.exceptions.ValidationError as e:
+            return False, str(e)
+
+    def check_data(self, data):
+        """
+        Validate component data payload; return (ok, err).
+        Logs on failure via validate_data().
+        """
+        try:
+            self.validate_data(data)
+            return True, None
+        except jsonschema.exceptions.ValidationError as e:
+            return False, str(e)
+
+    def check_response(self, data):
+        """
+        Validate final response envelope; return (ok, err).
+        Logs on failure via validate_response().
+        """
+        try:
+            self.validate_response(data)
+            return True, None
+        except jsonschema.exceptions.ValidationError as e:
+            return False, str(e)

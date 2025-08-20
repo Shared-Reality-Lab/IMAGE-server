@@ -19,8 +19,6 @@
 
 from flask import Flask, request, jsonify
 import gc
-import json
-import jsonschema
 import base64
 
 import torch
@@ -29,12 +27,20 @@ import mmseg
 import numpy as np
 import cv2
 
-from utils import visualize_result, findContour
+from mmseg_utils import visualize_result, findContour
 
 from time import time
 import logging
 from config.logging_utils import configure_logging
 from datetime import datetime
+
+from utils.validation import Validator
+validator = Validator(
+    data_schema='./schemas/preprocessors/segmentation.schema.json',
+    request_schema='./schemas/request.schema.json',
+    response_schema='./schemas/preprocessor-response.schema.json',
+    definitions_schema='./schemas/definitions.json'
+)
 
 configure_logging()
 # configuration and checkpoint files
@@ -120,25 +126,6 @@ def segment():
     torch.cuda.empty_cache()
     dictionary = []
 
-    # load the schemas
-    with open('./schemas/preprocessors/segmentation.schema.json') as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definitionSchema = json.load(jsonfile)
-    with open('./schemas/request.schema.json') as jsonfile:
-        first_schema = json.load(jsonfile)
-    # Following 6 lines refered from
-    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
-    schema_store = {
-        schema['$id']: schema,
-        definitionSchema['$id']: definitionSchema
-    }
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
-    logging.info("Schemas loaded")
-
     # load the model
     try:
         model = init_segmentor(BEIT_CONFIG, BEIT_CHECKPOINT, device='cuda:0')
@@ -152,12 +139,8 @@ def segment():
     request_json = request.get_json()
 
     # validate the request
-    try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-        validator.validate(request_json)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Request validation failed")
-        logging.pii(f"Validation error: {e.message} | Data: {request_json}")
+    ok, _ = validator.check_request(request_json)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     if "graphic" not in request_json:
@@ -180,9 +163,7 @@ def segment():
         classifier_1_output = preprocess_output[classifier_1]
         classifier_1_label = classifier_1_output["category"]
         if classifier_1_label != "photograph":
-            logging.info(
-                "Not photograph content. Skipping...")
-
+            logging.info("Not photograph content. Skipping...")
             return "", 204
         if classifier_2 in preprocess_output:
             # classifier_2_output = preprocess_output[classifier_2]
@@ -222,12 +203,8 @@ def segment():
     torch.cuda.empty_cache()
 
     # validate the data format for the output
-    try:
-        validator = jsonschema.Draft7Validator(data_schema)
-        validator.validate(segment)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Data validation failed")
-        logging.pii(f"Validation error: {e.message} | Data: {segment}")
+    ok, _ = validator.check_data(segment)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {
@@ -238,24 +215,17 @@ def segment():
     }
 
     # validate the output format
-    try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Response validation failed")
-        logging.pii(f"Validation error: {e.message} | Response: {response}")
+    ok, _ = validator.check_response(response)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.info("Valid response generated")
-
     return response
 
 
 @app.route("/health", methods=["GET"])
 def health():
-    """
-    Health check endpoint to verify if the service is running
-    """
+    """Health check endpoint to verify if the service is running"""
     return jsonify({
         "status": "healthy",
         "timestamp": datetime.now().isoformat()
@@ -264,9 +234,7 @@ def health():
 
 @app.route("/warmup", methods=["GET"])
 def warmup():
-    """
-    Warms up the segmentation model by running a dummy inference.
-    """
+    """Warms up the segmentation model by running a dummy inference."""
     try:
         # dummy black image (512×512)
         dummy_img = np.zeros((512, 512, 3), dtype=np.uint8)
@@ -274,14 +242,11 @@ def warmup():
         # runs inference_segmentor(): model weight loading/memory allocation
         model = init_segmentor(BEIT_CONFIG, BEIT_CHECKPOINT, device='cuda:0')
         _ = inference_segmentor(model, dummy_img)
-
         torch.cuda.empty_cache()
-
         return jsonify({
             "status": "warmup successful",
             "timestamp": datetime.now().isoformat()
         }), 200
-
     except Exception as e:
         logging.pii(f"[WARMUP] Warmup failed: {e}")
         logging.exception("Warmup failed")
