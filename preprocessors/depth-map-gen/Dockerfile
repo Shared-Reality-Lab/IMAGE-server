@@ -10,7 +10,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-
 RUN adduser --disabled-password python
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
-ENV PYTHONPATH "${PYTHONPATH}:./AdelaiDepth/LeReS/Minist_Test/"
+ENV PYTHONPATH="/app:${PYTHONPATH}:./AdelaiDepth/LeReS/Minist_Test/"
 ENV FLASK_APP=depth-map-generator.py
 ENV TORCH_HOME=/app
 
@@ -23,6 +23,7 @@ RUN pip3 install --upgrade pip && \
 COPY /schemas /app/schemas
 #config for pii
 COPY /config /app/config
+COPY /utils /app/utils
 
 #model download, app code
 RUN git clone https://github.com/aim-uofa/AdelaiDepth && \

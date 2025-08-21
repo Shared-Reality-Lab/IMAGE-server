@@ -15,19 +15,21 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 import os
-import json
 import time
 import logging
-import jsonschema
 import requests
 from flask import Flask, request, jsonify
 from datetime import datetime
 from config.logging_utils import configure_logging
+from utils.validation import Validator
 
 configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
+
+# Initialize shared validator
+VALIDATOR = Validator(data_schema='./schemas/preprocessors/autour.schema.json')
 
 
 @app.route('/preprocessor', methods=['POST', 'GET'])
@@ -36,35 +38,13 @@ def get_map_data():
     Gets data on locations nearby a map from the Autour API
     """
     logging.debug("Received request")
-    # Load schemas
-    with open('./schemas/preprocessors/autour.schema.json') as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definition_schema = json.load(jsonfile)
-    schema_store = {
-        data_schema['$id']: data_schema,
-        schema['$id']: schema,
-        definition_schema['$id']: definition_schema
-    }
+
     content = request.get_json()
 
-    with open('./schemas/request.schema.json') as jsonfile:
-        request_schema = json.load(jsonfile)
     # Validate incoming request
-    resolver = jsonschema.RefResolver.from_schema(
-            request_schema, store=schema_store)
-
-    validated = validate(
-        schema=request_schema,
-        data=content,
-        resolver=resolver,
-        json_message="Invalid Request JSON format",
-        error_code=400)
-
-    if validated is not None:
-        return validated
+    ok, _ = VALIDATOR.check_request(content)
+    if not ok:
+        return jsonify("Invalid Request JSON format"), 400
 
     # Check if request is for a map
     if 'coordinates' not in content and 'placeID' not in content:
@@ -113,19 +93,10 @@ def get_map_data():
         'places': results,
     }
 
-    # Use response schema to validate response
-    resolver = jsonschema.RefResolver.from_schema(
-            schema, store=schema_store)
-
-    validated = validate(
-        schema=data_schema,
-        data=data,
-        resolver=resolver,
-        json_message='Invalid Preprocessor JSON format',
-        error_code=500)
-
-    if validated is not None:
-        return validated
+    # Validate preprocessor data against its schema
+    ok, _ = VALIDATOR.check_data(data)
+    if not ok:
+        return jsonify('Invalid Preprocessor JSON format'), 500
 
     response = {
         'request_uuid': request_uuid,
@@ -134,43 +105,13 @@ def get_map_data():
         'data': data
     }
 
-    validated = validate(
-        schema=schema,
-        data=response,
-        resolver=resolver,
-        json_message='Invalid Preprocessor JSON format',
-        error_code=500)
-
-    if validated is not None:
-        return validated
+    # Validate full response
+    ok, _ = VALIDATOR.check_response(response)
+    if not ok:
+        return jsonify('Invalid Preprocessor JSON format'), 500
 
     logging.debug("Sending response")
     return response
-
-
-def validate(schema, data, resolver, json_message, error_code):
-    """
-    Validate a piece of data against a schema
-
-    Args:
-        schema: a JSON schema to check against
-        data: the data to check
-        resolver: a JSON schema resolver
-        json_messaage: the error to jsonify and return
-        error_code: the error code to return
-
-    Returns:
-        None or Tuple[flask.Response, int]
-    """
-    try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(data)
-    except jsonschema.exceptions.ValidationError as error:
-        logging.error("Validation error occurred")
-        logging.pii(f"Validation error: {error.message}")
-        return jsonify(json_message), error_code
-
-    return None
 
 
 def get_coordinates(content):

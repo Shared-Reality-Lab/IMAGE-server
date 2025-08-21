@@ -12,6 +12,7 @@ RUN pip3 install --upgrade pip && \
     pip3 install -r /app/requirements.txt
 
 COPY /schemas /app/schemas
+COPY /utils /app/utils
 COPY /preprocessors/celebrity-detector /app
 
 EXPOSE 5000

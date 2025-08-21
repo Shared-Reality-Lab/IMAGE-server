@@ -11,6 +11,7 @@ RUN pip3 install --upgrade pip && \
 
 COPY /schemas /app/schemas
 COPY /config /app/config
+COPY /utils /app/utils
 COPY /preprocessors/grouping/ /app
 
 EXPOSE 5000

@@ -15,10 +15,8 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 
-import json
 import time
 import logging
-import jsonschema
 import os
 import io
 import base64
@@ -33,11 +31,14 @@ from ocr_utils import (
     process_azure_read_v4_preview
 )
 from config.logging_utils import configure_logging
+from utils.validation import Validator
 
 configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
+
+VALIDATOR = Validator(data_schema='./schemas/preprocessors/ocr.schema.json')
 
 
 @app.route('/preprocessor', methods=['POST', 'GET'])
@@ -47,18 +48,6 @@ def get_ocr_text():
     """
 
     logging.debug("Received request")
-    # Load schemas
-    with open('./schemas/preprocessors/ocr.schema.json') as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definition_schema = json.load(jsonfile)
-    schema_store = {
-        data_schema['$id']: data_schema,
-        schema['$id']: schema,
-        definition_schema['$id']: definition_schema
-    }
     content = request.get_json()
 
     # Check if request is for a map
@@ -66,24 +55,11 @@ def get_ocr_text():
         logging.info("Map request. Skipping...")
         return "", 204
 
-    with open('./schemas/request.schema.json') as jsonfile:
-        request_schema = json.load(jsonfile)
     # Validate incoming request
-    resolver = jsonschema.RefResolver.from_schema(
-        request_schema, store=schema_store)
-    try:
-        validator = jsonschema.Draft7Validator(
-            request_schema,
-            resolver=resolver
-        )
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as error:
-        logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {error.message}")
+    ok, _ = VALIDATOR.check_request(content)
+    if not ok:
         return jsonify("Invalid Request JSON format"), 400
-    # Use response schema to validate response
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
+
     # Get OCR text response
     width = content['dimensions'][0]
     height = content['dimensions'][1]
@@ -105,12 +81,9 @@ def get_ocr_text():
     timestamp = int(time.time())
     data = {'lines': ocr_result, 'cloud_service': cld_srv_optn}
 
-    try:
-        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
-        validator.validate(data)
-    except jsonschema.exceptions.ValidationError as error:
-        logging.error("Validation failed for processed OCR data")
-        logging.pii(f"Validation error: {error.message}")
+    # data schema validation
+    ok, _ = VALIDATOR.check_data(data)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {
@@ -120,12 +93,9 @@ def get_ocr_text():
         'data': data
     }
 
-    try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as error:
-        logging.error("Validation failed for final response")
-        logging.pii(f"Validation error: {error.message}")
+    # full response validation
+    ok, _ = VALIDATOR.check_response(response)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")

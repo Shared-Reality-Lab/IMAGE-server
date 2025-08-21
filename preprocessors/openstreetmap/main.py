@@ -1,6 +1,4 @@
 from flask import Flask, jsonify, request
-import jsonschema
-import json
 import logging
 from datetime import datetime
 from osm_service import (
@@ -13,16 +11,21 @@ from osm_service import (
     get_amenities,
     enlist_POIs,
     OSM_preprocessor,
-    validate,
     get_coordinates,
 )
 from config.logging_utils import configure_logging
+from utils.validation import Validator
 
 configure_logging()
 
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 logging.basicConfig(level=logging.DEBUG)
+
+# Shared validator for this component
+VALIDATOR = Validator(
+    data_schema='./schemas/preprocessors/openstreetmap.schema.json'
+)
 
 
 @app.route('/preprocessor', methods=['POST', ])
@@ -31,46 +34,24 @@ def get_map_data():
     Gets map data from OpenStreetMap
     """
     logging.debug("Received request")
-    # Load schemas
-    with open('./schemas/preprocessors/openstreetmap.schema.json') as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definition_schema = json.load(jsonfile)
-    schema_store = {
-        data_schema['$id']: data_schema,
-        schema['$id']: schema,
-        definition_schema['$id']: definition_schema
-    }
+
     try:
         content = request.get_json()
         logging.debug("Validating request")
-        with open('./schemas/request.schema.json') as jsonfile:
-            request_schema = json.load(jsonfile)
 
-        # Validate incoming request
-        resolver = jsonschema.RefResolver.from_schema(
-            request_schema, store=schema_store)
-
-        validated = validate(
-            schema=request_schema,
-            data=content,
-            resolver=resolver,
-            json_message="Invalid Request JSON format",
-            error_code=400
-        )
-
-        if validated is not None:
-            return validated
-    except jsonschema.exceptions.ValidationError as e:
+        # Validate incoming request (request schema)
+        ok, _ = VALIDATOR.check_request(content)
+        if not ok:
+            return jsonify("Invalid Request JSON format"), 400
+    except Exception as e:
         logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {e.message}")
+        logging.pii(f"Validation error: {e}")
         return jsonify("Invalid Request JSON format"), 400
 
     time_stamp = int(get_timestamp())
     name = "ca.mcgill.a11y.image.preprocessor.openstreetmap"
     request_uuid = content["request_uuid"]
+
     # Check if this request is for an openstreetmap
     if 'coordinates' not in content and 'placeID' not in content:
         logging.info("Not map content. Skipping...")
@@ -97,12 +78,14 @@ def get_map_data():
     }
     OSM_data = get_streets(bbox_coordinates)
     amenity = get_amenities(bbox_coordinates)
+
     # initialize empty response
     response = {
         "request_uuid": request_uuid,
         "timestamp": time_stamp,
         "name": name
-        }
+    }
+
     if OSM_data is not None:
         processed_OSM_data = process_streets_data(OSM_data, bbox_coordinates)
         if processed_OSM_data is None:
@@ -120,37 +103,34 @@ def get_map_data():
                 "points_of_interest": POIs,
                 "streets": streets
             }
-            logging.debug("Validating response data")
-            validated = validate(
-                schema=data_schema,
-                data=response["data"],
-                resolver=resolver,
-                json_message='Invalid Preprocessor JSON format',
-                error_code=500)
-            if validated is not None:
-                return validated
-        """
-        # 'streets', 'points_of_interest' and 'bounds' are
-        #  required fields as per the schema
-        elif amenity is not None and len(amenity) != 0:
-            response = {
-                "request_uuid": request_uuid,
-                "timestamp": time_stamp,
-                "name": name,
-                "data": {
-                    "bounds": header_info,
-                    "points_of_interest": amenity
-                }
+
+            # Validate data payload (component schema)
+            ok, _ = VALIDATOR.check_data(response["data"])
+            if not ok:
+                return jsonify('Invalid Preprocessor JSON format'), 500
+
+    """
+    # 'streets', 'points_of_interest' and 'bounds' are
+    #  required fields as per the schema
+    elif amenity is not None and len(amenity) != 0:
+        response = {
+            "request_uuid": request_uuid,
+            "timestamp": time_stamp,
+            "name": name,
+            "data": {
+                "bounds": header_info,
+                "points_of_interest": amenity
             }
-        else:
-            response = {
-                "request_uuid": request_uuid,
-                "timestamp": time_stamp,
-                "name": name,
-                "data": {
-                    "bounds": header_info
-                }
+        }
+    else:
+        response = {
+            "request_uuid": request_uuid,
+            "timestamp": time_stamp,
+            "name": name,
+            "data": {
+                "bounds": header_info
             }
+        }
     elif OSM_data is None and amenity is not None:
         response = {
             "request_uuid": request_uuid,
@@ -162,18 +142,16 @@ def get_map_data():
             }
         }
     """
+
     if "data" not in response:
         logging.debug("Map data is empty for location. Skipping...")
         return "", 204
-    logging.debug("Validating response")
-    validated = validate(
-        schema=schema,
-        data=response,
-        resolver=resolver,
-        json_message='Invalid Preprocessor JSON format',
-        error_code=500)
-    if validated is not None:
-        return validated
+
+    # Validate final response
+    ok, _ = VALIDATOR.check_response(response)
+    if not ok:
+        return jsonify('Invalid Preprocessor JSON format'), 500
+
     logging.debug("Sending final response")
     return response
 
