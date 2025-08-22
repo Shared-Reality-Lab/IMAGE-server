@@ -20,6 +20,7 @@ import jsonschema
 PREPROCESSOR_RESPONSE_SCHEMA = './schemas/preprocessor-response.schema.json'
 DEFINITIONS_SCHEMA = './schemas/definitions.json'
 REQUEST_SCHEMA = './schemas/request.schema.json'
+HANDLER_RESPONSE_SCHEMA = './schemas/handler-response.schema.json'
 
 
 class Validator:
