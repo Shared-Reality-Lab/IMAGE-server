@@ -78,8 +78,16 @@ Docker Compose uses environment files to configure how services run. In IMAGE, y
   DOCKER_GID=134 # find your Docker group ID by doing `grep docker /etc/group | awk -F: '{ print $3 }'`
   PII_LOGGING_ENABLED=true  # Flag to control whether Personally Identifiable Information logging is active (true/false)
   ```
-2. Service-level env files (in config/) — hold API keys and credentials
-  Alongside the root .env, IMAGE uses per-service environment files under config/. These files hold API keys, credentials, or flags for optional integrations. Empty files are fine if you’re not using that service; however, Docker Compose may complain if these files don't exist, so you may leave them empty, or opt out of using the env file entirely.
+2. Env files in config/ — either Infrastructure / script envs, or component-specific envs.
+    
+    a) Infrastructure / script envs: These control our own tooling (deployment, logging, scripts). We abstracted repo URLs, directory lists, Slack API keys, and log locations, and store them in a .env file eponymous with the name of the script (in the `scripts/` dir) for convenience. You may find it beneficial to use our healthcheck script for instance, which polls through each microservice and reports if they can hit the /health endpoint defined in each component. Therefore, a `healthcheck.env` would store the API key for Slack (where we have hourly reporting), and the log location. 
+    
+    b) Component-specific envs: These configure runtime services (preprocessors, handlers, or standalone services) which are consumed by containers at runtime. They often hold API keys, model names, or URLs.
+    In the docker-compose, each service that requires an env file has an env_file block like so:
+    ```
+    env_file:
+      - config/ollama.env
+    ```
 
 # API Key Setup
 Ensure the following files exist in the config/ folder and are populated with appropriate credentials:
