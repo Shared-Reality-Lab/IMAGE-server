@@ -16,6 +16,7 @@ In the route you just map failure -> HTTP status.
 import json
 import logging
 import jsonschema
+from typing import Literal
 
 PREPROCESSOR_RESPONSE_SCHEMA = './schemas/preprocessor-response.schema.json'
 DEFINITIONS_SCHEMA = './schemas/definitions.json'
@@ -23,16 +24,21 @@ REQUEST_SCHEMA = './schemas/request.schema.json'
 HANDLER_RESPONSE_SCHEMA = './schemas/handler-response.schema.json'
 
 
-class Validator:
-    """Lightweight validator for schema validation with consistent logging."""
+class _Validator:
+    """Lightweight validator for schema validation with consistent logging.
+    Not intended to be used directly;
+    Use PreprocessorValidator() or HandlerValidator().
+    """
 
     def __init__(
         self,
+        role: Literal["preprocessor", "handler"],
         data_schema: str,
-        request_schema: str = REQUEST_SCHEMA,
-        response_schema: str = PREPROCESSOR_RESPONSE_SCHEMA,
-        definitions_schema: str = DEFINITIONS_SCHEMA
+        request_schema: str,
+        response_schema: str,
+        definitions_schema: str
     ):
+        self.role = role
         self.data_schema_path = data_schema
         self.request_schema_path = request_schema
         self.response_schema_path = response_schema
@@ -52,7 +58,11 @@ class Validator:
             self.request_schema,
             resolver=self.resolver
         )
-        self._v_data = jsonschema.Draft7Validator(self.data_schema)
+        # Attach resolver to data validator so $ref works inside data schemas
+        self._v_data = jsonschema.Draft7Validator(
+            self.data_schema,
+            resolver=self.resolver
+        )
         self._v_response = jsonschema.Draft7Validator(
             self.response_schema,
             resolver=self.resolver
@@ -177,3 +187,24 @@ class Validator:
             return True, None
         except jsonschema.exceptions.ValidationError as e:
             return False, str(e)
+
+
+# Convenience factories - API
+def PreprocessorValidator(data_schema: str) -> _Validator:
+    return _Validator(
+        role="preprocessor",
+        data_schema=data_schema,
+        request_schema=REQUEST_SCHEMA,
+        response_schema=PREPROCESSOR_RESPONSE_SCHEMA,
+        definitions_schema=DEFINITIONS_SCHEMA,
+    )
+
+
+def HandlerValidator(data_schema: str) -> _Validator:
+    return _Validator(
+        role="handler",
+        data_schema=data_schema,
+        request_schema=REQUEST_SCHEMA,
+        response_schema=HANDLER_RESPONSE_SCHEMA,
+        definitions_schema=DEFINITIONS_SCHEMA,
+    )
