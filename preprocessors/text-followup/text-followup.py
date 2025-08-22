@@ -17,7 +17,6 @@
 from flask import Flask, request, jsonify
 import json
 import time
-import jsonschema
 import logging
 import os
 import sys
@@ -90,9 +89,8 @@ def followup():
     # load the content and verify incoming data
     content = request.get_json()
 
-    try:
-        validator.validate_request(content)
-    except jsonschema.exceptions.ValidationError:
+    ok, _ = validator.check_request(content)
+    if not ok:
         return jsonify({"error": "Invalid Preprocessor JSON format"}), 400
 
     # check we received a graphic (e.g., not a map or chart request)
@@ -237,9 +235,9 @@ def followup():
         )
 
     # check if LLM returned valid json that follows schema
-    try:
-        validator.validate_data(followup_response_json)
-    except jsonschema.exceptions.ValidationError:
+    # validate data
+    ok, _ = validator.check_data(followup_response_json)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # create full response & check meets overall preprocessor response schema
@@ -250,9 +248,8 @@ def followup():
         "data": followup_response_json
     }
 
-    try:
-        validator.validate_response(response)
-    except jsonschema.exceptions.ValidationError:
+    ok, _ = validator.check_response(response)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("full response length: " + str(len(response)))

@@ -25,6 +25,7 @@ RUN pip3 install --upgrade pip && \
 # Copy the schema and config files
 COPY /schemas /usr/src/app/schemas
 COPY /config /usr/src/app/config
+COPY /utils   /usr/src/app/utils
 
 # Copy your preprocessor application code
 COPY /preprocessors/resize-graphic /usr/src/app

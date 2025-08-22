@@ -15,6 +15,7 @@ RUN pip3 install --upgrade pip && \
 
 COPY /schemas /usr/src/app/schemas
 COPY /config /usr/src/app/config
+COPY /utils   /usr/src/app/utils
 
 # Create model directory
 RUN mkdir -p /usr/src/app/models

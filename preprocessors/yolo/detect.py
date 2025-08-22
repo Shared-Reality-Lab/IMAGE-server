@@ -16,19 +16,18 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 from datetime import datetime
-import json
 import time
 import logging
 import os
 import traceback
 from flask import Flask, request, jsonify
-import jsonschema
 import base64
 import io
 from PIL import Image
 from ultralytics import YOLO
 import torch
 from config.logging_utils import configure_logging
+from utils.validation import Validator
 
 # Create Flask app
 app = Flask(__name__)
@@ -51,26 +50,9 @@ if torch.cuda.is_available():
 else:
     device, device_name = 'cpu', 'CPU'
 
-# Load schemas once at startup
-with open('./schemas/preprocessors/object-detection.schema.json') as f:
-    DATA_SCHEMA = json.load(f)
-with open('./schemas/preprocessor-response.schema.json') as f:
-    RESPONSE_SCHEMA = json.load(f)
-with open('./schemas/definitions.json') as f:
-    DEFINITIONS_SCHEMA = json.load(f)
-with open('./schemas/request.schema.json') as f:
-    REQUEST_SCHEMA = json.load(f)
-
-# Build resolver store using loaded schemas
-# Following 7 lines of code are referred from
-# https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
-SCHEMA_STORE = {
-    RESPONSE_SCHEMA['$id']: RESPONSE_SCHEMA,
-    DEFINITIONS_SCHEMA['$id']: DEFINITIONS_SCHEMA
-    }
-RESOLVER = jsonschema.RefResolver.from_schema(
-    RESPONSE_SCHEMA, store=SCHEMA_STORE
-    )
+VALIDATOR = Validator(
+    data_schema='./schemas/preprocessors/object-detection.schema.json'
+)
 
 
 def decode_image(graphic_data):
@@ -142,15 +124,11 @@ def format_detection_results(results):
 def detect():
     # Get JSON content from the request
     content = request.get_json()
-    try:
-        # Validate input against REQUEST_SCHEMA
-        validator = jsonschema.Draft7Validator(
-            REQUEST_SCHEMA, resolver=RESOLVER
-            )
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {e.message} | Data: {content}")
+    # request schema validation
+    ok, err = VALIDATOR.check_request(content)
+    if not ok:
+        logging.error("Request validation failed.")
+        logging.debug(f"[request.validation] {err}")
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     # Check if there is graphic content to process
@@ -199,12 +177,10 @@ def detect():
         return "", 204
 
     # Validate YOLO output against the object detection data schema
-    try:
-        validator = jsonschema.Draft7Validator(DATA_SCHEMA)
-        validator.validate(objects)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for detection data")
-        logging.pii(f"Validation error: {e.message} | Data: {objects}")
+    ok, err = VALIDATOR.check_data(objects)
+    if not ok:
+        logging.error("Validation failed for detection data.")
+        logging.debug(f"[data.validation] {err}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # Create full response following preprocessor response schema
@@ -214,14 +190,11 @@ def detect():
         "name": name,
         "data": objects
     }
-    try:
-        validator = jsonschema.Draft7Validator(
-            RESPONSE_SCHEMA, resolver=RESOLVER
-            )
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for full response")
-        logging.pii(f"Validation error: {e.message} | Response: {response}")
+    # response schema validation
+    ok, err = VALIDATOR.check_response(response)
+    if not ok:
+        logging.error("Response validation failed. Are schemas out of date?")
+        logging.debug(f"[response.validation] {err}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.pii(response)

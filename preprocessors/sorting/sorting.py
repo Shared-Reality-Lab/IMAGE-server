@@ -15,13 +15,12 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 from flask import Flask, request, jsonify
-import json
 import time
-import jsonschema
 import logging
 from math import sqrt
 from datetime import datetime
 from config.logging_utils import configure_logging
+from utils.validation import Validator
 
 configure_logging()
 
@@ -29,9 +28,12 @@ configure_logging()
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
+VALIDATOR = Validator(
+    data_schema='./schemas/preprocessors/sorting.schema.json'
+)
+
+
 # this function determines the size of bounding box
-
-
 def calculate_diagonal(x1, y1, x2, y2):
     diag = sqrt((x2 - x1)**2 + (y2 - y1)**2)
     return diag
@@ -50,31 +52,13 @@ def readImage():
     left_id = []
     small_id = []
     centroid = []
-    # loading schemas to check of the received and returned outputs are correct
-    with open('./schemas/preprocessors/sorting.schema.json') as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definition_schema = json.load(jsonfile)
-    with open('./schemas/request.schema.json') as jsonfile:
-        first_schema = json.load(jsonfile)
-    # Following 6 lines of code are refered from
-    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
-    schema_store = {
-        schema['$id']: schema,
-        definition_schema['$id']: definition_schema
-    }
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
+
     content = request.get_json()
-    # check if received input is correct
-    try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
+    # request schema validation
+    ok, err = VALIDATOR.check_request(content)
+    if not ok:
         logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {e.message}")
+        logging.debug(f"[request.validation] {err}")
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     preprocessor = content["preprocessors"]
@@ -83,6 +67,7 @@ def readImage():
         logging.info("Object detection output not "
                      "available. Skipping...")
         return "", 204
+
     oDpreprocessor = \
         preprocessor["ca.mcgill.a11y.image.preprocessor.objectDetection"]
     objects = oDpreprocessor["objects"]
@@ -111,13 +96,12 @@ def readImage():
     name = "ca.mcgill.a11y.image.preprocessor.sorting"
     data = {"leftToRight": left_id,
             "topToBottom": top_id, "smallToBig": small_id}
-    # verify the output format
-    try:
-        validator = jsonschema.Draft7Validator(data_schema)
-        validator.validate(data)
-    except jsonschema.exceptions.ValidationError as e:
+
+    # data schema validation
+    ok, err = VALIDATOR.check_data(data)
+    if not ok:
         logging.error("Validation failed for processed data")
-        logging.pii(f"Validation error: {e.message}")
+        logging.debug(f"[data.validation] {err}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {
@@ -126,13 +110,12 @@ def readImage():
         "name": name,
         "data": data
     }
-    try:
-        validator = jsonschema.Draft7Validator(
-            schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as e:
+
+    # response schema validation
+    ok, err = VALIDATOR.check_response(response)
+    if not ok:
         logging.error("Validation failed for final response")
-        logging.pii(f"Validation error: {e.message}")
+        logging.debug(f"[response.validation] {err}")
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")

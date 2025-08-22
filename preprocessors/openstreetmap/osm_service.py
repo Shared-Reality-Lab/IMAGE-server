@@ -985,6 +985,8 @@ def compute_street_length(processed_OSM_data):
 
 def validate(schema, data, resolver, json_message, error_code):
     """
+    DEPRECATED: use utils.validation.Validator instead
+
     Validate a piece of data against a schema
     Args:
         schema: a JSON schema to check against

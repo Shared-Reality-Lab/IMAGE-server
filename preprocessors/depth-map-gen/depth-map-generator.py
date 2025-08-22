@@ -24,18 +24,22 @@ import torch
 import torchvision.transforms as transforms
 from flask import Flask, request, jsonify
 from collections import OrderedDict
-import json
 import time
-import jsonschema
 import logging
 import base64
 from lib.multi_depth_model_woauxi import RelDepthModel
 from datetime import datetime
 from config.logging_utils import configure_logging
+from utils.validation import Validator
 
 configure_logging()
 
 app = Flask(__name__)
+
+# Initialize shared validator
+VALIDATOR = Validator(
+    data_schema='./schemas/preprocessors/depth-map-generator.schema.json'
+    )
 
 
 def parse_args():
@@ -85,33 +89,13 @@ def scale_torch(img):
 @app.route("/preprocessor", methods=['POST', ])
 def depthgenerator():
     logging.debug("Received request")
-    # load the schema
-    with open('./schemas/preprocessors/depth-map-generator.schema.json') \
-            as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') \
-            as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definitionSchema = json.load(jsonfile)
-    with open('./schemas/request.schema.json') as jsonfile:
-        first_schema = json.load(jsonfile)
-    # Following 6 lines of code
-    # refered from
-    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
-    schema_store = {
-        schema['$id']: schema,
-        definitionSchema['$id']: definitionSchema
-    }
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
+
+    # incoming request
     content = request.get_json()
-    try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {e.message}")
+
+    # request schema validation
+    ok, _ = VALIDATOR.check_request(content)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     # check content category from contentCategoriser
@@ -131,6 +115,7 @@ def depthgenerator():
     if "graphic" not in content:
         logging.info("Request is not a graphic. Skipping...")
         return "", 204  # No content
+
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.depth-map-gen"
@@ -184,12 +169,9 @@ def depthgenerator():
         logging.pii(f"Inference error: {e}")
         return jsonify("Depth Model cannot complete"), 500
 
-    try:
-        validator = jsonschema.Draft7Validator(data_schema)
-        validator.validate(depth)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for depth data")
-        logging.pii(f"Validation error: {e.message}")
+    # data schema validation
+    ok, _ = VALIDATOR.check_data(depth)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {
@@ -198,12 +180,10 @@ def depthgenerator():
         "name": name,
         "data": depth
     }
-    try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for final response")
-        logging.pii(f"Validation error: {e.message}")
+
+    # response validation
+    ok, _ = VALIDATOR.check_response(response)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     torch.cuda.empty_cache()

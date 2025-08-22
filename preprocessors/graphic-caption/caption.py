@@ -17,14 +17,13 @@
 from flask import Flask, request, jsonify
 import sys
 import time
-import jsonschema
 import logging
 from datetime import datetime
 from config.logging_utils import configure_logging
 from utils.llm import (
     LLMClient,
     GRAPHIC_CAPTION_PROMPT
-    )
+)
 from utils.validation import Validator
 
 configure_logging()
@@ -32,12 +31,11 @@ configure_logging()
 app = Flask(__name__)
 
 DATA_SCHEMA = './schemas/preprocessors/caption.schema.json'
-
 PREPROCESSOR_NAME = "ca.mcgill.a11y.image.preprocessor.graphic-caption"
 
 try:
     llm_client = LLMClient()
-    validator = Validator(data_schema=DATA_SCHEMA)
+    VALIDATOR = Validator(data_schema=DATA_SCHEMA)
     logging.debug("LLM client and validator initialized")
 except Exception as e:
     logging.error(f"Failed to initialize clients: {e}")
@@ -53,9 +51,9 @@ def categorise():
     # load the content and verify incoming data
     content = request.get_json()
 
-    try:
-        validator.validate_request(content)
-    except jsonschema.exceptions.ValidationError:
+    # request schema validation
+    ok, _ = VALIDATOR.check_request(content)
+    if not ok:
         return jsonify({"error": "Invalid Preprocessor JSON format"}), 400
 
     # check we received a graphic (e.g., not a map or chart request)
@@ -87,9 +85,9 @@ def categorise():
     # create data json and verify the content-categoriser schema is respected
     graphic_caption_json = {"caption": graphic_caption.strip()}
 
-    try:
-        validator.validate_data(graphic_caption_json)
-    except jsonschema.exceptions.ValidationError:
+    # data schema validation
+    ok, _ = VALIDATOR.check_data(graphic_caption_json)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # create full response & check meets overall preprocessor response schema
@@ -100,13 +98,13 @@ def categorise():
         "data": graphic_caption_json
     }
 
-    try:
-        validator.validate_response(response)
-    except jsonschema.exceptions.ValidationError:
+    # response validation
+    ok, _ = VALIDATOR.check_response(response)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # all done; return to orchestrator
-    return jsonify(response)
+    return response
 
 
 @app.route("/health", methods=["GET"])
@@ -132,7 +130,7 @@ def warmup():
         else:
             return jsonify(
                 {"status": "error", "message": "Warmup failed"}
-                ), 500
+            ), 500
     except Exception as e:
         logging.error(f"Warmup endpoint failed: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500

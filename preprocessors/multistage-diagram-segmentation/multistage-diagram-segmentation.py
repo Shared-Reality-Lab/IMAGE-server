@@ -15,7 +15,6 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
-import jsonschema
 import logging
 import time
 from flask import Flask, request, jsonify
@@ -93,10 +92,9 @@ def process_diagram():
             )
         return jsonify({"error": "Invalid request URL"}), 403
 
-    # 1. Validate Incoming Request
-    try:
-        validator.validate_request(content)
-    except jsonschema.exceptions.ValidationError:
+    # 1. Validate Incoming Request via shared Validator
+    ok, _ = validator.check_request(content)
+    if not ok:
         return jsonify({"error": "Invalid Preprocessor JSON format"}), 400
 
     request_uuid = content["request_uuid"]
@@ -171,10 +169,9 @@ def process_diagram():
             logging.info("Segmentation process did not yield any data.")
             final_data_json = base_json
 
-        # 7. Validate the Generated Data against its specific schema
-        try:
-            validator.validate_data(final_data_json)
-        except jsonschema.exceptions.ValidationError:
+        # 7. Data schema validation
+        ok, _ = validator.check_data(final_data_json)
+        if not ok:
             return jsonify("Invalid Preprocessor JSON format"), 500
 
         # 8. Construct the Final Response
@@ -186,9 +183,8 @@ def process_diagram():
         }
 
         # 9. Validate Final Response against System Schema
-        try:
-            validator.validate_response(response)
-        except jsonschema.exceptions.ValidationError:
+        ok, _ = validator.check_response(response)
+        if not ok:
             return jsonify("Invalid Preprocessor JSON format"), 500
 
         logging.info(

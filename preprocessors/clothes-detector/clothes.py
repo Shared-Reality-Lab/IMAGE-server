@@ -14,9 +14,7 @@
 # If not, see
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
-import json
 import time
-import jsonschema
 import logging
 import base64
 from flask import Flask, request, jsonify
@@ -35,9 +33,14 @@ from colorthief import ColorThief
 from yolo.utils.utils import load_classes
 from predictors.YOLOv3 import YOLOv3Predictor
 from datetime import datetime
+from utils.validation import Validator
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.NOTSET)
+
+# Initialize shared validator
+VALIDATOR = Validator(
+    data_schema='./schemas/preprocessors/clothes.schema.json')
 
 # code referred from
 # https://medium.com/codex/rgb-to-color-names-in-python-the-robust-way-ec4a9d97a01f
@@ -102,30 +105,14 @@ def get_clothes(img):
 def categorise():
     final_data = []
     logging.debug("Received request")
-    with open('./schemas/preprocessors/clothes.schema.json') \
-            as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') \
-            as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definitionSchema = json.load(jsonfile)
-    with open('./schemas/request.schema.json') as jsonfile:
-        first_schema = json.load(jsonfile)
-    schema_store = {
-        schema['$id']: schema,
-        definitionSchema['$id']: definitionSchema
-    }
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
 
     content = request.get_json()
-    try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+
+    # request schema validation
+    ok, _ = VALIDATOR.check_request(content)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 400
+
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     preprocessor_name = "ca.mcgill.a11y.image.preprocessor.clothesDetector"
@@ -172,26 +159,23 @@ def categorise():
                 final_data.append(clothes)
                 logging.info(final_data)
         data = {"clothes": final_data}
-        try:
-            validator = jsonschema.Draft7Validator(data_schema)
-            validator.validate(data)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+
+        # data schema validation
+        ok, _ = VALIDATOR.check_data(data)
+        if not ok:
             return jsonify("Invalid Preprocessor JSON format"), 500
+
         response = {
             "request_uuid": request_uuid,
             "timestamp": int(timestamp),
             "name": preprocessor_name,
             "data": data
         }
-        # validate the results to check if they are in correct format
-        try:
-            validator = jsonschema.Draft7Validator(schema,
-                                                   resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+        # response validation
+        ok, _ = VALIDATOR.check_response(response)
+        if not ok:
             return jsonify("Invalid Preprocessor JSON format"), 500
+
         logging.debug("Sending response")
         return response
 

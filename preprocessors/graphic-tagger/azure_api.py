@@ -19,24 +19,27 @@ from re import search
 import operator
 
 # import numpy as np
-import json
 import time
-import jsonschema
 import logging
 import base64
 import os
 from flask import Flask, request, jsonify
 from datetime import datetime
 from config.logging_utils import configure_logging
+from utils.validation import Validator
 
 configure_logging()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
+# Initialize shared validator once
+VALIDATOR = Validator(
+    data_schema='./schemas/preprocessors/graphic-tagger.schema.json'
+)
+
+
 # extract the required results from the API returned values
-
-
 def process_results(response, labels):
     if not response["categories"]:
         return labels[0]
@@ -51,10 +54,9 @@ def process_results(response, labels):
         else:
             return labels[0]
 
+
 # this function takes in the image and send the image to Azure to get the
 # output
-
-
 def process_image(image, labels):
 
     region = "canadacentral"  # For example, "westus"
@@ -116,30 +118,12 @@ def categorise():
     logging.debug("Received request")
     # load the schema
     labels = ["other", "indoor", "outdoor", "people"]
-    with open('./schemas/preprocessors/graphic-tagger.schema.json') \
-            as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') \
-            as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definitionSchema = json.load(jsonfile)
-    with open('./schemas/request.schema.json') as jsonfile:
-        first_schema = json.load(jsonfile)
-    schema_store = {
-        schema['$id']: schema,
-        definitionSchema['$id']: definitionSchema
-    }
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
 
     content = request.get_json()
-    try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {e.message}")
+
+    # request schema validation
+    ok, _ = VALIDATOR.check_request(content)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     request_uuid = content["request_uuid"]
@@ -177,27 +161,22 @@ def categorise():
             binary = base64.b64decode(image_b64)
             pred = process_image(image=binary, labels=labels)
             type = {"category": pred}
-        try:
-            validator = jsonschema.Draft7Validator(data_schema)
-            validator.validate(type)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error("Validation failed for graphic tagger result")
-            logging.pii(f"Validation error: {e.message}")
+
+        # data validation
+        ok, _ = VALIDATOR.check_data(type)
+        if not ok:
             return jsonify("Invalid Preprocessor JSON format"), 500
+
         response = {
             "request_uuid": request_uuid,
             "timestamp": int(timestamp),
             "name": name,
             "data": type
         }
-        # validate the results to check if they are in correct format
-        try:
-            validator = jsonschema.Draft7Validator(schema,
-                                                   resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error("Validation failed for final response")
-            logging.pii(f"Validation error: {e.message}")
+
+        # response validation
+        ok, _ = VALIDATOR.check_response(response)
+        if not ok:
             return jsonify("Invalid Preprocessor JSON format"), 500
 
         logging.debug(type)

@@ -15,13 +15,11 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 
-import json
 import time
 import logging
-import jsonschema
 from flask import Flask, request, jsonify
 from config.logging_utils import configure_logging
-
+from utils.validation import Validator
 from charts_utils import getLowerPointsOnLeft, getHigherPointsOnLeft
 from charts_utils import getLowerPointsOnRight, getHigherPointsOnRight
 from datetime import datetime
@@ -31,6 +29,11 @@ configure_logging()
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
+# Initialize shared validator
+VALIDATOR = Validator(
+    data_schema='./schemas/preprocessors/line-charts.schema.json'
+)
+
 
 @app.route('/preprocessor', methods=['POST', 'GET'])
 def get_chart_info():
@@ -39,18 +42,7 @@ def get_chart_info():
     functionality to be extended later
     """
     logging.debug("Received request")
-    # Load schemas
-    with open('./schemas/preprocessors/line-charts.schema.json') as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definition_schema = json.load(jsonfile)
-    schema_store = {
-        data_schema['$id']: data_schema,
-        schema['$id']: schema,
-        definition_schema['$id']: definition_schema
-    }
+
     content = request.get_json()
 
     # Check if request is for a chart
@@ -58,24 +50,10 @@ def get_chart_info():
         logging.info("Not a highcharts charts request. Skipping...")
         return "", 204
 
-    with open('./schemas/request.schema.json') as jsonfile:
-        request_schema = json.load(jsonfile)
-    # Validate incoming request
-    resolver = jsonschema.RefResolver.from_schema(
-        request_schema, store=schema_store)
-    try:
-        validator = jsonschema.Draft7Validator(
-            request_schema,
-            resolver=resolver
-        )
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as error:
-        logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {error.message}")
+    # request validation (request.schema.json)
+    ok, _ = VALIDATOR.check_request(content)
+    if not ok:
         return jsonify("Invalid Request JSON format"), 400
-    # Use response schema to validate response
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
 
     name = 'ca.mcgill.a11y.image.preprocessor.lineChart'
     request_uuid = content['request_uuid']
@@ -108,12 +86,9 @@ def get_chart_info():
 
     data = {'dataPoints': series_data}
 
-    try:
-        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
-        validator.validate(data)
-    except jsonschema.exceptions.ValidationError as error:
-        logging.error("Validation failed for proccessed data")
-        logging.pii(f"Validation error: {error.message}")
+    # data validation
+    ok, _ = VALIDATOR.check_data(data)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     response = {
@@ -123,12 +98,9 @@ def get_chart_info():
         'data': data
     }
 
-    try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as error:
-        logging.error("Validation failed for response")
-        logging.pii(f"Validation error: {error.message} | {response}")
+    # Validate response (preprocessor-response.schema.json)
+    ok, _ = VALIDATOR.check_response(response)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")
