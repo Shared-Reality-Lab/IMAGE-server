@@ -1,21 +1,34 @@
 # Deploying the IMAGE Server
-The following information is meant to aid people in getting IMAGE running on their own so components can be used. It is based on what we've done for our testing and production environments, but by no means is this the only way to deploy. The general principles and concerns will likely be relevant.
+There are many ways to configure and deploy an IMAGE server.
+We describe how our own IMAGE server is configured, as a reference for you to do your own deployment.
+IMAGE server heavily relies on Docker, and is deployed via a docker-compose file, so if you aren't familiar with Docker, you will struggle to set up a server from scratch.
+We generally do not provide step-by-step instructions itemizing each command, as these change with versions, etc.
+High level steps for deployment:
 
-# System Requirements & Dependencies
-The following is written with the assumption you are running a Debian-based Linux distribution (e.g., Ubuntu 24.04, Debian 12). Other distributions may work but are not officially tested.
+1. Install Debian server (We use Ubuntu LTS), whether on a local machine, or in the cloud (we have used Amazon EC2)
+2. Install and configure base tools including Docker and GPU driver
+3. Set up your directory structure, clone the IMAGE server repository, and configure links
+3. Decide how you will handle routing (we use traefik), and encryption (easy if you use traefik!)
+4. Set up config files for accessing external tools like an LLM
+5. Run the imageup script to bring up the entire IMAGE server stack
+6. Point the IMAGE browser extension to your server via the options page
+6. Know how to keep your IMAGE server updated
 
-# Minimum System Requirements
-- OS: Debian-based Linux (Ubuntu 24.04+ recommended) — Pegasus runs on Ubuntu 24.04 LTS, so we recommend using the latest LTS.
-- CPU: At least 4 cores recommended - more cores improve parallel processing.
-- RAM: 16GB or more recommended — Some services may require more RAM, especially if running multiple preprocessors concurrently.
-- Storage: 50GB free, 100GB+ recommended if using a GPU.
-- GPU: NVIDIA GPU required for certain services (some services will not run on CPU-only configurations).
-** While AMD GPUs may work, we have not tested compatibility with AMD ROCm or other alternatives.
 
-AWS EC2 Example Configuration
-IMAGE Server was also successfully deployed on AWS EC2 using the configuration below:
+# System Requirements
+System requirements vary depending on what components you will run, and how loaded you expect your server to be.
+For reference, we run a test server with a Ryzen 3800x CPU, 32GB RAM, 1GB NVMe, and a couple of older NVidia GPUs (Titan XP and 1660ti).
+This is fine for testing, including running a very small local LLM.
+Our production reference server is beefier, with a Ryzen 7950x CPU, 5090 NVidia GPU, 64GB RAM, 2TB NVMe.
+Anecdotal load testing indicates that the production reference server responds to most requests in roughly 5 seconds, and can support multiple users all making overlapping requests from the browser extension as fast as they can (although response time increases).
 
-- Instance Type: [Preferred] g5.xlarge (GPU) or t3.large (CPU-only)
+Pretty much any IMAGE server will require a GPU for running local ML models and services.
+However, if you use a remote API for LLM functionality, an 8GB VRAM GPU can be sufficient for running the smaller local models that provide, for example, text-to-speech.
+We expect that it will soon be possible to run an IMAGE server without any local GPU resources, and only use cloud endpoints, but at least a small GPU is currently required.
+If you run a local LLM, anticipate using approximately 20GB of GPU VRAM for reasonable response quality.
+
+We have also run IMAGE on AWS EC2. Note that the major cost is the dedicated GPU:
+- Instance Type: g5.xlarge (GPU)
 - OS: Ubuntu 22.04 LTS
 - CPU: 4 vCPUs
 - RAM: 16 GiB (15 GiB usable)
@@ -23,45 +36,73 @@ IMAGE Server was also successfully deployed on AWS EC2 using the configuration b
 - Network: Default VPC with public IPv4
 - Security Group: Open ports 22 (SSH), 80 (HTTP), 443 (HTTPS) — Required for server & web-based access
 
-Note: If using a CPU-only instance (t3.large), some preprocessors/services will not be available.
+# System setup
+- Install Debian or Ubuntu LTS Server
+- Install and configure Docker (make sure `docker --version` & `docker compose --version` both work)
+- Install GPU drivers (make sure `nvidia-smi` sees your GPU
 
-# Required Software
-Install the following packages:
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y docker.io docker-compose git python3-pip
-sudo apt install -y nvidia-driver nvidia-container-runtime  # For GPU-based services
+# Cloning and configuring
+We strongly recommend putting all of the IMAGE server components in the directory `/var/docker/image`.
+Although mostly abstracted, if you use another directory, you may need to adjust scripts.
 
-Post-install steps:
-sudo usermod -aG docker $USER
-newgrp docker
-reboot  # Required after NVIDIA driver install
+In `/var/docker/image`, clone the IMAGE server repository:
 
-Verify:
-docker --version
-docker-compose --version
-nvidia-smi  # For GPU instances
-
-# Cloning the Repository
+```
 git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git
-cd IMAGE-server
+```
 
-# Environment Configuration
-Docker Group ID
-Find your Docker group ID:
+In the same directory, make the following soft links, to get access to scripts and configuration, and copy the prod-docker-compose.yml file so you can modify it to reflect your server configuration:
 
-grep docker /etc/group | awk -F: '{ print $3 }'
-Add this value to your .env file:
-DOCKER_GID=122  # Replace with your actual Docker group ID
+```
+ln -s /var/docker/image/IMAGE-server/scripts ./bin
+ln -s IMAGE-server/config ./config
+ln -s  IMAGE-server/docker-compose.yml ./docker-compose.yml
+cp IMAGE-server/prod-docker-compose.yml ./prod-docker-compose.yml
+```
+
+Create a `.env` file that tells Docker, for example, what profile you want to use (production, test, etc.), and what versions of containers you want to use, e.g.:
+
+```
+COMPOSE_PROFILES=production
+COMPOSE_FILE=docker-compose.yml:prod-docker-compose.yml
+REGISTRY_TAG=latest
+DOCKER_GID=999
+PII_LOGGING_ENABLED=false
+```
+
+COMPOSE_PROFILES sets the docker compose profile to be used. If you look at docker-compose.yml, you will note some microservices are run only in the `test` profile. You can also make your own profile in a docker-compose file, and set it here.
+
+DOCKER_GID can be obtained by running `grep docker /etc/group | awk -F: '{ print $3 }'`
+
+`REGISTRY_TAG=latest` will use the most current stable IMAGE server components. Set to `unstable` to run pre-production (beta) versions.
+
+`PII_LOGGING_ENABLED=false` will avoid logging any personally identifiable information (PII).
+Make sure this aligns with your terms of service if you set it to `true` (useful for debugging on a test server).
+
+The prod-docker-compose.yml file assumes you are doing routing via traefik, and uses the McGill server names.
+You can override this in the prod-docker-compose.yml file to reflect your own server names and configuration.
+If you don't want to pick up future changes to the base docker-compose.yml file, copy it instead of linking it.
 
 
-# API Key Setup
-Ensure the following files exist in the config/ folder and are populated with appropriate credentials:
+The IMAGE microservices use cloud and other endpoints, for which you typically need credentials.
+These should not be checked into git, of course!
+Ensure the following files exist in `/var/docker/image/config/` and are populated with appropriate credentials:
+
+```
 apis-and-selection.env
 azure-api.env
-ollama.env
+llm.env
 maps.env
+```
 
-If a service is not in use, simply create an empty file with the same name to avoid startup errors.
+If a service is not in use, create an empty file to avoid startup errors.
+
+Note that for the LLM used by multiple server components, we use a local instance of vLLM fronted by open-webui.
+An easier alternative is to point to a cloud-based openai API compatible service for the LLM you wish to use.
+We currently use qwen [GET DETAILED INFO FROM MIKE]
+
+
+# JEFF EDITED TO HERE...
 
 # Starting Services
 Create the Traefik Network
