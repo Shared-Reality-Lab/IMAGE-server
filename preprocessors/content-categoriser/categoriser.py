@@ -75,12 +75,15 @@ def categorise():
     base64_image = source.split(",")[1]
 
     graphic_category = llm_client.chat_completion(
-        prompt=CATEGORISER_PROMPT + POSSIBLE_CATEGORIES,
+        prompt=f"{CATEGORISER_PROMPT} {POSSIBLE_CATEGORIES}",
         image_base64=base64_image,
         temperature=0.0,
         json_schema=CATEGORISER_RESPONSE_SCHEMA,
         parse_json=True
     )
+
+    logging.debug(f"PROMPT: {CATEGORISER_PROMPT} {POSSIBLE_CATEGORIES}")
+    logging.debug(f"Schema: {CATEGORISER_RESPONSE_SCHEMA}")
 
     if graphic_category is None:
         logging.error("Failed to receive response from LLM.")
@@ -90,10 +93,11 @@ def categorise():
 
     logging.pii(f"Graphic category JSON: {graphic_category}")
     # create data json and verify the content-categoriser schema is respected
-    graphic_category_json = {"category": graphic_category}
+    # graphic_category_json = {"category": graphic_category}
 
     try:
-        validator.validate_data(graphic_category_json)
+        # validator.validate_data(graphic_category_json)
+        validator.validate_data(graphic_category)
     except jsonschema.exceptions.ValidationError:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
@@ -102,7 +106,8 @@ def categorise():
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": PREPROCESSOR_NAME,
-        "data": graphic_category_json
+        # "data": graphic_category_json
+        "data": graphic_category
     }
 
     try:
