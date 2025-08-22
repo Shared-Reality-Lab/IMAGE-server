@@ -1,4 +1,5 @@
 # Deploying the IMAGE Server
+IMAGE is a microservice-oriented stack where preprocessors, handlers, and services plug into a central orchestrator. Everything runs in Docker containers, wired together via Docker Compose.
 The following information is meant to aid people in getting IMAGE running on their own so components can be used. It is based on what we've done for our testing and production environments, but by no means is this the only way to deploy. The general principles and concerns will likely be relevant.
 
 # System Requirements & Dependencies
@@ -27,32 +28,58 @@ Note: If using a CPU-only instance (t3.large), some preprocessors/services will 
 
 # Required Software
 Install the following packages:
+```
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y docker.io docker-compose git python3-pip
 sudo apt install -y nvidia-driver nvidia-container-runtime  # For GPU-based services
+```
 
 Post-install steps:
+```
 sudo usermod -aG docker $USER
 newgrp docker
 reboot  # Required after NVIDIA driver install
+```
 
 Verify:
+```
 docker --version
 docker-compose --version
 nvidia-smi  # For GPU instances
+```
 
-# Cloning the Repository
+# Clone the [IMAGE-server](https://github.com/Shared-Reality-Lab/IMAGE-server) repo
+```
 git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git
 cd IMAGE-server
+```
+
+# Docker Compose Files
+IMAGE runs entirely through Docker Compose. You’ll see several Compose files in the repo root:
+- docker-compose.yml — the base stack. This is applied to any profile (test, production).
+- test-docker-compose.yml — overrides for test/dev setups (we use Unicorn). 
+- prod-docker-compose.yml — overrides for production setups (we use Pegasus).
+- ec2-docker-compose.yml — overrides for our EC2 instance.
+- docker-compose.override.yml — local overrides.
+
+Docker Compose lets you layer files with -f flags, or list them in .env via COMPOSE_FILE. The next section covers how to populate the .env file.
 
 # Environment Configuration
-Docker Group ID
-Find your Docker group ID:
+Docker Compose uses environment files to configure how services run. In IMAGE, you’ll usually work with two types of env files:
 
-grep docker /etc/group | awk -F: '{ print $3 }'
-Add this value to your .env file:
-DOCKER_GID=122  # Replace with your actual Docker group ID
-
+1. System-level .env (in repo root) — tells Compose which profiles and files to load.
+    Let’s look at the root .env. 
+    This is our unicorn .env file, which is our test server:
+  ```
+  # Do not add any secrets in this file
+  COMPOSE_PROFILES=test  # or COMPOSE_PROFILES=production
+  COMPOSE_FILE=docker-compose.yml:test-docker-compose.yml:docker-compose.override.yml  # a colon-separated list of compose files to apply in order (base -> test overrides -> local overrides)
+  REGISTRY_TAG=unstable   # Docker image tag to use (unstable for development, latest for production).
+  DOCKER_GID=134 # find your Docker group ID by doing `grep docker /etc/group | awk -F: '{ print $3 }'`
+  PII_LOGGING_ENABLED=true  # Flag to control whether Personally Identifiable Information logging is active (true/false)
+  ```
+2. Service-level env files (in config/) — hold API keys and credentials
+  Alongside the root .env, IMAGE uses per-service environment files under config/. These files hold API keys, credentials, or flags for optional integrations. Empty files are fine if you’re not using that service; however, Docker Compose may complain if these files don't exist, so you may leave them empty, or opt out of using the env file entirely.
 
 # API Key Setup
 Ensure the following files exist in the config/ folder and are populated with appropriate credentials:
