@@ -88,30 +88,33 @@ Docker Compose uses environment files to configure how services run. In IMAGE, y
     env_file:
       - config/ollama.env
     ```
+    Ensure the following files exist in the config/ folder and are populated with appropriate credentials:
 
-# API Key Setup
-Ensure the following files exist in the config/ folder and are populated with appropriate credentials:
-apis-and-selection.env
-azure-api.env
-ollama.env
-maps.env
+    apis-and-selection.env, azure-api.env, llm.env, maps.env
+    
+    If a service is not in use, simply create an empty file with the same name to avoid startup errors.
+    Here is a command to create them all:
+    `touch config/{maps.env,express-common.env,llm.env,azure-api.env}`
 
-If a service is not in use, simply create an empty file with the same name to avoid startup errors.
 
 # Starting Services
-Create the Traefik Network
-If this is your first time:
-docker network create traefik
+To start the services, you need to be in the directory where your docker compose is located.
 
-Start Services
+First, ceate the Traefik Network if this is your first time: 
+`docker network create traefik`
+
+Then, you can start services:
+
 From the IMAGE-server root directory:
-docker-compose up -d
+`docker-compose up -d`
+
+Tips:
 
 Optional cleanup:
-docker system prune
+`docker system prune`
 
 Verify running containers:
-docker ps
+`docker ps`
 
 
 # Why We Use Traefik
@@ -121,52 +124,74 @@ We use Traefik as the external reverse proxy for the IMAGE server stack. It allo
 - Route traffic to the correct service by hostname or path (e.g., /render → Orchestrator)
 - Cleanly separate internal and external traffic
 
-It works in combination with an internal nginx instance that forwards specific requests to services like the Orchestrator.
+It works in combination with an internal nginx instance that forwards specific requests to services like the Orchestrator. Traefik only needs to reach the services you want public; the rest stay on the internal image network. In our docker-compose, we connect `monarch-link-app` and `tat` to Traefik for this reason.
 
 Example networking block in docker-compose.yml:
-
+```
 networks:
   traefik:
     external: true
     name: traefik
   default:
     name: image
+```
 Services must explicitly declare the network they connect to.
 
+Traefik itself lives in a separate compose (it’s just another container) and exposes ports 80/443 on the host.
+
 # Why We Use Ollama
-Ollama is used to serve local LLMs for use with the text-followup preprocessor and others. It allows offline or low-latency processing and integrates with Open WebUI.
+Ollama is the local LLM runtime. It’s not a preprocessor itself; instead, several preprocessors in IMAGE-server call out to whatever LLM endpoint you configure (Ollama locally, or a remote API if you set one). Currently the following preprocessors connect to the LLM via env_file `./config/llm.env`: content-categoriser, graphic-caption, text-followup, and multistage-diagram-segmentation. It allows offline or low-latency processing and integrates with Open WebUI.
 Key features:
 - Accepts image and text input for multimodal tasks
 - Loads large models locally
 - Paired with Open WebUI
 
 Configuration:
-Store credentials and settings in config/ollama.env.
+Store credentials and settings in config/ollama.env. [Guidelines on how to set this up wcan be found here](https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/text-followup).
+
+Similar to Traefik, Ollama (or vLLM) works the same way: it’s not baked into IMAGE-server, but runs in its own stack and IMAGE preprocessors talk to it via HTTP.
+Within the ollama `docker-compose.yml`, you'll find services like:
+- ollama: pulls `ollama/ollama:latest`, exposes port 11434.
+- vllm: runs `vllm/vllm-openai:latest`, reserves a GPU, serves an OpenAI-style API at port 8000.
+- open-webui: optional WebUI that connects to Ollama or vLLM and is exposed via Traefik with a hostname like `ollama.unicorn.cim.mcgill.ca`.
 
 
 GPU Notes
-Containers that require GPU include espnet-tts, text-followup, semantic-segmentation,object-detection, action-recognition, and so on.
+Some containers that require GPU include espnet-tts, text-followup, semantic-segmentation,object-detection, action-recognition, and so on. You can see which ones need GPU directly in docker-compose.yml—they either include a `deploy.resources.reservations.devices` stanza with `driver: nvidia`. 
 
 If you see this error:
-
 Cannot start service ...: could not select device driver "nvidia"
+Common error & fixes
 
-Make sure:
-- nvidia-smi works
-- The container is configured to use the NVIDIA runtime
+Error:
 
+Cannot start service <name>: could not select device driver "nvidia"
+
+Fix checklist:
+
+- Host GPUs present: `nvidia-smi` works on the host.
+- Toolkit configured: `nvidia-container-toolkit` installed and Docker restarted.
+- Compose GPU config present: service has either `deploy.resources.reservations.devices` with `driver: nvidia` (or similar).
+
+Performance tips:
+Within our `scripts/` directory, we provide a [warmup script](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/scripts/warmup) that hits model-loading endpoints to cold-start model load and reduce first-request latency.
 
 # Docker Image Tagging
 Docker images are tagged in four ways:
 - latest: Stable, production-ready image
 - unstable: Built from the main branch, less tested
-- <timestamp>: Exact build time
-- <version>: Explicit version number
+- `<timestamp>`: Exact build time
+- `<version>`: Explicit version number
 
 We recommend:
 - Use unstable for development
 - Use latest for production
 
+As described earlier in the `.env` file in root, you can set the default tag there. To update containers to a new tag, you can:
+```
+docker-compose pull
+docker-compose up -d
+```
 
 # Local vs Production Use
 Local Testing
