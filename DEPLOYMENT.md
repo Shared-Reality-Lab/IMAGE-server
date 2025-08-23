@@ -119,6 +119,7 @@ Docker Compose uses environment files to configure how services run. In IMAGE, y
     Here is a command to create them all:
     `touch config/{maps.env,express-common.env,llm.env,azure-api.env}`
 
+    Please note: these files include credentials that should not be committed into Git!
 
 # Starting Services
 To start the services, you need to be in the directory where your docker compose is located.
@@ -160,7 +161,7 @@ networks:
 ```
 Services must explicitly declare the network they connect to.
 
-Traefik itself lives in a separate compose (it’s just another container) and exposes ports 80/443 on the host.
+Traefik itself lives in a separate compose (it’s just another container) and exposes ports 80/443 on the host. Following our setup on `/var/docker/image` above, we place this docker compose on `/var/docker/traefik`.
 
 # Why We Use Ollama
 Ollama is the local LLM runtime. It’s not a preprocessor itself; instead, several preprocessors in IMAGE-server call out to whatever LLM endpoint you configure (Ollama locally, or a remote API if you set one). Currently the following preprocessors connect to the LLM via env_file `./config/llm.env`: content-categoriser, graphic-caption, text-followup, and multistage-diagram-segmentation. It allows offline or low-latency processing and integrates with Open WebUI.
@@ -172,7 +173,7 @@ Key features:
 Configuration:
 Store credentials and settings in config/ollama.env. [Guidelines on how to set this up wcan be found here](https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/text-followup).
 
-Similar to Traefik, Ollama (or vLLM) works the same way: it’s not baked into IMAGE-server, but runs in its own stack and IMAGE preprocessors talk to it via HTTP.
+Similar to Traefik, Ollama (or vLLM) works the same way: it’s not baked into IMAGE-server, but runs in its own stack and IMAGE preprocessors talk to it via HTTP. Its docker-compose lives in `/var/docker/ollama`.
 Within the ollama `docker-compose.yml`, you'll find services like:
 - ollama: pulls `ollama/ollama:latest`, exposes port 11434.
 - vllm: runs `vllm/vllm-openai:latest`, reserves a GPU, serves an OpenAI-style API at port 8000.
