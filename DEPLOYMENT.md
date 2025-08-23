@@ -58,9 +58,9 @@ nvidia-smi  # For GPU instances
 ```
 
 # Clone the [IMAGE-server](https://github.com/Shared-Reality-Lab/IMAGE-server) repo
-We strongly recommend putting all of the IMAGE server components in the directory /var/docker/image. Although mostly abstracted, if you use another directory, you may need to adjust scripts.
+We strongly recommend putting all of the IMAGE server components in the directory `/var/docker/image`. Although mostly abstracted, if you use another directory, you may need to adjust scripts.
 
-In /var/docker/image, clone the IMAGE server repository:
+In `/var/docker/image`, clone the IMAGE server repository:
 ```
 git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git
 cd IMAGE-server
@@ -217,21 +217,12 @@ docker-compose pull
 docker-compose up -d
 ```
 
-# Local vs Production Use
-Local Testing
-Use the default docker-compose.yml:
-docker-compose up -d
+# Maintaining IMAGE-server:
+We ship a helper script called [`imageup`](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/scripts/imageup) (in `scripts/`) to make updating the server consistent across environments. It’s the same script we use on Pegasus (production) and Unicorn (test).
+We run it from `/var/docker/image/bin`, which also warms up the models by running the `warmup` script mentioned above. It pulls the latest code and Docker images from GitHub/registry, ensures the Git repo is clean and up to date, brings services up with the correct env files, and abstracts away the docker-compose incantations (so you don’t forget to include prod-docker-compose.yml or the right .env). 
 
-Disable services not needed on your machine (especially GPU-based ones) to save resources.
-
-Production Tips
-Use latest tags
-Use Traefik + Nginx for public access
-Add replicas for audio services:
+Note: if you’ve made local changes to Dockerfiles or compose files, imageup may overwrite them when pulling from Git.
 
 
-deploy:
-  replicas: 2
-  
-Final Notes
+# Final Notes
 This guide is intended to help you deploy IMAGE Server in a robust and flexible way, whether on a local machine or cloud host like AWS EC2. For more advanced deployments, monitoring, logging, and load balancing, consult the maintainers or reference our internal production setup (e.g., Pegasus).
