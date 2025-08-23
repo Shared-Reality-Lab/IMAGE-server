@@ -1,17 +1,25 @@
 # Deploying the IMAGE Server
 IMAGE is a microservice-oriented stack where preprocessors, handlers, and services plug into a central orchestrator. Everything runs in Docker containers, wired together via Docker Compose.
-The following information is meant to aid people in getting IMAGE running on their own so components can be used. It is based on what we've done for our testing and production environments, but by no means is this the only way to deploy. The general principles and concerns will likely be relevant.
+The following information is meant to aid people in getting IMAGE running on their own so components can be used. It is based on what we've done for our testing and production environments, but by no means is this the only way to deploy. The general principles and concerns will likely be relevant. If you aren't familiar with Docker, you will struggle to set up a server from scratch. We generally do not provide step-by-step instructions itemizing each command, as these change with versions.
+
+High level steps for deployment:
+
+1. Install Debian server (We use Ubuntu LTS), whether on a local machine, or in the cloud (we have used Amazon EC2)
+2. Install and configure base tools including Docker and GPU driver
+3. Set up your directory structure, clone the IMAGE server repository, and configure links
+4. Decide how you will handle routing (we use traefik), and encryption (easy if you use traefik!)
+5. Set up config files for accessing external tools like an LLM
+6. Run the imageup script to bring up the entire IMAGE server stack
+7. Point the IMAGE browser extension to your server via the options page
+8. Know how to keep your IMAGE server updated
 
 # System Requirements & Dependencies
 The following is written with the assumption you are running a Debian-based Linux distribution (e.g., Ubuntu 24.04, Debian 12). Other distributions may work but are not officially tested.
 
 # Minimum System Requirements
-- OS: Debian-based Linux (Ubuntu 24.04+ recommended) — Pegasus runs on Ubuntu 24.04 LTS, so we recommend using the latest LTS.
-- CPU: At least 4 cores recommended - more cores improve parallel processing.
-- RAM: 16GB or more recommended — Some services may require more RAM, especially if running multiple preprocessors concurrently.
-- Storage: 50GB free, 100GB+ recommended if using a GPU.
-- GPU: NVIDIA GPU required for certain services (some services will not run on CPU-only configurations).
-** While AMD GPUs may work, we have not tested compatibility with AMD ROCm or other alternatives.
+System requirements vary depending on what components you will run, and how loaded you expect your server to be. For reference, we run a test server with a Ryzen 3800x CPU, 32GB RAM, 1GB NVMe, and a couple of older NVidia GPUs (Titan XP and 1660ti). This is fine for testing, including running a very small local LLM. Our production reference server is beefier, with a Ryzen 7950x CPU, 5090 NVidia GPU, 64GB RAM, 2TB NVMe. Anecdotal load testing indicates that the production reference server responds to most requests in roughly 5 seconds, and can support multiple users all making overlapping requests from the browser extension as fast as they can (although response time increases).
+
+Pretty much any IMAGE server will require a GPU for running local ML models and services. However, if you use a remote API for LLM functionality, an 8GB VRAM GPU can be sufficient for running the smaller local models that provide, for example, text-to-speech. We expect that it will soon be possible to run an IMAGE server without any local GPU resources, and only use cloud endpoints, but at least a small GPU is currently required. If you run a local LLM, anticipate using approximately 20GB of GPU VRAM for reasonable response quality.
 
 AWS EC2 Example Configuration
 IMAGE Server was also successfully deployed on AWS EC2 using the configuration below:
@@ -26,7 +34,8 @@ IMAGE Server was also successfully deployed on AWS EC2 using the configuration b
 
 Note: If using a CPU-only instance (t3.large), some preprocessors/services will not be available.
 
-# Required Software
+
+# Required Software - System Setup
 Install the following packages:
 ```
 sudo apt update && sudo apt upgrade -y
@@ -49,6 +58,9 @@ nvidia-smi  # For GPU instances
 ```
 
 # Clone the [IMAGE-server](https://github.com/Shared-Reality-Lab/IMAGE-server) repo
+We strongly recommend putting all of the IMAGE server components in the directory /var/docker/image. Although mostly abstracted, if you use another directory, you may need to adjust scripts.
+
+In /var/docker/image, clone the IMAGE server repository:
 ```
 git clone --recurse-submodules git@github.com:Shared-Reality-Lab/IMAGE-server.git
 cd IMAGE-server
@@ -65,19 +77,30 @@ IMAGE runs entirely through Docker Compose. You’ll see several Compose files i
 Docker Compose lets you layer files with -f flags, or list them in .env via COMPOSE_FILE. The next section covers how to populate the .env file.
 
 # Environment Configuration
+
+In the same directory, make the following soft links, to get access to scripts and configuration, and copy the [prod-docker-compose.yml](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/prod-docker-compose.yml) file so you can modify it to reflect your server configuration:
+```
+ln -s /var/docker/image/IMAGE-server/scripts ./bin
+ln -s IMAGE-server/config ./config
+ln -s  IMAGE-server/docker-compose.yml ./docker-compose.yml
+cp IMAGE-server/prod-docker-compose.yml ./prod-docker-compose.yml
+```
+
 Docker Compose uses environment files to configure how services run. In IMAGE, you’ll usually work with two types of env files:
 
 1. System-level .env (in repo root) — tells Compose which profiles and files to load.
     Let’s look at the root .env. 
-    This is our unicorn .env file, which is our test server:
+    This is our Pegasus .env file, which is our production server,
   ```
-  # Do not add any secrets in this file
-  COMPOSE_PROFILES=test  # or COMPOSE_PROFILES=production
-  COMPOSE_FILE=docker-compose.yml:test-docker-compose.yml:docker-compose.override.yml  # a colon-separated list of compose files to apply in order (base -> test overrides -> local overrides)
-  REGISTRY_TAG=unstable   # Docker image tag to use (unstable for development, latest for production).
-  DOCKER_GID=134 # find your Docker group ID by doing `grep docker /etc/group | awk -F: '{ print $3 }'`
-  PII_LOGGING_ENABLED=true  # Flag to control whether Personally Identifiable Information logging is active (true/false)
+    # Do not add any secrets in this file
+    COMPOSE_PROFILES=production    # or COMPOSE_PROFILES=test
+    COMPOSE_FILE=docker-compose.yml:prod-docker-compose.yml    # a colon-separated list of compose files to apply in order (base -> production overrides)
+    REGISTRY_TAG=latest    # Docker image tag to use (unstable for development, latest for production). More info below.
+    DOCKER_GID=999    # find your Docker group ID by doing `grep docker /etc/group | awk -F: '{ print $3 }'`
+    PII_LOGGING_ENABLED=false    # Flag to control whether Personally Identifiable Information logging is active (true/false)
   ```
+    Note: PII_LOGGING_ENABLED=false will avoid logging any personally identifiable information (PII). Make sure this aligns with your terms of service if you set it to true (useful for debugging on a test server).
+
 2. Env files in config/ — either Infrastructure / script envs, or component-specific envs.
     
     a) Infrastructure / script envs: These control our own tooling (deployment, logging, scripts). We abstracted repo URLs, directory lists, Slack API keys, and log locations, and store them in a .env file eponymous with the name of the script (in the `scripts/` dir) for convenience. You may find it beneficial to use our healthcheck script for instance, which polls through each microservice and reports if they can hit the /health endpoint defined in each component. Therefore, a `healthcheck.env` would store the API key for Slack (where we have hourly reporting), and the log location. 
