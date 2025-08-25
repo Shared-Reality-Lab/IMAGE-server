@@ -84,14 +84,18 @@ def process_diagram():
     if "graphic" not in content:
         logging.info("No graphic content. Skipping...")
         return jsonify({"error": "No graphic content"}), 204
-    if not any(
-        content["URL"].startswith(origin) for origin in ALLOWED_ORIGINS
-            ):
 
-        logging.info(
-            "Request URL does not match expected endpoint. Skipping."
-            )
-        return jsonify({"error": "Invalid request URL"}), 403
+    # Uncomment if you are planning to use cloud-based models
+    # and don't have control over data residency and PII handling.
+
+    # if not any(
+    #     content["URL"].startswith(origin) for origin in ALLOWED_ORIGINS
+    #         ):
+
+    #     logging.info(
+    #         "Request URL does not match expected endpoint. Skipping."
+    #         )
+    #     return jsonify({"error": "Invalid request URL"}), 403
 
     # 1. Validate Incoming Request
     try:
