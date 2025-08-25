@@ -31,10 +31,6 @@ from utils.llm import (
     )
 from utils.segmentation import SAMClient
 from utils.validation import Validator
-# from utils.llm.response_schemas import (
-#     STAGE_RESPONSE_SCHEMA,
-#     BBOX_RESPONSE_SCHEMA
-#     )
 import json
 
 configure_logging()
