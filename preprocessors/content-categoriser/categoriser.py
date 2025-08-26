@@ -21,11 +21,7 @@ import logging
 import sys
 from datetime import datetime
 from config.logging_utils import configure_logging
-from utils.llm import (
-    LLMClient,
-    CATEGORISER_PROMPT,
-    POSSIBLE_CATEGORIES
-    )
+from utils.llm import LLMClient, CATEGORISER_PROMPT
 from utils.validation import Validator
 import json
 
@@ -36,6 +32,14 @@ app = Flask(__name__)
 DATA_SCHEMA = './schemas/preprocessors/content-categoriser.schema.json'
 with open(DATA_SCHEMA, 'r') as f:
     CATEGORISER_RESPONSE_SCHEMA = json.load(f)
+
+categories_properties = (
+    CATEGORISER_RESPONSE_SCHEMA.get("properties", {})
+    .get("categories", {})
+    .get("properties", {})
+)
+POSSIBLE_CATEGORIES = list(categories_properties.keys())
+logging.debug(f"Possible categories: {POSSIBLE_CATEGORIES}")
 
 PREPROCESSOR_NAME = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
 
@@ -74,26 +78,25 @@ def categorise():
     source = content["graphic"]
     base64_image = source.split(",")[1]
 
-    graphic_category = llm_client.chat_completion(
-        prompt=CATEGORISER_PROMPT + POSSIBLE_CATEGORIES,
+    graphic_categories = llm_client.chat_completion(
+        prompt=f"{CATEGORISER_PROMPT} {POSSIBLE_CATEGORIES}",
         image_base64=base64_image,
         temperature=0.0,
         json_schema=CATEGORISER_RESPONSE_SCHEMA,
         parse_json=True
     )
 
-    if graphic_category is None:
+    if graphic_categories is None:
         logging.error("Failed to receive response from LLM.")
         return jsonify(
             {"error": "Failed to get graphic category from LLM"}
         ), 500
 
-    logging.pii(f"Graphic category JSON: {graphic_category}")
-    # create data json and verify the content-categoriser schema is respected
-    graphic_category_json = {"category": graphic_category}
+    logging.pii(f"Graphic tags JSON: {graphic_categories}")
 
     try:
-        validator.validate_data(graphic_category_json)
+        # validator.validate_data(graphic_category_json)
+        validator.validate_data(graphic_categories)
     except jsonschema.exceptions.ValidationError:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
@@ -102,7 +105,7 @@ def categorise():
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": PREPROCESSOR_NAME,
-        "data": graphic_category_json
+        "data": graphic_categories
     }
 
     try:
