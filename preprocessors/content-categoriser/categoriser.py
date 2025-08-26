@@ -36,6 +36,16 @@ DATA_SCHEMA = './schemas/preprocessors/content-categoriser.schema.json'
 with open(DATA_SCHEMA, 'r') as f:
     CATEGORISER_RESPONSE_SCHEMA = json.load(f)
 
+categories_properties = (
+    CATEGORISER_RESPONSE_SCHEMA.get("properties", {})
+    .get("categories", {})
+    .get("properties", {})
+)
+POSSIBLE_CATEGORIES = list(categories_properties.keys())
+
+logging.debug(f"Data schema: {CATEGORISER_RESPONSE_SCHEMA}")
+logging.debug(f"Possible categories: {POSSIBLE_CATEGORIES}")
+
 PREPROCESSOR_NAME = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
 
 try:
@@ -73,7 +83,7 @@ def categorise():
     source = content["graphic"]
     base64_image = source.split(",")[1]
 
-    graphic_category = llm_client.chat_completion(
+    graphic_categories = llm_client.chat_completion(
         prompt=f"{CATEGORISER_PROMPT} {POSSIBLE_CATEGORIES}",
         image_base64=base64_image,
         temperature=0.0,
@@ -84,7 +94,7 @@ def categorise():
     logging.debug(f"PROMPT: {CATEGORISER_PROMPT} {POSSIBLE_CATEGORIES}")
     logging.debug(f"Schema: {CATEGORISER_RESPONSE_SCHEMA}")
 
-    if graphic_category is None:
+    if graphic_categories is None:
         logging.error("Failed to receive response from LLM.")
         return jsonify(
             {"error": "Failed to get graphic category from LLM"}
