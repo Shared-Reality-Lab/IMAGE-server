@@ -39,8 +39,6 @@ categories_properties = (
     .get("properties", {})
 )
 POSSIBLE_CATEGORIES = list(categories_properties.keys())
-
-logging.debug(f"Data schema: {CATEGORISER_RESPONSE_SCHEMA}")
 logging.debug(f"Possible categories: {POSSIBLE_CATEGORIES}")
 
 PREPROCESSOR_NAME = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
@@ -87,9 +85,6 @@ def categorise():
         json_schema=CATEGORISER_RESPONSE_SCHEMA,
         parse_json=True
     )
-
-    logging.debug(f"PROMPT: {CATEGORISER_PROMPT} {POSSIBLE_CATEGORIES}")
-    logging.debug(f"Schema: {CATEGORISER_RESPONSE_SCHEMA}")
 
     if graphic_categories is None:
         logging.error("Failed to receive response from LLM.")
