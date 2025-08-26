@@ -5,53 +5,48 @@
     "title": "Graphic Categories",
     "description": "Boolean tags for categorizing graphics and images",
     "properties": {
-        "photo": {
-        "type": "boolean",
-        "description": "True if the graphic is a photograph"
-        },
-        "diagram": {
-        "type": "boolean",
-        "description": "True if the graphic contains diagrams or technical illustrations"
-        },
-        "flow_diagram": {
-        "type": "boolean",
-        "description": "True if the graphic is a flow diagram with stages and links between them"
-        },
-        "contains_text": {
-        "type": "boolean",
-        "description": "True if the graphic contains readable text"
-        },
-        "people": {
-        "type": "boolean",
-        "description": "True if the graphic shows people or human figures"
-        },
-        "animals": {
-        "type": "boolean",
-        "description": "True if the graphic shows animals"
-        },
-        "collage": {
-        "type": "boolean",
-        "description": "True if the graphic is a collage or composite of multiple images"
-        },
-        "chart_or_graph": {
-            "type": "boolean",
-            "description": "True if the graphic contains charts, graphs, or data visualizations"
-        },
-        "illustration": {
-        "type": "boolean",
-        "description": "True if the graphic is a drawing, painting, or artistic illustration"
+        "categories": {
+            "type": "object",
+            "description": "Object containing boolean flags for different image categories",
+            "properties": {
+                "photo": {
+                    "type": "boolean",
+                    "description": "True if the graphic is a photograph"
+                },
+                "diagram": {
+                    "type": "boolean",
+                    "description": "True if the graphic contains diagrams or technical illustrations"
+                },
+                "flow_diagram": {
+                    "type": "boolean",
+                    "description": "True if the graphic is a flow diagram with stages and links between them"
+                },
+                "contains_text": {
+                    "type": "boolean",
+                    "description": "True if the graphic contains readable text"
+                },
+                "people": {
+                    "type": "boolean",
+                    "description": "True if the graphic shows people or human figures"
+                },
+                "animals": {
+                    "type": "boolean",
+                    "description": "True if the graphic shows animals"
+                },
+                "collage": {
+                    "type": "boolean",
+                    "description": "True if the graphic is a collage or composite of multiple images"
+                },
+                "chart_or_graph": {
+                    "type": "boolean",
+                    "description": "True if the graphic contains charts, graphs, or data visualizations"
+                },
+                "illustration": {
+                    "type": "boolean",
+                    "description": "True if the graphic is a drawing, painting, or artistic illustration"
+                }
+            },
+            "additionalProperties": {"type": "boolean"}
         }
-    },
-    "required": [
-        "photo",
-        "diagram",
-        "flow_diagram",
-        "contains_text",
-        "people",
-        "animals",
-        "collage",
-        "chart_or_graph",
-        "illustration"
-    ],
-    "additionalProperties": false
+    }
 }
