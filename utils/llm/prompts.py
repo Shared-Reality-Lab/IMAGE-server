@@ -18,36 +18,12 @@ Do not give any intro like "Here's what in this image:",
 the graphic type is significant (like oil painting or aerial photo).
 Instead, start describing the graphic right away.
 """
-###
-
 # Content categoriser
-# CATEGORISER_PROMPT = """
-# Answer only in JSON with the following format:
-# '{"category": "YOUR_ANSWER"}.'
-# Which of the following categories best
-# describes this image, selecting from this enum:
-# """
-
-# POSSIBLE_CATEGORIES = "photograph, chart, text, other"
-
 CATEGORISER_PROMPT = """
 Your task is to categorise the content of an image.
 Answer only in JSON.
 Assign boolean values (true or false) to each of the following categories:
 """
-
-
-POSSIBLE_CATEGORIES = [
-        "photo",
-        "diagram",
-        "flow_diagram",
-        "contains_text",
-        "people",
-        "animals",
-        "collage",
-        "chart_or_graph",
-        "illustration"
-    ]
 ###
 
 # Followup
