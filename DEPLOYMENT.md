@@ -31,23 +31,61 @@ AWS EC2 Example Configuration:
 # Required Software - System Setup
 Install the following packages:
 ```
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y docker.io docker-compose git python3-pip
+sudo apt update && sudo apt upgrade -y    # refreshes the package index and upgrades any out-of-date base packages, which is crucial for installing Docker/NVIDIA tooling.
+sudo apt install -y docker.io docker-compose git python3-pip 
 sudo apt install -y nvidia-driver nvidia-container-runtime  # For GPU-based services
 ```
+- nvidia-driver is needed so that the server can communicate with NVIDIA GPUs. Without this, GPU-accelerated preprocessors (like segmentation or local LLMs) won’t run.
+- nvidia-container-runtime integrates NVIDIA GPUs into Docker. Without this, Compose won’t recognize your GPUs.
 
 Post-install steps:
 ```
-sudo usermod -aG docker $USER
-newgrp docker
+sudo usermod -aG docker $USER    # By default, only root can run Docker. Adding your user to the docker group allows you to run Docker commands without sudo
+newgrp docker    # Refreshes, so you don’t need to log out/in before using Docker as a non-root user.
 reboot  # Required after NVIDIA driver install
 ```
 
 Verify:
-```
-docker --version
-docker-compose --version
-nvidia-smi  # For GPU instances
+
+`docker --version`
+
+`docker-compose --version`
+
+`nvidia-smi  # For GPU instances. This should display driver version and usage, similar to:`
+
+
+```   
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 575.64.03              Driver Version: 575.64.03      CUDA Version: 12.9     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce GTX 1660 Ti     Off |   00000000:04:00.0 Off |                  N/A |
+|  0%   34C    P8              9W /  130W |    3599MiB /   6144MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA TITAN Xp                Off |   00000000:0A:00.0 Off |                  N/A |
+| 23%   30C    P8              9W /  250W |    5466MiB /  12288MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1574      G   /usr/lib/xorg/Xorg                        4MiB |
+|    0   N/A  N/A          219673      C   /usr/bin/python3                       3582MiB |
+|    1   N/A  N/A            1574      G   /usr/lib/xorg/Xorg                       56MiB |
+|    1   N/A  N/A            1659      G   /usr/bin/gnome-shell                     16MiB |
+|    1   N/A  N/A         3575124      C   /opt/conda/bin/python3.11               648MiB |
+|    1   N/A  N/A         3575127      C   /opt/conda/bin/python3.11               804MiB |
+|    1   N/A  N/A         3575207      C   /opt/conda/bin/python3.11               934MiB |
+|    1   N/A  N/A         3575264      C   gunicorn: worker [app:app]             1328MiB |
+|    1   N/A  N/A         3575429      C   /opt/conda/bin/python                  1666MiB |
++-----------------------------------------------------------------------------------------+
 ```
 
 # Clone the [IMAGE-server](https://github.com/Shared-Reality-Lab/IMAGE-server) repo
@@ -65,13 +103,20 @@ IMAGE runs entirely through Docker Compose. You’ll see several Compose files i
 - test-docker-compose.yml — overrides for test/dev setups (for us, unicorn.cim.mcgill.ca). 
 - prod-docker-compose.yml — overrides for production setups (for us, pegasus.cim.mcgill.ca).
 - ec2-docker-compose.yml — overrides for our EC2 instance.
-- docker-compose.override.yml — local overrides for testing.
+- docker-compose.override.yml — optional overrides for local development.
 
 Docker Compose lets you layer files with -f flags, or list them in .env via COMPOSE_FILE. The next section covers how to populate the .env file.
 
 # Environment Configuration
 
-In the same directory, make the following soft links, to get access to scripts and configuration, and copy the [prod-docker-compose.yml](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/prod-docker-compose.yml) file so you can modify it to reflect your server configuration:
+We place everything under `/var/docker/image` to keep a clean separation between:
+- The core IMAGE-server repository (`/var/docker/image/IMAGE-server`) — this is the Git repo you clone and keep updated.
+- The server’s working directory (`/var/docker/image`) — this is where you run commands, keep local configs, and apply overrides.
+
+Think of `/var/docker/image` as the control room for the server. The source code (IMAGE-server) lives in a room. We pull out just the key controls (scripts, configs, compose files) into the control room with symlinks, so operators only need to work there. When the source code updates, the control room “sees” the changes instantly, but its own local switches and dials (prod-docker-compose.yml, .env) stay safe.
+By soft-linking into the repo where needed, we keep configs and overrides outside of Git, but still in the right place for Docker Compose to find them.
+
+In the same directory (`/var/docker/image` or equivalent), make the following soft links, to get access to scripts and configuration, and copy the [prod-docker-compose.yml](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/prod-docker-compose.yml) file so you can modify it to reflect your server configuration:
 ```
 ln -s /var/docker/image/IMAGE-server/scripts ./bin
 ln -s IMAGE-server/config ./config
@@ -99,7 +144,7 @@ Docker Compose uses environment files to configure how services run. In IMAGE, y
     b) Component-specific envs: These configure runtime services (preprocessors, handlers, or standalone services) which are loaded by containers at runtime. They often hold API keys, model names, or URLs that you don't want to check into git. Filenames are specified in docker-compose.
     For example, ensure the following files exist in the config/ folder and are populated with appropriate credentials:
 
-    apis-and-selection.env, azure-api.env, llm.env, maps.env
+    `apis-and-selection.env, azure-api.env, llm.env, maps.env`
     
     If a service is not in use, simply create an empty file with the same name to avoid startup errors.
     Here is a command to create them all:
@@ -108,16 +153,17 @@ Docker Compose uses environment files to configure how services run. In IMAGE, y
     TIP: once completed, these files include credentials that should not be committed in Git!
 
 # Starting Services
-[@SHAHD: is this a better place to put the `imageup` information?]
 To start the services, cd to `/var/docker/image`.
 
-First, ceate the Traefik Network if this is your first time: [@SHAHD: Isn't this created automatically in docker-compose? If not, explain why here?]
+First, create the Traefik Network if this is your first time. Any external network in Docker Compose isn't automatically created. If a docker-compose.yml defines a network as [`external: true` (like we do with traefik)](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/docker-compose.yml#L617), Compose expects that network to already exist - it wont create it for you, because "external" implies 'managed outside this Compose stack':
+
 `docker network create traefik`
 
-Then, you can start services:
+Then, you can start the services. We ship a helper script called [`imageup`](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/scripts/imageup) (in `scripts/`) to bring up all the services. It’s the same script we use on our own production and test servers.
+Make sure you're in the `/var/docker/image` directory, and run `./bin/imageup`. It pulls the latest code and Docker images from GitHub/registry, ensures the Git repo is clean and up to date, brings services up with the correct env files, removes stale containers and network, and abstracts away the docker-compose incantations (so you don’t forget to include prod-docker-compose.yml or the right .env). Moreover, the script warms up the models by running the `warmup` script (more details about this script in the "Connecting to, or running your own, visual LLM" section)
 
-From the IMAGE-server root directory:
-`docker-compose up -d`
+You can also start services using `docker-compose up -d`. This will just launch containers using your current .env and COMPOSE_FILE. It does not:
+Pull the latest images, reset Git or overrides, remove stale containers, or warm up models.
 
 TIP: Clean up old Docker containers, images, etc. that are clogging your drive: `docker system prune`
 
@@ -146,7 +192,52 @@ Services must explicitly declare the network they connect to.
 
 Traefik itself lives in a separate compose (it’s just another container) and exposes ports 80/443 on the host. Following our setup on `/var/docker/image` above, we place this docker compose in `/var/docker/traefik`.
 
-[@SHAHD agree we should point to an example somewhere, or include here.]
+Below is our traefik docker-compose.yml on our production server:
+```
+services:
+    traefik:
+        image: "traefik:3.1"
+        container_name: "pegasus-traefik"
+        restart: unless-stopped
+        command:
+            # Basic config
+            - "--providers.docker=true"
+            - "--providers.docker.exposedbydefault=false"
+            # Set up HTTP(S) and redirects
+            - "--entrypoints.web.address=:80"
+            - "--entrypoints.websecure.address=:443"
+            - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+            - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+            # Set up TLS with LetsEncrypt
+            #- "--certificatesresolvers.myresolver.acme.tlsChallenge=true"
+            - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+            - "--certificatesresolvers.myresolver.acme.email=juliette@cim.mcgill.ca"
+            - "--certificatesresolvers.myresolver.acme.storage=/var/letsencrypt/acme.json"
+            # Logging & Debugging
+            - "--log.level=DEBUG"    # Can be ERROR (default), DEBUG, PANIC, FATAL, WARN, and INFO
+            #- "--api.insecure=true"
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock:ro"
+            - "letsencrypt:/var/letsencrypt"
+
+    test:
+        image: "nginx"
+        container_name: "test-nginx"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.test-nginx.rule=Host(`pegasus.cim.mcgill.ca`) && Path(`/test`)"
+            - "traefik.http.routers.test-nginx.tls.certresolver=myresolver"
+
+volumes:
+    letsencrypt:
+
+networks:
+    default:
+        name: traefik
+```
 
 # Connecting to, or running your own, visual LLM
 Since multiple IMAGE preprocessors us a visual LLM (currently qwen), you need to either specify a cloud endpoint, or run your own LLM locally on your server.
@@ -171,26 +262,19 @@ You must specifiy services such as:
 GPU Notes
 Some containers that require GPU (and don't use a cloud endpoint or the LLM) include espnet-tts, text-followup, semantic-segmentation,object-detection, action-recognition, and so on. You can see which ones need GPU directly in docker-compose.yml since they include a `deploy.resources.reservations.devices` stanza with `driver: nvidia`. 
 
-[@SHAHD: Not sure we need to give this debug information, other than saying "TIP: If your GPU containers are not working, first check that `nvidia-smi` shows your GPU(s)!"]
-If you see this error:
-Cannot start service ...: could not select device driver "nvidia"
-Common error & fixes
-
-Error:
-
-Cannot start service <name>: could not select device driver "nvidia"
-
-Fix checklist:
+TIP: if you run into `Cannot start service ...: could not select device driver "nvidia"`, you can use this checklist to guide you:
 
 - Host GPUs present: `nvidia-smi` works on the host.
 - Toolkit configured: `nvidia-container-toolkit` installed and Docker restarted.
 - Compose GPU config present: service has either `deploy.resources.reservations.devices` with `driver: nvidia` (or similar).
 
+
 TIP: In `/var/docker/image/IMAGE-server/scripts/`, we provide a [warmup script](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/scripts/warmup) that hits model-loading endpoints to cold-start model load and reduce first-request latency.
 On a slow server, the first request can even cause failures due to timeouts, which the warmup helps avoid.
 Note that the warmups are automatically called if you use the `imageup` script.
 
-# Docker Image Tags
+
+# Docker Image Tags & Updating IMAGE-Server
 Docker images are tagged:
 - latest: Stable, production-ready image
 - unstable: Built from the main branch, less tested
@@ -200,15 +284,17 @@ Docker images are tagged:
 We recommend `unstable` for development and `latest` for production
 
 As described earlier, you can set the default tag in `/var/docker/image/.env`.
-[@SHAHD why not just tell them to `imageup`?] To update containers to a new tag:
 ```
-docker-compose pull
-docker-compose up -d
+REGISTRY_TAG=latest   # use 'unstable' for test
 ```
 
-# Updating IMAGE-server:
-We ship a helper script called [`imageup`](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/scripts/imageup) (in `scripts/`) to make updating the server consistent across environments. It’s the same script we use on our own production and test servers.
-make sure you're in the `/var/docker/image` directory, and run `./bin/imageup`. This warms up the models by running the `warmup` script mentioned above. It pulls the latest code and Docker images from GitHub/registry, ensures the Git repo is clean and up to date, brings services up with the correct env files, and abstracts away the docker-compose incantations (so you don’t forget to include prod-docker-compose.yml or the right .env). 
+The `imageup` script already runs `docker compose pull` and `docker compose up -d` for you, along with cleanup and warmup. Re-run `./bin/imageup` to ensure you’re running the latest images for your selected tag.
+
+Alternatively, you could run:
+```
+docker-compose pull    # fetch latest images for the current tag
+docker-compose up -d    # restart containers with those images
+```
 
 Note: if you’ve made local changes to Dockerfiles or compose files, imageup may overwrite them when pulling from Git.
 
