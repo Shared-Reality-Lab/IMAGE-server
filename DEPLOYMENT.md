@@ -97,7 +97,7 @@ Docker Compose uses environment files to configure how services run. In IMAGE, y
   ```
     Note: PII_LOGGING_ENABLED=false will avoid logging any personally identifiable information (PII). Make sure this aligns with your terms of service if you set it to true (useful for debugging on a test server).
 
-2. Env files in /var/docker/image/config/ :
+2. Env files in `/var/docker/image/config/` :
     
     a) Infrastructure / script envs: These helper scripts control our own tooling (deployment, logging, scripts). We abstracted repo URLs, directory lists, Slack API keys, and log locations, and store them in a .env file eponymous with the name of the script (in the `/var/docker/image/IMAGE-server/scripts/` dir). You may find it beneficial to use our healthcheck script for instance, which polls each microservice and reports if it can hit the /health endpoint. For reporting, our `healthcheck.env` stores the API key for our team's Slack, and the log location. 
     
@@ -120,7 +120,7 @@ First, create the Traefik Network if this is your first time. Any external netwo
 `docker network create traefik`
 
 Then, you can start the services. We ship a helper script called [`imageup`](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/scripts/imageup) (in `scripts/`) to bring up all the services. It’s the same script we use on our own production and test servers.
-Make sure you're in the `/var/docker/image` directory, and run `./bin/imageup`. It pulls the latest code and Docker images from GitHub/registry, ensures the Git repo is clean and up to date, brings services up with the correct env files, removes stale containers and network, and abstracts away the docker-compose incantations (so you don’t forget to include prod-docker-compose.yml or the right .env). Moreover, the script warms up the models by running the `warmup` script (more details about this script in the "Connecting to, or running your own, visual LLM" section)
+Make sure you're in the `/var/docker/image` directory, and run `./bin/imageup`. It pulls the latest code and Docker images from GitHub/registry, ensures the Git repo is clean and up to date, brings services up with the correct env files, removes stale containers and network, and abstracts away the docker-compose incantations (so you don’t forget to include prod-docker-compose.yml or the right .env). 
 
 You can also start services using `docker-compose up -d`. This will just launch containers using your current .env and COMPOSE_FILE. It does not:
 Pull the latest images, reset Git or overrides, remove stale containers, or warm up models.
@@ -219,7 +219,7 @@ You must specifiy services such as:
 - open-webui: optional WebUI that connects to Ollama or vLLM and is exposed via Traefik with a hostname like `ollama.unicorn.cim.mcgill.ca`.
 
 
-GPU Notes
+GPU Notes:
 Some containers that require GPU (and don't use a cloud endpoint or the LLM) include espnet-tts, text-followup, semantic-segmentation,object-detection, action-recognition, and so on. You can see which ones need GPU directly in docker-compose.yml since they include a `deploy.resources.reservations.devices` stanza with `driver: nvidia`. 
 
 TIP: if you run into `Cannot start service ...: could not select device driver "nvidia"`, you can use this checklist to guide you:
@@ -234,7 +234,7 @@ On a slow server, the first request can even cause failures due to timeouts, whi
 Note that the warmups are automatically called if you use the `imageup` script.
 
 
-# Docker Image Tags & Updating IMAGE-Server
+# Docker Image Tags & Keeping IMAGE-Server Up-to-Date
 Docker images are tagged:
 - latest: Stable, production-ready image
 - unstable: Built from the main branch, less tested
