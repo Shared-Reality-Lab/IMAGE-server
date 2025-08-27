@@ -51,42 +51,7 @@ Verify:
 
 `docker-compose --version`
 
-`nvidia-smi  # For GPU instances. This should display driver version and usage, similar to:`
-
-
-```   
-+-----------------------------------------------------------------------------------------+
-| NVIDIA-SMI 575.64.03              Driver Version: 575.64.03      CUDA Version: 12.9     |
-|-----------------------------------------+------------------------+----------------------+
-| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
-| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
-|                                         |                        |               MIG M. |
-|=========================================+========================+======================|
-|   0  NVIDIA GeForce GTX 1660 Ti     Off |   00000000:04:00.0 Off |                  N/A |
-|  0%   34C    P8              9W /  130W |    3599MiB /   6144MiB |      0%      Default |
-|                                         |                        |                  N/A |
-+-----------------------------------------+------------------------+----------------------+
-|   1  NVIDIA TITAN Xp                Off |   00000000:0A:00.0 Off |                  N/A |
-| 23%   30C    P8              9W /  250W |    5466MiB /  12288MiB |      0%      Default |
-|                                         |                        |                  N/A |
-+-----------------------------------------+------------------------+----------------------+
-                                                                                         
-+-----------------------------------------------------------------------------------------+
-| Processes:                                                                              |
-|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
-|        ID   ID                                                               Usage      |
-|=========================================================================================|
-|    0   N/A  N/A            1574      G   /usr/lib/xorg/Xorg                        4MiB |
-|    0   N/A  N/A          219673      C   /usr/bin/python3                       3582MiB |
-|    1   N/A  N/A            1574      G   /usr/lib/xorg/Xorg                       56MiB |
-|    1   N/A  N/A            1659      G   /usr/bin/gnome-shell                     16MiB |
-|    1   N/A  N/A         3575124      C   /opt/conda/bin/python3.11               648MiB |
-|    1   N/A  N/A         3575127      C   /opt/conda/bin/python3.11               804MiB |
-|    1   N/A  N/A         3575207      C   /opt/conda/bin/python3.11               934MiB |
-|    1   N/A  N/A         3575264      C   gunicorn: worker [app:app]             1328MiB |
-|    1   N/A  N/A         3575429      C   /opt/conda/bin/python                  1666MiB |
-+-----------------------------------------------------------------------------------------+
-```
+`nvidia-smi  # For GPU instances. This should display driver version and usage.`
 
 # Clone the [IMAGE-server](https://github.com/Shared-Reality-Lab/IMAGE-server) repo
 We strongly recommend putting all of the IMAGE server components in the directory `/var/docker/image`. Although mostly abstracted, if you use another directory, you may need to adjust scripts.
@@ -109,12 +74,7 @@ Docker Compose lets you layer files with -f flags, or list them in .env via COMP
 
 # Environment Configuration
 
-We place everything under `/var/docker/image` to keep a clean separation between:
-- The core IMAGE-server repository (`/var/docker/image/IMAGE-server`) — this is the Git repo you clone and keep updated.
-- The server’s working directory (`/var/docker/image`) — this is where you run commands, keep local configs, and apply overrides.
-
-Think of `/var/docker/image` as the control room for the server. The source code (IMAGE-server) lives in a room. We pull out just the key controls (scripts, configs, compose files) into the control room with symlinks, so operators only need to work there. When the source code updates, the control room “sees” the changes instantly, but its own local switches and dials (prod-docker-compose.yml, .env) stay safe.
-By soft-linking into the repo where needed, we keep configs and overrides outside of Git, but still in the right place for Docker Compose to find them.
+We place everything under `/var/docker/image` to keep a clean separation between the IMAGE-server respository and the server's working directory. By soft-linking into the repo where needed, we keep configs and overrides outside of Git, but still in the right place for Docker Compose to find them.
 
 In the same directory (`/var/docker/image` or equivalent), make the following soft links, to get access to scripts and configuration, and copy the [prod-docker-compose.yml](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/prod-docker-compose.yml) file so you can modify it to reflect your server configuration:
 ```
