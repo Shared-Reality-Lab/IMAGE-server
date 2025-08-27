@@ -16,7 +16,6 @@
 
 from flask import Flask, request, jsonify
 import time
-import jsonschema
 import logging
 import sys
 from datetime import datetime
@@ -25,7 +24,7 @@ from utils.llm import (
     LLMClient,
     CATEGORISER_PROMPT,
     POSSIBLE_CATEGORIES
-    )
+)
 from utils.validation import Validator
 import json
 
@@ -55,9 +54,9 @@ def categorise():
     # load the content and verify incoming data
     content = request.get_json()
 
-    try:
-        validator.validate_request(content)
-    except jsonschema.exceptions.ValidationError:
+    # request schema validation (check_* style)
+    ok, _ = validator.check_request(content)
+    if not ok:
         return jsonify({"error": "Invalid Preprocessor JSON format"}), 400
 
     # check we received a graphic (e.g., not a map or chart request)
@@ -92,9 +91,9 @@ def categorise():
     # create data json and verify the content-categoriser schema is respected
     graphic_category_json = {"category": graphic_category}
 
-    try:
-        validator.validate_data(graphic_category_json)
-    except jsonschema.exceptions.ValidationError:
+    # data schema validation
+    ok, _ = validator.check_data(graphic_category_json)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     # create full response & check meets overall preprocessor response schema
@@ -105,9 +104,9 @@ def categorise():
         "data": graphic_category_json
     }
 
-    try:
-        validator.validate_response(response)
-    except jsonschema.exceptions.ValidationError:
+    # response envelope validation
+    ok, _ = validator.check_response(response)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     return response
@@ -136,7 +135,7 @@ def warmup():
         else:
             return jsonify(
                 {"status": "error", "message": "Warmup failed"}
-                ), 500
+            ), 500
     except Exception as e:
         logging.error(f"Warmup endpoint failed: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500

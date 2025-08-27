@@ -15,37 +15,25 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 import requests  # pip3 install requests
-import json
 import time
-import jsonschema
-
 import logging
 import base64
 import os
 from flask import Flask, request, jsonify
 from datetime import datetime
 from config.logging_utils import configure_logging
+from utils.validation import Validator
 
 configure_logging()
+VALIDATOR = Validator(
+    data_schema='./schemas/preprocessors/object-detection.schema.json'
+)
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
-# load the schema
-with open('./schemas/preprocessors/object-detection.schema.json') \
-        as jsonfile:
-    data_schema = json.load(jsonfile)
-with open('./schemas/preprocessor-response.schema.json') \
-        as jsonfile:
-    schema = json.load(jsonfile)
-with open('./schemas/definitions.json') as jsonfile:
-    definitionSchema = json.load(jsonfile)
-with open('./schemas/request.schema.json') as jsonfile:
-    first_schema = json.load(jsonfile)
 
 # normalise the xy coordinates
-
-
 def process_results(result):
     send = []
     image_height = result["metadata"]["height"]
@@ -128,21 +116,14 @@ def process_image(image):
 @app.route("/preprocessor", methods=['POST', ])
 def categorise():
     logging.debug("Received request")
-    schema_store = {
-        schema['$id']: schema,
-        definitionSchema['$id']: definitionSchema
-    }
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
 
     content = request.get_json()
-    try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {e.message}")
+
+    # request schema validation
+    ok, _ = VALIDATOR.check_request(content)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 400
+
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.objectDetection"
@@ -178,28 +159,24 @@ def categorise():
             binary = base64.b64decode(image_b64)
             pred = process_image(image=binary)
             type = {"objects": pred}
-        try:
-            validator = jsonschema.Draft7Validator(data_schema)
-            validator.validate(type)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error("Validation failed for processed image data")
-            logging.pii(f"Validation error: {e.message}")
+
+        # data schema validation
+        ok, _ = VALIDATOR.check_data(type)
+        if not ok:
             return jsonify("Invalid Preprocessor JSON format"), 500
+
         response = {
             "request_uuid": request_uuid,
             "timestamp": int(timestamp),
             "name": name,
             "data": type
         }
-        # validate the output with schema
-        try:
-            validator = jsonschema.Draft7Validator(schema,
-                                                   resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error("Validation failed for final response")
-            logging.pii(f"Validation error: {e.message}")
+
+        # validate full response
+        ok, _ = VALIDATOR.check_response(response)
+        if not ok:
             return jsonify("Invalid Preprocessor JSON format"), 500
+
         logging.debug("Sending response")
         return response
 

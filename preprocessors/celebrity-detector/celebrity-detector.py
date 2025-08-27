@@ -19,21 +19,23 @@ from re import search
 import operator
 
 import os
-import json
 import time
-import jsonschema
 import logging
 import base64
 from flask import Flask, request, jsonify
 import cv2
 import numpy as np
 from datetime import datetime
+from utils.validation import Validator
 
 app = Flask(__name__)
 
+# Initialize shared validator once
+VALIDATOR = Validator(
+    data_schema='./schemas/preprocessors/celebrity.schema.json')
+
+
 # extract the required results from the API returned values
-
-
 def process_results(response, labels):
     logging.debug(response)
     if not response["categories"]:
@@ -120,30 +122,14 @@ def categorise():
     logging.debug("Received request")
     # load the schema
     labels = ["other", "indoor", "outdoor", "people"]
-    with open('./schemas/preprocessors/celebrity.schema.json') \
-            as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') \
-            as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definitionSchema = json.load(jsonfile)
-    with open('./schemas/request.schema.json') as jsonfile:
-        first_schema = json.load(jsonfile)
-    schema_store = {
-        schema['$id']: schema,
-        definitionSchema['$id']: definitionSchema
-    }
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
 
     content = request.get_json()
-    try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error(e)
+
+    # request schema validation
+    ok, _ = VALIDATOR.check_request(content)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 400
+
     request_uuid = content["request_uuid"]
     timestamp = time.time()
     preprocessor_name = "ca.mcgill.a11y.image.preprocessor.celebrityDetector"
@@ -195,26 +181,24 @@ def categorise():
                 }
                 final_data.append(celebrities)
         data = {"celebrities": final_data}
-        try:
-            validator = jsonschema.Draft7Validator(data_schema)
-            validator.validate(data)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+
+        # data schema validation
+        ok, _ = VALIDATOR.check_data(data)
+        if not ok:
             return jsonify("Invalid Preprocessor JSON format"), 500
+
         response = {
             "request_uuid": request_uuid,
             "timestamp": int(timestamp),
             "name": preprocessor_name,
             "data": data
         }
-        # validate the results to check if they are in correct format
-        try:
-            validator = jsonschema.Draft7Validator(schema,
-                                                   resolver=resolver)
-            validator.validate(response)
-        except jsonschema.exceptions.ValidationError as e:
-            logging.error(e)
+
+        # response validation
+        ok, _ = VALIDATOR.check_response(response)
+        if not ok:
             return jsonify("Invalid Preprocessor JSON format"), 500
+
         logging.debug("Detected " + str(len(final_data)) +
                       "celebrities out of " + str(len(objects)) + "objects")
         return response

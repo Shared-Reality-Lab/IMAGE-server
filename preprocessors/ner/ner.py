@@ -21,11 +21,11 @@ import base64
 import shutil
 import logging
 import tempfile
-import jsonschema
 from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify
 from config.logging_utils import configure_logging
 from datetime import datetime
+from utils.validation import Validator
 
 import nltk
 import clipscore
@@ -45,6 +45,8 @@ IMAGE_DIR = tempfile.mkdtemp(prefix=dir_prefix)
 # path to the stanford ner models
 STANFORD_JAR = '/app/stanford-ner/stanford-ner.jar'
 STANFORD_MODEL = '/app/stanford-ner/ner-model-english.ser.gz'
+
+VALIDATOR = Validator(data_schema='./schemas/preprocessors/ner.schema.json')
 
 
 def save_image(my_html, name, out_dir):
@@ -142,38 +144,12 @@ def find_first_index(word, arr):
 def main():
     logging.debug("Received request")
 
-    with open('./schemas/preprocessors/ner.schema.json') as jsonfile:
-        data_schema = json.load(jsonfile)
-
-    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-        schema = json.load(jsonfile)
-
-    with open('./schemas/definitions.json') as jsonfile:
-        definition_schema = json.load(jsonfile)
-
-    with open('./schemas/request.schema.json') as jsonfile:
-        first_schema = json.load(jsonfile)
-
-    schema_store = {
-        data_schema['$id']: data_schema,
-        schema['$id']: schema,
-        definition_schema['$id']: definition_schema
-    }
-
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
-
     content = request.get_json()
 
-    try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {e.message}")
+    # request schema validation
+    ok, _ = VALIDATOR.check_request(content)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 400
-
-    # ------ START COMPUTATION ------ #
 
     # check if 'graphic' and 'context' keys are in the content dict
     if 'graphic' in content and 'context' in content:
@@ -233,6 +209,11 @@ def main():
     timestamp = time.time()
     name = "ca.mcgill.a11y.image.preprocessor.ner"
 
+    # data schema validation
+    ok, _ = VALIDATOR.check_data(data)
+    if not ok:
+        return jsonify("Invalid Preprocessor JSON format"), 500
+
     response = {
         'request_uuid': request_uuid,
         'timestamp': int(timestamp),
@@ -240,20 +221,9 @@ def main():
         'data': data
     }
 
-    try:
-        validator = jsonschema.Draft7Validator(data_schema, resolver=resolver)
-        validator.validate(response['data'])
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for response data")
-        logging.pii(f"Validation error: {e.message}")
-        return jsonify("Invalid Preprocessor JSON format"), 500
-
-    try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for response")
-        logging.pii(f"Validation error: {e.message}")
+    # full response validation
+    ok, _ = VALIDATOR.check_response(response)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     logging.debug("Sending response")

@@ -15,19 +15,23 @@
 # <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
 
 from flask import Flask, request, jsonify
-import json
 import time
-import jsonschema
 import logging
 import collections
 from math import sqrt
 from operator import itemgetter
 from config.logging_utils import configure_logging
 from datetime import datetime
+from utils.validation import Validator
 
 configure_logging()
 
 app = Flask(__name__)
+
+# Initialize shared validator
+VALIDATOR = Validator(
+    data_schema='./schemas/preprocessors/grouping.schema.json'
+)
 
 
 def calculate_diagonal(x1, y1, x2, y2):
@@ -44,30 +48,12 @@ def readImage():
     dimensions = []
     ungrouped = []
     flag = 0
-    with open('./schemas/preprocessors/grouping.schema.json') as jsonfile:
-        data_schema = json.load(jsonfile)
-    with open('./schemas/preprocessor-response.schema.json') as jsonfile:
-        schema = json.load(jsonfile)
-    with open('./schemas/definitions.json') as jsonfile:
-        definitionSchema = json.load(jsonfile)
-    with open('./schemas/request.schema.json') as jsonfile:
-        first_schema = json.load(jsonfile)
-    # Following 6 lines refered from
-    # https://stackoverflow.com/questions/42159346/jsonschema-refresolver-to-resolve-multiple-refs-in-python
-    schema_store = {
-        schema['$id']: schema,
-        definitionSchema['$id']: definitionSchema
-    }
-    resolver = jsonschema.RefResolver.from_schema(
-        schema, store=schema_store)
+
     content = request.get_json()
 
-    try:
-        validator = jsonschema.Draft7Validator(first_schema, resolver=resolver)
-        validator.validate(content)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for incoming request")
-        logging.pii(f"Validation error: {e.message} | Data: {content}")
+    # request validation
+    ok, _ = VALIDATOR.check_request(content)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     preprocessor = content["preprocessors"]
@@ -119,13 +105,11 @@ def readImage():
     logging.debug("Number of ungrouped objects " + str(len(ungrouped)))
     data = {"grouped": final_group, "ungrouped": ungrouped}
 
-    try:
-        validator = jsonschema.Draft7Validator(data_schema)
-        validator.validate(data)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for grouped data")
-        logging.pii(f"Validation error: {e.message}")
+    # data validation
+    ok, _ = VALIDATOR.check_data(data)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
+
     logging.debug("Sending response")
 
     response = {
@@ -137,12 +121,9 @@ def readImage():
         "data": data
     }
 
-    try:
-        validator = jsonschema.Draft7Validator(schema, resolver=resolver)
-        validator.validate(response)
-    except jsonschema.exceptions.ValidationError as e:
-        logging.error("Validation failed for response schema")
-        logging.pii(f"Validation error: {e.message} | Response: {response}")
+    # response validation
+    ok, _ = VALIDATOR.check_response(response)
+    if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
     return response
