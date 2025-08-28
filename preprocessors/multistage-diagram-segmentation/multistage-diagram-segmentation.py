@@ -129,12 +129,13 @@ def process_diagram():
             for stage in base_json.get("stages", [])
             if isinstance(stage, dict) and "label" in stage
             ]
-        if not stages or len(stages) == 0:
+        if not stages or len(stages) == 0 or any(s == "" for s in stages):
             logging.info(
-                "No stage labels found. Cannot request bounding boxes."
+                "Some or all stage labels not found. "
+                "Cannot request bounding boxes."
                 )
             return jsonify(
-                {"error": "No valid stage labels found in the diagram"}
+                {"error": "Valid stage labels not found in the diagram"}
                 ), 204
 
         else:
