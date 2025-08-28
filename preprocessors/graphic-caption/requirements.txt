@@ -5,5 +5,5 @@ Werkzeug==3.1.3
 gunicorn==23.0.0
 requests==2.32.3
 openai==1.98.0
-
-
+pillow==11.3.0
+qwen-vl-utils==0.0.11
