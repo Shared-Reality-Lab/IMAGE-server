@@ -88,11 +88,9 @@ def categorise():
         ), 500
 
     logging.pii(f"Graphic category JSON: {graphic_category}")
-    # create data json and verify the content-categoriser schema is respected
-    graphic_category_json = {"category": graphic_category}
 
     # data schema validation
-    ok, _ = validator.check_data(graphic_category_json)
+    ok, _ = validator.check_data(graphic_category)
     if not ok:
         return jsonify("Invalid Preprocessor JSON format"), 500
 
@@ -101,7 +99,7 @@ def categorise():
         "request_uuid": request_uuid,
         "timestamp": int(timestamp),
         "name": PREPROCESSOR_NAME,
-        "data": graphic_category_json
+        "data": graphic_category
     }
 
     # response envelope validation
