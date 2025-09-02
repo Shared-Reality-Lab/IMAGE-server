@@ -27,7 +27,6 @@ AWS EC2 Example Configuration:
 - Network: Default VPC with public IPv4
 - Security Group: Open ports 22 (SSH), 80 (HTTP), 443 (HTTPS) — Required for server & web-based access
 
-
 # Required Software - System Setup
 Install the following packages:
 ```
@@ -233,6 +232,26 @@ TIP: In `/var/docker/image/IMAGE-server/scripts/`, we provide a [warmup script](
 On a slow server, the first request can even cause failures due to timeouts, which the warmup helps avoid.
 Note that the warmups are automatically called if you use the `imageup` script.
 
+## GPU / CPU / Cloud tradeoffs
+The McGill production server currently runs all services, including the LLM, on the same server with a 24GB Radeon 4090 GPU.
+It is possible to push some of this to cloud API endpoints through the configuration options above.
+There are effectively three options:
+
+First, all microservices and ML can be run on a single machine with a capable GPU.
+<img width="3840" height="2138" alt="20250902_ML_GPUlocal" src="https://github.com/user-attachments/assets/cd3ead1d-6efb-47fb-aaf7-560873373fe8" />
+
+
+Second, we can do a mix of local and remote GPU resources.
+In this case, we offload the large LLM to the cloud, but keep all other services local.
+This lets us use a significantly smaller GPU, which is especially important when paying for a cloud instance.
+<img width="3840" height="2064" alt="20250902_ML_LLMCloud" src="https://github.com/user-attachments/assets/c1b4a057-359f-47b2-8a3a-09c3edcaf1df" />
+
+Third, although not yet tested, we can attempt to push all ML to the cloud, by finding suitable third party services.
+The IMAGE team is working toward this, but for some scenarios, there are not likely to be clean cloud endpoints.
+For example, we do not currently have a remote API for photograph depth mapping.
+If you do not need these microservices for your server, you may be able to achieve this already:
+<img width="3840" height="2586" alt="20250902_ML_cloud" src="https://github.com/user-attachments/assets/e35ccf56-dc08-47f1-8959-86d33b2d40f0" />
+
 
 # Docker Image Tags & Keeping IMAGE-Server Up-to-Date
 Docker images are tagged:
@@ -258,6 +277,13 @@ docker-compose up -d    # restart containers with those images
 
 Note: if you’ve made local changes to Dockerfiles or compose files, imageup may overwrite them when pulling from Git.
 
+# Monarch-specific notes
+
+The McGill reference server also supports prototype experiences for the [Humanware Monarch](https://www.humanware.com/en-canada/monarch/).
+Currently, this requires a special firmware build on the Monarch tablet, so are not usable on commercially-available Monarchs.
+If you are setting up a server to also service Monarch devices, there are some additional components to enable.
+At a high level, the server will run the normal IMAGE orchestrator receiving requests, but also run the Tactile Authoring Tool (TAT) for editing experiences, as well as the Monarch Link App (MLA) that caches experiences when they are pushed to one or more subscribed Monarch tablets.
+<img width="3840" height="1647" alt="20250902_ServerToolsDiagram" src="https://github.com/user-attachments/assets/12cf3444-f7bb-4a7d-9df1-b3d061a61323" />
 
 # Tips & Tricks
 - 
