@@ -53,7 +53,7 @@ This point about "staging" is important: we may agree on how the data for a part
 
 1. Create a branch of `schemas` and implement.
 2. Create a schema PR.
-3. Merge the PR into schemas.
+3. Merge the PR into `schemas`.
 4. Create a PR to update the submodule in the main branch: include any updates to component functionality your modifications will allow.
 5. Merge the PR into main.
 
