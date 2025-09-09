@@ -51,7 +51,7 @@ This point about "staging" is important: we may agree on how the data for a part
 
 #### I want to make a minor (non-breaking) change to a data type
 
-1. Create a branch of schemas and implement.
+1. Create a branch of `schemas` and implement.
 2. Create a schema PR.
 3. Merge the PR into schemas.
 4. Create a PR to update the submodule in the main branch: include any updates to component functionality your modifications will allow.
