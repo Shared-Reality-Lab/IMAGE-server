@@ -92,8 +92,6 @@ def categorise():
             {"error": "Failed to get graphic category from LLM"}
         ), 500
 
-    logging.pii(f"Graphic category JSON: {graphic_category}")
-
     # data schema validation
     ok, _ = validator.check_data(graphic_category)
     if not ok:

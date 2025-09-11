@@ -97,6 +97,17 @@ def process_diagram():
     if not ok:
         return jsonify({"error": "Invalid Preprocessor JSON format"}), 400
 
+    # Determine if the content is a multistage diagram
+    # based on the categoriser output
+    preprocess_output = content["preprocessors"]
+    categoriser = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
+    if categoriser in preprocess_output:
+        categoriser_output = preprocess_output[categoriser]
+        categoriser_tags = categoriser_output["categories"]
+        if not categoriser_tags["multistage_diagram"]:
+            logging.info("Not a multistage diagram. Skipping...")
+            return "", 204
+
     request_uuid = content["request_uuid"]
     timestamp = time.time()
 
