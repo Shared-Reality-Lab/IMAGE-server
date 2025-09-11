@@ -20,11 +20,8 @@ import logging
 import sys
 from datetime import datetime
 from config.logging_utils import configure_logging
-from utils.llm import (
-    LLMClient,
-    CATEGORISER_PROMPT,
-    POSSIBLE_CATEGORIES
-)
+from utils.llm import LLMClient, CATEGORISER_PROMPT
+
 from utils.validation import Validator
 import json
 
@@ -81,7 +78,7 @@ def categorise():
     source = content["graphic"]
     base64_image = source.split(",")[1]
 
-    graphic_categories = llm_client.chat_completion(
+    graphic_category = llm_client.chat_completion(
         prompt=f"{CATEGORISER_PROMPT} {POSSIBLE_CATEGORIES}",
         image_base64=base64_image,
         temperature=0.0,
@@ -89,7 +86,7 @@ def categorise():
         parse_json=True
     )
 
-    if graphic_categories is None:
+    if graphic_category is None:
         logging.error("Failed to receive response from LLM.")
         return jsonify(
             {"error": "Failed to get graphic category from LLM"}
