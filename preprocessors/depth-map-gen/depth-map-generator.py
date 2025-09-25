@@ -103,8 +103,8 @@ def depthgenerator():
     classifier_1 = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
     if classifier_1 in preprocess_output:
         classifier_1_output = preprocess_output[classifier_1]
-        classifier_1_label = classifier_1_output.get("category", "")
-        if classifier_1_label != "photograph":
+        categoriser_tags = classifier_1_output["categories"]
+        if not categoriser_tags["photo"]:
             logging.info("Not photograph content. Skipping...")
             return "", 204
     else:
