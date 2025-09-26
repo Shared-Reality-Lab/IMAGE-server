@@ -118,7 +118,10 @@ class LLMClient:
 
             # Add system prompt if provided
             if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
+                messages.append(
+                    {"role": "developer",
+                     "content": system_prompt}
+                     )
 
             # Build user message content
             user_content = []

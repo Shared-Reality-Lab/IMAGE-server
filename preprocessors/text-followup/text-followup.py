@@ -25,9 +25,13 @@ from datetime import datetime
 from config.logging_utils import configure_logging
 from utils.llm import (
     LLMClient,
-    FOLLOWUP_PROMPT
+    FOLLOWUP_PROMPT,
+    FOLLOWUP_PROMPT_FOCUS
     )
 from utils.validation import Validator
+import base64
+from io import BytesIO
+from PIL import Image, ImageDraw
 
 app = Flask(__name__)
 
@@ -56,6 +60,66 @@ conversation_history = {}
 MAX_HISTORY_LENGTH = int(os.getenv('MAX_HISTORY_LENGTH', '100'))
 # History expiry in seconds after the last message
 HISTORY_EXPIRY = int(os.getenv('HISTORY_EXPIRY', '3600'))
+
+
+def draw_rectangle(
+    base64_image, focus_coords, rectangle_color="red", line_width=3
+):
+    """
+    Draw a rectangle on a base-64 encoded image based on normalized
+    coordinates.
+
+    Args:
+        base64_image (str): Base-64 encoded image string.
+        focus_coords (list): Normalized coordinates [x1, y1, x2, y2]
+        where values are 0-1.
+        rectangle_color (str): Color of the rectangle (default: "red").
+        line_width (int): Width of the rectangle outline (default: 3).
+
+    Returns:
+        str: Base-64 encoded image with rectangle drawn
+    """
+
+    # Decode the base-64 image
+    image_data = base64.b64decode(base64_image)
+    image = Image.open(BytesIO(image_data))
+
+    # Get image dimensions
+    width, height = image.size
+
+    # Convert normalized coordinates to pixel coordinates
+    x1 = int(focus_coords[0] * width)
+    y1 = int(focus_coords[1] * height)
+    x2 = int(focus_coords[2] * width)
+    y2 = int(focus_coords[3] * height)
+
+    # Ensure coordinates are within image bounds
+    x1 = max(0, min(x1, width))
+    y1 = max(0, min(y1, height))
+    x2 = max(0, min(x2, width))
+    y2 = max(0, min(y2, height))
+
+    # Create a drawing context
+    draw = ImageDraw.Draw(image)
+
+    # Draw rectangle outline
+    draw.rectangle(
+        [x1, y1, x2, y2],
+        outline=rectangle_color,
+        width=line_width
+    )
+
+    # Convert image back to base-64
+    buffer = BytesIO()
+
+    # Preserve original format if possible, otherwise use PNG
+    image_format = image.format if image.format else 'PNG'
+    image.save(buffer, format=image_format)
+
+    # Encode to base-64
+    encoded_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+    return encoded_image
 
 
 # Function to clean up old conversation histories
@@ -127,15 +191,57 @@ def followup():
     source = content["graphic"]
     graphic_b64 = source.split(",")[1]
 
-    # TODO: crop graphic if the user has specified a region of interest
-    # TODO: add previous request history before new prompt
-
     user_prompt = content["followup"]["query"]
 
-    system_message = {"role": "system", "content": FOLLOWUP_PROMPT}
+    logging.pii(f'Full followup: {content["followup"]}')
 
-    # Retrieve existing conversation history or create new one
-    if uuid_exists:
+    # if focus area is in the query, we replace the original graphic
+    # with the graphic with the focus area highlighted in red rectangle
+    if (
+        "focus" in content["followup"]
+        and len(content["followup"]["focus"]) == 4
+    ):
+        focus = content["followup"]["focus"]
+        logging.info(f"Focus area provided: {focus}")
+    else:
+        focus = None
+        logging.info("No focus area provided")
+
+    if focus:
+        try:
+            graphic_b64 = draw_rectangle(
+                base64_image=graphic_b64,
+                focus_coords=focus,
+                rectangle_color="red",
+                line_width=3
+            )
+            logging.info("Drew rectangle on image based on focus area")
+        except ValueError as e:
+            logging.error(f"Error drawing rectangle: {str(e)}")
+            return jsonify(
+                {"error": "Failed to process focus area on image"}
+            ), 500
+
+    system_message = {
+        "role": "developer",
+        "content": FOLLOWUP_PROMPT if not focus else FOLLOWUP_PROMPT_FOCUS
+        }
+
+    # existing uuid and same focus: add user message to history
+    if (
+        uuid_exists
+        and focus == conversation_history[request_uuid].get('focus')
+    ):
+        # logging.info("Adding new graphic with focus area to history")
+        # # update first user message with new graphic with focus area
+        # conversation_history[request_uuid]["messages"][1]["content"][1][
+        #     "image_url"
+        # ] = {"url": f"data:image/png;base64,{graphic_b64}"}
+        # # update system message to reflect focus area
+        # conversation_history[request_uuid]["messages"][0][
+        #     "content"
+        # ] = FOLLOWUP_PROMPT_FOCUS
+
         # For follow-up messages, add the new user prompt
         user_message = {
             "role": "user",
@@ -144,7 +250,7 @@ def followup():
         conversation_history[request_uuid]['messages'].append(user_message)
         conversation_history[request_uuid]['last_updated'] = timestamp
     else:
-        # For the first message, create a new history entry
+        # For the first message OR new focus, create a new history entry
         # include the system prompt, the user's text, and the image
         user_message = {
             "role": "user",
@@ -161,7 +267,8 @@ def followup():
 
         conversation_history[request_uuid] = {
             'messages': [system_message, user_message],
-            'last_updated': timestamp
+            'last_updated': timestamp,
+            'focus': focus if focus else None
         }
 
     # Use history for the request
