@@ -59,11 +59,11 @@ This point about "staging" is important: we may agree on how the data for a part
 
 #### I want to make a breaking change to a data type
 
-1. Create a branch of schemas and implement.
+1. Create a branch of `schemas` and implement.
 2. Create a schema PR.
-3. Merge the PR into schemas.
-4. Create a new branch from main: update the schemas submodule and test all components that may use the modified data type extensively to ensure there are no regressions.
-5. Merge the PR into main.
+3. Merge the PR into `schemas`. Note that this will **not** update the commit referenced in the submodule in `main`, so the previous version of the data type will continue to be used in production.
+4. Create a new branch from `main`: update the `schemas` submodule to point to the newest version (`git submodule update --remote`) and test all components that may use the modified data type extensively to ensure there are no regressions.
+5. Merge the PR into `main`.
 
 Note that if many different schemas are being modified, it may be necessary to delay merging PRs into the schemas branch until modifications to components are underway. Otherwise, PRs adding new schema files or making minor modifications may be blocked from merging into main until this process is complete.
 
