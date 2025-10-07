@@ -122,6 +122,28 @@ def draw_rectangle(
     return encoded_image
 
 
+def create_text_message(text):
+    """Create a simple text message."""
+    return {
+        "role": "user",
+        "content": text
+    }
+
+
+def create_multimodal_message(text, graphic_b64):
+    """Create a message with text and image."""
+    return {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": text},
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{graphic_b64}"}
+            }
+        ]
+    }
+
+
 # Function to clean up old conversation histories
 @app.route("/cleanup", methods=["GET"])
 def cleanup_old_histories():
@@ -224,52 +246,40 @@ def followup():
 
     system_message = {
         "role": "developer",
-        "content": FOLLOWUP_PROMPT if not focus else FOLLOWUP_PROMPT_FOCUS
+        "content": FOLLOWUP_PROMPT
         }
 
-    # existing uuid and same focus: add user message to history
-    if (
-        uuid_exists
-        and focus == conversation_history[request_uuid].get('focus')
-    ):
-        # logging.info("Adding new graphic with focus area to history")
-        # # update first user message with new graphic with focus area
-        # conversation_history[request_uuid]["messages"][1]["content"][1][
-        #     "image_url"
-        # ] = {"url": f"data:image/png;base64,{graphic_b64}"}
-        # # update system message to reflect focus area
-        # conversation_history[request_uuid]["messages"][0][
-        #     "content"
-        # ] = FOLLOWUP_PROMPT_FOCUS
-
-        # For follow-up messages, add the new user prompt
-        user_message = {
-            "role": "user",
-            "content": user_prompt
-        }
-        conversation_history[request_uuid]['messages'].append(user_message)
-        conversation_history[request_uuid]['last_updated'] = timestamp
-    else:
-        # For the first message OR new focus, create a new history entry
+    if not uuid_exists:
+        # For the first message, create a new history entry
         # include the system prompt, the user's text, and the image
-        user_message = {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": user_prompt},
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/png;base64,{graphic_b64}"
-                    }
-                }
-            ]
-        }
+        user_message = create_multimodal_message(user_prompt, graphic_b64)
 
         conversation_history[request_uuid] = {
             'messages': [system_message, user_message],
             'last_updated': timestamp,
             'focus': focus if focus else None
         }
+
+    elif (
+        uuid_exists
+        and focus == conversation_history[request_uuid].get('focus')
+    ):
+        # existing uuid and same focus: add user message to history
+        user_message = create_text_message(user_prompt)
+
+        conversation_history[request_uuid]['messages'].append(user_message)
+        conversation_history[request_uuid]['last_updated'] = timestamp
+
+    else:
+        # existing uuid but different focus: add new message with new graphic
+        user_message = create_multimodal_message(
+            user_prompt + FOLLOWUP_PROMPT_FOCUS,
+            graphic_b64
+        )
+
+        conversation_history[request_uuid]['messages'].append(user_message)
+        conversation_history[request_uuid]['last_updated'] = timestamp
+        conversation_history[request_uuid]['focus'] = focus
 
     # Use history for the request
     uuid_messages = conversation_history[request_uuid]["messages"]

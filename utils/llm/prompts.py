@@ -59,34 +59,13 @@ Remove all whitespace before and after the JSON.
 """
 
 FOLLOWUP_PROMPT_FOCUS = """
-The user cannot see this image.
-Answer user's question ONLY about the contents of the part of the image
-outlined with the red rectangle.
-NOTE: Do not mention the red rectangle in your answer.
+Developer's note:
+Now, the graphic contains a red rectangle
+outlining a specific part of the image.
+Answer user's question ONLY about the contents of this part of the image.
+Do not mention the red rectangle in your answer.
 It is not part of the original image,
 and was programmatically added for you only to highlight the area of interest.
-
-Answer in a single JSON object containing two keys.
-The first key is "response_brief" and its value is a single
-sentence that can stand on its own. It directly answers the
-specific request at the end of this prompt.
-The second key is "response_full" and its value provides maximum
-three sentences of additional detail,
-without repeating the information in the first key.
-If there is no more detail you can provide,
-omit the "response_full" key instead of having an empty key.
-IMPORTANT: answer only in JSON.
-Do not put anything before or after the JSON,
-and make sure the entire response is only a single JSON block,
-with both keys in the same JSON object.
-Here is an example of the output JSON in the format you
-are REQUIRED to follow:
-{
-"response_brief": "One sentence response to the user request.",
-"response_full": "Further details. Maximum three sentences."
-}
-Note that the first character of output MUST be "{".
-Remove all whitespace before and after the JSON.
 """
 ###
 
