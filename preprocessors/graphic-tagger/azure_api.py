@@ -139,9 +139,8 @@ def categorise():
         if content_classifier in preprocess_output:
             content_classifier_output = \
                 preprocess_output[content_classifier]
-            content_label = \
-                content_classifier_output["category"]
-            if content_label == "photograph":
+            categoriser_tags = content_classifier_output["categories"]
+            if categoriser_tags["photo"]:
                 source = content["graphic"]
                 image_b64 = source.split(",")[1]
                 binary = base64.b64decode(image_b64)

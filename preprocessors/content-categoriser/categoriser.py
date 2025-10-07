@@ -20,11 +20,8 @@ import logging
 import sys
 from datetime import datetime
 from config.logging_utils import configure_logging
-from utils.llm import (
-    LLMClient,
-    CATEGORISER_PROMPT,
-    POSSIBLE_CATEGORIES
-)
+from utils.llm import LLMClient, CATEGORISER_PROMPT
+
 from utils.validation import Validator
 import json
 
@@ -35,6 +32,14 @@ app = Flask(__name__)
 DATA_SCHEMA = './schemas/preprocessors/content-categoriser.schema.json'
 with open(DATA_SCHEMA, 'r') as f:
     CATEGORISER_RESPONSE_SCHEMA = json.load(f)
+
+categories_properties = (
+    CATEGORISER_RESPONSE_SCHEMA.get("properties", {})
+    .get("categories", {})
+    .get("properties", {})
+)
+POSSIBLE_CATEGORIES = list(categories_properties.keys())
+logging.debug(f"Possible categories: {POSSIBLE_CATEGORIES}")
 
 PREPROCESSOR_NAME = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
 
@@ -74,7 +79,7 @@ def categorise():
     base64_image = source.split(",")[1]
 
     graphic_category = llm_client.chat_completion(
-        prompt=CATEGORISER_PROMPT + POSSIBLE_CATEGORIES,
+        prompt=f"{CATEGORISER_PROMPT} {POSSIBLE_CATEGORIES}",
         image_base64=base64_image,
         temperature=0.0,
         json_schema=CATEGORISER_RESPONSE_SCHEMA,
@@ -86,8 +91,6 @@ def categorise():
         return jsonify(
             {"error": "Failed to get graphic category from LLM"}
         ), 500
-
-    logging.pii(f"Graphic category JSON: {graphic_category}")
 
     # data schema validation
     ok, _ = validator.check_data(graphic_category)
