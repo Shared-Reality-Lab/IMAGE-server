@@ -54,10 +54,10 @@ Remove all whitespace before and after the JSON.
 """
 
 FOLLOWUP_PROMPT_FOCUS = """
-Developer's note:
-Now, the graphic contains a red rectangle
+IMPORTANT NOTE:
+The graphic contains a red rectangle
 outlining a specific part of the image.
-Answer user's question ONLY about the contents of this part of the image.
+Answer the question ONLY about the contents of this part of the image.
 Do not mention the red rectangle in your answer.
 It is not part of the original image,
 and was programmatically added for you only to highlight the area of interest.

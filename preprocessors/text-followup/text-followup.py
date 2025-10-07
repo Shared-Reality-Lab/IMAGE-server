@@ -244,14 +244,20 @@ def followup():
                 {"error": "Failed to process focus area on image"}
             ), 500
 
+    if not focus:
+        system_prompt = FOLLOWUP_PROMPT
+    else:
+        system_prompt = FOLLOWUP_PROMPT + FOLLOWUP_PROMPT_FOCUS
+
     system_message = {
         "role": "developer",
-        "content": FOLLOWUP_PROMPT
+        "content": system_prompt
         }
 
     if not uuid_exists:
         # For the first message, create a new history entry
         # include the system prompt, the user's text, and the image
+
         user_message = create_multimodal_message(user_prompt, graphic_b64)
 
         conversation_history[request_uuid] = {
