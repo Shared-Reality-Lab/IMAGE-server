@@ -133,13 +133,13 @@ export function getGraphInfo(highChartsData: any): string{
     let xEnd = xAxis.dataMax;
     let yStart = yAxis.dataMin;
     let yEnd = yAxis.dataMax;
-    if (xAxis.type.toLowerCase() === "datetime"){
+    if (xAxis.type && xAxis.type.toLowerCase() === "datetime"){
         const xDataMin = new Date(xAxis.dataMin);
         const xDataMax = new Date(xAxis.dataMax);
         xStart = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(xDataMin)
         xEnd = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(xDataMax)
     }
-    if (yAxis.type.toLowerCase() === "datetime"){
+    if (yAxis.type && yAxis.type.toLowerCase() === "datetime"){
         const yDataMin = new Date(yAxis.dataMin);
         const yDataMax = new Date(yAxis.dataMax);
         yStart = new Intl.DateTimeFormat('en-GB', {day:'numeric', month: 'long', year:'numeric'}).format(yDataMin)
