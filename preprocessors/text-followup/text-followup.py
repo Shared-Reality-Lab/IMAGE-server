@@ -59,8 +59,6 @@ BUFFER_TOKENS = int(os.getenv('BUFFER_TOKENS', '1000'))  # Safety buffer
 conversation_history = {}
 
 # Configuration for history management
-# Max messages to keep (including user and model messages)
-MAX_HISTORY_LENGTH = int(os.getenv('MAX_HISTORY_LENGTH', '100'))
 # History expiry in seconds after the last message
 HISTORY_EXPIRY = int(os.getenv('HISTORY_EXPIRY', '3600'))
 
@@ -506,16 +504,7 @@ def followup():
         conversation_history[request_uuid]['focus'] = focus
 
     # Use history for the request
-    uuid_messages = conversation_history[request_uuid]["messages"]
-
-    if len(uuid_messages) <= MAX_HISTORY_LENGTH:
-        messages = uuid_messages
-    else:
-        # Get system message, first user message w/ image, and recent messages
-        messages = (
-            uuid_messages[:2] +
-            uuid_messages[-(MAX_HISTORY_LENGTH-2):]
-        )
+    messages = conversation_history[request_uuid]["messages"]
 
     followup_response_json = llm_client.chat_completion(
         prompt="",  # Empty since we're using full messages via kwargs

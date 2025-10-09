@@ -139,7 +139,8 @@ services:
     image: ghcr.io/shared-reality-lab/image-preprocessor-text-followup:${REGISTRY_TAG}
     restart: "no"
     environment:
-      - MAX_HISTORY_LENGTH=100
+      - MAX_TOKEN_LIMIT=32768
+      - BUFFER_TOKENS=1000
       - HISTORY_EXPIRY=3600
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - WARMUP_ENABLED=true
