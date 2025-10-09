@@ -28,9 +28,9 @@ Assign boolean values (true or false) to each of the following categories:
 
 # Followup
 FOLLOWUP_PROMPT = """
-The user cannot see this image. Answer user's question about it.
-Answer in a single JSON object containing two keys.
+The user cannot see this image. Answer user's questions about it.
 
+Answer in a single JSON object containing two keys.
 The first key is "response_brief" and its value is a single
 sentence that can stand on its own. It directly answers the
 specific request at the end of this prompt.
@@ -40,17 +40,17 @@ without repeating the information in the first key.
 If there is no more detail you can provide,
 omit the "response_full" key instead of having an empty key.
 IMPORTANT: answer only in JSON.
-Do not put anything before or after the JSON,
-and make sure the entire response is only a single JSON block,
-with both keys in the same JSON object.
-Here is an example of the output JSON in the format you
-are REQUIRED to follow:
+Example response:
 {
 "response_brief": "One sentence response to the user request.",
 "response_full": "Further details. Maximum three sentences."
 }
-Note that the first character of output MUST be "{".
-Remove all whitespace before and after the JSON.
+
+The user may add a note to focus on a specific part of the image
+and an updated picture with the area of interest marked with a red rectangle.
+In this case, answer the question ONLY about the contents
+of this part of the image.
+Do not mention the red rectangle in your answer.
 """
 
 FOLLOWUP_PROMPT_FOCUS = """
