@@ -281,6 +281,7 @@ services:
     labels:
       ca.mcgill.a11y.image.handler: enable
       ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation,object-grouping,object-detection,graphic-caption"
+      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser"
     volumes:
       - sc-store:/tmp/sc-store
     environment:

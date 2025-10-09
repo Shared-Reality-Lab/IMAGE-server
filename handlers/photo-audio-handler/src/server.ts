@@ -64,7 +64,8 @@ app.post("/handler", async (req, res) => {
     const objDet = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"];
     const objGroup = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"];
     const action = preprocessors["ca.mcgill.a11y.image.preprocessor.actionRecognition"];
-    const collageDetector = preprocessors["ca.mcgill.a11y.image.preprocessor.collageDetector"];
+    //const collageDetector = preprocessors["ca.mcgill.a11y.image.preprocessor.collageDetector"];
+    const contentCategoriser = preprocessors["ca.mcgill.a11y.image.preprocessor.contentCategoriser"];
     const graphicCaption = preprocessors["ca.mcgill.a11y.image.preprocessor.graphic-caption"];
     const targetLanguage = req.body["language"];
 
@@ -101,7 +102,7 @@ app.post("/handler", async (req, res) => {
     // This is variable depending on which preprocessor data is available.
     const ttsData: utils.TTSSegment[] = [];
 // Printing a disclaimer that the graphic may be a collage if the preprocessor identifies it as one
-    if (collageDetector && collageDetector.collage) {
+    if(contentCategoriser && contentCategoriser["categories"] && contentCategoriser["categories"]["collage"]) {
         ttsData.push({"value": "This is likely a collage of multiple photos, so the following interpretation may be confusing.", "type": "text"});
     }
 
