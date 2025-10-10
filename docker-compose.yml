@@ -153,21 +153,6 @@ services:
     env_file:
       ./config/llm.env
 
-  graphic-tagger:
-    profiles: [production, test, default]
-    image: ghcr.io/shared-reality-lab/image-preprocessor-graphic-tagger:${REGISTRY_TAG}
-    restart: "no"
-    env_file:
-      - ./config/azure-api.env
-    labels:
-      ca.mcgill.a11y.image.preprocessor: 2
-      ca.mcgill.a11y.image.port: 5000
-      ca.mcgill.a11y.image.cacheTimeout: 3600
-      ca.mcgill.a11y.image.required_dependencies: ""
-      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser"
-    environment:
-      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
-
   object-detection:
     profiles: [production, default, test]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-yolo:${REGISTRY_TAG}
@@ -270,7 +255,7 @@ services:
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
       ca.mcgill.a11y.image.required_dependencies: ""
-      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser,graphic-tagger"
+      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - WARMUP_ENABLED=true
@@ -296,7 +281,7 @@ services:
     labels:
       ca.mcgill.a11y.image.handler: enable
       ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation,object-grouping,object-detection,graphic-caption"
-      ca.mcgill.a11y.image.optional_dependencies: "collage-detector-preprocessor,graphic-tagger"
+      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser"
     volumes:
       - sc-store:/tmp/sc-store
     environment:
@@ -571,19 +556,6 @@ services:
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.port: 5000
-        ca.mcgill.a11y.image.required_dependencies: ""
-        ca.mcgill.a11y.image.optional_dependencies: ""
-    environment:
-      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
-
-  collage-detector-preprocessor:
-    profiles: [production, test, default]
-    image: ghcr.io/shared-reality-lab/image-preprocessor-collage-detector:${REGISTRY_TAG}
-    restart: "no"
-    labels:
-        ca.mcgill.a11y.image.preprocessor: 1
-        ca.mcgill.a11y.image.port: 5000
-        ca.mcgill.a11y.image.cacheTimeout: 3600
         ca.mcgill.a11y.image.required_dependencies: ""
         ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
