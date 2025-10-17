@@ -73,6 +73,7 @@ class LLMClient:
         response_format: Optional[Dict[str, str]] = None,
         system_prompt: Optional[str] = None,
         parse_json: bool = False,
+        return_token_info=False,
         **kwargs
     ) -> Union[str, Dict[str, Any], None]:
         """
@@ -91,6 +92,7 @@ class LLMClient:
                 (e.g., {"type": "json_object"})
             system_prompt: Optional system message
             parse_json: If True, attempt to parse response as JSON
+            return_token_info: If True, return tuple of (response, token_info)
             **kwargs: Additional parameters to pass to the API
 
         Returns:
@@ -118,7 +120,10 @@ class LLMClient:
 
             # Add system prompt if provided
             if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
+                messages.append(
+                    {"role": "developer",
+                     "content": system_prompt}
+                     )
 
             # Build user message content
             user_content = []
@@ -161,9 +166,20 @@ class LLMClient:
 
             # Parse JSON if requested
             if parse_json:
-                return self._parse_json_response(response_text)
+                result = self._parse_json_response(response_text)
+            else:
+                result = response_text
 
-            return response_text
+            self.last_token_usage = {
+                'prompt_tokens': response.usage.prompt_tokens,
+                'completion_tokens': response.usage.completion_tokens,
+                'total_tokens': response.usage.total_tokens
+            }
+
+            if return_token_info:
+                return result, self.last_token_usage
+            else:
+                return result
 
         except Exception as e:
             logging.error(f"Error in chat_completion: {e}", exc_info=True)
