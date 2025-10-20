@@ -37,7 +37,7 @@ services:
       ca.mcgill.a11y.image.required_dependencies: ""
       ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
-      - MAX_GRAPHIC_DIMENSION=2048
+      - MAX_GRAPHIC_DIMENSION=1200
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   espnet-tts:
