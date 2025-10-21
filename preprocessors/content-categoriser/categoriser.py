@@ -38,7 +38,7 @@ categories_properties = (
     .get("categories", {})
     .get("properties", {})
 )
-POSSIBLE_CATEGORIES = list(categories_properties.keys())
+POSSIBLE_CATEGORIES = str(list(categories_properties.keys()))
 logging.debug(f"Possible categories: {POSSIBLE_CATEGORIES}")
 
 PREPROCESSOR_NAME = "ca.mcgill.a11y.image.preprocessor.contentCategoriser"
