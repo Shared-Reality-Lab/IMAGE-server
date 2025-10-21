@@ -18,10 +18,29 @@ Do not give any intro like "Here's what in this image:",
 the graphic type is significant (like oil painting or aerial photo).
 Instead, start describing the graphic right away.
 """
+###
+
 # Content categoriser
 CATEGORISER_PROMPT = """
 Your task is to categorise the content of an image.
 Answer only in JSON.
+The JSON should contain a single key "categories" with a value
+containing the object with the boolean values for each category.
+For example:
+```json
+{
+    "categories": {
+        "photo": True,
+        "diagram": False,
+        "multistage_diagram": False,
+        "contains_text": False,
+        "collage": False,
+        "chart_or_graph": False,
+        "illustration": False,
+    }
+}
+```
+
 Assign boolean values (true or false) to each of the following categories:
 """
 ###
