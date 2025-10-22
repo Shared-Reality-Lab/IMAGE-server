@@ -1,4 +1,4 @@
-FROM python:3.11-alpine3.20
+FROM python:3.13.9-alpine3.22
 
 RUN apk add --no-cache curl && \
     adduser --disabled-password python

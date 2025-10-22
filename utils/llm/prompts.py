@@ -8,6 +8,46 @@
 """
 Prompt templates for LLM interactions in the IMAGE project.
 """
+# Object detection
+OBJECT_DETECTION_PROMPT = """
+Give the bounding boxes for the objects found in this image.
+Output a only JSON list of bounding boxes where each entry contains:
+- the unique numeric ID in the key "ID",
+- the object label in the key "type",
+- the pixel coordinates of a 2D bounding box in the key "dimensions",
+- and the confidence score in the key "confidence".
+
+Example:
+```json
+{
+  "objects": [
+    {
+        "ID": 0,
+        "type": "car",
+        "dimensions": [120, 200, 300, 450],
+        "confidence": 0.92
+    },
+    {
+        "ID": 1,
+        "type": "person",
+        "dimensions": [50, 100, 120, 300],
+        "confidence": 0.95
+    }
+  ]
+}
+
+```
+Ensure that the bounding boxes are in the format [x1, y1, x2, y2].
+
+Rules:
+1. The graphic can contain any number of objects, from zero to many.
+2. If no objects are detected, return an empty list: {"objects": []}.
+3. Use simple and common object labels (e.g., "car", "person", "tree").
+4. Include only objects that are clearly visible and identifiable.
+5. Focus on the major and important objects in the image.
+"""
+###
+
 # Graphic caption
 GRAPHIC_CAPTION_PROMPT = """
 Describe this image to a person who cannot see it.
@@ -22,6 +62,23 @@ Instead, start describing the graphic right away.
 CATEGORISER_PROMPT = """
 Your task is to categorise the content of an image.
 Answer only in JSON.
+The JSON should contain a single key "categories" with a value
+containing the object with the boolean values for each category.
+For example:
+```json
+{
+    "categories": {
+        "photo": True,
+        "diagram": False,
+        "multistage_diagram": False,
+        "contains_text": False,
+        "collage": False,
+        "chart_or_graph": False,
+        "illustration": False,
+    }
+}
+```
+
 Assign boolean values (true or false) to each of the following categories:
 """
 ###
