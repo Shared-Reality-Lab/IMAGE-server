@@ -30,12 +30,12 @@ COPY /utils /usr/src/app/utils
 # Create model directory
 RUN mkdir -p /usr/src/app/models
 
-# Download SAM model
+# Download SAM 2.1 Large model
 RUN wget -O /usr/src/app/models/sam2.1_l.pt https://image.a11y.mcgill.ca/models/semanticSegmentation/sam2.1_l.pt
 
 # Copy your preprocessor application code
 # Make sure your python script is named 'diagram_preprocessor.py'
-COPY /preprocessors/multistage-diagram-segmentation /usr/src/app 
+COPY /preprocessors/multistage-diagram-segmentation /usr/src/app
 
 # Set environment variables needed by the Flask app
 ENV FLASK_APP=multistage-diagram-segmentation.py
