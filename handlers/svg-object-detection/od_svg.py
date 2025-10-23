@@ -32,6 +32,7 @@ app = Flask(__name__)
 @app.route("/handler", methods=["POST"])
 def handle():
     logging.debug("Received request")
+
     try:
         # Load necessary schema files
         with open("./schemas/definitions.json") as f:
@@ -70,6 +71,7 @@ def handle():
 
     # Check preprocessor data
     preprocessors = contents['preprocessors']
+
     if ("ca.mcgill.a11y.image.capability.DebugMode"
         not in contents['capabilities']
             or "ca.mcgill.a11y.image.renderer.SVGLayers"
@@ -93,7 +95,7 @@ def handle():
         return response
 
     # No Object Detector found
-    if "ca.mcgill.a11y.image.preprocessor.objectDetection"\
+    if "ca.mcgill.a11y.image.preprocessor.object-detection-llm"\
             not in preprocessors:
         logging.debug("No Object Detector found")
         response = {
@@ -135,12 +137,13 @@ def handle():
         logging.debug("Sending response")
         return response
 
-    o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
+    o = preprocessors["ca.mcgill.a11y.image.preprocessor.object-detection-llm"]
     g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
     u = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
     objects = o["objects"]
     grouped = g["grouped"]
     ungrouped = u["ungrouped"]
+
     svg = draw.Drawing(dimensions[0], dimensions[1])
     print(dimensions[0], dimensions[1])
     svg_layers = []

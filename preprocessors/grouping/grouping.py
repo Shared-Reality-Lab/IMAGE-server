@@ -57,13 +57,13 @@ def readImage():
         return jsonify("Invalid Preprocessor JSON format"), 400
 
     preprocessor = content["preprocessors"]
-    if "ca.mcgill.a11y.image.preprocessor.objectDetection" \
+    if "ca.mcgill.a11y.image.preprocessor.object-detection-llm" \
             not in preprocessor:
         logging.info("Object detection output not "
                      "available. Skipping...")
         return "", 204
     oDpreprocessor = \
-        preprocessor["ca.mcgill.a11y.image.preprocessor.objectDetection"]
+        preprocessor["ca.mcgill.a11y.image.preprocessor.object-detection-llm"]
     objects = oDpreprocessor["objects"]
 
     for i in range(len(objects)):
