@@ -30,7 +30,7 @@ COPY /utils /usr/src/app/utils
 # Create model directory
 RUN mkdir -p /usr/src/app/models
 
-# Download YOLOv11 model
+# Download SAM model
 RUN wget -O /usr/src/app/models/sam2.1_l.pt https://image.a11y.mcgill.ca/models/semanticSegmentation/sam2.1_l.pt
 
 # Copy your preprocessor application code
