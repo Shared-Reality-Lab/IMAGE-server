@@ -147,9 +147,7 @@ def detect_objects():
 
         if object_json is None or len(object_json.get("objects", [])) == 0:
             logging.error("Failed to extract objects from the graphic.")
-            return jsonify(
-                {"error": "Failed to extract objects from the graphic."}
-            ), 503
+            return jsonify({"error": "No objects extracted"}), 204
 
         # Normalize bounding boxes
         width, height = pil_image.size
