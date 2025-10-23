@@ -70,7 +70,8 @@ def normalize_bbox(bbox, width, height):
 
 def filter_objects_by_confidence(objects, threshold):
     """
-    Filter objects based on confidence score threshold.
+    Filter objects based on confidence score threshold
+    and replace underscores in labels with spaces.
 
     Args:
         objects (list): List of detected objects with confidence scores
@@ -79,9 +80,11 @@ def filter_objects_by_confidence(objects, threshold):
     Returns:
         list: Filtered list of objects meeting the confidence threshold
     """
-    filtered = [
-        obj for obj in objects if obj.get("confidence", 0) >= threshold
-        ]
+    filtered = []
+    for obj in objects:
+        if obj.get("confidence", 0) >= threshold:
+            obj['type'] = obj['type'].replace('_', ' ')
+            filtered.append(obj)
     logging.debug(
         f"Filtered {len(objects)} objects to {len(filtered)} "
         f"objects with confidence >= {threshold}"
