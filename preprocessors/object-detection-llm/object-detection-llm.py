@@ -85,6 +85,11 @@ def filter_objects_by_confidence(objects, threshold):
         if obj.get("confidence", 0) >= threshold:
             obj['type'] = obj['type'].replace('_', ' ')
             filtered.append(obj)
+
+    # Renumber IDs sequentially after filtering
+    for idx, obj in enumerate(filtered):
+        obj['ID'] = idx
+
     logging.debug(
         f"Filtered {len(objects)} objects to {len(filtered)} "
         f"objects with confidence >= {threshold}"
