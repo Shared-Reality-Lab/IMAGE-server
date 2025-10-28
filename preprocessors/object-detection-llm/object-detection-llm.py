@@ -61,10 +61,10 @@ def normalize_bbox(bbox, width, height):
     """
     x1, y1, x2, y2 = bbox
     return [
-        x1 / width,
-        y1 / height,
-        x2 / width,
-        y2 / height
+        max(0.0, min(x1 / width, 1.0)),
+        max(0.0, min(y1 / height, 1.0)),
+        max(0.0, min(x2 / width, 1.0)),
+        max(0.0, min(y2 / height, 1.0))
     ]
 
 
