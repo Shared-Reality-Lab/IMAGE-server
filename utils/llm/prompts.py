@@ -45,6 +45,7 @@ Rules:
 3. Use simple and common object labels (e.g., "car", "person", "tree").
 4. Include only objects that are clearly visible and identifiable.
 5. Focus on the major and important objects in the image.
+6. Several objects can have the same confidence score.
 """
 ###
 
