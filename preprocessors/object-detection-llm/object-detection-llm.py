@@ -38,7 +38,7 @@ app = Flask(__name__)
 CONF_THRESHOLD = float(os.environ.get('CONF_THRESHOLD', '0.9'))
 
 PREPROCESSOR_NAME = \
-    "ca.mcgill.a11y.image.preprocessor.object-detection-llm"
+    "ca.mcgill.a11y.image.preprocessor.objectDetection"
 
 DATA_SCHEMA = './schemas/preprocessors/object-detection.schema.json'
 

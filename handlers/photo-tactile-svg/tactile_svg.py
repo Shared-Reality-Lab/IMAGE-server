@@ -100,7 +100,7 @@ def handle():
     if not (("ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
              in preprocessors) or
             all(x in preprocessors for x in
-                ["ca.mcgill.a11y.image.preprocessor.object-detection-llm",
+                ["ca.mcgill.a11y.image.preprocessor.objectDetection",
                  "ca.mcgill.a11y.image.preprocessor.grouping"])):
         logging.debug("No Object Detector and Semantic Segmentation found")
         response = {
@@ -152,7 +152,7 @@ def handle():
     form = inflect.engine()
     caption = ""
 
-    if "ca.mcgill.a11y.image.preprocessor.object-detection-llm"\
+    if "ca.mcgill.a11y.image.preprocessor.objectDetection"\
         in preprocessors\
             and "ca.mcgill.a11y.image.preprocessor.grouping" in preprocessors:
         logging.debug("Object detector and grouping preprocessor found. "
@@ -161,7 +161,7 @@ def handle():
         obj_list = []
         preprocessor_names.append('Things and people')
         o = preprocessors[
-            "ca.mcgill.a11y.image.preprocessor.object-detection-llm"
+            "ca.mcgill.a11y.image.preprocessor.objectDetection"
             ]
         g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
         objects = o["objects"]
