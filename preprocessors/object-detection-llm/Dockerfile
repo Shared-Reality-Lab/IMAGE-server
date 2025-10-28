@@ -25,4 +25,4 @@ ENV FLASK_APP=object-detection-llm.py
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=5 CMD curl -f http://localhost:5000/health || exit 1
 
-CMD [ "gunicorn", "object-detection-llm:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug" ]
+CMD [ "gunicorn", "object-detection-llm:app", "-b", "0.0.0.0:5000", "--capture-output", "--log-level=debug", "--timeout", "75"]
