@@ -95,7 +95,7 @@ def handle():
         return response
 
     # No Object Detector found
-    if "ca.mcgill.a11y.image.preprocessor.object-detection-llm"\
+    if "ca.mcgill.a11y.image.preprocessor.objectDetection"\
             not in preprocessors:
         logging.debug("No Object Detector found")
         response = {
@@ -137,7 +137,7 @@ def handle():
         logging.debug("Sending response")
         return response
 
-    o = preprocessors["ca.mcgill.a11y.image.preprocessor.object-detection-llm"]
+    o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
     g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
     u = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
     objects = o["objects"]
