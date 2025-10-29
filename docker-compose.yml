@@ -181,7 +181,7 @@ services:
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-llm:${REGISTRY_TAG}
     restart: "no"
     environment:
-      - CONF_THRESHOLD=0.9
+      - CONF_THRESHOLD=0.8
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - WARMUP_ENABLED=true
     labels:
