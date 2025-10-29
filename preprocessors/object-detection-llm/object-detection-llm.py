@@ -68,26 +68,30 @@ def normalize_bbox(bbox, width, height):
     ]
 
 
-def filter_objects(objects, threshold):
+def process_objects(objects, threshold):
     """
-    Filter objects based on confidence score threshold
-    and replace underscores in labels with spaces.
+    Process detected objects by filtering, transforming, and enriching them.
+
+    - Filters objects by confidence threshold
+    - Normalizes labels (replaces underscores with spaces)
+    - Renumbers IDs sequentially
+    - Calculates geometric properties (area, centroid)
 
     Args:
         objects (list): List of detected objects with confidence scores
         threshold (float): Minimum confidence score (0-1)
 
     Returns:
-        list: Filtered list of objects meeting the confidence threshold
+        list: Processed objects with computed properties
     """
-    filtered = []
+    processed = []
     for obj in objects:
         if obj.get("confidence", 0) >= threshold:
             obj['type'] = obj['type'].replace('_', ' ')
-            filtered.append(obj)
+            processed.append(obj)
 
     # Renumber IDs sequentially after filtering
-    for idx, obj in enumerate(filtered):
+    for idx, obj in enumerate(processed):
         obj['ID'] = idx
 
         x1, y1, x2, y2 = obj["dimensions"]
@@ -104,10 +108,10 @@ def filter_objects(objects, threshold):
         obj["centroid"] = [centroid_x, centroid_y]
 
     logging.debug(
-        f"Filtered {len(objects)} objects to {len(filtered)} "
+        f"Processed {len(objects)} objects to {len(processed)} "
         f"objects with confidence >= {threshold}"
     )
-    return filtered
+    return processed
 
 
 @app.route("/preprocessor", methods=['POST'])
@@ -175,7 +179,7 @@ def detect_objects():
 
         # Filter objects by confidence threshold, add area and centroid,
         # remove underscores from labels, and renumber IDs
-        object_json["objects"] = filter_objects(
+        object_json["objects"] = process_objects(
             object_json["objects"],
             CONF_THRESHOLD
         )
