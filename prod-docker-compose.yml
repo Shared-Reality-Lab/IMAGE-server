@@ -23,11 +23,11 @@ services:
       - SERVER_NAME=image.a11y.mcgill.ca
     volumes:
       # Following volume mounts are used only by the IMAGE project's website, not required for IMAGE server 
-      - ./www/image.conf:/etc/nginx/templates/image.conf.template:ro
-      - ./www/html:/var/www/html:ro
+      - /var/docker/image/IMAGE-website/image.conf:/etc/nginx/templates/image.conf.template:ro
+      - /var/docker/image/IMAGE-website/html:/var/www/html:ro
       - website-logs:/var/log/nginx
-      - ./www/passwords:/etc/nginx/passwords
-      - ./resources/current:/var/www/resources:ro
+      - /var/docker/image/IMAGE-website/passwords:/etc/nginx/passwords
+      - /var/docker/image/resources/current:/var/www/resources:ro
     depends_on:
       - orchestrator
     networks:
