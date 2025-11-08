@@ -224,8 +224,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
-      ca.mcgill.a11y.image.required_dependencies: "object-detection-llm"
-      ca.mcgill.a11y.image.optional_dependencies: ""
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm,object-detection-yolo"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -253,8 +253,8 @@ services:
       ca.mcgill.a11y.image.preprocessor: 5
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
-      ca.mcgill.a11y.image.required_dependencies: "object-detection-llm"
-      ca.mcgill.a11y.image.optional_dependencies: ""
+      ca.mcgill.a11y.image.required_dependencies: ""
+      ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm,object-detection-yolo"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
