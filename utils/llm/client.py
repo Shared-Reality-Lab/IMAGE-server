@@ -68,7 +68,7 @@ class LLMClient:
         image_base64: Optional[str] = None,
         json_schema: Optional[Dict[str, Any]] = None,
         schema_name: str = "response-format",
-        temperature: float = 0.5,
+        temperature: float = 0.0,
         max_tokens: Optional[int] = None,
         response_format: Optional[Dict[str, str]] = None,
         system_prompt: Optional[str] = None,

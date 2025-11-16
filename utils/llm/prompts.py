@@ -40,11 +40,11 @@ Example:
 Ensure that the bounding boxes are in the format [x1, y1, x2, y2].
 
 Rules:
-1. The graphic can contain any number of objects, from zero to many.
-2. If no objects are detected, return an empty list: {"objects": []}.
-3. Use simple and common object labels (e.g., "car", "person", "tree").
-4. Include only objects that are clearly visible and identifiable.
-5. Focus on the major and important objects in the image.
+1. Focus ONLY on the major and important objects in the image.
+2. The graphic can contain any number of objects, from zero to many.
+3. If no objects are detected, return an empty list: {"objects": []}.
+4. Use simple and common object labels (e.g., "car", "person", "tree").
+5. Include ONLY objects that are clearly visible and identifiable.
 6. Multiple objects can have the same confidence score.
 """
 ###
