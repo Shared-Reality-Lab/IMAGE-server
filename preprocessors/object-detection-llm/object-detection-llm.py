@@ -68,33 +68,30 @@ def normalize_bbox(bbox, width, height):
     ]
 
 
-def process_objects(objects, threshold):
+def process_objects(qwen_output, width, height, threshold):
     """
-    Process detected objects by filtering, transforming, and enriching them.
+    Transform Qwen object detection output to IMAGE schema format.
 
-    - Filters objects by confidence threshold
+    - Transforms from Qwen format (bbox_2d, label) to IMAGE format
+    - Normalizes bounding boxes to [0,1] range
+    - Assigns confidence threshold to all objects
     - Normalizes labels (replaces underscores with spaces)
-    - Renumbers IDs sequentially
     - Calculates geometric properties (area, centroid)
+    - Filters objects by confidence threshold
 
     Args:
-        objects (list): List of detected objects with confidence scores
+        qwen_output (list): Qwen detection output with bbox_2d and label
+        width (int): Image width for normalization
+        height (int): Image height for normalization
         threshold (float): Minimum confidence score (0-1)
 
     Returns:
         list: Processed objects with computed properties
     """
     processed = []
-    for obj in objects:
-        if obj.get("confidence", 0) >= threshold:
-            obj['type'] = obj['type'].replace('_', ' ')
-            processed.append(obj)
-
-    # Renumber IDs sequentially after filtering
-    for idx, obj in enumerate(processed):
-        obj['ID'] = idx
-
-        x1, y1, x2, y2 = obj["dimensions"]
+    for idx, item in enumerate(qwen_output):
+        # Normalize bounding box
+        x1, y1, x2, y2 = normalize_bbox(item["bbox_2d"], width, height)
 
         # Calculate area (width * height)
         area = (x2 - x1) * (y2 - y1)
@@ -103,13 +100,20 @@ def process_objects(objects, threshold):
         centroid_x = (x1 + x2) / 2
         centroid_y = (y1 + y2) / 2
 
-        # Create object entry according to schema
-        obj["area"] = area
-        obj["centroid"] = [centroid_x, centroid_y]
+        # Create object entry according to IMAGE schema
+        obj = {
+            "ID": idx,
+            "type": item["label"].replace('_', ' '),
+            "dimensions": [x1, y1, x2, y2],
+            "confidence": threshold,
+            "area": area,
+            "centroid": [centroid_x, centroid_y]
+        }
+
+        processed.append(obj)
 
     logging.debug(
-        f"Processed {len(objects)} objects to {len(processed)} "
-        f"objects with confidence >= {threshold}"
+        f"Processed {len(qwen_output)} objects from Qwen output"
     )
     return processed
 
@@ -155,34 +159,41 @@ def detect_objects():
     if error:
         return jsonify(error), error["code"]
 
+    stop_tokens = [
+        "<|im_end|>",          # Qwen's end token
+        "<|endoftext|>",        # Alternative end token
+        "\n\n\n",               # Triple newline
+        "```",                  # Code block end
+    ]
+
     try:
         # Get object info
-        object_json = llm_client.chat_completion(
+        qwen_output = llm_client.chat_completion(
             prompt=OBJECT_DETECTION_PROMPT,
             image_base64=base64_image,
             json_schema=BBOX_RESPONSE_SCHEMA,
-            temperature=0.0,
-            parse_json=True
+            temperature=0.5,
+            parse_json=True,
+            stop=stop_tokens
         )
 
-        if object_json is None or len(object_json.get("objects", [])) == 0:
+        logging.debug(f"Qwen output received: {qwen_output}")
+
+        if qwen_output is None or len(qwen_output) == 0:
             logging.error("Failed to extract objects from the graphic.")
             return jsonify({"error": "No objects extracted"}), 204
 
-        # Normalize bounding boxes
+        # Transform Qwen format to IMAGE schema format
         width, height = pil_image.size
-        for obj in object_json["objects"]:
-            # Normalize bounding boxes
-            obj["dimensions"] = normalize_bbox(
-                obj["dimensions"], width, height
-            )
-
-        # Filter objects by confidence threshold, add area and centroid,
-        # remove underscores from labels, and renumber IDs
-        object_json["objects"] = process_objects(
-            object_json["objects"],
+        processed_objects = process_objects(
+            qwen_output,
+            width,
+            height,
             CONF_THRESHOLD
         )
+
+        # Wrap in "objects" for schema compliance
+        object_json = {"objects": processed_objects}
 
         logging.pii(f"Normalized output: {object_json}")
 

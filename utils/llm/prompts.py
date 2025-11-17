@@ -10,39 +10,35 @@ Prompt templates for LLM interactions in the IMAGE project.
 """
 # Object detection
 OBJECT_DETECTION_PROMPT = """
-Give the bounding boxes for the objects found in this image.
+Step 1:
+Determine from 0 to 10 major and important objects in the image.
+Focus ONLY on the objects that are clearly visible and identifiable.
+
+Step 2:
+Give the bounding boxes for the objects determined in the first step.
 Output a only JSON list of bounding boxes where each entry contains:
-- the unique numeric ID in the key "ID",
-- the object label in the key "type",
-- the pixel coordinates of a 2D bounding box in the key "dimensions",
-- and the confidence score in the key "confidence".
+- the pixel coordinates of a 2D bounding box in the key "bbox_2d",
+- the object label in the key "label".
 
 Example:
 ```json
-{
-  "objects": [
+[
     {
-        "ID": 0,
-        "type": "car",
-        "dimensions": [120, 200, 300, 450],
-        "confidence": 0.92
+        "bbox_2d": [120, 200, 300, 450],
+        "label": "car",
     },
     {
-        "ID": 1,
-        "type": "person",
-        "dimensions": [50, 100, 120, 300],
-        "confidence": 0.95
+        "bbox_2d": [50, 100, 120, 300],
+        "label": "person",
     }
-  ]
-}
-
+]
 ```
 Ensure that the bounding boxes are in the format [x1, y1, x2, y2].
 
 Rules:
 1. Focus ONLY on the major and important objects in the image.
 2. The graphic can contain any number of objects, from zero to many.
-3. If no objects are detected, return an empty list: {"objects": []}.
+3. If no objects are detected, return an empty list: [].
 4. Use simple and common object labels (e.g., "car", "person", "tree").
 5. Include ONLY objects that are clearly visible and identifiable.
 6. Multiple objects can have the same confidence score.
