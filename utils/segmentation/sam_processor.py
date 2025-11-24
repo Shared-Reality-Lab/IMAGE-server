@@ -136,8 +136,25 @@ class SAMClient:
                     )
                 continue
 
-            logging.pii(f"Processing bounding box for label: '{label}'")
-            bboxes.append(bbox)
+            logging.pii(
+                f"Processing bounding box for label: '{label}' "
+                f"(normalized coords: {bbox})"
+            )
+
+            # Convert normalized coordinates (0-1000) received from Qwen 3
+            # to pixel coordinates
+            bbox_pixels = [
+                (bbox[0] / 1000.0) * width,
+                (bbox[1] / 1000.0) * height,
+                (bbox[2] / 1000.0) * width,
+                (bbox[3] / 1000.0) * height
+            ]
+
+            logging.pii(
+                f"Converted to pixel coords: {bbox_pixels}"
+            )
+
+            bboxes.append(bbox_pixels)
             labels.append(label)
 
         if not bboxes:
