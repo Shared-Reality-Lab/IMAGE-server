@@ -138,6 +138,8 @@ of the following stages: {stages}.
 Output a only JSON list of bounding boxes where each entry contains
 the 2D bounding box in the key "box_2d",
 and the stage name in the key "label".
+Include in the bounding boxes only the illustrations of the objects themselves,
+not any surrounding text or arrows.
 
 """
 
