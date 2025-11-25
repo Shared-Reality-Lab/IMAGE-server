@@ -1,45 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "type": "object",
+  "type": "array",
   "title": "Object Detection Data",
-  "description": "Detected object data with bounding boxes.",
-  "definitions": {
-    "object": {
-      "type": "object",
-      "title": "BoundingBoxItem",
-      "properties": {
-        "ID": {
-          "description": "A number identifying this object in the set.",
-          "type": "integer"
-        },
-        "type": {
-          "description": "The type of object detected (e.g., 'person', 'car').",
-          "type": "string"
-        },
-        "dimensions": {
-          "description": "Bounding box coordinates of this object [x1, y1, x2, y2].",
-          "type": "array",
-          "items": { "type": "number" },
-          "minItems": 4,
-          "maxItems": 4,
-          "additionalItems": false
-        },
-        "confidence": {
-          "description": "Confidence in the correctness of this object's data (0-1).",
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        }
+  "description": "Detected object data with bounding boxes in Qwen format.",
+  "items": {
+    "type": "object",
+    "properties": {
+      "bbox_2d": {
+        "description": "Bounding box coordinates [x1, y1, x2, y2].",
+        "type": "array",
+        "items": { "type": "number" },
+        "minItems": 4,
+        "maxItems": 4
       },
-      "required": ["ID", "type", "dimensions", "confidence"]
-    }
-  },
-  "properties": {
-    "objects": {
-      "description": "The set of detected objects in the image.",
-      "type": "array",
-      "items": { "$ref": "#/definitions/object" }
-    }
-  },
-  "required": ["objects"]
+      "label": {
+        "description": "The type of object detected (e.g., 'person', 'car').",
+        "type": "string"
+      }
+    },
+    "required": ["bbox_2d", "label"]
+  }
 }
