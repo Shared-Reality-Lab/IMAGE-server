@@ -81,8 +81,8 @@ def process_objects(qwen_output, width, height, threshold):
 
     Args:
         qwen_output (list): Qwen detection output with bbox_2d and label
-        width (int): Image width for normalization
-        height (int): Image height for normalization
+        width (int): Image width in pixels for normalization
+        height (int): Image height in pixels for normalization
         threshold (float): Minimum confidence score (0-1)
 
     Returns:
