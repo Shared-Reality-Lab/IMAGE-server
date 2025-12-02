@@ -40,6 +40,9 @@ As of 2022-06-29, these are the statuses of the handlers:
 
 For more information, consult the individual READMEs of the handlers.
 
+## Prototypes and directions
+Rachel Bainbridge-Sedivy did a COMP400 project exploring sonifications of objects in photographs, including taking advantage of depth information. [Repo here](https://github.com/rachel-sedibridge/IMAGE-obj-sonification-prototypes).
+
 ## Language Handling
 Some handlers use `multilang-support` microservice to translate its rendering to different languages:
 * `photo-audio-handler`
