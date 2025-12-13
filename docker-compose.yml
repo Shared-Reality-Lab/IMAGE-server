@@ -155,7 +155,7 @@ services:
       ./config/llm.env
 
   object-detection:
-    profiles: [production]
+    profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-yolo:${REGISTRY_TAG}
     restart: "no"
     labels:
@@ -177,7 +177,7 @@ services:
       - WARMUP_ENABLED=true
 
   object-detection-llm:
-    profiles: [test, default]
+    profiles: []
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-llm:${REGISTRY_TAG}
     restart: "no"
     environment:
@@ -225,7 +225,7 @@ services:
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
       ca.mcgill.a11y.image.required_dependencies: ""
-      ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm,object-detection-yolo"
+      ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm,object-detection"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -254,7 +254,7 @@ services:
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
       ca.mcgill.a11y.image.required_dependencies: ""
-      ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm,object-detection-yolo"
+      ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm,object-detection"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -298,8 +298,8 @@ services:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
-      ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation,object-grouping,object-detection-llm,graphic-caption"
-      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser"
+      ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation,object-grouping,object-detection,graphic-caption"
+      ca.mcgill.a11y.image.optional_dependencies: "content-categoriser,object-detection-llm"
     volumes:
       - sc-store:/tmp/sc-store
     environment:
@@ -328,8 +328,8 @@ services:
       - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
-      ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation,object-grouping,object-detection-llm"
-      ca.mcgill.a11y.image.optional_dependencies: ""
+      ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation,object-grouping,object-detection"
+      ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm"
     volumes:
       - sc-store:/tmp/sc-store
     environment:
@@ -356,8 +356,8 @@ services:
     restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
-        ca.mcgill.a11y.image.required_dependencies: "object-detection-llm,object-grouping"
-        ca.mcgill.a11y.image.optional_dependencies: ""
+        ca.mcgill.a11y.image.required_dependencies: "object-detection,object-grouping"
+        ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -426,8 +426,8 @@ services:
     restart: "no"
     labels:
         ca.mcgill.a11y.image.handler: enable
-        ca.mcgill.a11y.image.required_dependencies: "object-detection-llm,object-grouping,semantic-segmentation,graphic-caption"
-        ca.mcgill.a11y.image.optional_dependencies: ""
+        ca.mcgill.a11y.image.required_dependencies: "object-detection,object-grouping,semantic-segmentation,graphic-caption"
+        ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -521,7 +521,7 @@ services:
       ca.mcgill.a11y.image.port: 5000
       ca.mcgill.a11y.image.cacheTimeout: 3600
       ca.mcgill.a11y.image.required_dependencies: ""
-      ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm"
+      ca.mcgill.a11y.image.optional_dependencies: "object-detection"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
@@ -544,7 +544,7 @@ services:
     restart: "no"
     labels:
       ca.mcgill.a11y.image.handler: enable
-      ca.mcgill.a11y.image.required_dependencies: "ocr-clouds-preprocessor,object-detection-llm"
+      ca.mcgill.a11y.image.required_dependencies: "ocr-clouds-preprocessor,object-detection"
       ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
