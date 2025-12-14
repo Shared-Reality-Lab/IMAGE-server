@@ -159,8 +159,6 @@ class LLMClient:
             params.update(kwargs)
 
             logging.debug(f"Making LLM request to model: {self.model}")
-            #logging.pii(f"LLM request params: {' '.join('GRAPHIC_HIDDEN' if item == 'graphic' else item for item in params)}")
-            #logging.pii(params)
             response = self.client.chat.completions.create(**params)
 
             # Validate and extract response

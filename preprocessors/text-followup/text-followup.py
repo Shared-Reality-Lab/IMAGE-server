@@ -472,7 +472,7 @@ def followup():
         user_message = create_multimodal_message(user_prompt, graphic_b64)
 
         conversation_history[request_uuid] = {
-            'messages': [system_message,user_message],
+            'messages': [system_message, user_message],
             'last_updated': timestamp,
             'focus': focus if focus else None
         }
@@ -512,7 +512,7 @@ def followup():
     followup_response_json = llm_client.chat_completion(
         prompt="",  # Empty since we're using full messages via kwargs
         system_prompt=system_prompt,
-        json_schema=None, # qwen3 wants json_object not rigid schema
+        json_schema=None,  # qwen3 wants json_object not rigid schema
         response_format={"type": "json_object"},
         temperature=0.0,
         messages=messages,  # Pass full conversation history via kwargs
