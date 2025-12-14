@@ -177,7 +177,7 @@ services:
       - WARMUP_ENABLED=true
 
   object-detection-llm:
-    profiles: []
+    profiles: [default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-llm:${REGISTRY_TAG}
     restart: "no"
     environment:
