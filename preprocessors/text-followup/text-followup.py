@@ -1,4 +1,4 @@
-# Copyright (c) 2021 IMAGE Project, Shared Reality Lab, McGill University
+# Copyright (c) 2025 IMAGE Project, Shared Reality Lab, McGill University
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -452,13 +452,16 @@ def followup():
                 {"error": "Failed to process focus area on image"}
             ), 500
 
+    # get followup prompt from env as an override if it exists
+    followup_prompt = os.getenv('FOLLOWUP_PROMPT_OVERRIDE', FOLLOWUP_PROMPT)
+
     if not focus:
-        system_prompt = FOLLOWUP_PROMPT
+        system_prompt = followup_prompt
     else:
-        system_prompt = FOLLOWUP_PROMPT + FOLLOWUP_PROMPT_FOCUS
+        system_prompt = followup_prompt + FOLLOWUP_PROMPT_FOCUS
 
     system_message = {
-        "role": "developer",
+        "role": "system",
         "content": system_prompt
         }
 
@@ -508,7 +511,9 @@ def followup():
 
     followup_response_json = llm_client.chat_completion(
         prompt="",  # Empty since we're using full messages via kwargs
-        json_schema=FOLLOWUP_RESPONSE_SCHEMA,
+        system_prompt=system_prompt,
+        json_schema=None,  # qwen3 wants json_object not rigid schema
+        response_format={"type": "json_object"},
         temperature=0.0,
         messages=messages,  # Pass full conversation history via kwargs
         parse_json=True,
@@ -518,7 +523,7 @@ def followup():
     if followup_response_json is None:
         logging.error("Failed to receive response from LLM.")
         return jsonify(
-            {"error": "Failed to get graphic caption from LLM"}
+            {"error": "Failed to receive response from LLM"}
         ), 500
 
     response_text, token_usage = followup_response_json

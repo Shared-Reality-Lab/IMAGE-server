@@ -121,7 +121,7 @@ class LLMClient:
             # Add system prompt if provided
             if system_prompt:
                 messages.append(
-                    {"role": "developer",
+                    {"role": "system",
                      "content": system_prompt}
                      )
 
@@ -139,6 +139,8 @@ class LLMClient:
                 })
 
             messages.append({"role": "user", "content": user_content})
+
+            logging.pii(messages)
 
             # Build API call parameters
             params = {
