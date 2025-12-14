@@ -101,7 +101,8 @@ Example response:
 "response_brief": "One sentence response to the user request.",
 "response_full": "Further details. Maximum three sentences."
 }
-
+"""
+OLD_END_OF_FOLLOWUP_PROMPT = """
 The user may add a note to focus on a specific part of the image
 and an updated picture with the area of interest marked with a red rectangle.
 In this case, answer the question ONLY about the contents

@@ -121,7 +121,7 @@ class LLMClient:
             # Add system prompt if provided
             if system_prompt:
                 messages.append(
-                    {"role": "developer",
+                    {"role": "system",
                      "content": system_prompt}
                      )
 
@@ -140,6 +140,8 @@ class LLMClient:
 
             messages.append({"role": "user", "content": user_content})
 
+            logging.pii(messages)
+
             # Build API call parameters
             params = {
                 "model": self.model,
@@ -157,6 +159,8 @@ class LLMClient:
             params.update(kwargs)
 
             logging.debug(f"Making LLM request to model: {self.model}")
+            #logging.pii(f"LLM request params: {' '.join('GRAPHIC_HIDDEN' if item == 'graphic' else item for item in params)}")
+            #logging.pii(params)
             response = self.client.chat.completions.create(**params)
 
             # Validate and extract response
