@@ -307,6 +307,11 @@ def cohenSutherlandClip(src, tgt, lims):
         # If both endpoints lie within rectangle
         if code1 == 0 and code2 == 0:
             break
+        
+        # If neither endpoint lies within rectangle
+        elif code1 > 0 and code2 > 0:
+            logging.debug("cohenSutherlandClip: no endpoint in rectangle!")
+            break
 
         # Some segment lies within the rectangle
         else:
