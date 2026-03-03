@@ -63,6 +63,7 @@ services:
             capabilities: ["gpu", "utility", "compute"]
 
   object-detection:
+    profiles: [production, default]
     deploy:
       resources:
         reservations:
@@ -71,6 +72,9 @@ services:
             device_ids: ['1']
             capabilities: ["gpu", "utility", "compute"]
 
+  object-detection-llm:
+    profiles: [test, default]
+    
   espnet-tts:
     deploy:
       resources:
