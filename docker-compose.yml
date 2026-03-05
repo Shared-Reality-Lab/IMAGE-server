@@ -155,7 +155,7 @@ services:
       ./config/llm.env
 
   object-detection:
-    profiles: [production, test, default]
+    profiles: [production, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-yolo:${REGISTRY_TAG}
     restart: "no"
     labels:
