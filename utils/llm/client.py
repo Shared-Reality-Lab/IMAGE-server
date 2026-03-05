@@ -18,9 +18,11 @@ Provides a generic interface for all LLM interactions.
 import os
 import json
 import logging
+from config.logging_utils import configure_logging
 from openai import OpenAI
 from typing import Optional, Dict, Any, Union
 
+configure_logging()
 
 class LLMClient:
     """Generic wrapper for OpenAI-compatible API clients."""
