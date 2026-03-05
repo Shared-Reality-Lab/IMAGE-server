@@ -162,6 +162,7 @@ class LLMClient:
 
             logging.debug(f"Making LLM request to model: {self.model}")
             response = self.client.chat.completions.create(**params)
+            logging.pii(response)
 
             # Validate and extract response
             response_text = self._validate_response(response)

@@ -159,11 +159,14 @@ def detect_objects():
     if error:
         return jsonify(error), error["code"]
 
+    # leaving list here since not sure which one(s) might be useful for
+    # preventing endless responses, but when enabled, these definitely
+    # prevented Qwen from generating valid return messages.
     stop_tokens = [
-        "<|im_end|>",          # Qwen's end token
-        "<|endoftext|>",        # Alternative end token
-        "\n\n\n",               # Triple newline
-        "```",                  # Code block end
+        # "<|im_end|>",           # Qwen's end token
+        # "<|endoftext|>",        # Alternative end token
+        # "\n\n\n",               # Triple newline
+        # "```",                  # Code block end
     ]
 
     try:
