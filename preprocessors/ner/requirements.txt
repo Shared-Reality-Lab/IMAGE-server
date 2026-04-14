@@ -2,7 +2,7 @@ bs4==0.0.1
 imgkit==1.2.2
 nltk==3.7
 gunicorn==23.0.0
-pillow==12.1.1
+pillow==10.4.0
 torch==1.13.1
 tqdm~=4.66.3
 torchvision==0.8.2
@@ -10,6 +10,6 @@ clip-by-openai==1.1
 scikit-learn==1.1.2
 packaging==21.3
 jsonschema==4.23.0
-Flask==3.1.3
+Flask==2.2.5
 pycocoevalcap==1.2
 git+https://github.com/openai/CLIP
