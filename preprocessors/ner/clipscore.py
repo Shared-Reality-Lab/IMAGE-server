@@ -32,8 +32,8 @@ from pycocoevalcap.rouge.rouge import Rouge
 from pycocoevalcap.spice.spice import Spice
 
 
-def normalize_rows(values):
-    """Normalize each row vector while leaving zero-norm rows as zeros."""
+def normalize_rows(values: np.ndarray) -> np.ndarray:
+    """Normalize a 2D float array row-wise while leaving zero-norm rows as zeros."""
     norms = np.linalg.norm(values, axis=1, keepdims=True)
     return np.divide(values, norms, out=np.zeros_like(values), where=norms != 0)
 
