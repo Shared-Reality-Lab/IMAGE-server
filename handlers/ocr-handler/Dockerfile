@@ -1,6 +1,9 @@
-FROM python:3.9.5-alpine
+FROM python:3.13-slim
 
-RUN apk add --no-cache curl && adduser --disabled-password python
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/* && \
+    adduser --disabled-password python
 
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"

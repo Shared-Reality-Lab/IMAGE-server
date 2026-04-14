@@ -1,6 +1,8 @@
-FROM python:3.10
+FROM python:3.13
 
-RUN apt-get install libcairo2 curl
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libcairo2 curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN adduser --disabled-password python
 WORKDIR /usr/src/app
