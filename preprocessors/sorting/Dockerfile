@@ -1,5 +1,4 @@
-#will come back to this and object detection
-FROM python:3.8-alpine
+FROM python:3.13.9-alpine3.22
 
 RUN apk add --no-cache curl && \
     adduser --disabled-password python
