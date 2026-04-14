@@ -1,6 +1,6 @@
-FROM python:3.9.5-alpine
+FROM python:3.13-alpine3.22
 
-RUN apk add --no-cache curl && adduser --disabled-password python
+RUN apk add --no-cache curl ca-certificates && adduser --disabled-password python
 
 WORKDIR /app
 ENV PATH="/home/python/.local/bin:${PATH}"
