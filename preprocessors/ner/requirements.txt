@@ -10,4 +10,5 @@ packaging==21.3
 jsonschema==4.23.0
 Flask==2.2.5
 pycocoevalcap==1.2
+# Pin the tested CLIP commit used for the Python 3.11-compatible NER build.
 git+https://github.com/openai/CLIP@d05afc436d78f1c48dc0dbf8e5980a9d471f35f6
