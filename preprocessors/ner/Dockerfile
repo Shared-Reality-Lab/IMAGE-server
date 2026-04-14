@@ -1,12 +1,11 @@
-FROM ubuntu:20.04
+FROM python:3.11-bookworm
 
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
+ENV JAVA_HOME=/usr/lib/jvm/default-java
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    openjdk-8-jdk \
-    python3-pip \
-    gcc \
+    build-essential \
+    default-jre-headless \
     git \
     curl \
     && apt-get clean && \
