@@ -11,14 +11,12 @@ Code for CLIPScore (https://arxiv.org/abs/2104.08718)
 '''
 import argparse
 import clip
+import sklearn.preprocessing
 import torch
 from PIL import Image
-from sklearn.preprocessing import normalize
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
-import torch
 import tqdm
 import numpy as np
-import sklearn.preprocessing
 import collections
 import os
 import pathlib
