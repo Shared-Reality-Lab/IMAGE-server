@@ -11,6 +11,7 @@ Code for CLIPScore (https://arxiv.org/abs/2104.08718)
 '''
 import argparse
 import clip
+import sklearn.preprocessing
 import torch
 from PIL import Image
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
@@ -30,12 +31,6 @@ from pycocoevalcap.bleu.bleu import Bleu
 from pycocoevalcap.cider.cider import Cider
 from pycocoevalcap.rouge.rouge import Rouge
 from pycocoevalcap.spice.spice import Spice
-
-
-def normalize_rows(values: np.ndarray) -> np.ndarray:
-    """Normalize a 2D float array row-wise while leaving zero-norm rows as zeros."""
-    norms = np.linalg.norm(values, axis=1, keepdims=True)
-    return np.divide(values, norms, out=np.zeros_like(values), where=norms != 0)
 
 
 def get_all_metrics(refs, cands, return_per_cap=False):
@@ -215,14 +210,14 @@ def get_clip_score(model, images, candidates, device, w=2.5):
 
     #as of numpy 1.21, normalize doesn't work properly for float16
     if version.parse(np.__version__) < version.parse('1.21'):
-        images = normalize_rows(images)
-        candidates = normalize_rows(candidates)
+        images = sklearn.preprocessing.normalize(images, axis=1)
+        candidates = sklearn.preprocessing.normalize(candidates, axis=1)
     else:
         warnings.warn(
             'due to a numerical instability, new numpy normalization is slightly different than paper results. '
             'to exactly replicate paper results, please use numpy version less than 1.21, e.g., 1.20.3.')
-        images = normalize_rows(images)
-        candidates = normalize_rows(candidates)
+        images = images / np.sqrt(np.sum(images**2, axis=1, keepdims=True))
+        candidates = candidates / np.sqrt(np.sum(candidates**2, axis=1, keepdims=True))
 
     per = w*np.clip(np.sum(images * candidates, axis=1), 0, None)
     return np.mean(per), per, candidates
@@ -244,15 +239,15 @@ def get_refonlyclipscore(model, references, candidates, device):
     flattened_refs = extract_all_captions(flattened_refs, model, device)
 
     if version.parse(np.__version__) < version.parse('1.21'):
-        candidates = normalize_rows(candidates)
-        flattened_refs = normalize_rows(flattened_refs)
+        candidates = sklearn.preprocessing.normalize(candidates, axis=1)
+        flattened_refs = sklearn.preprocessing.normalize(flattened_refs, axis=1)
     else:
         warnings.warn(
             'due to a numerical instability, new numpy normalization is slightly different than paper results. '
             'to exactly replicate paper results, please use numpy version less than 1.21, e.g., 1.20.3.')
 
-        candidates = normalize_rows(candidates)
-        flattened_refs = normalize_rows(flattened_refs)
+        candidates = candidates / np.sqrt(np.sum(candidates**2, axis=1, keepdims=True))
+        flattened_refs = flattened_refs / np.sqrt(np.sum(flattened_refs**2, axis=1, keepdims=True))
 
     cand_idx2refs = collections.defaultdict(list)
     for ref_feats, cand_idx in zip(flattened_refs, flattened_refs_idxs):
