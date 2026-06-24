@@ -676,7 +676,15 @@ app.get("/health", (req: express.Request, res: express.Response) => {
     res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`Started server on port ${port}`);
 });
+
+const serverTimeout = parseInt(process.env.SERVER_TIMEOUT || "");
+if (!isNaN(serverTimeout) && serverTimeout > 0) {
+    server.requestTimeout = serverTimeout;
+    server.headersTimeout = serverTimeout + 10000;
+    server.timeout = serverTimeout;
+    console.log(`Server timeouts set to ${serverTimeout}ms`);
+}
 
