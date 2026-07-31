@@ -45,32 +45,32 @@ services:
     image: ghcr.io/shared-reality-lab/image-service-espnet-tts:${REGISTRY_TAG}
     restart: "no"
     environment:
-      - TORCH_DEVICE=cuda
+#      - TORCH_DEVICE=cuda
       - WARMUP_ENABLED=true
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            capabilities: ["gpu", "utility", "compute"]
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#          - driver: nvidia
+#            capabilities: ["gpu", "utility", "compute"]
 
   espnet-tts-fr:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-service-espnet-tts-fr:${REGISTRY_TAG}
     restart: "no"
     environment:
-      - TORCH_DEVICE=cuda
+#      - TORCH_DEVICE=cuda
       - WARMUP_ENABLED=true
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              capabilities: ["gpu", "compute", "utility"]
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              capabilities: ["gpu", "compute", "utility"]
 
   multilang-support:
     profiles: [production, test, default]
@@ -155,7 +155,7 @@ services:
       ./config/llm.env
 
   object-detection:
-    profiles: [production, default]
+    profiles: [default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-yolo:${REGISTRY_TAG}
     restart: "no"
     labels:
@@ -177,7 +177,7 @@ services:
       - WARMUP_ENABLED=true
 
   object-detection-llm:
-    profiles: [default]
+    profiles: [test, production, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-object-detection-llm:${REGISTRY_TAG}
     restart: "no"
     environment:
@@ -259,7 +259,7 @@ services:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   semantic-segmentation:
-    profiles: [production, test, default]
+    profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-mmsemantic-segmentation:${REGISTRY_TAG}
     restart: "no"
     deploy:
