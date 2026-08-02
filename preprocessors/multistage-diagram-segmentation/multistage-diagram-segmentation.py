@@ -31,10 +31,22 @@ from utils.llm import (
 from utils.segmentation import SAMClient
 from utils.validation import Validator
 import json
+import os
 
 configure_logging()
 
 app = Flask(__name__)
+
+# Get model name from environment variable
+LLM_MODEL = os.environ.get('LLM_MODEL', '').lower()
+MODEL_NAME = "gemma" if "gemma" in LLM_MODEL else "qwen"
+logging.debug(f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_NAME}")
+
+# Set bounding box key based on model
+BBOX_KEY = "box_2d" if MODEL_NAME == "gemma" else "bbox_2d"
+
+# Set coordinate order based on model
+bbox_order = "[y1, x1, y2, x2]" if MODEL_NAME == "gemma" else "[x1, y1, x2, y2]"
 
 PREPROCESSOR_NAME = \
     "ca.mcgill.a11y.image.preprocessor.multistage-diagram-segmentation"
@@ -54,6 +66,16 @@ with open(STAGE_SCHEMA, 'r') as f:
 with open(BBOX_SCHEMA, 'r') as f:
     BBOX_RESPONSE_SCHEMA = json.load(f)
 
+# Swap the bounding box key to match the active model's convention
+bbox_def = BBOX_RESPONSE_SCHEMA["$defs"]["BoundingBoxItem"]
+prop = bbox_def["properties"]
+prop[BBOX_KEY] = prop.pop("bbox_2d")
+prop[BBOX_KEY]["description"] = f"Bounding box coordinates {bbox_order}"
+bbox_def["required"] = [
+    BBOX_KEY if k == "bbox_2d" else k
+    for k in bbox_def["required"]
+]
+
 try:
     llm_client = LLMClient()
     sam_client = SAMClient()
@@ -63,6 +85,24 @@ except Exception as e:
     logging.error(f"Failed to initialize clients: {e}")
     sys.exit(1)
 
+# Convert bounding boxes to expected format for SAM
+def normalize_bboxes_for_sam(bboxes_data, model_name, bbox_key):
+    """
+    Converts model-specific bounding box format back to the
+    bbox_2d / [x1,y1,x2,y2] format expected by sam_processor.
+    """
+    normalized = []
+    for item in bboxes_data:
+        coords = item[bbox_key]
+        if model_name == "gemma":
+            y1, x1, y2, x2 = coords
+        else:
+            x1, y1, x2, y2 = coords
+        normalized.append({
+            "bbox_2d": [x1, y1, x2, y2],
+            "label": item["label"]
+        })
+    return normalized
 
 @app.route("/preprocessor", methods=['POST'])
 def process_diagram():
@@ -152,8 +192,10 @@ def process_diagram():
         else:
             logging.pii(f"Identified stages: {stages}")
 
-        bbox_prompt = BOUNDING_BOX_PROMPT_TEMPLATE.format(stages=stages)
-        bbox_prompt += BOUNDING_BOX_PROMPT_EXAMPLE
+        bbox_prompt = BOUNDING_BOX_PROMPT_TEMPLATE.format(stages=stages, bbox_key=BBOX_KEY)
+        bbox_prompt += BOUNDING_BOX_PROMPT_EXAMPLE.format(bbox_key=BBOX_KEY, bbox_order=bbox_order)
+
+        logging.debug(f"Schema being sent to LLM: {json.dumps(BBOX_RESPONSE_SCHEMA, indent=2)}")
 
         # 5. Get Bounding Boxes from LLM
         bounding_boxes_data = llm_client.chat_completion(
@@ -166,6 +208,8 @@ def process_diagram():
 
         if bounding_boxes_data is None:
             logging.info("Failed to get bounding boxes from LLM.")
+        else:
+            bounding_boxes_data = normalize_bboxes_for_sam(bounding_boxes_data, MODEL_NAME, BBOX_KEY)
 
         # 6.Segment the graphic and return contours
         final_data_json = sam_client.segment_with_boxes(

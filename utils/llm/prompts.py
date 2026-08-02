@@ -17,23 +17,23 @@ Focus ONLY on the objects that are clearly visible and identifiable.
 Step 2:
 Give the bounding boxes for the objects determined in the first step.
 Output a only JSON list of bounding boxes where each entry contains:
-- the pixel coordinates of a 2D bounding box in the key "bbox_2d",
+- the pixel coordinates of a 2D bounding box in the key "{bbox_key}",
 - the object label in the key "label".
 
 Example:
 ```json
 [
-    {
-        "bbox_2d": [120, 200, 300, 450],
-        "label": "car",
-    },
-    {
-        "bbox_2d": [50, 100, 120, 300],
-        "label": "person",
-    }
+    {{
+        "{bbox_key}": [120, 200, 300, 450],
+        "label": "car"
+    }},
+    {{
+        "{bbox_key}": [50, 100, 120, 300],
+        "label": "person"
+    }}
 ]
 ```
-Ensure that the bounding boxes are in the format [x1, y1, x2, y2].
+Ensure that the bounding boxes are in the format {bbox_order}.
 
 Rules:
 1. Focus ONLY on the major and important objects in the image.
@@ -137,7 +137,7 @@ BOUNDING_BOX_PROMPT_TEMPLATE = """
 Give the bounding boxes for the illustrations
 of the following stages: {stages}.
 Output a only JSON list of bounding boxes where each entry contains
-the 2D bounding box in the key "box_2d",
+the 2D bounding box in the key "{bbox_key}",
 and the stage name in the key "label".
 Include in the bounding boxes only the illustrations of the objects themselves,
 not any surrounding text or arrows.
@@ -148,16 +148,16 @@ BOUNDING_BOX_PROMPT_EXAMPLE = """
 Example:
 ```json
 [
-    {
-        "bbox_2d": [x1, y1, x2, y2],
+    {{
+        "{bbox_key}": {bbox_order},
         "label": "Label 1"
-    },
-    {
-        "bbox_2d": [x1, y1, x2, y2],
+    }},
+    {{
+        "{bbox_key}": {bbox_order},
         "label": "Label 2"
-    }
+    }}
 ]
 ```
-Ensure that the bounding boxes are in the format [x1, y1, x2, y2]
+Ensure that the bounding boxes are in the format {bbox_order}.
 """
 ###
