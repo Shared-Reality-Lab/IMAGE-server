@@ -46,9 +46,14 @@ logging.debug(f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_NAME}")
 BBOX_KEY = "box_2d" if MODEL_NAME == "gemma" else "bbox_2d"
 
 # Set coordinate order based on model
-bbox_order = "[y1, x1, y2, x2]" if MODEL_NAME == "gemma" else "[x1, y1, x2, y2]"
+bbox_order = (
+    "[y1, x1, y2, x2]" if MODEL_NAME == "gemma" else "[x1, y1, x2, y2]"
+)
 
-FORMATTED_PROMPT = OBJECT_DETECTION_PROMPT.format(bbox_key=BBOX_KEY, bbox_order=bbox_order)
+FORMATTED_PROMPT = OBJECT_DETECTION_PROMPT.format(
+    bbox_key=BBOX_KEY,
+    bbox_order=bbox_order
+)
 
 PREPROCESSOR_NAME = \
     "ca.mcgill.a11y.image.preprocessor.objectDetection"
@@ -60,7 +65,7 @@ with open(BBOX_SCHEMA, 'r') as f:
     BBOX_RESPONSE_SCHEMA = json.load(f)
 
 # Swap the bounding box key to match the active model's convention
-# Note: If the schema is loaded twice within a run, this might give a key error => Needs testing
+# Note: if schema is loaded twice, this might raise a key error
 prop = BBOX_RESPONSE_SCHEMA["items"]["properties"]
 prop[BBOX_KEY] = prop.pop("bbox_2d")
 prop[BBOX_KEY]["description"] = f"Bounding box coordinates {bbox_order}."
@@ -85,7 +90,7 @@ def normalize_bbox(bbox, width, height, model_name):
     """
     if model_name == "gemma":
         y1, x1, y2, x2 = bbox
-    else: # Default set to Qwen's order
+    else:  # Default set to Qwen's order
         x1, y1, x2, y2 = bbox
     return [
         max(0.0, min(x1 / 1000, 1.0)),
@@ -119,7 +124,9 @@ def process_objects(llm_output, width, height, threshold, model_name):
     processed = []
     for idx, item in enumerate(llm_output):
         # Normalize bounding box
-        x1, y1, x2, y2 = normalize_bbox(item[BBOX_KEY], width, height, model_name)
+        x1, y1, x2, y2 = normalize_bbox(
+            item[BBOX_KEY], width, height, model_name
+        )
 
         # Calculate area (width * height)
         area = (x2 - x1) * (y2 - y1)
