@@ -119,7 +119,8 @@ def process_objects(llm_output, width, height, threshold, coord_order):
         width (int): Image width in pixels for normalization
         height (int): Image height in pixels for normalization
         threshold (float): Minimum confidence score (0-1)
-        coord_order (tuple): Coordinate order for the active model (e.g. ("x1","y1","x2","y2"))
+        coord_order (tuple): Coordinate order for the active model
+            (e.g. ("x1", "y1", "x2", "y2"))
 
     Returns:
         list: Processed objects with computed properties
