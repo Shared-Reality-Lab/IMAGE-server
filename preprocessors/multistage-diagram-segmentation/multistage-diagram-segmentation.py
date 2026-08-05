@@ -42,8 +42,12 @@ app = Flask(__name__)
 
 # Get model name from environment variable
 LLM_MODEL = os.environ.get('LLM_MODEL', '').lower()
-MODEL_NAME = get_model_family(LLM_MODEL)
-logging.debug(f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_NAME}")
+try:
+    MODEL_NAME = get_model_family(LLM_MODEL)
+    logging.debug(f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_NAME}")
+except ValueError as e:
+    logging.error(f"Failed to determine model family: {e}")
+    sys.exit(1)
 
 # Get bounding box format based on model
 BBOX_FORMAT = get_bbox_format(MODEL_NAME)

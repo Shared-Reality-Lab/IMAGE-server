@@ -28,7 +28,10 @@ def get_model_family(llm_model_env):
     for family in MODEL_BBOX_FORMATS:
         if family in llm_model_env:
             return family
-    return DEFAULT_FAMILY
+    raise ValueError(
+        f"Unsupported LLM model: '{llm_model_env}'. "
+        f"Supported families: {list(MODEL_BBOX_FORMATS.keys())}"
+    )
 
 def get_bbox_format(model_family):
     """Return the bbox config dict for a given model family."""
