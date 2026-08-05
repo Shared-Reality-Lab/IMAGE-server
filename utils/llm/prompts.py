@@ -17,7 +17,7 @@ Focus ONLY on the objects that are clearly visible and identifiable.
 Step 2:
 Give the bounding boxes for the objects determined in the first step.
 Output a only JSON list of bounding boxes where each entry contains:
-- the pixel coordinates of a 2D bounding box in the key "{bbox_key}",
+- the coordinates of a 2D bounding box in the key "{bbox_key}",
 - the object label in the key "label".
 
 Example:

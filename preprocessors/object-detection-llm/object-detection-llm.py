@@ -91,7 +91,7 @@ except Exception as e:
 def normalize_bbox(bbox, width, height, coord_order):
     """
     Normalize bounding box coordinates to [0,1] range.
-    Handles differing coordinate orders between Qwen and Gemma.
+    Handles differing coordinate orders between LLMs.
     """
     coords = dict(zip(coord_order, bbox))
     x1, y1, x2, y2 = coords["x1"], coords["y1"], coords["x2"], coords["y2"]
