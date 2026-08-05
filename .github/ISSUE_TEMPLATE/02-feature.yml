@@ -1,0 +1,222 @@
+name: "Feature request"
+description: "Propose a new capability or meaningful change in behaviour."
+type: "Feature"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Create a Feature
+
+        Use this form for **one coherent new capability or meaningful change in behaviour**.
+
+        A Feature defines the outcome that should become possible and the value it should provide. It may later be implemented through one or more Tasks, but its purpose is to define the capability-not to prescribe every implementation step.
+
+        ### Use another issue type when
+
+        - Existing intended behaviour is incorrect, broken, or regressed: **Bug**
+        - The required outcome is sufficiently defined and the issue represents a concrete unit of implementation or operational work: **Task**
+        - Evidence is needed before the desired outcome or direction can be defined: **Investigation**
+        - The outcome contains several independently valuable or independently deliverable capabilities: **Epic**
+
+        Issue type is based on the nature of the issue, not its estimated size. A small capability may still be a Feature, and a large implementation step may still be a Task.
+
+        ### Title convention
+
+        Describe the capability or meaningful behaviour change that should become possible.
+
+        **Good:** `Support multilingual text-to-speech responses`  
+        **Good:** `Allow handlers to request diagram-specific descriptions`  
+        **Good:** `Provide fallback when the primary translation service is unavailable`  
+        **Avoid:** `New TTS feature`, `Update translation code`, or `[Feature] Add fallback`
+
+        Prefer outcome-oriented verbs such as `Support`, `Enable`, `Allow`, `Provide`, `Add`, or `Improve`.
+
+        Do not add a `Feature` prefix. The native issue type is assigned automatically.
+
+        ### Authoring conventions
+
+        - Search existing open and closed issues before creating a new one.
+        - Define the problem or opportunity before proposing a solution.
+        - Identify who or what benefits and in what context.
+        - Describe the desired outcome independently of a preferred implementation where possible.
+        - A user-story format may be used when helpful, but it is not required.
+        - Keep one coherent capability or behaviour change per Feature.
+        - Make success observable or measurable.
+        - Track independently manageable implementation work as separate Tasks.
+        - Do not invent Priority, Effort, dates, owners, or project Status.
+        - Remove secrets, credentials, personal information, and confidential records.
+
+        ### Metadata convention
+
+        Project-management fields and labels are set during triage.
+
+        - Apply the most specific known `area:*` label.
+        - Add a `domain:*` label only when the Feature is specific to charts, diagrams, maps, or photos.
+        - Apply `documentation` or `dependencies` only when they are material parts of the required outcome.
+        - Use `blocked: external` or `needs: information` only while those conditions are actually true.
+        - Leave contribution and assistance labels to triage or automation.
+        - Reserve `regression` for confirmed Bugs.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Need and outcome
+
+        Explain the need and the outcome before describing implementation.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problem or opportunity"
+      description: >
+        Describe the unmet need, limitation, inefficiency, risk, or opportunity.
+        Explain what is difficult, impossible, unreliable, or unnecessarily
+        costly today.
+      placeholder: |
+        Example:
+        Handlers currently receive only a general image description. They cannot
+        request a description specialized for diagrams, even when the input type
+        is already known. Important labels, relationships, and structural details
+        are therefore omitted or described inconsistently.
+    validations:
+      required: true
+
+  - type: textarea
+    id: beneficiaries
+    attributes:
+      label: "Affected users, systems, or workflows"
+      description: >
+        Identify who or what experiences the need and in what context. Include
+        internal systems or automated workflows when there is no direct human user.
+      placeholder: |
+        Example:
+        This affects handlers that produce accessible diagram experiences and the
+        users who rely on those experiences to understand labels, relationships,
+        hierarchy, and directional connections.
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-behaviour
+    attributes:
+      label: "Current behaviour or workaround"
+      description: >
+        Optional. Explain how the need is handled today, including manual work,
+        degraded behaviour, duplicated logic, competing tools, or known workarounds.
+      placeholder: |
+        Example:
+        Handlers currently append diagram-specific instructions to a general
+        prompt. This duplicates prompt logic and produces inconsistent results.
+
+  - type: textarea
+    id: desired-outcome
+    attributes:
+      label: "Desired outcome or user story"
+      description: >
+        State what users, systems, or workflows should be able to accomplish and
+        why it matters. A user-story format is optional; use it only when it
+        improves clarity.
+      placeholder: |
+        Example outcome:
+        Handlers should be able to request a diagram-specific description through
+        a supported interface so the resulting experience preserves important
+        labels, relationships, hierarchy, and directional connections.
+
+        Optional user-story format:
+        As a handler producing an accessible diagram experience,
+        I want to request a diagram-specific description,
+        so that users receive the structural information needed to understand it.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature definition
+
+        Define the minimum coherent capability and the evidence that will demonstrate its value.
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: "In scope"
+      description: >
+        List the required behaviours, interfaces, deliverables, or outcomes
+        included in this Feature. Keep the boundary coherent; a few concise
+        bullets are sufficient for a focused Feature.
+      placeholder: |
+        Example:
+        - Allow handlers to indicate that an input is a diagram.
+        - Support diagram-specific description behaviour.
+        - Return the result through the existing response workflow.
+        - Preserve existing behaviour for other image types.
+        - Document the supported request and response behaviour.
+    validations:
+      required: true
+
+  - type: textarea
+    id: success-measures
+    attributes:
+      label: "Success measures"
+      description: >
+        Describe observable or measurable evidence that the Feature solves the
+        stated problem. Do not use implementation activity, such as merely
+        merging code, as the success condition.
+      placeholder: |
+        Example:
+        - [ ] Handlers can request diagram-specific descriptions through a
+          documented and supported interface.
+        - [ ] Representative diagram descriptions include materially relevant
+          labels and relationships according to the agreed evaluation method.
+        - [ ] Existing photo, map, and chart workflows remain unchanged.
+        - [ ] The capability can be verified through automated tests or documented
+          representative examples.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Additional context
+
+        Complete the following fields only when they materially clarify the Feature or prevent avoidable rework.
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: "Constraints, non-goals, and open questions"
+      description: >
+        Optional. Record requirements the solution must respect, adjacent
+        capabilities that are excluded, and unresolved questions that may require
+        refinement or a separate Investigation.
+      placeholder: |
+        Examples:
+
+        Constraints:
+        - Preserve compatibility with existing handler requests.
+        - Do not expose provider-specific configuration through the shared schema.
+
+        Non-goals:
+        - Do not redesign chart or map descriptions in this Feature.
+        - Do not select a new vision model in this Feature.
+
+        Open questions:
+        - Should diagram subtype information be optional or required?
+        - Is a separate quality benchmark needed before implementation?
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: "Evidence, examples, and related work"
+      description: >
+        Optional. Link or attach representative requests, user feedback,
+        observations, designs, research, comparable systems, issues, pull
+        requests, or prior Investigations.
+      placeholder: |
+        Examples:
+        - Representative inputs or outputs:
+        - User or stakeholder request:
+        - Related Investigation: #123
+        - Related schema proposal: #124
+        - Comparable implementation or external reference:
