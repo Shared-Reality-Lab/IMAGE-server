@@ -1,0 +1,233 @@
+name: "Epic"
+description: "Coordinate a larger outcome through multiple independently tracked issues."
+type: "Epic"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Create an Epic
+
+        Use this form for **one larger outcome that requires several independently trackable Bugs, Features, Tasks, or Investigations**.
+
+        Create the Epic when the larger outcome is recognized, then add or create sub-issues as the work is refined. The initial decomposition does not need to be complete.
+
+        Existing issues may also be attached later when several pieces of work are discovered to contribute to the same larger outcome.
+
+        ### Use another issue type when
+
+        - Existing intended behaviour is incorrect, broken, or regressed: **Bug**
+        - One coherent new capability or meaningful behaviour change is being defined: **Feature**
+        - One independently completable outcome is sufficiently defined: **Task**
+        - One bounded question must be answered: **Investigation**
+
+        Do not use an Epic merely because an issue is difficult, important, or estimated to require substantial effort. Use an Epic when the outcome must be coordinated through multiple independently managed issues.
+
+        ### Title convention
+
+        Describe the larger outcome, not the project activity or implementation mechanism.
+
+        **Good:** `Provide resilient multilingual responses`  
+        **Good:** `Enable content-aware image description workflows`  
+        **Good:** `Standardize deployment and rollback across services`  
+        **Avoid:** `Translation work`, `Big deployment project`, or `[Epic] Update services`
+
+        Do not add an `Epic` prefix. The native issue type is assigned automatically.
+
+        ### Authoring conventions
+
+        - Search existing open and closed issues before creating a new one.
+        - Define the larger outcome before listing its expected workstreams.
+        - Keep child issue tracking in GitHub's native sub-issue hierarchy.
+        - Do not maintain a duplicate checklist of child issue links in the body.
+        - Use native issue dependencies for `blocked by` and `blocking` relationships between children.
+        - Allow decomposition to evolve as information becomes available.
+        - Create children only when they represent independently trackable work.
+        - Do not use the Epic as a substitute for detailed child issues.
+        - Do not invent Priority, Effort, dates, owners, or project Status.
+        - Remove secrets, credentials, personal information, and confidential records.
+
+        ### Metadata convention
+
+        Project-management fields and labels are set during triage.
+
+        - Apply `area:*` or `domain:*` labels only when they meaningfully describe the Epic as a whole.
+        - Do not add every child issue's labels to the Epic.
+        - Use `blocked: external` only when the entire Epic is currently blocked by an external dependency.
+        - Use `needs: information` only when material missing information prevents refinement of the Epic.
+        - Leave contribution and assistance labels to triage or automation.
+        - Reserve `regression` for confirmed Bugs.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Outcome and value
+
+        Define what the Epic should accomplish and why coordinating it as a larger body of work is justified.
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: "Outcome"
+      description: >
+        State the larger result this Epic should achieve. Describe the completed
+        capability or operational state rather than the implementation activity.
+      placeholder: |
+        Example:
+        Provide resilient multilingual responses so requests can continue through
+        an approved fallback when the primary translation provider is unavailable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "Context and value"
+      description: >
+        Explain the problem, opportunity, or strategic need and why it requires
+        coordinated work across multiple independently tracked issues.
+      placeholder: |
+        Example:
+        Translation is currently provided through one external service. Provider
+        outages interrupt several handlers and require manual intervention.
+        Resilience requires coordinated changes to provider selection, health
+        detection, shared services, handlers, monitoring, and operations.
+    validations:
+      required: true
+
+  - type: textarea
+    id: beneficiaries
+    attributes:
+      label: "Affected users, systems, or workflows"
+      description: >
+        Identify who or what benefits from the Epic and the contexts in which the
+        outcome matters.
+      placeholder: |
+        Example:
+        - Users requesting multilingual experiences
+        - Handlers that depend on the shared translation service
+        - Operators responding to provider outages
+        - Monitoring and incident-response workflows
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Boundaries and success
+
+        Establish the Epic's boundary and the evidence required to consider the larger outcome complete.
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: "In scope"
+      description: >
+        List the major capabilities, operational outcomes, or areas of coordinated
+        work included in the Epic. Do not use this as a duplicate child-issue list.
+      placeholder: |
+        Example:
+        - Define supported provider-fallback behaviour.
+        - Detect provider failure and recovery.
+        - Route requests through an approved fallback.
+        - Preserve consistent behaviour across affected handlers.
+        - Provide monitoring, documentation, and rollback support.
+    validations:
+      required: true
+
+  - type: textarea
+    id: non-goals
+    attributes:
+      label: "Out of scope"
+      description: >
+        Identify adjacent outcomes that this Epic explicitly does not include.
+        Enter `None identified` only when the boundary is genuinely unambiguous.
+      placeholder: |
+        Example:
+        - Selecting an entirely new primary translation provider.
+        - Redesigning handler response formats unrelated to fallback.
+        - Supporting providers that do not meet existing privacy requirements.
+    validations:
+      required: true
+
+  - type: textarea
+    id: success-measures
+    attributes:
+      label: "Success measures"
+      description: >
+        Describe observable or measurable evidence that the larger outcome has
+        been achieved. Child issues being closed is progress, but is not by itself
+        evidence that the Epic's outcome succeeded.
+      placeholder: |
+        Example:
+        - [ ] A primary-provider outage does not interrupt supported multilingual
+          request workflows.
+        - [ ] Fallback activation and recovery are visible to operators.
+        - [ ] Affected handlers behave consistently during fallback.
+        - [ ] Privacy, security, and operational requirements are satisfied.
+        - [ ] The fallback process is documented and validated through a
+          representative failure exercise.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Initial decomposition
+
+        Describe the expected areas of work. After creating the Epic, represent the actual decomposition using GitHub's native sub-issues.
+
+  - type: textarea
+    id: workstreams
+    attributes:
+      label: "Expected workstreams"
+      description: >
+        List the currently anticipated workstreams, capabilities, or questions.
+        These are planning hypotheses, not a permanent checklist of child issues.
+        A few high-level bullets are sufficient.
+      placeholder: |
+        Example:
+        - Investigate provider-failure signals and selection strategies.
+        - Define fallback behaviour and shared-service interfaces.
+        - Implement health detection and provider routing.
+        - Update affected handlers and schemas.
+        - Add monitoring, operational documentation, and failure testing.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Additional context
+
+        Complete the following fields only when they materially clarify coordination or connect existing work.
+
+  - type: textarea
+    id: coordination
+    attributes:
+      label: "Constraints and coordination considerations"
+      description: >
+        Optional. Record cross-repository boundaries, compatibility requirements,
+        release constraints, ownership considerations, external dependencies,
+        sequencing concerns, or organizational commitments.
+      placeholder: |
+        Examples:
+        - Changes span the shared service, handlers, and deployment repositories.
+        - Existing handler interfaces must remain backward compatible.
+        - Provider approval is required before production use.
+        - Deployment must support independent rollback.
+
+  - type: textarea
+    id: existing-work
+    attributes:
+      label: "Existing and related work"
+      description: >
+        Optional. Link issues, pull requests, Investigations, designs, incidents,
+        or external commitments that may belong under or inform this Epic. Attach
+        qualifying issues through the native sub-issue interface after creation.
+      placeholder: |
+        Examples:
+        - Existing Feature that may become a sub-issue: #123
+        - Related Investigation: #124
+        - Prior incident:
+        - Design or architectural decision:

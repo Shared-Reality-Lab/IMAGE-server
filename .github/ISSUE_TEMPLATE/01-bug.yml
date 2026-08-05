@@ -1,0 +1,196 @@
+name: "Bug report"
+description: "Report behaviour that is incorrect, broken, or regressed."
+type: "Bug"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Create a Bug
+
+        Use this form for **one independently fixable defect**: behaviour that is incorrect, broken, or materially different from intended or previously working behaviour.
+
+        ### Use another issue type when
+
+        - The required change is known and is not correcting a defect: **Task**
+        - A new capability or meaningful behaviour change is being proposed: **Feature**
+        - A bounded question must be answered before implementation work can be defined: **Investigation**
+        - The outcome requires several independently tracked issues: **Epic**
+
+        A difficult Bug may require diagnosis. Do not create a separate Investigation merely because the cause is not yet known. Use an Investigation when answering the question is a distinct, reusable outcome or must occur before implementation work can be defined.
+
+        ### Title convention
+
+        Describe the affected component or workflow, the incorrect behaviour, and any important condition.
+
+        **Good:** `Orchestrator returns a cached response for a request with a different schema`  
+        **Good:** `Diagram preprocessor produces an empty description for SVG inputs`  
+        **Avoid:** `Bug`, `Something is broken`, or `[High Priority] Fix orchestrator`
+
+        Do not add a `Bug` prefix. The native issue type is assigned automatically.
+
+        ### Authoring conventions
+
+        - Search existing open and closed issues before creating a new one.
+        - Keep one independently fixable defect per issue.
+        - Describe observed behaviour separately from expected behaviour.
+        - State confirmed observations as facts.
+        - Clearly identify suspected causes as hypotheses.
+        - Provide the smallest reliable reproduction or observation procedure available.
+        - Do not invent Priority, Effort, dates, owners, or project Status.
+        - Remove secrets, credentials, personal information, and confidential records.
+        - Report suspected security vulnerabilities privately through the laboratory's approved security channel.
+
+        ### Metadata convention
+
+        Project-management fields and labels are set during triage.
+
+        - Apply the most specific known `area:*` label.
+        - Add a `domain:*` label only when the defect is specific to charts, diagrams, maps, or photos.
+        - Apply `regression` only when previous working behaviour is confirmed.
+        - Use `needs: information` only when material missing information prevents triage or refinement.
+        - Leave workflow, contribution, and assistance labels to triage or automation.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Behaviour
+
+        Separate what happened from what should have happened.
+
+  - type: textarea
+    id: observed-behaviour
+    attributes:
+      label: "Observed behaviour"
+      description: "Describe exactly what happened. Include incorrect output, visible symptoms, state changes, or exact error messages."
+      placeholder: |
+        Example:
+        Requests containing a diagram are accepted by the orchestrator, but the
+        completed response contains no generated description and no error is
+        returned.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behaviour
+    attributes:
+      label: "Expected behaviour"
+      description: "Describe what should happen. Reference documentation, an accepted design, or previous behaviour when available."
+      placeholder: |
+        Example:
+        The orchestrator should return the generated diagram description, or a
+        clear error explaining why the request could not be processed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: "Impact and scope"
+      description: "Briefly explain which users, work, systems, data, or results are affected. Describe evidence rather than assigning a priority."
+      placeholder: |
+        Example:
+        Diagram requests complete without usable output, blocking the affected
+        workflow. Photo requests are not affected, and no data loss is known.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Reproduction
+
+        Provide the smallest reliable way to reproduce or observe the defect.
+
+        Production-only, intermittent, and one-time defects are valid. When no reliable reproduction exists, describe the original occurrence and the reproduction attempts already made.
+
+  - type: dropdown
+    id: reproducibility
+    attributes:
+      label: "Reproducibility"
+      description: "Choose the option best supported by the current evidence."
+      options:
+        - "Reliably reproducible"
+        - "Intermittently reproducible"
+        - "Observed once and not yet reproduced"
+        - "Reproduction attempts have not succeeded"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Steps to reproduce or observe"
+      description: "Include the starting state, relevant input, action or command, and the point where behaviour differs. When reproduction is unavailable, describe the occurrence and attempted reproductions."
+      placeholder: |
+        Example:
+        1. Start the standard development stack at commit `abc1234`.
+        2. Submit the attached diagram to `POST /request`.
+        3. Wait for the completed response.
+        4. Observe that the response contains no generated description.
+
+        Include relevant inputs, configuration, commands, request IDs, or
+        observation procedures when useful.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Runtime context
+
+        Provide enough context to distinguish the affected occurrence from working cases. Do not inventory unrelated software, dependencies, or hardware.
+
+  - type: input
+    id: affected-version
+    attributes:
+      label: "Affected version, revision, or deployment"
+      description: "Provide the most precise identifier available. Enter `Unknown` when it cannot be established."
+      placeholder: "Example: v2.4.1, commit abc1234, image digest, or deployment 2026-08-04"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: "Relevant environment or configuration"
+      description: "Optional. Include only details that could affect reproduction, such as environment, runtime, dependency versions, model, hardware, feature flags, or non-default configuration."
+      placeholder: |
+        Example:
+        - Environment: production
+        - Runtime: Python 3.11.15
+        - Model or dependency: ...
+        - Relevant configuration: ...
+        - Hardware or platform: ...
+
+  - type: dropdown
+    id: regression-status
+    attributes:
+      label: "Regression status"
+      description: "Was the affected behaviour known to work previously?"
+      options:
+        - "Confirmed regression - worked previously"
+        - "No - not known to have worked previously"
+        - "Unknown"
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Additional context
+
+        Complete the following field only when it materially improves reproduction, diagnosis, or triage.
+
+  - type: textarea
+    id: diagnostic-context
+    attributes:
+      label: "Additional diagnostic context"
+      description: "Optional. Add redacted logs or files, request IDs, a known workaround, a clearly identified hypothesis, or related issues and pull requests."
+      placeholder: |
+        Examples:
+        - Request ID and timestamp: ...
+        - Redacted log excerpt or attached sample: ...
+        - Workaround: ...
+        - Hypothesis and supporting evidence: ...
+        - Related issue or pull request: #123
