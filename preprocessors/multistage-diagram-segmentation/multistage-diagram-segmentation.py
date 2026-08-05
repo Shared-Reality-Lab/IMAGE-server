@@ -94,6 +94,8 @@ except Exception as e:
 
 # Convert bounding boxes to expected format for SAM
 def normalize_bboxes_for_sam(bboxes_data, coord_order, bbox_key):
+
+    
     """
     Converts model-specific bounding box format back to the
     bbox_2d / [x1,y1,x2,y2] format expected by sam_processor.
