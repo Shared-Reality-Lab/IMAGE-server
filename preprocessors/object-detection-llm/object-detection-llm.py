@@ -25,6 +25,9 @@ from utils.image_processing import decode_and_resize_image
 from utils.llm import (
     LLMClient, OBJECT_DETECTION_PROMPT
     )
+from utils.llm.coordinate_convention import (
+    get_model_family, get_bbox_format
+)
 from utils.validation import Validator
 import json
 import os
@@ -39,16 +42,18 @@ CONF_THRESHOLD = float(os.environ.get('CONF_THRESHOLD', '0.9'))
 
 # Get model name from environment variable
 LLM_MODEL = os.environ.get('LLM_MODEL', '').lower()
-MODEL_NAME = "gemma" if "gemma" in LLM_MODEL else "qwen"
+MODEL_NAME = get_model_family(LLM_MODEL)
 logging.debug(f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_NAME}")
 
+# Get bounding box format based on model
+BBOX_FORMAT = get_bbox_format(MODEL_NAME)
+
 # Set bounding box key based on model
-BBOX_KEY = "box_2d" if MODEL_NAME == "gemma" else "bbox_2d"
+BBOX_KEY = BBOX_FORMAT["bbox_key"]
 
 # Set coordinate order based on model
-bbox_order = (
-    "[y1, x1, y2, x2]" if MODEL_NAME == "gemma" else "[x1, y1, x2, y2]"
-)
+COORD_ORDER = BBOX_FORMAT["coord_order"]
+bbox_order = f"[{', '.join(COORD_ORDER)}]"
 
 FORMATTED_PROMPT = OBJECT_DETECTION_PROMPT.format(
     bbox_key=BBOX_KEY,
@@ -83,15 +88,13 @@ except Exception as e:
     sys.exit(1)
 
 
-def normalize_bbox(bbox, width, height, model_name):
+def normalize_bbox(bbox, width, height, coord_order):
     """
     Normalize bounding box coordinates to [0,1] range.
     Handles differing coordinate orders between Qwen and Gemma.
     """
-    if model_name == "gemma":
-        y1, x1, y2, x2 = bbox
-    else:  # Default set to Qwen's order
-        x1, y1, x2, y2 = bbox
+    coords = dict(zip(coord_order, bbox))
+    x1, y1, x2, y2 = coords["x1"], coords["y1"], coords["x2"], coords["y2"]
     return [
         max(0.0, min(x1 / 1000, 1.0)),
         max(0.0, min(y1 / 1000, 1.0)),
@@ -100,7 +103,7 @@ def normalize_bbox(bbox, width, height, model_name):
     ]
 
 
-def process_objects(llm_output, width, height, threshold, model_name):
+def process_objects(llm_output, width, height, threshold, coord_order):
     """
     Transform LLM object detection output to IMAGE schema format.
 
@@ -116,7 +119,7 @@ def process_objects(llm_output, width, height, threshold, model_name):
         width (int): Image width in pixels for normalization
         height (int): Image height in pixels for normalization
         threshold (float): Minimum confidence score (0-1)
-        model_name (str): Name of the LLM model used
+        coord_order (tuple): Coordinate order for the active model (e.g. ("x1","y1","x2","y2"))
 
     Returns:
         list: Processed objects with computed properties
@@ -125,7 +128,7 @@ def process_objects(llm_output, width, height, threshold, model_name):
     for idx, item in enumerate(llm_output):
         # Normalize bounding box
         x1, y1, x2, y2 = normalize_bbox(
-            item[BBOX_KEY], width, height, model_name
+            item[BBOX_KEY], width, height, coord_order
         )
 
         # Calculate area (width * height)
@@ -228,7 +231,7 @@ def detect_objects():
             width,
             height,
             CONF_THRESHOLD,
-            MODEL_NAME
+            COORD_ORDER
         )
 
         # Wrap in "objects" for schema compliance

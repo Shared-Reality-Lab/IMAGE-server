@@ -28,6 +28,9 @@ from utils.llm import (
     BOUNDING_BOX_PROMPT_TEMPLATE,
     BOUNDING_BOX_PROMPT_EXAMPLE
     )
+from utils.llm.coordinate_convention import (
+    get_model_family, get_bbox_format
+)
 from utils.segmentation import SAMClient
 from utils.validation import Validator
 import json
@@ -39,18 +42,18 @@ app = Flask(__name__)
 
 # Get model name from environment variable
 LLM_MODEL = os.environ.get('LLM_MODEL', '').lower()
-MODEL_NAME = "gemma" if "gemma" in LLM_MODEL else "qwen"
+MODEL_NAME = get_model_family(LLM_MODEL)
 logging.debug(f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_NAME}")
 
+# Get bounding box format based on model
+BBOX_FORMAT = get_bbox_format(MODEL_NAME)
+
 # Set bounding box key based on model
-BBOX_KEY = "box_2d" if MODEL_NAME == "gemma" else "bbox_2d"
+BBOX_KEY = BBOX_FORMAT["bbox_key"]
 
 # Set coordinate order based on model
-bbox_order = (
-    "[y1, x1, y2, x2]"
-    if MODEL_NAME == "gemma"
-    else "[x1, y1, x2, y2]"
-)
+COORD_ORDER = BBOX_FORMAT["coord_order"]
+bbox_order = f"[{', '.join(COORD_ORDER)}]"
 
 PREPROCESSOR_NAME = \
     "ca.mcgill.a11y.image.preprocessor.multistage-diagram-segmentation"
@@ -90,20 +93,16 @@ except Exception as e:
     sys.exit(1)
 
 # Convert bounding boxes to expected format for SAM
-
-
-def normalize_bboxes_for_sam(bboxes_data, model_name, bbox_key):
+def normalize_bboxes_for_sam(bboxes_data, coord_order, bbox_key):
     """
     Converts model-specific bounding box format back to the
     bbox_2d / [x1,y1,x2,y2] format expected by sam_processor.
     """
     normalized = []
     for item in bboxes_data:
-        coords = item[bbox_key]
-        if model_name == "gemma":
-            y1, x1, y2, x2 = coords
-        else:
-            x1, y1, x2, y2 = coords
+        coords_raw = item[bbox_key]
+        coords = dict(zip(coord_order, coords_raw))
+        x1, y1, x2, y2 = coords["x1"], coords["y1"], coords["x2"], coords["y2"]
         normalized.append({
             "bbox_2d": [x1, y1, x2, y2],
             "label": item["label"]
@@ -227,7 +226,7 @@ def process_diagram():
         else:
             bounding_boxes_data = normalize_bboxes_for_sam(
                 bounding_boxes_data,
-                MODEL_NAME,
+                COORD_ORDER,
                 BBOX_KEY
             )
 
