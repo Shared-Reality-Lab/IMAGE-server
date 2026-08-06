@@ -17,6 +17,7 @@
 
 import logging
 import time
+from typing import Any, Mapping
 from flask import Flask, request, jsonify
 from datetime import datetime
 from config.logging_utils import configure_logging
@@ -43,21 +44,21 @@ app = Flask(__name__)
 # Get model name from environment variable
 LLM_MODEL = os.environ.get('LLM_MODEL', '').lower()
 try:
-    MODEL_NAME = get_model_family(LLM_MODEL)
-    logging.debug(f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_NAME}")
+    MODEL_FAMILY = get_model_family(LLM_MODEL)
+    logging.debug(f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_FAMILY}")
 except ValueError as e:
     logging.error(f"Failed to determine model family: {e}")
     sys.exit(1)
 
 # Get bounding box format based on model
-BBOX_FORMAT = get_bbox_format(MODEL_NAME)
+BBOX_FORMAT = get_bbox_format(MODEL_FAMILY)
 
 # Set bounding box key based on model
 BBOX_KEY = BBOX_FORMAT["bbox_key"]
 
 # Set coordinate order based on model
 COORD_ORDER = BBOX_FORMAT["coord_order"]
-bbox_order = f"[{', '.join(COORD_ORDER)}]"
+BBOX_ORDER = f"[{', '.join(COORD_ORDER)}]"
 
 PREPROCESSOR_NAME = \
     "ca.mcgill.a11y.image.preprocessor.multistage-diagram-segmentation"
@@ -81,7 +82,7 @@ with open(BBOX_SCHEMA, 'r') as f:
 bbox_def = BBOX_RESPONSE_SCHEMA["$defs"]["BoundingBoxItem"]
 prop = bbox_def["properties"]
 prop[BBOX_KEY] = prop.pop("bbox_2d")
-prop[BBOX_KEY]["description"] = f"Bounding box coordinates {bbox_order}"
+prop[BBOX_KEY]["description"] = f"Bounding box coordinates {BBOX_ORDER}"
 bbox_def["required"] = [
     BBOX_KEY if k == "bbox_2d" else k
     for k in bbox_def["required"]
@@ -98,11 +99,22 @@ except Exception as e:
 
 
 # Convert bounding boxes to expected format for SAM
-def normalize_bboxes_for_sam(bboxes_data, coord_order, bbox_key):
+def normalize_bboxes_for_sam(
+    bboxes_data: list[dict],
+    bbox_format: Mapping[str, Any]
+) -> list[dict]:
     """
     Converts model-specific bounding box format back to the
     bbox_2d / [x1,y1,x2,y2] format expected by sam_processor.
+    Args:
+        bboxes_data: Bounding boxes returned by the LLM.
+        bbox_format: Bounding-box configuration containing ``bbox_key``
+            and ``coord_order``.
+    Returns:
+        Bounding boxes converted to bbox_2d/[x1,y1,x2,y2] format.
     """
+    bbox_key = bbox_format["bbox_key"]
+    coord_order = bbox_format["coord_order"]
     normalized = []
     for item in bboxes_data:
         coords_raw = item[bbox_key]
@@ -209,7 +221,7 @@ def process_diagram():
         )
         bbox_prompt += BOUNDING_BOX_PROMPT_EXAMPLE.format(
             bbox_key=BBOX_KEY,
-            bbox_order=bbox_order
+            bbox_order=BBOX_ORDER
         )
 
         logging.debug(
@@ -231,8 +243,7 @@ def process_diagram():
         else:
             bounding_boxes_data = normalize_bboxes_for_sam(
                 bounding_boxes_data,
-                COORD_ORDER,
-                BBOX_KEY
+                BBOX_FORMAT
             )
 
         # 6.Segment the graphic and return contours

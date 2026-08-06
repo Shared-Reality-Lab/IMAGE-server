@@ -20,9 +20,7 @@ MODEL_BBOX_FORMATS = {
     },
 }
 
-DEFAULT_FAMILY = "qwen"
-
-def get_model_family(llm_model_env):
+def get_model_family(llm_model_env: str | None) -> str:
     """Determine model family from the LLM_MODEL env value."""
     llm_model_env = (llm_model_env or "").lower()
     for family in MODEL_BBOX_FORMATS:
@@ -33,6 +31,6 @@ def get_model_family(llm_model_env):
         f"Supported families: {list(MODEL_BBOX_FORMATS.keys())}"
     )
 
-def get_bbox_format(model_family):
+def get_bbox_format(model_family: str) -> dict:
     """Return the bbox config dict for a given model family."""
-    return MODEL_BBOX_FORMATS.get(model_family, MODEL_BBOX_FORMATS[DEFAULT_FAMILY])
+    return MODEL_BBOX_FORMATS[model_family]

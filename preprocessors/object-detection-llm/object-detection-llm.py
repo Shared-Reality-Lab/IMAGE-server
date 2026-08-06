@@ -17,6 +17,7 @@
 
 import logging
 import time
+from typing import Any, Mapping
 from flask import Flask, request, jsonify
 from datetime import datetime
 from config.logging_utils import configure_logging
@@ -43,25 +44,25 @@ CONF_THRESHOLD = float(os.environ.get('CONF_THRESHOLD', '0.9'))
 # Get model name from environment variable
 LLM_MODEL = os.environ.get('LLM_MODEL', '').lower()
 try:
-    MODEL_NAME = get_model_family(LLM_MODEL)
-    logging.debug(f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_NAME}")
+    MODEL_FAMILY = get_model_family(LLM_MODEL)
+    logging.debug(f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_FAMILY}")
 except ValueError as e:
     logging.error(f"Failed to determine model family: {e}")
     sys.exit(1)
 
 # Get bounding box format based on model
-BBOX_FORMAT = get_bbox_format(MODEL_NAME)
+BBOX_FORMAT = get_bbox_format(MODEL_FAMILY)
 
 # Set bounding box key based on model
 BBOX_KEY = BBOX_FORMAT["bbox_key"]
 
 # Set coordinate order based on model
 COORD_ORDER = BBOX_FORMAT["coord_order"]
-bbox_order = f"[{', '.join(COORD_ORDER)}]"
+BBOX_ORDER = f"[{', '.join(COORD_ORDER)}]"
 
 FORMATTED_PROMPT = OBJECT_DETECTION_PROMPT.format(
     bbox_key=BBOX_KEY,
-    bbox_order=bbox_order
+    bbox_order=BBOX_ORDER
 )
 
 PREPROCESSOR_NAME = \
@@ -77,7 +78,7 @@ with open(BBOX_SCHEMA, 'r') as f:
 # Note: if schema is loaded twice, this might raise a key error
 prop = BBOX_RESPONSE_SCHEMA["items"]["properties"]
 prop[BBOX_KEY] = prop.pop("bbox_2d")
-prop[BBOX_KEY]["description"] = f"Bounding box coordinates {bbox_order}."
+prop[BBOX_KEY]["description"] = f"Bounding box coordinates {BBOX_ORDER}."
 BBOX_RESPONSE_SCHEMA["items"]["required"] = [
     BBOX_KEY if k == "bbox_2d" else k
     for k in BBOX_RESPONSE_SCHEMA["items"]["required"]
@@ -107,33 +108,33 @@ def normalize_bbox(bbox, width, height, coord_order):
     ]
 
 
-def process_objects(llm_output, width, height, threshold, coord_order):
+def process_objects(llm_output: list[dict[str, Any]], 
+                    width: int, 
+                    height: int, 
+                    threshold: float, 
+                    bbox_format: Mapping[str, Any]
+                    ) -> list[dict[str, Any]]:
     """
-    Transform LLM object detection output to IMAGE schema format.
-
-    - Transforms from LLM format (bbox_2d, label) to IMAGE format
-    - Normalizes bounding boxes to [0,1] range
-    - Assigns confidence threshold to all objects
-    - Normalizes labels (replaces underscores with spaces)
-    - Calculates geometric properties (area, centroid)
-    - Filters objects by confidence threshold
-
+    Transform model-specific object detections into the IMAGE object schema.
+    Uses ``bbox_format`` to identify the bounding-box key and coordinate order,
+    then normalizes coordinates and calculates each object's area and centroid.
     Args:
-        llm_output (list): LLM detection output with bbox_2d and label
-        width (int): Image width in pixels for normalization
-        height (int): Image height in pixels for normalization
-        threshold (float): Minimum confidence score (0-1)
-        coord_order (tuple): Coordinate order for the active model
-            (e.g. ("x1", "y1", "x2", "y2"))
-
+        llm_output: Detected objects returned by the LLM.
+        width: Image width in pixels.
+        height: Image height in pixels.
+        threshold: Confidence value assigned to each object.
+        bbox_format: Bounding-box configuration containing ``bbox_key`` and
+            ``coord_order``.
     Returns:
-        list: Processed objects with computed properties
+        Objects formatted according to the IMAGE schema.
     """
+    bbox_key = bbox_format["bbox_key"]
+    coord_order = bbox_format["coord_order"]
     processed = []
     for idx, item in enumerate(llm_output):
         # Normalize bounding box
         x1, y1, x2, y2 = normalize_bbox(
-            item[BBOX_KEY], width, height, coord_order
+            item[bbox_key], width, height, coord_order
         )
 
         # Calculate area (width * height)
@@ -236,7 +237,7 @@ def detect_objects():
             width,
             height,
             CONF_THRESHOLD,
-            COORD_ORDER
+            BBOX_FORMAT
         )
 
         # Wrap in "objects" for schema compliance
