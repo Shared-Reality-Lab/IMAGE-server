@@ -108,10 +108,10 @@ def normalize_bbox(bbox, width, height, coord_order):
     ]
 
 
-def process_objects(llm_output: list[dict[str, Any]], 
-                    width: int, 
-                    height: int, 
-                    threshold: float, 
+def process_objects(llm_output: list[dict[str, Any]],
+                    width: int,
+                    height: int,
+                    threshold: float,
                     bbox_format: Mapping[str, Any]
                     ) -> list[dict[str, Any]]:
     """
