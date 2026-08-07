@@ -45,7 +45,9 @@ CONF_THRESHOLD = float(os.environ.get('CONF_THRESHOLD', '0.9'))
 LLM_MODEL = os.environ.get('LLM_MODEL', '').lower()
 try:
     MODEL_FAMILY = get_model_family(LLM_MODEL)
-    logging.debug(f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_FAMILY}")
+    logging.debug(
+        f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_FAMILY}"
+        )
 except ValueError as e:
     logging.error(f"Failed to determine model family: {e}")
     sys.exit(1)
