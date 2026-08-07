@@ -6,153 +6,114 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Create a Task
+        <details>
+        <summary><strong>Title guidelines</strong></summary>
 
-        Use this form for **one independently completable unit of work with a sufficiently defined outcome**.
+        Begin with a specific action verb and describe the resulting change or deliverable. A Task title should make the expected work recognizable without requiring the reader to open the issue.
 
-        A focused Task does not require a long specification. Brief answers are appropriate when they clearly establish the outcome, reason, scope, and completion conditions.
-
-        ### Use another issue type when
-
-        - Existing intended behaviour is incorrect, broken, or regressed: **Bug**
-        - A new capability or meaningful behaviour change is being proposed and still requires outcome-level definition: **Feature**
-        - Evidence or research is needed before the required outcome can be defined: **Investigation**
-        - The outcome requires several independently tracked issues: **Epic**
-
-        ### Title convention
-
-        Begin with a specific action verb and describe the resulting change.
+        Useful verbs include `Add`, `Update`, `Remove`, `Document`, `Configure`, `Migrate`, `Refactor`, and `Replace`.
 
         **Good:** `Add request IDs to orchestrator error responses`  
         **Good:** `Document the production rollback procedure`  
         **Good:** `Update the shared request schema to include locale`  
         **Avoid:** `Logging task`, `Work on deployment`, or `[Task] Update code`
 
-        Do not add a `Task` prefix. The native issue type is assigned automatically.
+        Do not add a `Task` prefix or encode priority, status, or ownership in the title. The native issue type and project-management metadata are managed separately.
 
-        ### Authoring conventions
+        </details>
 
-        - Search existing open and closed issues before creating a new one.
-        - Keep one independently completable outcome per Task.
-        - Describe the required outcome before proposing implementation.
-        - Keep the scope narrow enough to implement and review independently.
-        - Make completion criteria observable and verifiable.
-        - Do not require unrelated cleanup merely because it affects nearby code.
-        - Link separate work rather than expanding the Task without bound.
-        - Do not invent Priority, Effort, dates, owners, or project Status.
-        - Remove secrets, credentials, personal information, and confidential records.
+        <details>
+        <summary><strong>Issue type classification</strong></summary>
 
-        ### Metadata convention
+        | Issue type | Use it when… |
+        | --- | --- |
+        | Bug | Existing intended behaviour is incorrect, broken, or has regressed. |
+        | Feature | A new capability or meaningful behaviour change is proposed. |
+        | ***Task*** | ***The required work is known and does not correct a defect.*** |
+        | Investigation | A bounded question must be answered before work can be defined. |
+        | Epic | One larger outcome requires several independently tracked issues. |
 
-        Project-management fields and labels are set during triage.
+        Issue type is determined by the **nature of the work**, not by its size, urgency, or difficulty.
 
-        - Apply the most specific known `area:*` label.
-        - Add a `domain:*` label only when the work is specific to charts, diagrams, maps, or photos.
-        - Apply `documentation` when documentation is a material part of the required outcome.
-        - Apply `dependencies` when the Task updates, replaces, removes, or configures a software, model, schema, or build dependency.
-        - Apply `blocked: external` only while progress actually depends on an external party, service, platform, or approval.
-        - Use `needs: information` only when material missing information prevents refinement.
-        - Leave `good first issue`, `help wanted`, and `cla-*` labels to triage or automation.
-        - Reserve `regression` for confirmed Bugs.
+        Use a Task when the required outcome is already sufficiently understood and the issue represents a concrete, independently completable unit of implementation, maintenance, documentation, configuration, migration, refactoring, or operational work.
 
-  - type: markdown
-    attributes:
-      value: |
-        ## Work definition
+        If the desired capability itself still needs to be defined, use a Feature. If evidence is needed before the required work can be determined, use an Investigation.
 
-        Define the required result and the boundaries of the work. Avoid prescribing implementation details unless they are genuine constraints.
+        </details>
+
+        <details>
+        <summary><strong>Definition of ready</strong></summary>
+
+        A Task is **ready for active work** when a contributor can reasonably begin implementation without first resolving major uncertainty about what outcome is required.
+
+        In general:
+
+        - The objective is clear and sufficiently specific.
+        - Acceptance criteria are observable and verifiable.
+        - Required inputs, decisions, access, and technical information are available.
+        - Material blockers and dependencies are identified and resolved where necessary.
+        - Important implementation constraints are known.
+        - The work is scoped so it can be completed and reviewed independently.
+
+        A Task does **not** need to satisfy the Definition of Ready when it is first created. Tasks may remain in triage or backlog while missing information, dependencies, or scope are resolved.
+
+        Straightforward Tasks should remain straightforward. Do not add unnecessary specification merely to make the issue appear more complete.
+
+        </details>
 
   - type: textarea
     id: objective
     attributes:
       label: "Objective"
-      description: "State the concrete result this Task must produce. Focus on the completed outcome rather than the activity."
+      description: "State the concrete result this Task must produce. A short description is sufficient for straightforward work."
       placeholder: |
         Example:
-        Add a correlation ID to every orchestrator error response so failures can
-        be matched to the corresponding server logs.
+        Add the existing request ID to orchestrator error responses so failures can be matched to the corresponding server logs.
     validations:
       required: true
 
   - type: textarea
     id: context
     attributes:
-      label: "Context and rationale"
-      description: "Explain why the work is needed, what problem or obligation it addresses, and why it belongs in this repository. A concise explanation is sufficient for straightforward Tasks."
+      label: "Context"
+      description: "Optional. Explain why the work is needed or provide information necessary to understand the Task."
       placeholder: |
         Example:
-        Production error responses currently cannot be reliably matched to the
-        request-specific logs used during incident investigation. The orchestrator
-        already creates a request ID internally, but it is not returned to callers.
-    validations:
-      required: true
+        Production error responses cannot currently be matched reliably to request-specific logs. The orchestrator already creates a request ID internally, but it is not returned to callers.
 
   - type: textarea
-    id: scope
+    id: acceptance-criteria
     attributes:
-      label: "In scope"
-      description: "List the required changes or deliverables. For a small Task, one concise bullet may be sufficient."
+      label: "Acceptance criteria"
+      description: "List the observable conditions required to accept the Task as complete. One or two criteria may be sufficient for a simple Task."
       placeholder: |
         Example:
-        - Include the existing request ID in orchestrator error responses.
-        - Use the same field name across applicable error schemas.
-        - Update affected automated tests.
-        - Update API documentation where the response schema is documented.
-    validations:
-      required: true
-
-  - type: textarea
-    id: completion-criteria
-    attributes:
-      label: "Completion criteria"
-      description: "List the observable conditions required for closure. For a straightforward Task, one or two criteria may be sufficient."
-      placeholder: |
-        Example:
-        - [ ] Every applicable orchestrator error response includes the request ID.
+        - [ ] Applicable orchestrator error responses include the request ID.
         - [ ] The returned value matches the ID written to the corresponding logs.
         - [ ] Existing successful-response behaviour remains unchanged.
-        - [ ] Automated tests cover the affected error-response paths.
     validations:
       required: true
 
-  - type: markdown
-    attributes:
-      value: |
-        ## Planning context
-
-        Complete the following fields only when they materially clarify the Task or prevent avoidable rework.
-
   - type: textarea
-    id: constraints
+    id: additional-context
     attributes:
-      label: "Constraints and non-goals"
-      description: "Optional. Record requirements the implementation must respect and adjacent work that is explicitly excluded."
+      label: "Additional context and related work"
+      description: "Optional. Add constraints, implementation notes, validation considerations, dependencies, parent work, related issues, or pull requests when useful."
       placeholder: |
-        Examples:
+        Example:
         - Preserve backward compatibility with existing response fields.
-        - Do not redesign the general logging format in this Task.
-        - Do not add request IDs to successful responses unless required separately.
-
-  - type: textarea
-    id: validation
-    attributes:
-      label: "Validation and operational impact"
-      description: "Optional. Describe verification beyond the completion criteria, including deployment, migration, monitoring, documentation, rollback, or operational considerations."
-      placeholder: |
-        Examples:
-        - Verify the response and server log share the same ID in staging.
-        - No migration is required.
-        - Add the response field to the API documentation.
-        - Monitor error-response failures after deployment.
-
-  - type: textarea
-    id: dependencies
-    attributes:
-      label: "Dependencies and related work"
-      description: "Optional. Link prerequisites, blockers, parent work, dependent issues, pull requests, designs, or external obligations."
-      placeholder: |
-        Examples:
         - Parent Epic: #123
-        - Depends on schema change: #124
-        - Blocks client update: #125
-        - Related design decision: ...
+        - Depends on: #124
+        - Related pull request: #125
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Checks"
+      options:
+        - label: "I searched existing issues and kept this Task focused on one independently completable outcome."
+          required: true
+        - label: "The acceptance criteria are sufficient to determine when this Task is complete."
+          required: true
+        - label: "I removed secrets, credentials, personal information, and confidential data."
+          required: true
