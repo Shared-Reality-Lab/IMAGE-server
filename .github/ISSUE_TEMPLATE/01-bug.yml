@@ -6,21 +6,54 @@ body:
   - type: markdown
     attributes:
       value: |
-        Describe the affected component or workflow, the incorrect behaviour, and any important condition.
+        <details>
+        <summary><strong>Title guidelines</strong></summary>
 
-        Good: `Orchestrator returns a cached response for a request with a different schema`
-        Good: `Diagram preprocessor produces an empty description for SVG inputs`
-        Avoid: `Bug`, `Something is broken`, or `[High Priority] Fix orchestrator`
+        Describe the affected component or workflow, the incorrect behaviour, and any important condition needed to distinguish the problem.
 
-        Do not add a Bug prefix. The native issue type is assigned automatically.
-        
+        Good titles identify **what is wrong** rather than simply stating that a bug exists.
+
+        **Good:** `Orchestrator returns a cached response for a request with a different schema`  
+        **Good:** `Diagram preprocessor produces an empty description for SVG inputs`  
+        **Avoid:** `Bug`, `Something is broken`, or `[High Priority] Fix orchestrator`
+
+        Do not add a `Bug` prefix or encode priority, status, or ownership in the title. The native issue type and project-management metadata are managed separately.
+
+        </details>
+
+        <details>
+        <summary><strong>Issue type classification</strong></summary>
+
         | Issue type | Use it when… |
         | --- | --- |
-        | ***Bug*** | ***Existing behaviour is incorrect, broken, or has regressed.*** |
+        | ***Bug*** | ***Existing intended behaviour is incorrect, broken, or has regressed.*** |
         | Feature | A new capability or meaningful behaviour change is proposed. |
         | Task | The required work is known and does not correct a defect. |
         | Investigation | A bounded question must be answered before work can be defined. |
-        | Epic | One outcome requires several independently tracked issues. |
+        | Epic | One larger outcome requires several independently tracked issues. |
+
+        Issue type is determined by the **nature of the work**, not by its size, urgency, or difficulty.
+
+        Use a Bug when the system already has an intended behaviour and the observed behaviour does not match it. Root-cause analysis and diagnosis may be part of fixing a Bug; do not create a separate Investigation merely because the cause is not yet known.
+
+        </details>
+
+        <details>
+        <summary><strong>Definition of ready</strong></summary>
+
+        A Bug is **ready for active work** when the team has enough information to begin a meaningful diagnosis or fix without first resolving major ambiguity.
+
+        In general:
+
+        - The observed and expected behaviours are clearly distinguished.
+        - Reproduction steps, a failing example, or sufficient diagnostic context are available.
+        - The affected component or workflow can be identified well enough to begin investigation.
+        - Material blockers, dependencies, or missing access are identified.
+        - The issue is scoped to one independently fixable defect where practical.
+
+        An issue does **not** need to satisfy the Definition of Ready when it is first created. Incomplete reports may remain in triage while information is collected or scope is refined.
+
+        </details>
 
   - type: textarea
     id: observed-behaviour
@@ -48,7 +81,7 @@ body:
     id: reproduction
     attributes:
       label: "Reproduction"
-      description: "Give the shortest reliable steps, input, or command. If it cannot be reproduced, describe when it occurred."
+      description: "Give the shortest reliable steps, input, or command. If the bug cannot be reproduced reliably, describe when and how it occurred."
       placeholder: |
         Example:
         1. Start the standard development stack.
@@ -76,16 +109,16 @@ body:
       description: "Optional. Add redacted logs, screenshots, sample files, request IDs, workarounds, hypotheses, or related issues."
       placeholder: |
         Example:
-        - Hypothesis: Someone tried to center a div
         - Related issue: #123
+        - Workaround: Restarting the service temporarily restores expected behaviour.
         ```
         404: Page not found
         ```
 
   - type: checkboxes
-    id: checkboxes
+    id: checks
     attributes:
-      label: Checks
+      label: "Checks"
       options:
         - label: "I searched existing issues and kept this report focused on one independently fixable bug."
           required: true
