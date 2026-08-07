@@ -6,80 +6,60 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Create an Investigation
+        <details>
+        <summary><strong>Title guidelines</strong></summary>
 
-        Use this form when the primary outcome is **knowledge, evidence, or a recommendation**, rather than production implementation.
+        Describe the question, comparison, measurement, or uncertainty being resolved. The title should make the intended knowledge outcome clear rather than merely describing research activity.
 
-        An Investigation should:
-
-        - answer one bounded question
-        - reduce uncertainty that affects a decision or next step
-        - produce a documented and reusable result
-        - have a clear stopping condition
-        - track resulting implementation separately
-
-        A focused Investigation does not require a long research proposal. Brief answers are appropriate when they clearly establish the question, decision, approach, and stopping condition.
-
-        ### Use another issue type when
-
-        - Existing intended behaviour is incorrect, broken, or regressed: **Bug**
-        - The required implementation outcome is sufficiently defined: **Task**
-        - A new capability or meaningful behaviour change is being proposed: **Feature**
-        - The outcome requires several independently tracked issues: **Epic**
-
-        Do not create a separate Investigation merely because a Bug requires diagnosis. Use an Investigation when answering the question is a distinct, reusable outcome or must occur before implementation work can be defined.
-
-        ### Title convention
-
-        Describe the question, comparison, measurement, or uncertainty being resolved.
+        Useful verbs include `Determine`, `Evaluate`, `Compare`, `Identify`, `Establish`, and `Measure`.
 
         **Good:** `Determine whether schema validation can move to the orchestrator without increasing request latency`  
         **Good:** `Evaluate fallback strategies for translation-provider outages`  
         **Good:** `Compare chart-description quality across the supported vision models`  
         **Avoid:** `Research schemas`, `Look into translation`, or `[Investigation] Test models`
 
-        Useful title verbs include:
+        Do not add an `Investigation` prefix or encode priority, status, or ownership in the title. The native issue type and project-management metadata are managed separately.
 
-        - `Determine`
-        - `Evaluate`
-        - `Compare`
-        - `Identify`
-        - `Establish`
-        - `Measure`
+        </details>
 
-        Do not add an `Investigation` prefix. The native issue type is assigned automatically.
+        <details>
+        <summary><strong>Issue type classification</strong></summary>
 
-        ### Authoring conventions
+        | Issue type | Use it when… |
+        | --- | --- |
+        | Bug | Existing intended behaviour is incorrect, broken, or has regressed. |
+        | Feature | A new capability or meaningful behaviour change is proposed. |
+        | Task | The required work is known and does not correct a defect. |
+        | ***Investigation*** | ***A bounded question must be answered before work can be defined.*** |
+        | Epic | One larger outcome requires several independently tracked issues. |
 
-        - Search existing open and closed issues before creating a new one.
-        - State the question before describing the proposed method.
-        - Separate confirmed evidence, assumptions, hypotheses, and unknowns.
-        - Do not assume the Investigation will confirm a preferred result.
-        - Do not require production implementation as part of completion.
-        - Create separate Tasks, Features, or Bugs for resulting implementation.
-        - Close the Investigation when the question has been answered as far as the agreed evidence permits and the result has been documented.
-        - Do not invent Priority, Effort, dates, owners, or project Status.
-        - Remove secrets, credentials, personal information, and confidential records.
+        Issue type is determined by the **nature of the work**, not by its size, urgency, or difficulty.
 
-        ### Metadata convention
+        Use an Investigation when the primary deliverable is **knowledge, evidence, a comparison, or a recommendation** that enables a later decision. Production implementation should normally be tracked separately.
 
-        Project-management fields and labels are set during triage.
+        Do not create an Investigation merely because a Bug requires debugging. Diagnosis may be part of resolving the Bug. An Investigation is appropriate when answering the question is itself a distinct, reusable outcome or when the answer is needed before implementation work can be meaningfully defined.
 
-        - Apply the most specific known `area:*` label for the system or workflow being investigated.
-        - Add a `domain:*` label only when the question is specific to charts, diagrams, maps, or photos.
-        - Apply `blocked: external` only while progress depends on an external party, service, platform, or approval.
-        - Use `needs: information` only when material missing information prevents the Investigation from being started or refined.
-        - Do not apply `documentation` merely because findings must be recorded.
-        - Do not apply `dependencies` merely because a dependency is being evaluated.
-        - Leave `good first issue`, `help wanted`, and `cla-*` labels to triage or automation.
-        - Reserve `regression` for confirmed Bugs.
+        </details>
 
-  - type: markdown
-    attributes:
-      value: |
-        ## Investigation definition
+        <details>
+        <summary><strong>Definition of ready</strong></summary>
 
-        Define the uncertainty and explain why resolving it matters.
+        An Investigation is **ready for active work** when the uncertainty being resolved is sufficiently bounded and the team understands what decision or next step the resulting evidence should inform.
+
+        In general:
+
+        - One primary question is clearly stated.
+        - The decision or next step enabled by the answer is understood.
+        - Relevant current knowledge and material unknowns have been identified where available.
+        - A proportionate approach for collecting or evaluating evidence can be described.
+        - Completion criteria establish a reasonable stopping condition.
+        - Required data, tools, access, participants, or other resources are available or their absence is explicitly understood.
+
+        An Investigation does **not** need to satisfy the Definition of Ready when it is first created. It may remain in triage while the question is narrowed, required access is obtained, or an appropriate method is established.
+
+        The goal is sufficient evidence for a decision—not certainty beyond what the decision reasonably requires.
+
+        </details>
 
   - type: textarea
     id: question
@@ -88,8 +68,7 @@ body:
       description: "State one bounded question. It should be possible to explain what evidence would constitute a useful answer."
       placeholder: |
         Example:
-        Can schema validation be performed in the orchestrator without materially
-        increasing request latency or duplicating validation logic across services?
+        Can schema validation be performed in the orchestrator without materially increasing request latency or duplicating validation logic across services?
     validations:
       required: true
 
@@ -100,9 +79,7 @@ body:
       description: "Explain what decision, design choice, prioritization, or follow-up work depends on the result."
       placeholder: |
         Example:
-        The result will determine whether validation should remain distributed
-        across preprocessors or be consolidated in the orchestrator as part of the
-        next schema revision.
+        The result will determine whether validation should remain distributed across preprocessors or be consolidated in the orchestrator during the next schema revision.
     validations:
       required: true
 
@@ -110,61 +87,30 @@ body:
     id: current-understanding
     attributes:
       label: "Current understanding and key unknowns"
-      description: "Summarize confirmed facts, relevant assumptions, the current hypothesis when one exists, and the uncertainties that must be resolved."
+      description: "Optional. Summarize relevant confirmed facts, assumptions, hypotheses, and uncertainties."
       placeholder: |
         Example:
         Confirmed:
         - Each preprocessor currently performs its own schema validation.
-        - Validation failures are represented differently across preprocessors.
 
         Current hypothesis:
-        - Central validation may simplify error handling without significant
-          latency impact.
+        - Central validation may simplify error handling without significant latency impact.
 
         Key unknowns:
-        - The measurable latency cost of central validation.
+        - The measurable latency cost.
         - Whether preprocessor-specific constraints can be represented centrally.
-        - Whether any handlers depend on the current failure formats.
-    validations:
-      required: true
-
-  - type: markdown
-    attributes:
-      value: |
-        ## Investigation plan
-
-        Describe a proportionate method. The plan should produce enough evidence for the identified decision without expanding into unnecessary implementation.
 
   - type: textarea
     id: approach
     attributes:
-      label: "Proposed investigation approach"
-      description: "Describe the analysis, experiment, prototype, benchmark, literature review, interviews, code review, or other work expected to answer the question."
+      label: "Proposed approach"
+      description: "Describe a proportionate analysis, experiment, prototype, benchmark, literature review, interview, code review, or other method for answering the question."
       placeholder: |
         Example:
-        1. Inventory validation behaviour and failure formats across preprocessors.
+        1. Inventory validation behaviour across preprocessors.
         2. Implement a minimal local prototype of orchestrator-level validation.
-        3. Benchmark request latency with and without central validation.
-        4. Identify constraints that cannot be represented in the shared schema.
-        5. Compare the alternatives and document a recommendation.
-
-        The approach may change when new evidence emerges. Update the issue when
-        the Investigation materially changes direction.
-    validations:
-      required: true
-
-  - type: dropdown
-    id: primary-output
-    attributes:
-      label: "Primary output"
-      description: "Select the main artifact that will preserve the Investigation result."
-      options:
-        - "Written findings and recommendation"
-        - "Experiment or benchmark results"
-        - "Prototype or proof of concept"
-        - "Architecture or design decision"
-        - "Dataset or analysis"
-        - "Other documented outcome"
+        3. Benchmark representative requests with and without central validation.
+        4. Compare the alternatives and document the findings.
     validations:
       required: true
 
@@ -177,41 +123,32 @@ body:
         Example:
         - [ ] Current validation behaviour and constraints are documented.
         - [ ] Latency impact is measured using representative requests.
-        - [ ] Central and distributed validation approaches are compared.
-        - [ ] Material risks and unresolved uncertainties are identified.
-        - [ ] A recommendation and its supporting evidence are documented.
-        - [ ] Any resulting implementation work is created as separate issues.
+        - [ ] Material trade-offs and unresolved uncertainties are identified.
+        - [ ] A supported recommendation or conclusion is documented.
+        - [ ] Resulting implementation work is tracked separately.
     validations:
       required: true
 
-  - type: markdown
-    attributes:
-      value: |
-        ## Additional context
-
-        Complete the following fields only when they materially clarify the Investigation or prevent avoidable rework.
-
   - type: textarea
-    id: constraints
+    id: additional-context
     attributes:
-      label: "Constraints and boundaries"
-      description: "Optional. Record time, data, access, compatibility, privacy, security, ethical, operational, or scope constraints. Identify approaches that are explicitly excluded."
+      label: "Evidence and related work"
+      description: "Optional. Link or attach relevant data, papers, logs, code, prior Investigations, related issues, designs, or external references."
       placeholder: |
-        Examples:
-        - Use only existing production-like test data approved for development use.
-        - Do not modify production services as part of this Investigation.
-        - Evaluate only approaches compatible with the current shared schema.
-        - A definitive answer may not be possible without provider-side metrics.
-
-  - type: textarea
-    id: evidence
-    attributes:
-      label: "Evidence, prior work, and related issues"
-      description: "Optional. Link or attach relevant data, papers, logs, incidents, code, previous Investigations, issues, pull requests, designs, or external references."
-      placeholder: |
-        Examples:
+        Example:
         - Prior Investigation: #123
-        - Related schema proposal: #124
-        - Representative benchmark data:
-        - Relevant incident or logs:
-        - External research or documentation:
+        - Related Feature: #124
+        - Representative benchmark data: ...
+        - Relevant research: ...
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Checks"
+      options:
+        - label: "I kept this Investigation focused on one bounded question with a clear stopping condition."
+          required: true
+        - label: "I will track resulting production implementation as separate Bugs, Features, or Tasks."
+          required: true
+        - label: "I removed secrets, credentials, personal information, and confidential data."
+          required: true
