@@ -24,8 +24,9 @@ LLM_API_KEY=sk-[your-api-key]
 LLM_URL=[OpenAI-compatible VLM endpoint]
 LLM_MODEL=[Model name]
 ```
-**Note**: This preprocessor is developed to be used with Qwen VL family of models (tested on Qwen 2.5 VL) due to their ability to correctly identify object bounding boxes.
+**Note**: This preprocessor supports the Qwen (currently Qwen 3 VL onwords) and Gemma VL model families for bounding box detection, and can be extended to additional model families by adding an entry to `MODEL_BBOX_FORMATS` in `utils/llm/coordinate_convention.py`. The active model's bounding-box key name and coordinate order are detected automatically from `LLM_MODEL`; an unsupported model will cause the service to fail at startup with a clear error.
 
+**Tech Debt**: Coordinate format is currently resolved at the model-*family* level (e.g., all "Qwen" models), not per version. This is safe for the versions currently in use, but Qwen's own coordinate convention has changed across versions (Qwen 2.5 VL uses absolute pixel coordinates, while Qwen 3 VL and later (including Qwen 3.5) use normalized 0–1000 coordinates, matching what this preprocessor currently assumes for the "qwen" family). If any future model families or model versions with differing coordinate conventions need to be supported, `get_model_family()`/`MODEL_BBOX_FORMATS` in `utils/llm/coordinate_convention.py` would need to be extended to resolve by specific model version, not just family.
 
 ## Libraries Used
 

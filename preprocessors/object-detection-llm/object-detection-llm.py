@@ -17,6 +17,7 @@
 
 import logging
 import time
+from typing import Any, Mapping
 from flask import Flask, request, jsonify
 from datetime import datetime
 from config.logging_utils import configure_logging
@@ -25,6 +26,9 @@ from utils.image_processing import decode_and_resize_image
 from utils.llm import (
     LLMClient, OBJECT_DETECTION_PROMPT
     )
+from utils.llm.coordinate_convention import (
+    get_model_family, get_bbox_format
+)
 from utils.validation import Validator
 import json
 import os
@@ -37,6 +41,32 @@ app = Flask(__name__)
 
 CONF_THRESHOLD = float(os.environ.get('CONF_THRESHOLD', '0.9'))
 
+# Get model name from environment variable
+LLM_MODEL = os.environ.get('LLM_MODEL', '').lower()
+try:
+    MODEL_FAMILY = get_model_family(LLM_MODEL)
+    logging.debug(
+        f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_FAMILY}"
+        )
+except ValueError as e:
+    logging.error(f"Failed to determine model family: {e}")
+    sys.exit(1)
+
+# Get bounding box format based on model
+BBOX_FORMAT = get_bbox_format(MODEL_FAMILY)
+
+# Set bounding box key based on model
+BBOX_KEY = BBOX_FORMAT["bbox_key"]
+
+# Set coordinate order based on model
+COORD_ORDER = BBOX_FORMAT["coord_order"]
+BBOX_ORDER = f"[{', '.join(COORD_ORDER)}]"
+
+FORMATTED_PROMPT = OBJECT_DETECTION_PROMPT.format(
+    bbox_key=BBOX_KEY,
+    bbox_order=BBOX_ORDER
+)
+
 PREPROCESSOR_NAME = \
     "ca.mcgill.a11y.image.preprocessor.objectDetection"
 
@@ -45,6 +75,16 @@ DATA_SCHEMA = './schemas/preprocessors/object-detection.schema.json'
 BBOX_SCHEMA = 'object-detection.schema.json'
 with open(BBOX_SCHEMA, 'r') as f:
     BBOX_RESPONSE_SCHEMA = json.load(f)
+
+# Swap the bounding box key to match the active model's convention
+# Note: if schema is loaded twice, this might raise a key error
+prop = BBOX_RESPONSE_SCHEMA["items"]["properties"]
+prop[BBOX_KEY] = prop.pop("bbox_2d")
+prop[BBOX_KEY]["description"] = f"Bounding box coordinates {BBOX_ORDER}."
+BBOX_RESPONSE_SCHEMA["items"]["required"] = [
+    BBOX_KEY if k == "bbox_2d" else k
+    for k in BBOX_RESPONSE_SCHEMA["items"]["required"]
+]
 
 try:
     llm_client = LLMClient()
@@ -55,11 +95,13 @@ except Exception as e:
     sys.exit(1)
 
 
-def normalize_bbox(bbox, width, height):
+def normalize_bbox(bbox, width, height, coord_order):
     """
-    Normalize bounding box coordinates to [0,1] range
+    Normalize bounding box coordinates to [0,1] range.
+    Handles differing coordinate orders between LLMs.
     """
-    x1, y1, x2, y2 = bbox
+    coords = dict(zip(coord_order, bbox))
+    x1, y1, x2, y2 = coords["x1"], coords["y1"], coords["x2"], coords["y2"]
     return [
         max(0.0, min(x1 / 1000, 1.0)),
         max(0.0, min(y1 / 1000, 1.0)),
@@ -68,30 +110,34 @@ def normalize_bbox(bbox, width, height):
     ]
 
 
-def process_objects(qwen_output, width, height, threshold):
+def process_objects(llm_output: list[dict[str, Any]],
+                    width: int,
+                    height: int,
+                    threshold: float,
+                    bbox_format: Mapping[str, Any]
+                    ) -> list[dict[str, Any]]:
     """
-    Transform Qwen object detection output to IMAGE schema format.
-
-    - Transforms from Qwen format (bbox_2d, label) to IMAGE format
-    - Normalizes bounding boxes to [0,1] range
-    - Assigns confidence threshold to all objects
-    - Normalizes labels (replaces underscores with spaces)
-    - Calculates geometric properties (area, centroid)
-    - Filters objects by confidence threshold
-
+    Transform model-specific object detections into the IMAGE object schema.
+    Uses ``bbox_format`` to identify the bounding-box key and coordinate order,
+    then normalizes coordinates and calculates each object's area and centroid.
     Args:
-        qwen_output (list): Qwen detection output with bbox_2d and label
-        width (int): Image width in pixels for normalization
-        height (int): Image height in pixels for normalization
-        threshold (float): Minimum confidence score (0-1)
-
+        llm_output: Detected objects returned by the LLM.
+        width: Image width in pixels.
+        height: Image height in pixels.
+        threshold: Confidence value assigned to each object.
+        bbox_format: Bounding-box configuration containing ``bbox_key`` and
+            ``coord_order``.
     Returns:
-        list: Processed objects with computed properties
+        Objects formatted according to the IMAGE schema.
     """
+    bbox_key = bbox_format["bbox_key"]
+    coord_order = bbox_format["coord_order"]
     processed = []
-    for idx, item in enumerate(qwen_output):
+    for idx, item in enumerate(llm_output):
         # Normalize bounding box
-        x1, y1, x2, y2 = normalize_bbox(item["bbox_2d"], width, height)
+        x1, y1, x2, y2 = normalize_bbox(
+            item[bbox_key], width, height, coord_order
+        )
 
         # Calculate area (width * height)
         area = (x2 - x1) * (y2 - y1)
@@ -113,7 +159,7 @@ def process_objects(qwen_output, width, height, threshold):
         processed.append(obj)
 
     logging.debug(
-        f"Processed {len(qwen_output)} objects from Qwen output"
+        f"Processed {len(llm_output)} objects from LLM output"
     )
     return processed
 
@@ -171,8 +217,8 @@ def detect_objects():
 
     try:
         # Get object info
-        qwen_output = llm_client.chat_completion(
-            prompt=OBJECT_DETECTION_PROMPT,
+        llm_output = llm_client.chat_completion(
+            prompt=FORMATTED_PROMPT,
             image_base64=base64_image,
             json_schema=BBOX_RESPONSE_SCHEMA,
             temperature=0.5,
@@ -180,19 +226,20 @@ def detect_objects():
             stop=stop_tokens
         )
 
-        logging.debug(f"Qwen output received: {qwen_output}")
+        logging.debug(f"LLM output received: {llm_output}")
 
-        if qwen_output is None or len(qwen_output) == 0:
+        if llm_output is None or len(llm_output) == 0:
             logging.error("Failed to extract objects from the graphic.")
             return jsonify({"error": "No objects extracted"}), 204
 
-        # Transform Qwen format to IMAGE schema format
+        # Transform LLM format to IMAGE schema format
         width, height = pil_image.size
         processed_objects = process_objects(
-            qwen_output,
+            llm_output,
             width,
             height,
-            CONF_THRESHOLD
+            CONF_THRESHOLD,
+            BBOX_FORMAT
         )
 
         # Wrap in "objects" for schema compliance

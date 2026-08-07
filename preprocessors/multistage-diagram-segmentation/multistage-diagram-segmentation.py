@@ -17,6 +17,7 @@
 
 import logging
 import time
+from typing import Any, Mapping
 from flask import Flask, request, jsonify
 from datetime import datetime
 from config.logging_utils import configure_logging
@@ -28,13 +29,38 @@ from utils.llm import (
     BOUNDING_BOX_PROMPT_TEMPLATE,
     BOUNDING_BOX_PROMPT_EXAMPLE
     )
+from utils.llm.coordinate_convention import (
+    get_model_family, get_bbox_format
+)
 from utils.segmentation import SAMClient
 from utils.validation import Validator
 import json
+import os
 
 configure_logging()
 
 app = Flask(__name__)
+
+# Get model name from environment variable
+LLM_MODEL = os.environ.get('LLM_MODEL', '').lower()
+try:
+    MODEL_FAMILY = get_model_family(LLM_MODEL)
+    logging.debug(
+        f"Using LLM model: {LLM_MODEL}, interpreted as {MODEL_FAMILY}"
+    )
+except ValueError as e:
+    logging.error(f"Failed to determine model family: {e}")
+    sys.exit(1)
+
+# Get bounding box format based on model
+BBOX_FORMAT = get_bbox_format(MODEL_FAMILY)
+
+# Set bounding box key based on model
+BBOX_KEY = BBOX_FORMAT["bbox_key"]
+
+# Set coordinate order based on model
+COORD_ORDER = BBOX_FORMAT["coord_order"]
+BBOX_ORDER = f"[{', '.join(COORD_ORDER)}]"
 
 PREPROCESSOR_NAME = \
     "ca.mcgill.a11y.image.preprocessor.multistage-diagram-segmentation"
@@ -54,6 +80,16 @@ with open(STAGE_SCHEMA, 'r') as f:
 with open(BBOX_SCHEMA, 'r') as f:
     BBOX_RESPONSE_SCHEMA = json.load(f)
 
+# Swap the bounding box key to match the active model's convention
+bbox_def = BBOX_RESPONSE_SCHEMA["$defs"]["BoundingBoxItem"]
+prop = bbox_def["properties"]
+prop[BBOX_KEY] = prop.pop("bbox_2d")
+prop[BBOX_KEY]["description"] = f"Bounding box coordinates {BBOX_ORDER}"
+bbox_def["required"] = [
+    BBOX_KEY if k == "bbox_2d" else k
+    for k in bbox_def["required"]
+]
+
 try:
     llm_client = LLMClient()
     sam_client = SAMClient()
@@ -62,6 +98,35 @@ try:
 except Exception as e:
     logging.error(f"Failed to initialize clients: {e}")
     sys.exit(1)
+
+
+# Convert bounding boxes to expected format for SAM
+def normalize_bboxes_for_sam(
+    bboxes_data: list[dict],
+    bbox_format: Mapping[str, Any]
+) -> list[dict]:
+    """
+    Converts model-specific bounding box format back to the
+    bbox_2d / [x1,y1,x2,y2] format expected by sam_processor.
+    Args:
+        bboxes_data: Bounding boxes returned by the LLM.
+        bbox_format: Bounding-box configuration containing ``bbox_key``
+            and ``coord_order``.
+    Returns:
+        Bounding boxes converted to bbox_2d/[x1,y1,x2,y2] format.
+    """
+    bbox_key = bbox_format["bbox_key"]
+    coord_order = bbox_format["coord_order"]
+    normalized = []
+    for item in bboxes_data:
+        coords_raw = item[bbox_key]
+        coords = dict(zip(coord_order, coords_raw))
+        x1, y1, x2, y2 = coords["x1"], coords["y1"], coords["x2"], coords["y2"]
+        normalized.append({
+            "bbox_2d": [x1, y1, x2, y2],
+            "label": item["label"]
+        })
+    return normalized
 
 
 @app.route("/preprocessor", methods=['POST'])
@@ -152,8 +217,19 @@ def process_diagram():
         else:
             logging.pii(f"Identified stages: {stages}")
 
-        bbox_prompt = BOUNDING_BOX_PROMPT_TEMPLATE.format(stages=stages)
-        bbox_prompt += BOUNDING_BOX_PROMPT_EXAMPLE
+        bbox_prompt = BOUNDING_BOX_PROMPT_TEMPLATE.format(
+            stages=stages,
+            bbox_key=BBOX_KEY
+        )
+        bbox_prompt += BOUNDING_BOX_PROMPT_EXAMPLE.format(
+            bbox_key=BBOX_KEY,
+            bbox_order=BBOX_ORDER
+        )
+
+        logging.debug(
+            f"Schema being sent to LLM: "
+            f"{json.dumps(BBOX_RESPONSE_SCHEMA, indent=2)}"
+        )
 
         # 5. Get Bounding Boxes from LLM
         bounding_boxes_data = llm_client.chat_completion(
@@ -166,6 +242,11 @@ def process_diagram():
 
         if bounding_boxes_data is None:
             logging.info("Failed to get bounding boxes from LLM.")
+        else:
+            bounding_boxes_data = normalize_bboxes_for_sam(
+                bounding_boxes_data,
+                BBOX_FORMAT
+            )
 
         # 6.Segment the graphic and return contours
         final_data_json = sam_client.segment_with_boxes(
