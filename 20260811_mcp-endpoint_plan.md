@@ -288,6 +288,9 @@ Step 9 accessible MCP App performed on 2026-08-12:
   descriptor contains the schema and App visibility. `npm test` passes 20 tests, `npm run build`
   passes with the existing 16 lint warnings, `npm audit --omit=dev` is clean, and the pinned Node
   20 Alpine Docker image builds successfully.
+- ChatGPT's MCP Apps resource fetch currently omits the MCP v2 `Mcp-Name` header required by the
+  v2 SDK when it sends `resources/read`. The `/mcp` adapter derives that header only from the same
+  request's `params.uri`, allowing the SDK to validate and serve the declared `ui://` resource.
 
 ## Shared IMAGE pipeline
 

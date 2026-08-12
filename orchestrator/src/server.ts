@@ -55,6 +55,11 @@ function mcpAuthentication(req: express.Request, res: express.Response, next: ex
 }
 
 app.post("/mcp", mcpAuthentication, (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // ChatGPT's Apps resource loader does not yet send MCP v2's required
+    // Mcp-Name header when it reads a ui:// resource.
+    if (req.body?.method === "resources/read" && !req.get("mcp-name") && typeof req.body.params?.uri === "string") {
+        req.headers["mcp-name"] = req.body.params.uri;
+    }
     mcpNodeHandler(req, res, req.body).catch(next);
 });
 

@@ -77,6 +77,9 @@ describe("POST /mcp", () => {
         const resources = await request(app).post("/mcp")
             .set({ ...mcpHeaders, "mcp-method": "resources/list" })
             .send(modernMcpRequest("resources/list", 2));
+        const resource = await request(app).post("/mcp")
+            .set({ ...mcpHeaders, "mcp-method": "resources/read" })
+            .send(modernMcpRequest("resources/read", 3, { uri: "ui://image/audio-experience-v4" }));
 
         expect(tools.status).toBe(200);
         expect(tools.body.result.tools[0]).toMatchObject({
@@ -93,6 +96,12 @@ describe("POST /mcp", () => {
         });
         expect(resources.status).toBe(200);
         expect(resources.body.result.resources[0]).toMatchObject({ uri: "ui://image/audio-experience-v4" });
+        expect(resource.status, JSON.stringify(resource.body)).toBe(200);
+        expect(resource.body.result.contents[0]).toMatchObject({
+            uri: "ui://image/audio-experience-v4",
+            mimeType: "text/html;profile=mcp-app",
+            text: expect.stringContaining("IMAGE audio experience")
+        });
     });
 
     it("requires the configured MCP bearer token", async () => {
@@ -108,6 +117,19 @@ describe("POST /mcp", () => {
 
         expect(rejected.status).toBe(401);
         expect(accepted.status).toBe(200);
+    });
+
+    it("accepts ChatGPT resource reads without MCP v2's name header", async () => {
+        const resource = await request(app).post("/mcp")
+            .set({ ...mcpHeaders, "mcp-method": "resources/read" })
+            .send(modernMcpRequest("resources/read", 3, { uri: "ui://image/audio-experience-v4" }));
+
+        expect(resource.status).toBe(200);
+        expect(resource.body.result.contents[0]).toMatchObject({
+            uri: "ui://image/audio-experience-v4",
+            mimeType: "text/html;profile=mcp-app",
+            text: expect.stringContaining("IMAGE audio experience")
+        });
     });
 });
 
