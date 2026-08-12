@@ -252,6 +252,21 @@ Step 8 artifact serving performed on 2026-08-12:
   beneath `https://unicorn.cim.mcgill.ca/image/mcp/audio/...`.
 - Tests verify partial MP3 responses, Range headers, invalid paths, and missing artifacts.
 
+Step 9 accessible MCP App performed on 2026-08-12:
+
+- Replaced the placeholder audio resource with an inline standalone MCP App. It listens for the
+  standard `ui/notifications/tool-result` bridge notification, treats all result data as text,
+  and uses native audio controls plus one native button per validated segment.
+- The resource reports polite status changes, stops playback on teardown/cancellation, provides
+  a download link, uses focus-visible controls with 44px targets, and includes the required
+  McGill IMAGE attribution/link.
+- The tool now advertises both standard nested `_meta.ui.resourceUri` and ChatGPT's
+  `_meta["openai/outputTemplate"]` compatibility alias. Results include compact
+  `structuredContent` so the App can render audio without parsing the conversation text.
+- Correct the Unicorn nginx `/mcp` proxy header to preserve Traefik's HTTPS protocol:
+  `proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;`. Do not use `$scheme`, because
+  nginx receives Traefik traffic over HTTP and would generate unusable `http` artifact links.
+
 ## Shared IMAGE pipeline
 
 `/render` and `/mcp` must call the same extracted pipeline function. The extraction must
@@ -575,6 +590,7 @@ directory exists.
 | 6. Image/file inputs | completed | Sharp-backed validation/normalization, constrained ChatGPT download support, and shared-pipeline request synthesis are in place. |
 | 7. Conversion + audio artifacts | completed | Text conversion, compact audio metadata, random request-directory MP3 artifacts, timepoints, and dropped-rendering diagnostics are in place. |
 | 8. Artifact serving | completed | Same-service MP3 route, constrained paths, Range support, and reverse-proxy-aware public links are in place. |
+| 9. Accessible MCP App | completed | ChatGPT/MCP Apps metadata, structured result payload, native audio/segment controls, and accessible App lifecycle behavior are in place. |
 | 8. Accessible MCP App | pending | Prefer audio-only instantiation; otherwise render all states. |
 | 9. Documentation | pending | Include prototype and client limitations. |
 | 10. Full verification | pending | Protocol, Docker, clients, NVDA, VoiceOver. |

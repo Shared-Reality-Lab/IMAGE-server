@@ -3,10 +3,9 @@ import { z } from "zod";
 import { prepareImageRequest } from "./mcp-input";
 import { runPipeline } from "./pipeline";
 import { convertRenderings } from "./mcp-renderings";
+import { AUDIO_EXPERIENCE_HTML } from "./mcp-app";
 
 export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience";
-
-const audioExperienceHtml = "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>IMAGE audio experience</title></head><body><main><h1>IMAGE audio experience</h1><p>Audio playback will appear here when an IMAGE interpretation includes audio.</p></main></body></html>";
 
 const inputSchema = z.object({
     graphic: z.string().optional().describe("A base64 image data URL."),
@@ -60,7 +59,10 @@ export function createImageMcpHandler() {
                 idempotentHint: false,
                 openWorldHint: true
             },
-            _meta: { "ui/resourceUri": AUDIO_UI_RESOURCE_URI }
+            _meta: {
+                ui: { resourceUri: AUDIO_UI_RESOURCE_URI },
+                "openai/outputTemplate": AUDIO_UI_RESOURCE_URI
+            }
         }, async (input, context) => {
             try {
                 const result = await runPipeline(await prepareImageRequest(input));
@@ -70,6 +72,7 @@ export function createImageMcpHandler() {
                 const converted = await convertRenderings(String(result.response.request_uuid), result.response.renderings, undefined, publicBaseUrl(context));
                 return {
                     content: converted.content.length ? converted.content : [{ type: "text", text: "IMAGE did not produce a usable interpretation." }],
+                    structuredContent: { audio: converted.audio, text: converted.content.map(item => item.text) },
                     _meta: { "ca.mcgill.a11y.image/audio": converted.audio, "ca.mcgill.a11y.image/droppedRenderings": converted.dropped }
                 };
             } catch (error) {
@@ -84,7 +87,8 @@ export function createImageMcpHandler() {
             contents: [{
                 uri: uri.href,
                 mimeType: "text/html;profile=mcp-app",
-                text: audioExperienceHtml
+                text: AUDIO_EXPERIENCE_HTML,
+                _meta: { ui: { prefersBorder: true } }
             }]
         }));
 

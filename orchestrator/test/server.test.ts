@@ -79,7 +79,11 @@ describe("POST /mcp", () => {
             .send(modernMcpRequest("resources/list", 2));
 
         expect(tools.status).toBe(200);
-        expect(tools.body.result.tools[0]).toMatchObject({ name: "interpret_graphic", annotations: { readOnlyHint: true } });
+        expect(tools.body.result.tools[0]).toMatchObject({
+            name: "interpret_graphic",
+            annotations: { readOnlyHint: true },
+            _meta: { ui: { resourceUri: "ui://image/audio-experience" }, "openai/outputTemplate": "ui://image/audio-experience" }
+        });
         expect(resources.status).toBe(200);
         expect(resources.body.result.resources[0]).toMatchObject({ uri: "ui://image/audio-experience" });
     });
