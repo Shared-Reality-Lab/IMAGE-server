@@ -209,6 +209,19 @@ Step 4 modern endpoint performed on 2026-08-11:
 - Endpoint tests verify modern `tools/list`, `resources/list`, and optional token enforcement
   through the production Express app. Resource-read header validation is part of Step 10.
 
+Step 6 image/file inputs performed on 2026-08-11:
+
+- Added `sharp@0.35.3` (Node >=20.9 with Linux musl prebuilds) to decode JPEG, PNG, and WebP
+  rather than trusting client MIME data. Input is rotated and normalized to bounded JPEG bytes
+  with accurate dimensions before it reaches the shared IMAGE pipeline.
+- Data URLs are strict base64 and accept only JPEG, PNG, or WebP. Inputs are limited by decoded
+  bytes, pixels, frames, normalized size, language/context/URL bounds, and active or multi-frame
+  formats are rejected.
+- ChatGPT file objects use only `file.download_url`; downloads require HTTPS, have an abortable
+  timeout and byte limits, and are decoded by the same path. General image URLs remain unsupported.
+- The tool now synthesizes a UUID IMAGE request and runs the shared pipeline. Until Step 7, it
+  exposes only Text renderings directly and reports no text interpretation when IMAGE returns audio only.
+
 ## Shared IMAGE pipeline
 
 `/render` and `/mcp` must call the same extracted pipeline function. The extraction must
@@ -529,7 +542,7 @@ directory exists.
 | 3. MCP SDK compatibility spike | completed | Official v2 server/Express/Node composition proven on Express 4; ext-apps v1 peer skew remains isolated. |
 | 4. Modern MCP endpoint | completed | `/mcp`, tool/resource discovery, optional fixed-token auth, and SDK-managed modern/legacy behavior are in place. |
 | 5. Stateless legacy fallback | not required | v2's verified built-in stateless 2025-11-25 fallback meets this requirement. |
-| 6. Image/file inputs | pending | Mature decoder + ChatGPT file params. |
+| 6. Image/file inputs | completed | Sharp-backed validation/normalization, constrained ChatGPT download support, and shared-pipeline request synthesis are in place. |
 | 7. Conversion + audio artifacts | pending | Store beneath request directory for cron cleanup. |
 | 8. Accessible MCP App | pending | Prefer audio-only instantiation; otherwise render all states. |
 | 9. Documentation | pending | Include prototype and client limitations. |

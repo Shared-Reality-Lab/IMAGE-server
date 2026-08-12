@@ -1,5 +1,7 @@
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
+import { prepareImageRequest } from "./mcp-input";
+import { runPipeline } from "./pipeline";
 
 export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience";
 
@@ -44,13 +46,21 @@ export function createImageMcpHandler() {
                 openWorldHint: true
             },
             _meta: { "ui/resourceUri": AUDIO_UI_RESOURCE_URI }
-        }, async () => ({
-            isError: true,
-            content: [{
-                type: "text",
-                text: "IMAGE image and file input handling is not available yet."
-            }]
-        }));
+        }, async input => {
+            try {
+                const result = await runPipeline(await prepareImageRequest(input));
+                if (!result.valid) {
+                    return { isError: true, content: [{ type: "text", text: "IMAGE produced an invalid response." }] };
+                }
+                const text = (result.response.renderings as Array<{ type_id?: string; data?: { text?: unknown } }>)
+                    .filter(rendering => rendering.type_id === "ca.mcgill.a11y.image.renderer.Text")
+                    .map(rendering => rendering.data?.text)
+                    .filter((value): value is string => typeof value === "string");
+                return { content: text.length ? text.map(value => ({ type: "text" as const, text: value })) : [{ type: "text" as const, text: "IMAGE did not produce a text interpretation." }] };
+            } catch (error) {
+                return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Unable to process the supplied image." }] };
+            }
+        });
 
         server.registerResource("audio-experience", AUDIO_UI_RESOURCE_URI, {
             title: "IMAGE audio experience",

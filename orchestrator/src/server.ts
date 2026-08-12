@@ -31,7 +31,7 @@ export const app = express();
 
 const port = 8080;
 
-app.use(express.json({limit: process.env.MAX_BODY}));
+app.use(express.json({limit: process.env.MAX_BODY || "15mb"}));
 
 const mcpNodeHandler = toNodeHandler(createImageMcpHandler());
 
