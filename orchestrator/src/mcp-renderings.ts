@@ -38,8 +38,8 @@ function timepoints(value: unknown) {
     }
     return value.flatMap(item => {
         const point = item as AudioInfo;
-        return typeof point.name === "string" && typeof point.offset === "number" && point.offset >= 0 &&
-            typeof point.duration === "number" && point.duration >= 0
+        return typeof point.name === "string" && typeof point.offset === "number" && Number.isFinite(point.offset) && point.offset >= 0 &&
+            typeof point.duration === "number" && Number.isFinite(point.duration) && point.duration >= 0
             ? [{ name: point.name, offset: point.offset, duration: point.duration }]
             : [];
     });

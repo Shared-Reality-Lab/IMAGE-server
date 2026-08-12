@@ -22,7 +22,12 @@ export function mcpAudioHandler(basePath = BASE_LOG_PATH) {
                 res.sendStatus(404);
                 return;
             }
-            console.error(`Unable to serve MCP audio artifact for request ${uuid}:`, error);
+            if (fileError.status === 416) {
+                if (!res.headersSent) res.sendStatus(416);
+                else res.end();
+                return;
+            }
+            console.error(`Unable to serve MCP audio artifact for request ${uuid}: ${fileError.code || "unknown error"}`);
             if (!res.headersSent) {
                 res.sendStatus(500);
             }

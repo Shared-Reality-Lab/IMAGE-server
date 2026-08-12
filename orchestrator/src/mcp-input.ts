@@ -18,7 +18,7 @@ function fail(message: string): never {
     throw new Error(message);
 }
 
-function decodeDataUrl(value: string): Buffer {
+function decodeDataUrl(value: string): { bytes: Buffer; format: string } {
     const match = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/.exec(value);
     if (!match || match[2].length % 4 !== 0) {
         return fail("graphic must be a base64 JPEG, PNG, or WebP data URL.");
@@ -27,7 +27,7 @@ function decodeDataUrl(value: string): Buffer {
     if (bytes.length === 0 || bytes.toString("base64") !== match[2] || bytes.length > MAX_INPUT_BYTES) {
         return fail("graphic contains invalid or oversized base64 image data.");
     }
-    return bytes;
+    return { bytes, format: match[1].slice("image/".length).replace("jpg", "jpeg") };
 }
 
 async function downloadFile(file: InterpretGraphicInput["file"]): Promise<Buffer> {
@@ -78,10 +78,14 @@ export async function prepareImageRequest(input: InterpretGraphicInput): Promise
         return fail("url is too long.");
     }
 
-    const bytes = input.graphic === undefined ? await downloadFile(input.file) : decodeDataUrl(input.graphic);
+    const decoded = input.graphic === undefined ? { bytes: await downloadFile(input.file), format: undefined } : decodeDataUrl(input.graphic);
+    const bytes = decoded.bytes;
     const metadata = await sharp(bytes, { animated: false, limitInputPixels: MAX_PIXELS, failOn: "error" }).metadata();
     if (!metadata.format || !["jpeg", "png", "webp"].includes(metadata.format) || (metadata.pages !== undefined && metadata.pages > 1)) {
         return fail("Only single-frame JPEG, PNG, and WebP images are supported.");
+    }
+    if (decoded.format !== undefined && decoded.format !== metadata.format) {
+        return fail("The graphic MIME type does not match its image data.");
     }
     const normalized = await sharp(bytes, { animated: false, limitInputPixels: MAX_PIXELS, failOn: "error" })
         .rotate()

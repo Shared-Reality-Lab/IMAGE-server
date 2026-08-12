@@ -5,9 +5,10 @@ import { runPipeline } from "./pipeline";
 import { convertRenderings } from "./mcp-renderings";
 import { AUDIO_EXPERIENCE_HTML } from "./mcp-app";
 
-export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v6.html";
+export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v7.html";
 export const AUDIO_UI_RESOURCE_URIS = [
     AUDIO_UI_RESOURCE_URI,
+    "ui://image/audio-experience-v6.html",
     "ui://image/audio-experience-v5.html",
     "ui://image/audio-experience-v4",
     "ui://image/audio-experience-v3",
@@ -89,6 +90,9 @@ export function createImageMcpServer(request: PublicRequest) {
                     return { isError: true, content: [{ type: "text", text: "IMAGE produced an invalid response." }] };
                 }
                 const converted = await convertRenderings(String(result.response.request_uuid), result.response.renderings, undefined, publicBaseUrl(request));
+                if (converted.dropped.length) {
+                    console.info(`MCP dropped rendering types: ${[...new Set(converted.dropped)].join(", ")}`);
+                }
                 return {
                     content: converted.content.length ? converted.content : [{ type: "text", text: "IMAGE did not produce a usable interpretation." }],
                     structuredContent: { audio: converted.audio, text: converted.content.map(item => item.text) },

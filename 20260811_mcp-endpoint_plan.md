@@ -296,6 +296,23 @@ Step 9 accessible MCP App performed on 2026-08-12:
   URI and protocol headers so any remaining host incompatibility is observable from orchestrator
   logs without exposing tool inputs or outputs.
 
+Steps 8-10 completion verification performed on 2026-08-12:
+
+- Artifact serving now preserves proper 416 responses for unsatisfiable ranges and avoids logging
+  error objects that can contain artifact filesystem paths or secret tokens. Tests cover complete,
+  fixed, open-ended, suffix, and unsatisfiable requests plus UUID/token rejection.
+- The cache-busting `ui://image/audio-experience-v7.html` App renders text-only and mixed results,
+  every returned audio experience, explicit Stop controls, an IMAGE wordmark, tool errors,
+  cancellation, and expired artifacts. It releases media on cancellation/teardown and applies host
+  locale and text direction when supplied.
+- Conversion rejects non-finite timepoints and mismatched data-URL MIME declarations. Dropped
+  rendering type IDs are logged without payloads or artifact URLs.
+- The suite contains 35 tests across protocol behavior, input normalization and downloads,
+  rendering conversion, artifact files and byte ranges, executable App states, and Axe
+  accessibility checks. `npm test`, `npm run build`, and `npm audit --omit=dev` pass; build lint has
+  the same 16 pre-existing warnings. Manual target-client, screen-reader, zoom, and forced-colors
+  acceptance remains ordered Step 12 rather than an automated Step 10 claim.
+
 ## Shared IMAGE pipeline
 
 `/render` and `/mcp` must call the same extracted pipeline function. The extraction must
@@ -620,9 +637,9 @@ directory exists.
 | 7. Conversion + audio artifacts | completed | Text conversion, compact audio metadata, random request-directory MP3 artifacts, timepoints, and dropped-rendering diagnostics are in place. |
 | 8. Artifact serving | completed | Same-service MP3 route, constrained paths, Range support, and reverse-proxy-aware public links are in place. |
 | 9. Accessible MCP App | completed | ChatGPT/MCP Apps metadata, structured result payload, native audio/segment controls, and accessible App lifecycle behavior are in place. |
-| 8. Accessible MCP App | pending | Prefer audio-only instantiation; otherwise render all states. |
-| 9. Documentation | pending | Include prototype and client limitations. |
-| 10. Full verification | pending | Protocol, Docker, clients, NVDA, VoiceOver. |
+| 10. Automated verification | completed | 35 protocol, input/conversion, artifact, executable App-state, and Axe tests pass. Manual client and assistive-technology acceptance remains Step 12. |
+| 11. Documentation | pending | Include prototype and client limitations. |
+| 12. Deployment/client verification | pending | Docker, target clients, NVDA, VoiceOver, zoom, and forced-colors acceptance. |
 
 ### Last completed work (2026-08-11)
 
