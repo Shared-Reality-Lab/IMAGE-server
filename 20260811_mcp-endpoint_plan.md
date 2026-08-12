@@ -266,6 +266,11 @@ Step 9 accessible MCP App performed on 2026-08-12:
 - Correct the Unicorn nginx `/mcp` proxy header to preserve Traefik's HTTPS protocol:
   `proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;`. Do not use `$scheme`, because
   nginx receives Traefik traffic over HTTP and would generate unusable `http` artifact links.
+- The first deployed App used a cached URI and omitted the required `ui/initialize` lifecycle
+  handshake. The corrected version uses `ui://image/audio-experience-v2`, completes
+  `ui/initialize` then `ui/notifications/initialized`, and therefore allows hosts to send the
+  tool-result notification. Set `IMAGE_MCP_PUBLIC_ORIGIN=https://unicorn.cim.mcgill.ca` so the
+  App CSP permits its externally hosted MP3 artifacts.
 
 ## Shared IMAGE pipeline
 

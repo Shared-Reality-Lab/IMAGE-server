@@ -5,7 +5,7 @@ import { runPipeline } from "./pipeline";
 import { convertRenderings } from "./mcp-renderings";
 import { AUDIO_EXPERIENCE_HTML } from "./mcp-app";
 
-export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience";
+export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v2";
 
 const inputSchema = z.object({
     graphic: z.string().optional().describe("A base64 image data URL."),
@@ -88,7 +88,14 @@ export function createImageMcpHandler() {
                 uri: uri.href,
                 mimeType: "text/html;profile=mcp-app",
                 text: AUDIO_EXPERIENCE_HTML,
-                _meta: { ui: { prefersBorder: true } }
+                _meta: {
+                    ui: {
+                        prefersBorder: true,
+                        csp: {
+                            resourceDomains: process.env.IMAGE_MCP_PUBLIC_ORIGIN ? [process.env.IMAGE_MCP_PUBLIC_ORIGIN] : []
+                        }
+                    }
+                }
             }]
         }));
 

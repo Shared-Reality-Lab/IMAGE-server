@@ -39,6 +39,13 @@ button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-of
   const download = document.getElementById("download");
   const segments = document.getElementById("segments");
   let stopTimer;
+  let nextRequestId = 1;
+
+  function send(method, params) {
+    const id = nextRequestId++;
+    window.parent.postMessage({ jsonrpc: "2.0", id, method, params }, "*");
+    return id;
+  }
 
   function stop() {
     if (stopTimer) window.clearTimeout(stopTimer);
@@ -85,8 +92,17 @@ button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-of
   window.addEventListener("message", event => {
     if (event.source !== window.parent || !event.data || event.data.jsonrpc !== "2.0") return;
     const message = event.data;
+    if (message.id === 1 && message.result) {
+      window.parent.postMessage({ jsonrpc: "2.0", method: "ui/notifications/initialized", params: {} }, "*");
+      return;
+    }
     if (message.method === "ui/notifications/tool-result") render(message.params?.structuredContent ?? message.params);
     if (message.method === "ui/resource-teardown" || message.method === "ui/notifications/tool-cancelled") stop();
+  });
+  send("ui/initialize", {
+    protocolVersion: "2026-01-26",
+    appCapabilities: { availableDisplayModes: ["inline"] },
+    clientInfo: { name: "image-audio-experience", version: "1.0.0" }
   });
 })();
 </script>
