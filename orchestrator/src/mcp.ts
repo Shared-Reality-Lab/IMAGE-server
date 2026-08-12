@@ -20,11 +20,11 @@ const RESOURCE_MIME_TYPE = "text/html;profile=mcp-app";
 const inputSchema = z.object({
     graphic: z.string().optional().describe("A base64 image data URL."),
     file: z.object({
-        download_url: z.string().url().optional(),
-        file_id: z.string().optional(),
+        download_url: z.string().url(),
+        file_id: z.string(),
         mime_type: z.string().optional(),
         file_name: z.string().optional()
-    }).passthrough().optional().describe("A ChatGPT file object."),
+    }).strict().optional().describe("A ChatGPT file object."),
     language: z.string().optional().describe("The requested interpretation language. Defaults to en."),
     context: z.string().optional().describe("Bounded surrounding context for the image."),
     url: z.string().optional().describe("A source-page identifier. IMAGE does not fetch this URL.")
@@ -81,7 +81,8 @@ export function createImageMcpServer(request: PublicRequest) {
             _meta: {
                 ui: { resourceUri: AUDIO_UI_RESOURCE_URI, visibility: ["model", "app"] },
                 "openai/outputTemplate": AUDIO_UI_RESOURCE_URI,
-                "openai/widgetAccessible": true
+                "openai/widgetAccessible": true,
+                "openai/fileParams": ["file"]
             }
         }, async input => {
             try {

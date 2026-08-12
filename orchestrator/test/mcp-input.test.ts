@@ -40,19 +40,19 @@ describe("prepareImageRequest", () => {
         const fetchMock = vi.fn().mockResolvedValue(new Response(png, { headers: { "content-length": String(png.length) } }));
         vi.stubGlobal("fetch", fetchMock);
 
-        const result = await prepareImageRequest({ file: { download_url: "https://files.example/image.png" } });
+        const result = await prepareImageRequest({ file: { download_url: "https://files.example/image.png", file_id: "file_test" } });
         expect(result.dimensions).toEqual([2, 1]);
         expect(fetchMock).toHaveBeenCalledWith(new URL("https://files.example/image.png"), expect.objectContaining({ signal: expect.any(AbortSignal) }));
 
-        await expect(prepareImageRequest({ file: { download_url: "http://files.example/image.png" } })).rejects.toThrow("HTTPS");
+        await expect(prepareImageRequest({ file: { download_url: "http://files.example/image.png", file_id: "file_test" } })).rejects.toThrow("HTTPS");
         fetchMock.mockResolvedValueOnce(new Response("missing", { status: 404 }));
-        await expect(prepareImageRequest({ file: { download_url: "https://files.example/missing.png" } })).rejects.toThrow("Unable to download");
+        await expect(prepareImageRequest({ file: { download_url: "https://files.example/missing.png", file_id: "file_test" } })).rejects.toThrow("Unable to download");
     });
 
     it("rejects malformed, unsupported, and ambiguous sources", async () => {
         await expect(prepareImageRequest({ graphic: "data:image/png;base64,invalid" })).rejects.toThrow("base64");
         const graphic = await pixelPng();
-        await expect(prepareImageRequest({ graphic, file: { download_url: "https://files.example/image.png" } })).rejects.toThrow("exactly one");
+        await expect(prepareImageRequest({ graphic, file: { download_url: "https://files.example/image.png", file_id: "file_test" } })).rejects.toThrow("exactly one");
         await expect(prepareImageRequest({ graphic, language: "eng" })).rejects.toThrow("two-letter");
     });
 });

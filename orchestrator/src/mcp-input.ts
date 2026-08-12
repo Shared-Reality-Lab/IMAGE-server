@@ -8,7 +8,7 @@ const DOWNLOAD_TIMEOUT_MS = Number(process.env.IMAGE_MCP_DOWNLOAD_TIMEOUT_MS || 
 
 export interface InterpretGraphicInput {
     graphic?: string;
-    file?: { download_url?: string; mime_type?: string; [key: string]: unknown };
+    file?: { download_url?: string; file_id?: string; mime_type?: string; file_name?: string };
     language?: string;
     context?: string;
     url?: string;

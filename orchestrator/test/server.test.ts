@@ -88,7 +88,19 @@ describe("POST /mcp", () => {
             },
             _meta: {
                 ui: { resourceUri: "ui://image/audio-experience-v7.html", visibility: ["model", "app"] },
-                "openai/outputTemplate": "ui://image/audio-experience-v7.html"
+                "openai/outputTemplate": "ui://image/audio-experience-v7.html",
+                "openai/fileParams": ["file"]
+            }
+        });
+        expect(tools.body.result.tools[0].inputSchema.properties.file).toMatchObject({
+            type: "object",
+            required: ["download_url", "file_id"],
+            additionalProperties: false,
+            properties: {
+                download_url: { type: "string" },
+                file_id: { type: "string" },
+                mime_type: { type: "string" },
+                file_name: { type: "string" }
             }
         });
         expect(resources.status).toBe(200);

@@ -312,6 +312,10 @@ Steps 8-10 completion verification performed on 2026-08-12:
   accessibility checks. `npm test`, `npm run build`, and `npm audit --omit=dev` pass; build lint has
   the same 16 pre-existing warnings. Manual target-client, screen-reader, zoom, and forced-colors
   acceptance remains ordered Step 12 rather than an automated Step 10 claim.
+- ChatGPT `+` attachments initially failed because the tool descriptor omitted
+  `_meta["openai/fileParams"]` and did not require the documented `download_url` and `file_id`
+  fields. The descriptor now declares `file` as a file parameter with the exact OpenAI file-object
+  schema, allowing ChatGPT to replace its local attachment reference with a temporary HTTPS URL.
 
 ## Shared IMAGE pipeline
 
