@@ -15,6 +15,7 @@
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
  */
 import express from "express";
+import { timingSafeEqual } from "crypto";
 import fs from "fs/promises";
 import path from "path";
 import hash from "object-hash";
@@ -23,12 +24,38 @@ import { performance } from "perf_hooks";
 import { ajv } from "./ajv";
 import { docker, getPreprocessorServices } from "./docker";
 import { BASE_LOG_PATH, getRoute, reqTag, runPipeline, runPreprocessors, runPreprocessorsParallel, storeResponse } from "./pipeline";
+import { toNodeHandler } from "@modelcontextprotocol/node";
+import { createImageMcpHandler } from "./mcp";
 
 export const app = express();
 
 const port = 8080;
 
 app.use(express.json({limit: process.env.MAX_BODY}));
+
+const mcpNodeHandler = toNodeHandler(createImageMcpHandler());
+
+function mcpAuthentication(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const token = process.env.IMAGE_MCP_TOKEN;
+    if (!token) {
+        next();
+        return;
+    }
+
+    const authorization = req.get("authorization");
+    const expected = `Bearer ${token}`;
+    const authorized = authorization !== undefined && authorization.length === expected.length &&
+        timingSafeEqual(Buffer.from(authorization), Buffer.from(expected));
+    if (!authorized) {
+        res.status(401).set("WWW-Authenticate", "Bearer").json({ error: "Unauthorized" });
+        return;
+    }
+    next();
+}
+
+app.post("/mcp", mcpAuthentication, (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    mcpNodeHandler(req, res, req.body).catch(next);
+});
 
 app.post("/render", (req: express.Request, res: express.Response) => {
     const requestBody = req.body; // capture req.body early

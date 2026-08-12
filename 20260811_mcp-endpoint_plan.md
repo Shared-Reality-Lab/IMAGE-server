@@ -195,6 +195,20 @@ Step 3 compatibility spike performed on 2026-08-11:
   path-traversal advisory. The tested package override selects `@hono/node-server@2.1.0`;
   the complete test suite passes and `npm audit` reports zero vulnerabilities.
 
+Step 4 modern endpoint performed on 2026-08-11:
+
+- `POST /mcp` is mounted on the existing Express application using the verified official
+  v2 `createMcpHandler`/`toNodeHandler` composition. It retains the SDK's default
+  stateless legacy fallback.
+- The server registers the final `interpret_graphic` tool identity, annotations, exactly-one
+  source schema, and the `ui://image/audio-experience` UI resource. Its execution returns a
+  temporary tool error until Step 6 supplies strict image/file input handling; the resource
+  serves a minimal placeholder until Step 9 builds the accessible App.
+- `IMAGE_MCP_TOKEN`, when set, requires a fixed Bearer token for `/mcp`. It is intentionally
+  only the documented prototype convenience mechanism, not OAuth.
+- Endpoint tests verify modern `tools/list`, `resources/list`, and optional token enforcement
+  through the production Express app. Resource-read header validation is part of Step 10.
+
 ## Shared IMAGE pipeline
 
 `/render` and `/mcp` must call the same extracted pipeline function. The extraction must
@@ -513,7 +527,7 @@ directory exists.
 | 1. Shared pipeline extraction | completed | Typecheck passed with schemas linked, ESLint had 0 errors (17 existing/moved warnings), Docker image built, and `/health` passed in a container. Behavioral regression tests are part of step 2. |
 | 2. Node/toolchain upgrade + pipeline tests | completed | Node 20/TypeScript 5.9/tooling upgrade, built-in fetch, CI and Docker updates, and eight pipeline/`/render` regression tests completed. `npm audit` is clean. |
 | 3. MCP SDK compatibility spike | completed | Official v2 server/Express/Node composition proven on Express 4; ext-apps v1 peer skew remains isolated. |
-| 4. Modern MCP endpoint | pending | Use official v2 `createMcpHandler` plus `toNodeHandler` on the existing Express app. |
+| 4. Modern MCP endpoint | completed | `/mcp`, tool/resource discovery, optional fixed-token auth, and SDK-managed modern/legacy behavior are in place. |
 | 5. Stateless legacy fallback | not required | v2's verified built-in stateless 2025-11-25 fallback meets this requirement. |
 | 6. Image/file inputs | pending | Mature decoder + ChatGPT file params. |
 | 7. Conversion + audio artifacts | pending | Store beneath request directory for cron cleanup. |

@@ -28,9 +28,63 @@ const validRequest = {
     renderers: ["ca.mcgill.a11y.image.renderer.Text"]
 };
 
+const mcpHeaders = {
+    accept: "application/json, text/event-stream",
+    "content-type": "application/json",
+    "mcp-protocol-version": "2026-07-28"
+};
+
+function modernMcpRequest(method: string, id: number, params: Record<string, unknown> = {}) {
+    return {
+        jsonrpc: "2.0",
+        id,
+        method,
+        params: {
+            ...params,
+            _meta: {
+                "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                "io.modelcontextprotocol/clientInfo": { name: "test-client", version: "1.0.0" },
+                "io.modelcontextprotocol/clientCapabilities": {}
+            }
+        }
+    };
+}
+
 afterEach(() => {
     vi.clearAllMocks();
     delete process.env.STORE_IMAGE_DATA;
+    delete process.env.IMAGE_MCP_TOKEN;
+});
+
+describe("POST /mcp", () => {
+    it("serves the registered tool and audio UI resource through the SDK", async () => {
+        const tools = await request(app).post("/mcp")
+            .set({ ...mcpHeaders, "mcp-method": "tools/list" })
+            .send(modernMcpRequest("tools/list", 1));
+        const resources = await request(app).post("/mcp")
+            .set({ ...mcpHeaders, "mcp-method": "resources/list" })
+            .send(modernMcpRequest("resources/list", 2));
+
+        expect(tools.status).toBe(200);
+        expect(tools.body.result.tools[0]).toMatchObject({ name: "interpret_graphic", annotations: { readOnlyHint: true } });
+        expect(resources.status).toBe(200);
+        expect(resources.body.result.resources[0]).toMatchObject({ uri: "ui://image/audio-experience" });
+    });
+
+    it("requires the configured MCP bearer token", async () => {
+        process.env.IMAGE_MCP_TOKEN = "test-token";
+        const body = modernMcpRequest("tools/list", 1);
+
+        const rejected = await request(app).post("/mcp")
+            .set({ ...mcpHeaders, "mcp-method": "tools/list" })
+            .send(body);
+        const accepted = await request(app).post("/mcp")
+            .set({ ...mcpHeaders, "mcp-method": "tools/list", authorization: "Bearer test-token" })
+            .send(body);
+
+        expect(rejected.status).toBe(401);
+        expect(accepted.status).toBe(200);
+    });
 });
 
 describe("POST /render", () => {
