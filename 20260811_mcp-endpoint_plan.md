@@ -291,6 +291,10 @@ Step 9 accessible MCP App performed on 2026-08-12:
 - ChatGPT's MCP Apps resource fetch currently omits the MCP v2 `Mcp-Name` header required by the
   v2 SDK when it sends `resources/read`. The `/mcp` adapter derives that header only from the same
   request's `params.uri`, allowing the SDK to validate and serve the declared `ui://` resource.
+- The documented ChatGPT resource convention uses a `.html` path. The App now advertises the
+  cache-busting `ui://image/audio-experience-v5.html` URI. The MCP adapter logs each resource-read
+  URI and protocol headers so any remaining host incompatibility is observable from orchestrator
+  logs without exposing tool inputs or outputs.
 
 ## Shared IMAGE pipeline
 

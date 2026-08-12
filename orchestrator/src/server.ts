@@ -60,6 +60,9 @@ app.post("/mcp", mcpAuthentication, (req: express.Request, res: express.Response
     if (req.body?.method === "resources/read" && !req.get("mcp-name") && typeof req.body.params?.uri === "string") {
         req.headers["mcp-name"] = req.body.params.uri;
     }
+    if (req.body?.method === "resources/read") {
+        console.info(`MCP resource read uri=${JSON.stringify(req.body.params?.uri)} mcp-name=${JSON.stringify(req.get("mcp-name"))} protocol=${JSON.stringify(req.get("mcp-protocol-version"))} user-agent=${JSON.stringify(req.get("user-agent"))}`);
+    }
     mcpNodeHandler(req, res, req.body).catch(next);
 });
 

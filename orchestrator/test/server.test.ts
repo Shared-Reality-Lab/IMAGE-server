@@ -79,7 +79,7 @@ describe("POST /mcp", () => {
             .send(modernMcpRequest("resources/list", 2));
         const resource = await request(app).post("/mcp")
             .set({ ...mcpHeaders, "mcp-method": "resources/read" })
-            .send(modernMcpRequest("resources/read", 3, { uri: "ui://image/audio-experience-v4" }));
+            .send(modernMcpRequest("resources/read", 3, { uri: "ui://image/audio-experience-v5.html" }));
 
         expect(tools.status).toBe(200);
         expect(tools.body.result.tools[0]).toMatchObject({
@@ -90,15 +90,15 @@ describe("POST /mcp", () => {
                 required: ["audio", "text"]
             },
             _meta: {
-                ui: { resourceUri: "ui://image/audio-experience-v4", visibility: ["model", "app"] },
-                "openai/outputTemplate": "ui://image/audio-experience-v4"
+                ui: { resourceUri: "ui://image/audio-experience-v5.html", visibility: ["model", "app"] },
+                "openai/outputTemplate": "ui://image/audio-experience-v5.html"
             }
         });
         expect(resources.status).toBe(200);
-        expect(resources.body.result.resources[0]).toMatchObject({ uri: "ui://image/audio-experience-v4" });
+        expect(resources.body.result.resources[0]).toMatchObject({ uri: "ui://image/audio-experience-v5.html" });
         expect(resource.status, JSON.stringify(resource.body)).toBe(200);
         expect(resource.body.result.contents[0]).toMatchObject({
-            uri: "ui://image/audio-experience-v4",
+            uri: "ui://image/audio-experience-v5.html",
             mimeType: "text/html;profile=mcp-app",
             text: expect.stringContaining("IMAGE audio experience")
         });
@@ -122,15 +122,26 @@ describe("POST /mcp", () => {
     it("accepts ChatGPT resource reads without MCP v2's name header", async () => {
         const resource = await request(app).post("/mcp")
             .set({ ...mcpHeaders, "mcp-method": "resources/read" })
-            .send(modernMcpRequest("resources/read", 3, { uri: "ui://image/audio-experience-v4" }));
+            .send(modernMcpRequest("resources/read", 3, { uri: "ui://image/audio-experience-v5.html" }));
 
         expect(resource.status).toBe(200);
         expect(resource.body.result.contents[0]).toMatchObject({
-            uri: "ui://image/audio-experience-v4",
+            uri: "ui://image/audio-experience-v5.html",
             mimeType: "text/html;profile=mcp-app",
             text: expect.stringContaining("IMAGE audio experience")
         });
     });
+
+    it("serves the App resource through the legacy resource-read fallback", async () => {
+        const resource = await request(app).post("/mcp")
+            .set({ accept: "application/json, text/event-stream", "content-type": "application/json" })
+            .send({ jsonrpc: "2.0", id: 4, method: "resources/read", params: { uri: "ui://image/audio-experience-v5.html" } });
+
+        expect(resource.status).toBe(200);
+        expect(resource.headers["content-type"]).toContain("text/event-stream");
+        expect(resource.text).toContain("IMAGE audio experience");
+    });
+
 });
 
 describe("POST /render", () => {
