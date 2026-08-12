@@ -89,7 +89,11 @@ button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-of
     status.textContent = "Audio interpretation ready.";
   }
 
-  function renderChatGptOutput(value) {
+  function renderChatGptOutput() {
+    const openai = window.openai;
+    const value = openai?.toolOutput
+      ?? openai?.toolResponseMetadata?.mcp_tool_result?.structuredContent
+      ?? openai?.toolResponseMetadata?.call_tool_result?.structuredContent;
     if (value !== undefined && value !== null) render(value);
   }
 
@@ -98,16 +102,14 @@ button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-of
     const message = event.data;
     if (message.id === 1 && message.result) {
       window.parent.postMessage({ jsonrpc: "2.0", method: "ui/notifications/initialized", params: {} }, "*");
-      renderChatGptOutput(window.openai?.toolOutput);
+      renderChatGptOutput();
       return;
     }
     if (message.method === "ui/notifications/tool-result") render(message.params?.structuredContent ?? message.params);
     if (message.method === "ui/resource-teardown" || message.method === "ui/notifications/tool-cancelled") stop();
   });
-  window.addEventListener("openai:set_globals", event => {
-    renderChatGptOutput(event.detail?.globals?.toolOutput);
-  });
-  renderChatGptOutput(window.openai?.toolOutput);
+  window.addEventListener("openai:set_globals", renderChatGptOutput);
+  renderChatGptOutput();
   send("ui/initialize", {
     protocolVersion: "2026-01-26",
     appCapabilities: { availableDisplayModes: ["inline"] },

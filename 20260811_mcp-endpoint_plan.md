@@ -280,6 +280,14 @@ Step 9 accessible MCP App performed on 2026-08-12:
 - Verification on 2026-08-12: `npm test` passes 20 tests, `npm run build` passes (with 16
   pre-existing lint warnings), `npm audit --omit=dev` reports zero vulnerabilities, and the
   pinned Node 20 Alpine Docker image builds successfully.
+- ChatGPT requires an `outputSchema` for tools returning `structuredContent`. The fourth resource
+  URI, `ui://image/audio-experience-v4`, declares the exact audio/text result schema. The App also
+  reads `toolResponseMetadata.mcp_tool_result.structuredContent`, ChatGPT's canonical full result
+  envelope, if its compatibility `toolOutput` global is absent.
+- Verification on 2026-08-12: the `tools/list` integration assertion confirms the emitted
+  descriptor contains the schema and App visibility. `npm test` passes 20 tests, `npm run build`
+  passes with the existing 16 lint warnings, `npm audit --omit=dev` is clean, and the pinned Node
+  20 Alpine Docker image builds successfully.
 
 ## Shared IMAGE pipeline
 

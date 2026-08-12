@@ -5,7 +5,7 @@ import { runPipeline } from "./pipeline";
 import { convertRenderings } from "./mcp-renderings";
 import { AUDIO_EXPERIENCE_HTML } from "./mcp-app";
 
-export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v3";
+export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v4";
 
 const inputSchema = z.object({
     graphic: z.string().optional().describe("A base64 image data URL."),
@@ -20,6 +20,22 @@ const inputSchema = z.object({
     url: z.string().optional().describe("A source-page identifier. IMAGE does not fetch this URL.")
 }).refine(value => Number(value.graphic !== undefined) + Number(value.file !== undefined) === 1, {
     message: "Provide exactly one of graphic or file."
+});
+
+const outputSchema = z.object({
+    audio: z.array(z.object({
+        description: z.string(),
+        mimeType: z.literal("audio/mpeg"),
+        bytes: z.number().int().nonnegative(),
+        artifactPath: z.string(),
+        artifactUrl: z.string().url(),
+        timepoints: z.array(z.object({
+            name: z.string(),
+            offset: z.number().nonnegative(),
+            duration: z.number().nonnegative()
+        }))
+    })),
+    text: z.array(z.string())
 });
 
 export function publicBaseUrl(context: ServerContext): string {
@@ -53,6 +69,7 @@ export function createImageMcpHandler() {
             title: "IMAGE graphic interpreter (photos, images, screenshots, and charts)",
             description: "Creates accessible text and audio interpretations for an image supplied directly or obtained from another connector.",
             inputSchema,
+            outputSchema,
             annotations: {
                 readOnlyHint: true,
                 destructiveHint: false,
@@ -60,7 +77,7 @@ export function createImageMcpHandler() {
                 openWorldHint: true
             },
             _meta: {
-                ui: { resourceUri: AUDIO_UI_RESOURCE_URI },
+                ui: { resourceUri: AUDIO_UI_RESOURCE_URI, visibility: ["model", "app"] },
                 "openai/outputTemplate": AUDIO_UI_RESOURCE_URI,
                 "openai/widgetAccessible": true
             }
