@@ -1,4 +1,4 @@
-import {ServiceInfo} from "./server";
+import {ServiceInfo} from "./types";
 import { getOptional, getRequired } from "./docker";
 import Docker from "dockerode";
 

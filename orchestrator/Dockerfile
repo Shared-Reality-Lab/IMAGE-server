@@ -1,4 +1,4 @@
-FROM node:alpine AS builder
+FROM node:20.19.2-alpine3.21 AS builder
 
 WORKDIR /usr/src/app
 COPY orchestrator/*.js* ./
@@ -6,9 +6,10 @@ RUN npm ci
 
 COPY schemas src/schemas
 COPY orchestrator/src ./src
-RUN npm run build && npm prune --production
+COPY orchestrator/test ./test
+RUN npm test && npm run build && npm prune --production
 
-FROM node:alpine AS final
+FROM node:20.19.2-alpine3.21 AS final
 
 RUN apk add memcached supercronic curl
 # Set up for logging

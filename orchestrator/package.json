@@ -4,31 +4,38 @@
   "description": "Entry point for request handling",
   "main": "dist/server.js",
   "scripts": {
-    "prebuild": "eslint --ext .ts src",
+    "prepare-schemas": "if [ -d ../schemas ]; then rm -rf src/schemas && cp -R ../schemas src/; fi",
+    "prebuild": "npm run prepare-schemas && eslint --ext .ts src",
     "build": "tsc",
     "prestart": "npm run build",
-    "start": "node ."
+    "start": "node .",
+    "pretest": "npm run prepare-schemas",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "@types/memjs": "^1.3.3",
-    "ajv": "^8.12.0",
+    "ajv": "^8.20.0",
     "dockerode": "^3.3.5",
-    "express": "^4.19.2",
+    "express": "^4.22.2",
     "memjs": "1.3.2",
-    "node-fetch": "^3.3.2",
     "object-hash": "^2.2.0",
-    "uuid": "^8.3.2"
+    "uuid": "^11.1.1"
   },
   "devDependencies": {
-    "@types/dockerode": "^3.2.3",
-    "@types/express": "^4.17.11",
-    "@types/node": "^15.0.2",
+    "@types/dockerode": "^3.3.47",
+    "@types/express": "^4.17.25",
+    "@types/node": "^20.19.0",
     "@types/object-hash": "^2.2.1",
-    "@types/uuid": "^8.3.4",
-    "@typescript-eslint/eslint-plugin": "^5.0.0",
-    "@typescript-eslint/parser": "^5.0.0",
-    "eslint": "^8.0.1",
-    "typescript": "^4.2.4"
+    "@types/supertest": "^6.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/parser": "^8.67.0",
+    "eslint": "^8.57.1",
+    "supertest": "^7.1.3",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
   },
   "overrides": {
     "tar-fs": "^2.1.2"

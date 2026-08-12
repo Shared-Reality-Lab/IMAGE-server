@@ -14,7 +14,7 @@
  * and our Additional Terms along with this program.
  * If not, see <https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/LICENSE>.
  */
-import { ServiceInfo } from "./server";
+import { ServiceInfo } from "./types";
 import Docker from "dockerode";
 
 export const docker = new Docker();

@@ -20,21 +20,24 @@ jobs:
     name: Basic linting and type checking.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: '16'
-      - name: Copy schemas
+          node-version: '20'
+      - name: Prepare schemas
         working-directory: ./orchestrator
-        run: cp -R ../schemas src/
+        run: npm run prepare-schemas
       - name: Install dependencies
         working-directory: ./orchestrator
         run: npm ci
       - name: Check with tsc
         working-directory: ./orchestrator
         run: npx tsc --noEmit
+      - name: Run tests
+        working-directory: ./orchestrator
+        run: npm test
   build-and-push-image:
     name: Build and Push to Registry
     needs: lint
@@ -44,7 +47,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
       - name: Log into GHCR
