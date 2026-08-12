@@ -1,11 +1,20 @@
-import { createMcpHandler, McpServer, ServerContext } from "@modelcontextprotocol/server";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { prepareImageRequest } from "./mcp-input";
 import { runPipeline } from "./pipeline";
 import { convertRenderings } from "./mcp-renderings";
 import { AUDIO_EXPERIENCE_HTML } from "./mcp-app";
 
-export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v5.html";
+export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v6.html";
+export const AUDIO_UI_RESOURCE_URIS = [
+    AUDIO_UI_RESOURCE_URI,
+    "ui://image/audio-experience-v5.html",
+    "ui://image/audio-experience-v4",
+    "ui://image/audio-experience-v3",
+    "ui://image/audio-experience-v2",
+    "ui://image/audio-experience"
+] as const;
+const RESOURCE_MIME_TYPE = "text/html;profile=mcp-app";
 
 const inputSchema = z.object({
     graphic: z.string().optional().describe("A base64 image data URL."),
@@ -38,34 +47,26 @@ const outputSchema = z.object({
     text: z.array(z.string())
 });
 
-export function publicBaseUrl(context: ServerContext): string {
-    const request = context.http?.req;
-    if (!request) {
-        return "";
-    }
-    const host = request.headers.get("host");
-    if (!host) {
-        return "";
-    }
-    const protocol = request.headers.get("x-forwarded-proto")?.split(",")[0].trim() || new URL(request.url).protocol.slice(0, -1);
-    const prefix = request.headers.get("x-forwarded-prefix")?.replace(/\/+$/, "") || "";
+export interface PublicRequest {
+    protocol: string;
+    get(name: string): string | undefined;
+}
+
+export function publicBaseUrl(request: PublicRequest): string {
+    const host = request.get("host");
+    if (!host) return "";
+    const protocol = request.get("x-forwarded-proto")?.split(",")[0].trim() || request.protocol;
+    const prefix = request.get("x-forwarded-prefix")?.replace(/\/+$/, "") || "";
     return `${protocol}://${host}${prefix.startsWith("/") ? prefix : ""}`;
 }
 
-/**
- * Builds a per-request MCP server. The SDK factory is intentionally stateless,
- * including for its built-in 2025-11-25 compatibility fallback.
- */
-export function createImageMcpHandler() {
-    return createMcpHandler(async () => {
-        const server = new McpServer(
-            { name: "image-orchestrator", version: "0.2.1" },
-            {
-                instructions: "IMAGE creates accessible text and audio interpretations for blind and low-vision users."
-            }
-        );
+export function createImageMcpServer(request: PublicRequest) {
+    const server = new McpServer(
+        { name: "image-orchestrator", version: "0.2.1" },
+        { instructions: "IMAGE creates accessible text and audio interpretations for blind and low-vision users." }
+    );
 
-        server.registerTool("interpret_graphic", {
+    server.registerTool("interpret_graphic", {
             title: "IMAGE graphic interpreter (photos, images, screenshots, and charts)",
             description: "Creates accessible text and audio interpretations for an image supplied directly or obtained from another connector.",
             inputSchema,
@@ -81,13 +82,13 @@ export function createImageMcpHandler() {
                 "openai/outputTemplate": AUDIO_UI_RESOURCE_URI,
                 "openai/widgetAccessible": true
             }
-        }, async (input, context) => {
+        }, async input => {
             try {
                 const result = await runPipeline(await prepareImageRequest(input));
                 if (!result.valid) {
                     return { isError: true, content: [{ type: "text", text: "IMAGE produced an invalid response." }] };
                 }
-                const converted = await convertRenderings(String(result.response.request_uuid), result.response.renderings, undefined, publicBaseUrl(context));
+                const converted = await convertRenderings(String(result.response.request_uuid), result.response.renderings, undefined, publicBaseUrl(request));
                 return {
                     content: converted.content.length ? converted.content : [{ type: "text", text: "IMAGE did not produce a usable interpretation." }],
                     structuredContent: { audio: converted.audio, text: converted.content.map(item => item.text) },
@@ -98,13 +99,13 @@ export function createImageMcpHandler() {
             }
         });
 
-        server.registerResource("audio-experience", AUDIO_UI_RESOURCE_URI, {
+    for (const [index, resourceUri] of AUDIO_UI_RESOURCE_URIS.entries()) server.registerResource(`audio-experience-${index}`, resourceUri, {
             title: "IMAGE audio experience",
-            mimeType: "text/html;profile=mcp-app"
-        }, async uri => ({
+            mimeType: RESOURCE_MIME_TYPE
+        }, async () => ({
             contents: [{
-                uri: uri.href,
-                mimeType: "text/html;profile=mcp-app",
+                uri: resourceUri,
+                mimeType: RESOURCE_MIME_TYPE,
                 text: AUDIO_EXPERIENCE_HTML,
                 _meta: {
                     ui: {
@@ -121,6 +122,5 @@ export function createImageMcpHandler() {
             }]
         }));
 
-        return server;
-    }, { responseMode: "json" });
+    return server;
 }

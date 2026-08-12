@@ -24,8 +24,8 @@ import { performance } from "perf_hooks";
 import { ajv } from "./ajv";
 import { docker, getPreprocessorServices } from "./docker";
 import { BASE_LOG_PATH, getRoute, reqTag, runPipeline, runPreprocessors, runPreprocessorsParallel, storeResponse } from "./pipeline";
-import { toNodeHandler } from "@modelcontextprotocol/node";
-import { createImageMcpHandler } from "./mcp";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { createImageMcpServer } from "./mcp";
 import { mcpAudioHandler } from "./mcp-audio";
 
 export const app = express();
@@ -33,8 +33,6 @@ export const app = express();
 const port = 8080;
 
 app.use(express.json({limit: process.env.MAX_BODY || "15mb"}));
-
-const mcpNodeHandler = toNodeHandler(createImageMcpHandler());
 
 function mcpAuthentication(req: express.Request, res: express.Response, next: express.NextFunction) {
     const token = process.env.IMAGE_MCP_TOKEN;
@@ -54,16 +52,26 @@ function mcpAuthentication(req: express.Request, res: express.Response, next: ex
     next();
 }
 
-app.post("/mcp", mcpAuthentication, (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    // ChatGPT's Apps resource loader does not yet send MCP v2's required
-    // Mcp-Name header when it reads a ui:// resource.
-    if (req.body?.method === "resources/read" && !req.get("mcp-name") && typeof req.body.params?.uri === "string") {
-        req.headers["mcp-name"] = req.body.params.uri;
-    }
+app.all("/mcp", mcpAuthentication, async (req: express.Request, res: express.Response) => {
     if (req.body?.method === "resources/read") {
-        console.info(`MCP resource read uri=${JSON.stringify(req.body.params?.uri)} mcp-name=${JSON.stringify(req.get("mcp-name"))} protocol=${JSON.stringify(req.get("mcp-protocol-version"))} user-agent=${JSON.stringify(req.get("user-agent"))}`);
+        console.info(`MCP resource read uri=${JSON.stringify(req.body.params?.uri)} protocol=${JSON.stringify(req.get("mcp-protocol-version"))} user-agent=${JSON.stringify(req.get("user-agent"))}`);
     }
-    mcpNodeHandler(req, res, req.body).catch(next);
+
+    const server = createImageMcpServer(req);
+    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
+    res.on("close", () => {
+        transport.close().catch(() => undefined);
+        server.close().catch(() => undefined);
+    });
+    try {
+        await server.connect(transport);
+        await transport.handleRequest(req, res, req.body);
+    } catch (error) {
+        console.error("MCP request failed:", error);
+        if (!res.headersSent) {
+            res.status(500).json({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error" }, id: null });
+        }
+    }
 });
 
 app.get("/mcp/audio/:uuid/:token.mp3", mcpAudioHandler());
