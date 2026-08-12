@@ -5,7 +5,7 @@ import { runPipeline } from "./pipeline";
 import { convertRenderings } from "./mcp-renderings";
 import { AUDIO_EXPERIENCE_HTML } from "./mcp-app";
 
-export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v2";
+export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v3";
 
 const inputSchema = z.object({
     graphic: z.string().optional().describe("A base64 image data URL."),
@@ -61,7 +61,8 @@ export function createImageMcpHandler() {
             },
             _meta: {
                 ui: { resourceUri: AUDIO_UI_RESOURCE_URI },
-                "openai/outputTemplate": AUDIO_UI_RESOURCE_URI
+                "openai/outputTemplate": AUDIO_UI_RESOURCE_URI,
+                "openai/widgetAccessible": true
             }
         }, async (input, context) => {
             try {
@@ -94,6 +95,10 @@ export function createImageMcpHandler() {
                         csp: {
                             resourceDomains: process.env.IMAGE_MCP_PUBLIC_ORIGIN ? [process.env.IMAGE_MCP_PUBLIC_ORIGIN] : []
                         }
+                    },
+                    "openai/widgetPrefersBorder": true,
+                    "openai/widgetCSP": {
+                        resource_domains: process.env.IMAGE_MCP_PUBLIC_ORIGIN ? [process.env.IMAGE_MCP_PUBLIC_ORIGIN] : []
                     }
                 }
             }]

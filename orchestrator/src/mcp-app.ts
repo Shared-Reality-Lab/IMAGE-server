@@ -89,16 +89,25 @@ button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-of
     status.textContent = "Audio interpretation ready.";
   }
 
+  function renderChatGptOutput(value) {
+    if (value !== undefined && value !== null) render(value);
+  }
+
   window.addEventListener("message", event => {
     if (event.source !== window.parent || !event.data || event.data.jsonrpc !== "2.0") return;
     const message = event.data;
     if (message.id === 1 && message.result) {
       window.parent.postMessage({ jsonrpc: "2.0", method: "ui/notifications/initialized", params: {} }, "*");
+      renderChatGptOutput(window.openai?.toolOutput);
       return;
     }
     if (message.method === "ui/notifications/tool-result") render(message.params?.structuredContent ?? message.params);
     if (message.method === "ui/resource-teardown" || message.method === "ui/notifications/tool-cancelled") stop();
   });
+  window.addEventListener("openai:set_globals", event => {
+    renderChatGptOutput(event.detail?.globals?.toolOutput);
+  });
+  renderChatGptOutput(window.openai?.toolOutput);
   send("ui/initialize", {
     protocolVersion: "2026-01-26",
     appCapabilities: { availableDisplayModes: ["inline"] },

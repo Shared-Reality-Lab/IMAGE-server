@@ -82,10 +82,10 @@ describe("POST /mcp", () => {
         expect(tools.body.result.tools[0]).toMatchObject({
             name: "interpret_graphic",
             annotations: { readOnlyHint: true },
-            _meta: { ui: { resourceUri: "ui://image/audio-experience-v2" }, "openai/outputTemplate": "ui://image/audio-experience-v2" }
+            _meta: { ui: { resourceUri: "ui://image/audio-experience-v3" }, "openai/outputTemplate": "ui://image/audio-experience-v3" }
         });
         expect(resources.status).toBe(200);
-        expect(resources.body.result.resources[0]).toMatchObject({ uri: "ui://image/audio-experience-v2" });
+        expect(resources.body.result.resources[0]).toMatchObject({ uri: "ui://image/audio-experience-v3" });
     });
 
     it("requires the configured MCP bearer token", async () => {

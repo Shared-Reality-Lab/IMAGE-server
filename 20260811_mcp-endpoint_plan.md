@@ -271,6 +271,15 @@ Step 9 accessible MCP App performed on 2026-08-12:
   `ui/initialize` then `ui/notifications/initialized`, and therefore allows hosts to send the
   tool-result notification. Set `IMAGE_MCP_PUBLIC_ORIGIN=https://unicorn.cim.mcgill.ca` so the
   App CSP permits its externally hosted MP3 artifacts.
+- ChatGPT's current UI runtime may hydrate `window.openai.toolOutput` instead of delivering the
+  portable tool-result bridge notification. The third, cache-busting resource URI
+  `ui://image/audio-experience-v3` supports both paths and listens for ChatGPT's
+  `openai:set_globals` event; it also includes ChatGPT's widget-CSP compatibility metadata.
+  The App continues to use the portable MCP initialization and tool-result notification path for
+  non-ChatGPT hosts.
+- Verification on 2026-08-12: `npm test` passes 20 tests, `npm run build` passes (with 16
+  pre-existing lint warnings), `npm audit --omit=dev` reports zero vulnerabilities, and the
+  pinned Node 20 Alpine Docker image builds successfully.
 
 ## Shared IMAGE pipeline
 
