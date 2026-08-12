@@ -169,6 +169,32 @@ Step 2 verification performed on 2026-08-11:
 - The Docker builder runs `npm test` before producing the production image, so the
   regression suite executes under the pinned Node 20 Alpine runtime as well as in CI.
 
+Step 3 compatibility spike performed on 2026-08-11:
+
+- Resolved packages are `@modelcontextprotocol/server@2.0.0`,
+  `@modelcontextprotocol/express@2.0.0`, and `@modelcontextprotocol/node@2.0.0`, with
+  `@modelcontextprotocol/core@2.0.0` and Zod `4.4.3`. All require Node 20 or later.
+- The Express package supplies official Express security/auth middleware, but not an MCP
+  route dispatcher. The supported Express 4 composition is the official v2
+  `createMcpHandler` from the server package adapted with the official v2 Node
+  `toNodeHandler`, passing `req.body` after `express.json()` parsing.
+- `orchestrator/test/mcp-sdk-spike.test.ts` proves this composition handles modern
+  `server/discover` and `tools/list`. Modern requests require the per-request `_meta`
+  envelope and a matching `Mcp-Method` header. The SDK emits `resultType: "complete"`
+  and the required cache fields (`ttlMs: 0`, `cacheScope: "private"`) for those results.
+- The v2 handler's built-in legacy path was verified with `initialize` and `tools/list`
+  for `2025-11-25`. It is stateless: each request uses a new server/transport, does not
+  emit `Mcp-Session-Id`, and returns legacy result shapes in SDK-generated SSE frames.
+  Therefore Step 5 does not require a custom compatibility adapter; Step 4 must retain
+  the SDK default legacy fallback rather than setting `legacy: "reject"`.
+- `@modelcontextprotocol/ext-apps@1.7.5` remains excluded. Its only available release
+  peers with `@modelcontextprotocol/sdk` v1, which must not be installed beside v2.
+  Step 9 must use v2 metadata/resources directly or put any future App dependency in an
+  isolated workspace after v2 compatibility is demonstrated.
+- `@modelcontextprotocol/node` v2 resolves `@hono/node-server` v1, which has a moderate
+  path-traversal advisory. The tested package override selects `@hono/node-server@2.1.0`;
+  the complete test suite passes and `npm audit` reports zero vulnerabilities.
+
 ## Shared IMAGE pipeline
 
 `/render` and `/mcp` must call the same extracted pipeline function. The extraction must
@@ -486,9 +512,9 @@ directory exists.
 |---|---|---|
 | 1. Shared pipeline extraction | completed | Typecheck passed with schemas linked, ESLint had 0 errors (17 existing/moved warnings), Docker image built, and `/health` passed in a container. Behavioral regression tests are part of step 2. |
 | 2. Node/toolchain upgrade + pipeline tests | completed | Node 20/TypeScript 5.9/tooling upgrade, built-in fetch, CI and Docker updates, and eight pipeline/`/render` regression tests completed. `npm audit` is clean. |
-| 3. MCP SDK compatibility spike | pending | Resolve v2 server vs ext-apps v1 peer skew. |
-| 4. Modern MCP endpoint | pending | Official v2 SDK/Express adapter. |
-| 5. Stateless legacy fallback | pending | No sessions or retained initialize capabilities. |
+| 3. MCP SDK compatibility spike | completed | Official v2 server/Express/Node composition proven on Express 4; ext-apps v1 peer skew remains isolated. |
+| 4. Modern MCP endpoint | pending | Use official v2 `createMcpHandler` plus `toNodeHandler` on the existing Express app. |
+| 5. Stateless legacy fallback | not required | v2's verified built-in stateless 2025-11-25 fallback meets this requirement. |
 | 6. Image/file inputs | pending | Mature decoder + ChatGPT file params. |
 | 7. Conversion + audio artifacts | pending | Store beneath request directory for cron cleanup. |
 | 8. Accessible MCP App | pending | Prefer audio-only instantiation; otherwise render all states. |
@@ -511,6 +537,6 @@ The shared pipeline extraction was repaired after review:
 - Built `orchestrator/Dockerfile` successfully and started the resulting container; the
   `/health` endpoint returned success.
 
-No MCP endpoint, SDK dependency, image decoder, artifact route, App, or MCP documentation
-has been implemented. Steps 1 and 2 are complete; the next implementer should start at
-ordered step 3 and must keep this file updated after each completed/verified step.
+No production MCP endpoint, image decoder, artifact route, App, or MCP documentation has
+been implemented. Steps 1 through 3 are complete; the next implementer should start at
+ordered step 4 and must keep this file updated after each completed/verified step.
