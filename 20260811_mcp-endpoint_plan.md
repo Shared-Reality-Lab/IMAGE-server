@@ -222,6 +222,13 @@ Step 6 image/file inputs performed on 2026-08-11:
 - The tool now synthesizes a UUID IMAGE request and runs the shared pipeline. Until Step 7, it
   exposes only Text renderings directly and reports no text interpretation when IMAGE returns audio only.
 
+Deployment correction performed on 2026-08-12:
+
+- Restored the production TypeScript source root to `src`. Including `test` in the production
+  compiler configuration emitted `dist/src/server.js`, while the image entrypoint correctly
+  expects `dist/server.js`. Tests remain outside the production output; the Docker builder still
+  runs them before compilation.
+
 ## Shared IMAGE pipeline
 
 `/render` and `/mcp` must call the same extracted pipeline function. The extraction must
