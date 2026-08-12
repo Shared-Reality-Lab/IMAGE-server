@@ -1,4 +1,4 @@
-import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
+import { createMcpHandler, McpServer, ServerContext } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { prepareImageRequest } from "./mcp-input";
 import { runPipeline } from "./pipeline";
@@ -22,6 +22,20 @@ const inputSchema = z.object({
 }).refine(value => Number(value.graphic !== undefined) + Number(value.file !== undefined) === 1, {
     message: "Provide exactly one of graphic or file."
 });
+
+export function publicBaseUrl(context: ServerContext): string {
+    const request = context.http?.req;
+    if (!request) {
+        return "";
+    }
+    const host = request.headers.get("host");
+    if (!host) {
+        return "";
+    }
+    const protocol = request.headers.get("x-forwarded-proto")?.split(",")[0].trim() || new URL(request.url).protocol.slice(0, -1);
+    const prefix = request.headers.get("x-forwarded-prefix")?.replace(/\/+$/, "") || "";
+    return `${protocol}://${host}${prefix.startsWith("/") ? prefix : ""}`;
+}
 
 /**
  * Builds a per-request MCP server. The SDK factory is intentionally stateless,
@@ -47,13 +61,13 @@ export function createImageMcpHandler() {
                 openWorldHint: true
             },
             _meta: { "ui/resourceUri": AUDIO_UI_RESOURCE_URI }
-        }, async input => {
+        }, async (input, context) => {
             try {
                 const result = await runPipeline(await prepareImageRequest(input));
                 if (!result.valid) {
                     return { isError: true, content: [{ type: "text", text: "IMAGE produced an invalid response." }] };
                 }
-                const converted = await convertRenderings(String(result.response.request_uuid), result.response.renderings);
+                const converted = await convertRenderings(String(result.response.request_uuid), result.response.renderings, undefined, publicBaseUrl(context));
                 return {
                     content: converted.content.length ? converted.content : [{ type: "text", text: "IMAGE did not produce a usable interpretation." }],
                     _meta: { "ca.mcgill.a11y.image/audio": converted.audio, "ca.mcgill.a11y.image/droppedRenderings": converted.dropped }

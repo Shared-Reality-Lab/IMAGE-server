@@ -17,6 +17,7 @@ vi.mock("../src/pipeline", () => ({
 }));
 
 import { app } from "../src/server";
+import { publicBaseUrl } from "../src/mcp";
 
 const validRequest = {
     request_uuid: "123e4567-e89b-42d3-a456-426614174000",
@@ -57,6 +58,18 @@ afterEach(() => {
 });
 
 describe("POST /mcp", () => {
+    it("uses the reverse proxy's public path prefix for artifact links", () => {
+        const context = {
+            http: {
+                req: new Request("http://orchestrator:8080/mcp", {
+                    headers: { host: "unicorn.cim.mcgill.ca", "x-forwarded-proto": "https", "x-forwarded-prefix": "/image" }
+                })
+            }
+        } as Parameters<typeof publicBaseUrl>[0];
+
+        expect(publicBaseUrl(context)).toBe("https://unicorn.cim.mcgill.ca/image");
+    });
+
     it("serves the registered tool and audio UI resource through the SDK", async () => {
         const tools = await request(app).post("/mcp")
             .set({ ...mcpHeaders, "mcp-method": "tools/list" })

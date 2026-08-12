@@ -54,7 +54,7 @@ async function storeAudio(basePath: string, requestUuid: string, bytes: Buffer):
 }
 
 /** Converts usable IMAGE renderings to compact MCP content without exposing base64 audio. */
-export async function convertRenderings(requestUuid: string, renderings: unknown, basePath = BASE_LOG_PATH) {
+export async function convertRenderings(requestUuid: string, renderings: unknown, basePath = BASE_LOG_PATH, publicBase = "") {
     const content: Array<{ type: "text"; text: string }> = [];
     const audio: Array<Record<string, unknown>> = [];
     const dropped: string[] = [];
@@ -75,8 +75,9 @@ export async function convertRenderings(requestUuid: string, renderings: unknown
             const points = type === SEGMENT_AUDIO ? timepoints(rendering.data?.audioInfo) : [];
             const description = typeof rendering.description === "string" ? rendering.description : "IMAGE audio interpretation";
             const artifactPath = `/mcp/audio/${requestUuid}/${token}.mp3`;
-            audio.push({ description, mimeType: "audio/mpeg", bytes: bytes.length, artifactPath, timepoints: points });
-            content.push({ type: "text", text: `${description}\nAudio: ${artifactPath}${points.length ? `\nSegments: ${points.map(point => `${point.name} (${point.offset}s, ${point.duration}s)`).join("; ")}` : ""}` });
+            const artifactUrl = publicBase ? `${publicBase}${artifactPath}` : artifactPath;
+            audio.push({ description, mimeType: "audio/mpeg", bytes: bytes.length, artifactPath, artifactUrl, timepoints: points });
+            content.push({ type: "text", text: `${description}\nAudio: ${artifactUrl}${points.length ? `\nSegments: ${points.map(point => `${point.name} (${point.offset}s, ${point.duration}s)`).join("; ")}` : ""}` });
             continue;
         }
         dropped.push(type);

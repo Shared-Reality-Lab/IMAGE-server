@@ -241,6 +241,17 @@ Step 7 rendering conversion and audio artifacts performed on 2026-08-12:
   vendor metadata. Step 8 will expose the emitted artifact paths through an HTTP route with
   Range support.
 
+Step 8 artifact serving performed on 2026-08-12:
+
+- `GET /mcp/audio/<request_uuid>/<random-token>.mp3` serves only UUID-v4 request paths and
+  32-byte base64url tokens from the request directory. It supplies `audio/mpeg`, byte Range
+  support, and 404 for malformed, missing, or expired artifacts without disclosing paths.
+- Artifact links are absolute and same-origin when the request reaches the service through a
+  reverse proxy. A prefix-stripping deployment must set `X-Forwarded-Prefix`; Unicorn's nginx
+  `/mcp` location needs `proxy_set_header X-Forwarded-Prefix /image;`, producing public links
+  beneath `https://unicorn.cim.mcgill.ca/image/mcp/audio/...`.
+- Tests verify partial MP3 responses, Range headers, invalid paths, and missing artifacts.
+
 ## Shared IMAGE pipeline
 
 `/render` and `/mcp` must call the same extracted pipeline function. The extraction must
@@ -563,6 +574,7 @@ directory exists.
 | 5. Stateless legacy fallback | not required | v2's verified built-in stateless 2025-11-25 fallback meets this requirement. |
 | 6. Image/file inputs | completed | Sharp-backed validation/normalization, constrained ChatGPT download support, and shared-pipeline request synthesis are in place. |
 | 7. Conversion + audio artifacts | completed | Text conversion, compact audio metadata, random request-directory MP3 artifacts, timepoints, and dropped-rendering diagnostics are in place. |
+| 8. Artifact serving | completed | Same-service MP3 route, constrained paths, Range support, and reverse-proxy-aware public links are in place. |
 | 8. Accessible MCP App | pending | Prefer audio-only instantiation; otherwise render all states. |
 | 9. Documentation | pending | Include prototype and client limitations. |
 | 10. Full verification | pending | Protocol, Docker, clients, NVDA, VoiceOver. |

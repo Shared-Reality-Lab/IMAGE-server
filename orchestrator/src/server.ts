@@ -26,6 +26,7 @@ import { docker, getPreprocessorServices } from "./docker";
 import { BASE_LOG_PATH, getRoute, reqTag, runPipeline, runPreprocessors, runPreprocessorsParallel, storeResponse } from "./pipeline";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { createImageMcpHandler } from "./mcp";
+import { mcpAudioHandler } from "./mcp-audio";
 
 export const app = express();
 
@@ -56,6 +57,8 @@ function mcpAuthentication(req: express.Request, res: express.Response, next: ex
 app.post("/mcp", mcpAuthentication, (req: express.Request, res: express.Response, next: express.NextFunction) => {
     mcpNodeHandler(req, res, req.body).catch(next);
 });
+
+app.get("/mcp/audio/:uuid/:token.mp3", mcpAudioHandler());
 
 app.post("/render", (req: express.Request, res: express.Response) => {
     const requestBody = req.body; // capture req.body early
