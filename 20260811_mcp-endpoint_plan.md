@@ -229,6 +229,18 @@ Deployment correction performed on 2026-08-12:
   expects `dist/server.js`. Tests remain outside the production output; the Docker builder still
   runs them before compilation.
 
+Step 7 rendering conversion and audio artifacts performed on 2026-08-12:
+
+- Text renderings are returned directly as MCP text content. SimpleAudio and SegmentAudio MP3
+  data URLs are strictly decoded and written as mode-0600 artifacts below
+  `/var/log/IMAGE/<request_uuid>/mcp-audio/` with random base64url tokens.
+- Tool results now include a text/link fallback and compact vendor metadata for each audio
+  artifact: MIME type, bytes, artifact path, description, and validated SegmentAudio timepoints.
+  Audio base64 is never placed in the MCP result.
+- Invalid audio and unsupported rendering types are dropped; type IDs are reported in compact
+  vendor metadata. Step 8 will expose the emitted artifact paths through an HTTP route with
+  Range support.
+
 ## Shared IMAGE pipeline
 
 `/render` and `/mcp` must call the same extracted pipeline function. The extraction must
@@ -550,7 +562,7 @@ directory exists.
 | 4. Modern MCP endpoint | completed | `/mcp`, tool/resource discovery, optional fixed-token auth, and SDK-managed modern/legacy behavior are in place. |
 | 5. Stateless legacy fallback | not required | v2's verified built-in stateless 2025-11-25 fallback meets this requirement. |
 | 6. Image/file inputs | completed | Sharp-backed validation/normalization, constrained ChatGPT download support, and shared-pipeline request synthesis are in place. |
-| 7. Conversion + audio artifacts | pending | Store beneath request directory for cron cleanup. |
+| 7. Conversion + audio artifacts | completed | Text conversion, compact audio metadata, random request-directory MP3 artifacts, timepoints, and dropped-rendering diagnostics are in place. |
 | 8. Accessible MCP App | pending | Prefer audio-only instantiation; otherwise render all states. |
 | 9. Documentation | pending | Include prototype and client limitations. |
 | 10. Full verification | pending | Protocol, Docker, clients, NVDA, VoiceOver. |

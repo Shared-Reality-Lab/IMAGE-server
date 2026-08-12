@@ -2,6 +2,7 @@ import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { prepareImageRequest } from "./mcp-input";
 import { runPipeline } from "./pipeline";
+import { convertRenderings } from "./mcp-renderings";
 
 export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience";
 
@@ -52,11 +53,11 @@ export function createImageMcpHandler() {
                 if (!result.valid) {
                     return { isError: true, content: [{ type: "text", text: "IMAGE produced an invalid response." }] };
                 }
-                const text = (result.response.renderings as Array<{ type_id?: string; data?: { text?: unknown } }>)
-                    .filter(rendering => rendering.type_id === "ca.mcgill.a11y.image.renderer.Text")
-                    .map(rendering => rendering.data?.text)
-                    .filter((value): value is string => typeof value === "string");
-                return { content: text.length ? text.map(value => ({ type: "text" as const, text: value })) : [{ type: "text" as const, text: "IMAGE did not produce a text interpretation." }] };
+                const converted = await convertRenderings(String(result.response.request_uuid), result.response.renderings);
+                return {
+                    content: converted.content.length ? converted.content : [{ type: "text", text: "IMAGE did not produce a usable interpretation." }],
+                    _meta: { "ca.mcgill.a11y.image/audio": converted.audio, "ca.mcgill.a11y.image/droppedRenderings": converted.dropped }
+                };
             } catch (error) {
                 return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Unable to process the supplied image." }] };
             }
