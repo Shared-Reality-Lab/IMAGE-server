@@ -93,7 +93,7 @@ Initialize the SAM client using environment variables.
 - Uses `SAM_MODEL_PATH` environment variable for model path
 - Raises `ValueError` if environment variable is not set
 
-##### `segment_with_boxes(image, bounding_boxes, use_prompts=False, aggregate_by_label=True, return_structured=False, base_data=None)`
+##### `segment_with_boxes(image, bounding_boxes, use_prompts=False, aggregate_by_label=True, return_structured=False, base_data=None, coord_scale=1000.0)`
 Segment image using bounding boxes.
 - `image`: PIL Image object
 - `bounding_boxes`: List of dicts with 'bbox_2d' and 'label' keys
@@ -101,6 +101,7 @@ Segment image using bounding boxes.
 - `aggregate_by_label`: Group contours by label
 - `return_structured`: Return data in schema-compatible format
 - `base_data`: Base data structure to update (required if return_structured=True)
+- `coord_scale`: Divisor used to convert `bbox_2d` coordinates to pixel space. Defaults to `1000.0` for LLM-native 0-1000 grids (e.g. Qwen's raw output). Pass `1.0` if `bbox_2d` values are already normalized to 0-1 (e.g. the shared `object-detection.schema.json` format).
 
 Returns:
 - If `return_structured=False`: Dictionary mapping labels to lists of normalized contours
@@ -152,7 +153,7 @@ The segmentation utilities expect bounding boxes in the following format:
 ```
 
 Where:
-- `bbox_2d`: Bounding box coordinates in pixels [left, top, right, bottom]
+- `bbox_2d`: Bounding box coordinates `[left, top, right, bottom]`. By default these are interpreted as an LLM-native 0-1000 grid (e.g. Qwen's raw output) and divided by `coord_scale` (default `1000.0`) to get pixel coordinates. Pass `coord_scale=1.0` if your coordinates are already normalized to 0-1, as with the shared `object-detection.schema.json` format used by `object-detection-llm`/`yolo`/`azure`.
 - `label`: String identifier for the object (used as text prompt when `use_prompts=True`)
 
 ## Output Format

@@ -32,6 +32,11 @@ from ocr_utils import (
 )
 from config.logging_utils import configure_logging
 from utils.validation import Validator
+from utils.object_detection import (
+    GENERIC_OBJECT_DETECTION_NAME,
+    LLM_OBJECT_DETECTION_NAME,
+    get_object_detection_data,
+)
 
 configure_logging()
 
@@ -71,10 +76,13 @@ def get_ocr_text():
     if ocr_result is None:
         return jsonify("Could not retreive Azure results"), 500
 
-    od = 'ca.mcgill.a11y.image.preprocessor.objectDetection'
     preprocessors = content['preprocessors']
-    if od in preprocessors and len(preprocessors[od]['objects']) > 0:
-        ocr_result = find_obj_enclosing(od, preprocessors[od], ocr_result)
+    od_data = get_object_detection_data(preprocessors)
+    if od_data is not None and len(od_data['objects']) > 0:
+        od = (GENERIC_OBJECT_DETECTION_NAME
+              if GENERIC_OBJECT_DETECTION_NAME in preprocessors
+              else LLM_OBJECT_DETECTION_NAME)
+        ocr_result = find_obj_enclosing(od, od_data, ocr_result)
 
     name = 'ca.mcgill.a11y.image.preprocessor.ocrClouds'
     request_uuid = content['request_uuid']

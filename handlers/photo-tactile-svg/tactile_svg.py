@@ -24,6 +24,7 @@ import drawSvg as draw
 import inflect
 from config.logging_utils import configure_logging
 from datetime import datetime
+from utils.object_detection import get_object_detection_data
 
 configure_logging()
 app = Flask(__name__)
@@ -99,9 +100,8 @@ def handle():
                   "and/ or semantic segmentation responses")
     if not (("ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
              in preprocessors) or
-            all(x in preprocessors for x in
-                ["ca.mcgill.a11y.image.preprocessor.objectDetection",
-                 "ca.mcgill.a11y.image.preprocessor.grouping"])):
+            (get_object_detection_data(preprocessors) is not None and
+             "ca.mcgill.a11y.image.preprocessor.grouping" in preprocessors)):
         logging.debug("No Object Detector and Semantic Segmentation found")
         response = {
             "request_uuid": contents["request_uuid"],
@@ -152,17 +152,14 @@ def handle():
     form = inflect.engine()
     caption = ""
 
-    if "ca.mcgill.a11y.image.preprocessor.objectDetection"\
-        in preprocessors\
+    if get_object_detection_data(preprocessors) is not None\
             and "ca.mcgill.a11y.image.preprocessor.grouping" in preprocessors:
         logging.debug("Object detector and grouping preprocessor found. "
                       "Adding data to response...")
         caption = "This photo contains "
         obj_list = []
         preprocessor_names.append('Things and people')
-        o = preprocessors[
-            "ca.mcgill.a11y.image.preprocessor.objectDetection"
-            ]
+        o = get_object_detection_data(preprocessors)
         g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
         objects = o["objects"]
         grouped = g["grouped"]

@@ -27,6 +27,7 @@ import cv2
 import numpy as np
 from datetime import datetime
 from utils.validation import Validator
+from utils.object_detection import get_object_detection_data
 
 app = Flask(__name__)
 
@@ -137,14 +138,12 @@ def categorise():
     # convert the uri to processable image
     if "graphic" not in content.keys():
         return "", 204
-    if "ca.mcgill.a11y.image.preprocessor.objectDetection" \
-            not in preprocessor:
+    oDpreprocessor = get_object_detection_data(preprocessor)
+    if oDpreprocessor is None:
         logging.info("Object detection output not "
                      "available. Skipping...")
         return "", 204
     else:
-        oDpreprocessor = \
-            preprocessor["ca.mcgill.a11y.image.preprocessor.objectDetection"]
         objects = oDpreprocessor["objects"]
         image_b64 = content["graphic"].split(",")[1]
         binary = base64.b64decode(image_b64)

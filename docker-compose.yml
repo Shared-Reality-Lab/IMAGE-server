@@ -193,6 +193,28 @@ services:
     env_file:
       ./config/llm.env
 
+  object-segmentation:
+    profiles: [test, production, default]
+    image: ghcr.io/shared-reality-lab/image-preprocessor-object-segmentation:${REGISTRY_TAG}
+    restart: "no"
+    labels:
+      ca.mcgill.a11y.image.preprocessor: 4
+      ca.mcgill.a11y.image.port: 5000
+      ca.mcgill.a11y.image.cacheTimeout: 3600
+      ca.mcgill.a11y.image.required_dependencies: "object-detection-llm"
+      ca.mcgill.a11y.image.optional_dependencies: ""
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu", "utility", "compute"]
+    environment:
+      - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
+      - SAM_MODEL_PATH=/usr/src/app/models/sam2.1_l.pt
+      - MIN_CONTOUR_AREA=0.0001
+      - WARMUP_ENABLED=true
+
   multistage-diagram-segmentation:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-multistage-diagram-segmentation:${REGISTRY_TAG}

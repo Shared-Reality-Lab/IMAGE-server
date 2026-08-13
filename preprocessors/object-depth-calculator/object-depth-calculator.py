@@ -23,6 +23,7 @@ import logging
 from datetime import datetime
 from config.logging_utils import configure_logging
 from utils.validation import Validator
+from utils.object_detection import get_object_detection_data
 
 configure_logging()
 
@@ -51,8 +52,7 @@ def objectdepth():
         logging.info("Request does not contain a depth-map. Skipping...")
         return "", 204  # No content
     logging.debug("passed depth-map check")
-    if ("ca.mcgill.a11y.image.preprocessor.objectDetection"
-            not in content["preprocessors"]):
+    if get_object_detection_data(content["preprocessors"]) is None:
         logging.info("Request does not contain objects. Skipping...")
         return "", 204  # No content
     logging.debug("passed objects check")
@@ -92,7 +92,7 @@ def objectdepth():
     image = np.asarray(bytearray(binary), dtype="uint8")
     img = cv2.imdecode(image, cv2.IMREAD_GRAYSCALE)/255
 
-    o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
+    o = get_object_detection_data(preprocessors)
     objects = o["objects"]
     print(dimensions[0], dimensions[1])
     obj_depth = []
