@@ -191,7 +191,10 @@ services:
       ca.mcgill.a11y.image.required_dependencies: "content-categoriser"
       ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
-      ./config/llm.env
+      - path: ./config/llm.env
+        required: true
+      - path: ./preprocessors/object-detection-llm/config/object-detection-llm.env
+        required: false
 
   multistage-diagram-segmentation:
     profiles: [production, test, default]
