@@ -19,3 +19,6 @@ config/imageup.env
 config/gemini.env
 *.sh
 docker-compose.override.yml
+
+# Ignore all preprocessor-specific LLM override env files
+preprocessors/**/config/*.env
