@@ -92,7 +92,10 @@ services:
     image: ghcr.io/shared-reality-lab/image-preprocessor-autour:${REGISTRY_TAG}
     restart: "no"
     env_file:
-      - ./config/maps.env
+      - path: ./config/maps.env
+        required: true
+      - path: ./preprocessors/autour/config/autour.env
+        required: false
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
       ca.mcgill.a11y.image.port: 5000
@@ -113,7 +116,10 @@ services:
       ca.mcgill.a11y.image.required_dependencies: ""
       ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
-      ./config/llm.env
+      - path: ./config/llm.env
+        required: true
+      - path: ./preprocessors/content-categoriser/config/content-categoriser.env
+        required: false
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - WARMUP_ENABLED=true
@@ -129,7 +135,10 @@ services:
       ca.mcgill.a11y.image.required_dependencies: ""
       ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
-      ./config/llm.env
+      - path: ./config/llm.env
+        required: true
+      - path: ./preprocessors/graphic-caption/config/graphic-caption.env
+        required: false
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - WARMUP_ENABLED=true
@@ -152,7 +161,10 @@ services:
       ca.mcgill.a11y.image.required_dependencies: ""
       ca.mcgill.a11y.image.optional_dependencies: ""
     env_file:
-      ./config/llm.env
+      - path: ./config/llm.env
+        required: true
+      - path: ./preprocessors/text-followup/config/text-followup.env
+        required: false
 
   object-detection:
     profiles: [default]
@@ -217,7 +229,10 @@ services:
       - SAM_MODEL_PATH=/usr/src/app/models/sam2.1_l.pt
       - WARMUP_ENABLED=true
     env_file:
-      ./config/llm.env
+      - path: ./config/llm.env
+        required: true
+      - path: ./preprocessors/multistage-diagram-segmentation/config/multistage-diagram-segmentation.env
+        required: false
 
   object-grouping:
     profiles: [production, test, default]
@@ -237,7 +252,10 @@ services:
     image: ghcr.io/shared-reality-lab/image-preprocessor-openstreetmap:${REGISTRY_TAG}
     restart: "no"
     env_file:
-      - ./config/maps.env
+      - path: ./config/maps.env
+        required: true
+      - path: ./preprocessors/openstreetmap/config/openstreetmap.env
+        required: false
     labels:
       ca.mcgill.a11y.image.preprocessor: 3
       ca.mcgill.a11y.image.port: 5000
