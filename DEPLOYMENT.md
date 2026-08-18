@@ -227,12 +227,12 @@ In `docker-compose.yml`, preprocessors that support this list two `env_file` ent
 env_file:
   - path: ./config/llm.env
     required: true
-  - path: ./preprocessors/<preprocessor-name>/config/<preprocessor-name>.env
+  - path: ./config/<preprocessor-name>.env
     required: false
 ```
 The global `config/llm.env` is always loaded first; the preprocessor-specific file is loaded second **only if it exists**, and any variable it sets overrides the global value for that preprocessor alone. If the file doesn't exist, the preprocessor simply falls back to the global configuration. No extra setup is required unless you actually want an override.
 
-To set one up, create a `config` folder inside the service (if it does not already exist) and a `.env` file inside the folder. Set `LLM_API_KEY`, `LLM_URL`, and `LLM_MODEL`. Add this path to the `docker-compose.yml` file's `env_file` entry for that service and set the `required` flag to `False`.
+To set one up, create a `.env` file within the existing `config/` directory using the naming convention `<preprocessor-name>.env`. Set `LLM_API_KEY`, `LLM_URL`, and `LLM_MODEL`. Add this path to the `docker-compose.yml` file's `env_file` entry for that service (if it does not exist) and set the `required` flag to `False`.
 
 **If you override any one of these three, set all three**: they describe a single endpoint together, and partially overriding them will send incorrect credentials to the new endpoint and fail the request.
 

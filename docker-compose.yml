@@ -94,7 +94,7 @@ services:
     env_file:
       - path: ./config/maps.env
         required: true
-      - path: ./preprocessors/autour/config/autour.env
+      - path: ./config/autour.env
         required: false
     labels:
       ca.mcgill.a11y.image.preprocessor: 1
@@ -118,7 +118,7 @@ services:
     env_file:
       - path: ./config/llm.env
         required: true
-      - path: ./preprocessors/content-categoriser/config/content-categoriser.env
+      - path: ./config/content-categoriser.env
         required: false
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
@@ -137,7 +137,7 @@ services:
     env_file:
       - path: ./config/llm.env
         required: true
-      - path: ./preprocessors/graphic-caption/config/graphic-caption.env
+      - path: ./config/graphic-caption.env
         required: false
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
@@ -163,7 +163,7 @@ services:
     env_file:
       - path: ./config/llm.env
         required: true
-      - path: ./preprocessors/text-followup/config/text-followup.env
+      - path: ./config/text-followup.env
         required: false
 
   object-detection:
@@ -205,7 +205,7 @@ services:
     env_file:
       - path: ./config/llm.env
         required: true
-      - path: ./preprocessors/object-detection-llm/config/object-detection-llm.env
+      - path: ./config/object-detection-llm.env
         required: false
 
   multistage-diagram-segmentation:
@@ -231,7 +231,7 @@ services:
     env_file:
       - path: ./config/llm.env
         required: true
-      - path: ./preprocessors/multistage-diagram-segmentation/config/multistage-diagram-segmentation.env
+      - path: ./config/multistage-diagram-segmentation.env
         required: false
 
   object-grouping:
@@ -254,7 +254,7 @@ services:
     env_file:
       - path: ./config/maps.env
         required: true
-      - path: ./preprocessors/openstreetmap/config/openstreetmap.env
+      - path: ./config/openstreetmap.env
         required: false
     labels:
       ca.mcgill.a11y.image.preprocessor: 3
@@ -523,7 +523,10 @@ services:
     image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:${REGISTRY_TAG}
     restart: "no"
     env_file:
-      - ./config/apis-and-selection.env
+      - path: ./config/apis-and-selection.env
+        required: true
+      - path: ./config/ocr.env
+        required: false
     labels:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
