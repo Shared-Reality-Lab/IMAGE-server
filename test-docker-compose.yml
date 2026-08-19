@@ -75,16 +75,6 @@ services:
   object-detection-llm:
     profiles: [test, default]
     
-  multilang-support:
-    scale: 0
-    deploy:
-      resources:
-        reservations:
-            devices:
-            - driver: nvidia
-              device_ids: ['1']
-              capabilities: ["gpu", "utility", "compute"]
-
   espnet-tts:
     deploy:
       resources:
@@ -95,6 +85,16 @@ services:
               capabilities: ["gpu", "utility", "compute"]
 
   espnet-tts-fr:
+    deploy:
+      resources:
+        reservations:
+            devices:
+            - driver: nvidia
+              device_ids: ['1']
+              capabilities: ["gpu", "utility", "compute"]
+
+  multilang-support:
+    scale: 0
     deploy:
       resources:
         reservations:
