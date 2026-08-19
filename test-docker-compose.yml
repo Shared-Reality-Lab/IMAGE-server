@@ -93,15 +93,6 @@ services:
               device_ids: ['1']
               capabilities: ["gpu", "utility", "compute"]
 
-  multilang-support:
-    deploy:
-      resources:
-        reservations:
-            devices:
-            - driver: nvidia
-              device_ids: ['1']
-              capabilities: ["gpu", "utility", "compute"]
-
   monarch-link-app:
     labels:
       - "traefik.enable=true"
