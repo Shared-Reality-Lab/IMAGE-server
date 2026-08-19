@@ -75,6 +75,9 @@ services:
   object-detection-llm:
     profiles: [test, default]
     
+  multilang-support:
+    profiles: [production, default]
+
   espnet-tts:
     deploy:
       resources:
