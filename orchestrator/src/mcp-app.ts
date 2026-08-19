@@ -9,34 +9,33 @@ export const AUDIO_EXPERIENCE_HTML = `<!doctype html>
 body { margin: 0; background: Canvas; color: CanvasText; }
 main { box-sizing: border-box; max-width: 44rem; margin: auto; padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)); }
 h1 { font-size: 1.25rem; margin: 0 0 .75rem; }
-h2 { font-size: 1rem; margin: 1rem 0 .5rem; }
 audio { display: block; width: 100%; margin: .75rem 0; }
 button, a { box-sizing: border-box; min-height: 44px; min-width: 44px; }
 button { margin: .25rem .5rem .25rem 0; padding: .5rem .75rem; }
 a { display: inline-flex; align-items: center; }
 button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-offset: 3px; }
 .brand { display: flex; gap: .75rem; align-items: center; }
-.logo { flex: none; width: 7.5rem; height: 3rem; }
+.logo { flex: none; width: 7.5rem; height: 3rem; object-fit: contain; }
 .muted { color: GrayText; }
 .error { font-weight: 600; }
 .interpretation { white-space: pre-wrap; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (forced-colors: active) { button, a { forced-color-adjust: auto; } }
 </style>
 </head>
 <body>
 <main>
 <div class="brand">
-<svg class="logo" role="img" aria-label="McGill IMAGE logo" viewBox="0 0 120 48" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="116" height="44" rx="8" fill="none" stroke="currentColor" stroke-width="4"/><text x="60" y="31" text-anchor="middle" fill="currentColor" font-family="system-ui, sans-serif" font-size="22" font-weight="700">IMAGE</text></svg>
-<h1>IMAGE accessible interpretation</h1>
+<img class="logo" src="https://image.a11y.mcgill.ca/images/logo.png" alt="McGill IMAGE logo">
+<h1>IMAGE interpretation</h1>
 </div>
 <p id="status" role="status" aria-live="polite">Waiting for an IMAGE interpretation.</p>
 <p id="error" class="error" role="alert" hidden></p>
-<section id="text-section" hidden>
-<h2>Text interpretation</h2>
+<div id="text-section" hidden>
 <div id="text"></div>
-</section>
+</div>
 <div id="experiences"></div>
-<p class="muted">Brought to you by the McGill IMAGE project. <a id="project-link" href="https://image.a11y.mcgill.ca" target="_blank" rel="noopener">Click here for more information.</a></p>
+<p class="muted">Brought to you by the <a id="project-link" href="https://image.a11y.mcgill.ca" target="_blank" rel="noopener">McGill IMAGE project</a>.</p>
 </main>
 <script>
 (() => {
@@ -73,6 +72,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-of
     textSection.hidden = true;
     error.hidden = true;
     error.textContent = "";
+    status.classList.remove("visually-hidden");
   }
 
   function renderText(values) {
@@ -89,26 +89,19 @@ button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-of
 
   function renderAudio(item, index) {
     if (!item || typeof item.artifactUrl !== "string") return false;
-    const section = document.createElement("section");
-    const heading = document.createElement("h2");
-    heading.textContent = typeof item.description === "string" ? item.description : "Audio interpretation " + (index + 1);
+    const section = document.createElement("div");
     const audio = document.createElement("audio");
     audio.controls = true;
     audio.preload = "metadata";
     audio.src = item.artifactUrl;
-    const playButton = document.createElement("button");
-    playButton.type = "button";
-    playButton.textContent = "Play audio";
-    playButton.setAttribute("aria-pressed", "false");
-    const stopButton = document.createElement("button");
-    stopButton.type = "button";
-    stopButton.textContent = "Stop audio";
+    audio.setAttribute("aria-label", "Audio interpretation " + (index + 1));
     const download = document.createElement("a");
     download.href = item.artifactUrl;
     download.download = "";
     download.textContent = "Download audio";
+    download.setAttribute("aria-label", "Download audio interpretation " + (index + 1));
     const segments = document.createElement("div");
-    segments.setAttribute("aria-label", "Audio segments");
+    segments.setAttribute("aria-label", "Audio interpretation " + (index + 1) + " segments");
     const player = { audio, timer: undefined };
     players.push(player);
 
@@ -120,19 +113,6 @@ button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-of
       if (message) status.textContent = message;
     }
 
-    playButton.addEventListener("click", () => {
-      if (audio.paused) audio.play().catch(() => announceError("Playback could not start. Use the audio controls."));
-      else audio.pause();
-    });
-    stopButton.addEventListener("click", () => stop("Audio stopped."));
-    audio.addEventListener("play", () => {
-      playButton.textContent = "Pause audio";
-      playButton.setAttribute("aria-pressed", "true");
-    });
-    audio.addEventListener("pause", () => {
-      playButton.textContent = "Play audio";
-      playButton.setAttribute("aria-pressed", "false");
-    });
     audio.addEventListener("error", () => announceError("This audio artifact is missing, expired, or unavailable."));
     for (const point of Array.isArray(item.timepoints) ? item.timepoints : []) {
       if (typeof point?.name !== "string" || !Number.isFinite(point.offset) || point.offset < 0 || !Number.isFinite(point.duration) || point.duration < 0) continue;
@@ -148,7 +128,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-of
       });
       segments.appendChild(button);
     }
-    section.append(heading, audio, playButton, stopButton, document.createElement("br"), download, segments);
+    section.append(audio, segments, download);
     experiences.appendChild(section);
     return true;
   }
@@ -165,10 +145,10 @@ button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-of
     const hasText = renderText(structured.text);
     const audioItems = Array.isArray(structured.audio) ? structured.audio : [];
     const hasAudio = audioItems.map(renderAudio).some(Boolean);
-    if (hasAudio && hasText) status.textContent = "Text and audio interpretations are ready.";
-    else if (hasAudio) status.textContent = "Audio interpretation ready.";
-    else if (hasText) status.textContent = "No audio rendering was produced. The text interpretation is shown here and in the conversation.";
-    else status.textContent = "IMAGE did not produce a usable interpretation.";
+    if (hasAudio || hasText) {
+      status.textContent = "IMAGE experiences ready above";
+      status.classList.add("visually-hidden");
+    } else status.textContent = "IMAGE did not produce a usable interpretation.";
   }
 
   function applyHostContext(context) {
@@ -200,6 +180,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-of
     if (message.method === "ui/notifications/host-context-changed") applyHostContext(message.params);
     if (message.method === "ui/notifications/tool-cancelled") {
       release();
+      status.classList.remove("visually-hidden");
       status.textContent = "The IMAGE request was cancelled.";
     }
     if (message.method === "ui/resource-teardown") release();
@@ -209,7 +190,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid Highlight; outline-of
   send("ui/initialize", {
     protocolVersion: "2026-01-26",
     appCapabilities: { availableDisplayModes: ["inline"] },
-    clientInfo: { name: "image-audio-experience", version: "1.1.0" }
+    clientInfo: { name: "image-audio-experience", version: "1.2.0" }
   });
 })();
 </script>

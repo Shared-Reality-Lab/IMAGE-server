@@ -77,7 +77,7 @@ export async function convertRenderings(requestUuid: string, renderings: unknown
             const artifactPath = `/mcp/audio/${requestUuid}/${token}.mp3`;
             const artifactUrl = publicBase ? `${publicBase}${artifactPath}` : artifactPath;
             audio.push({ description, mimeType: "audio/mpeg", bytes: bytes.length, artifactPath, artifactUrl, timepoints: points });
-            content.push({ type: "text", text: `${description}\nAudio: ${artifactUrl}${points.length ? `\nSegments: ${points.map(point => `${point.name} (${point.offset}s, ${point.duration}s)`).join("; ")}` : ""}` });
+            content.push({ type: "text", text: `Audio: ${artifactUrl}${points.length ? `\nSegments: ${points.map(point => `${point.name} (${point.offset}s, ${point.duration}s)`).join("; ")}` : ""}` });
             continue;
         }
         dropped.push(type);

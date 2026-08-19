@@ -39,7 +39,8 @@ describe("IMAGE audio MCP App", () => {
         expect(document.getElementById("text-section")?.hidden).toBe(false);
         expect(document.getElementById("text")?.textContent).toContain("A chart <script>alert(1)</script>");
         expect(document.querySelector("#text script")).toBeNull();
-        expect(document.getElementById("status")?.textContent).toContain("No audio rendering");
+        expect(document.getElementById("status")?.textContent).toBe("IMAGE experiences ready above");
+        expect(document.getElementById("status")?.classList.contains("visually-hidden")).toBe(true);
 
         notify(window, "ui/notifications/tool-result", { structuredContent: { text: [], audio: [] } });
         expect(document.getElementById("status")?.textContent).toContain("did not produce");
@@ -50,31 +51,34 @@ describe("IMAGE audio MCP App", () => {
         dom.window.close();
     });
 
-    it("renders mixed and multiple audio experiences with segment and Stop controls", async () => {
+    it("renders mixed and multiple audio experiences with native and segment controls", async () => {
         const { dom, window, document, play, pause } = loadApp();
         notify(window, "ui/notifications/tool-result", { structuredContent: {
             text: ["Visible description"],
             audio: [
-                { description: "Overview", artifactUrl: "https://image.example/one.mp3", timepoints: [] },
+                { description: "Rich audio description", artifactUrl: "https://image.example/one.mp3", timepoints: [] },
                 { description: "Details", artifactUrl: "https://image.example/two.mp3", timepoints: [{ name: "First bar", offset: 2, duration: 1 }] }
             ]
         } });
 
         expect(document.querySelectorAll("audio")).toHaveLength(2);
-        expect(document.querySelectorAll("button")).toHaveLength(5);
+        expect(document.querySelectorAll("button")).toHaveLength(1);
         expect(document.querySelectorAll("a[download]")).toHaveLength(2);
-        expect(document.getElementById("status")?.textContent).toContain("Text and audio");
+        expect(document.getElementById("status")?.textContent).toBe("IMAGE experiences ready above");
+        expect(document.getElementById("status")?.classList.contains("visually-hidden")).toBe(true);
+        expect(document.body.textContent).not.toContain("Rich audio description");
+        expect(document.body.textContent).not.toContain("Details");
+        expect(document.querySelector("audio")?.getAttribute("aria-label")).toBe("Audio interpretation 1");
         const segment = [...document.querySelectorAll("button")].find(button => button.textContent === "First bar")!;
         segment.click();
         await Promise.resolve();
         expect(play).toHaveBeenCalled();
         expect(document.getElementById("status")?.textContent).toBe("Playing First bar.");
-        const stop = [...document.querySelectorAll("button")].find(button => button.textContent === "Stop audio")!;
-        stop.click();
-        expect(pause).toHaveBeenCalled();
-        expect(stop.hasAttribute("aria-pressed")).toBe(false);
-        const playToggle = [...document.querySelectorAll("button")].find(button => button.textContent === "Play audio")!;
-        expect(playToggle.getAttribute("aria-pressed")).toBe("false");
+        expect([...document.querySelectorAll("button")].some(button => button.textContent === "Stop audio")).toBe(false);
+        expect([...document.querySelectorAll("button")].some(button => button.textContent === "Play audio")).toBe(false);
+        expect(pause).not.toHaveBeenCalled();
+        const secondSection = document.querySelectorAll("#experiences > div")[1];
+        expect(secondSection.lastElementChild?.textContent).toBe("Download audio");
         dom.window.close();
     });
 
@@ -110,6 +114,17 @@ describe("IMAGE audio MCP App", () => {
         expect(document.documentElement.lang).toBe("ar");
         expect(document.documentElement.dir).toBe("rtl");
         expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({ method: "ui/notifications/initialized" }), "*");
+        dom.window.close();
+    });
+
+    it("uses the IMAGE branding and concise linked attribution", () => {
+        const { dom, document } = loadApp();
+        const logo = document.querySelector("img.logo");
+        expect(logo?.getAttribute("src")).toBe("https://image.a11y.mcgill.ca/images/logo.png");
+        expect(document.querySelector("h1")?.textContent).toBe("IMAGE interpretation");
+        expect(document.querySelector("h2")).toBeNull();
+        expect(document.getElementById("project-link")?.textContent).toBe("McGill IMAGE project");
+        expect(document.body.textContent).not.toContain("Click here");
         dom.window.close();
     });
 

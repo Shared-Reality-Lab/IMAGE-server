@@ -468,8 +468,7 @@ Otherwise, the App must handle all states and always have a non-zero accessible 
 - Simple audio
 - Segmented audio
 - Mixed text and audio
-- Text-only: announce that no audio rendering was produced and that text appears in the
-  conversation; also render the text in the App
+- Text-only: render the text in the App as well as the conversation
 - No rendering
 - Tool error
 - Cancelled execution
@@ -477,24 +476,25 @@ Otherwise, the App must handle all states and always have a non-zero accessible 
 
 For audio, mirror the browser extension:
 
-- A full-rendering play/pause control.
+- Native audio controls for full-rendering playback.
 - One native button per timepoint/segment.
 - A native audio element or another streaming approach that does not decode an entire MP3
   into PCM unless testing proves that safe.
 - Segment seeking/stopping based on `offset` and `duration`.
 - A download link when supported.
-- IMAGE logo and the exact text: "Brought to you by the McGill IMAGE project. Click here
-  for more information." Make the final sentence a link to
-  `https://image.a11y.mcgill.ca`, using `ui/open-link` when required by the host.
+- Do not display internal audio rendering descriptions such as "Rich audio description".
+- The IMAGE logo from `https://image.a11y.mcgill.ca/images/logo.png` and the text
+  "Brought to you by the McGill IMAGE project.", with "McGill IMAGE project" linked to
+  `https://image.a11y.mcgill.ca` using `ui/open-link` when required by the host.
 
 ### Accessibility requirements
 
 - Semantic headings, links, native buttons, and audio controls.
 - Keyboard support without custom key traps.
-- `aria-pressed` for play/pause and a clear Stop behavior.
+- Accessible native playback controls and clear segment behavior.
 - Focus indicators, logical focus order, and minimum 44 by 44 CSS pixel touch targets.
-- A polite status region for state changes; alert errors without announcing continuous
-  time updates.
+- A polite, visually hidden status region for successful results, using "IMAGE
+  experiences ready above"; alert errors without announcing continuous time updates.
 - Host theme, locale, safe-area, size, and context-change support with robust fallbacks.
 - Correct document language and right-to-left handling where applicable.
 - Forced-colors/high-contrast support, reduced motion, 200% and 400% zoom, and a usable

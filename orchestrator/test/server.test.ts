@@ -18,7 +18,7 @@ vi.mock("../src/pipeline", () => ({
 }));
 
 import { app } from "../src/server";
-import { publicBaseUrl } from "../src/mcp";
+import { AUDIO_UI_RESOURCE_URI, publicBaseUrl } from "../src/mcp";
 
 const validRequest = {
     request_uuid: "123e4567-e89b-42d3-a456-426614174000",
@@ -76,7 +76,7 @@ describe("POST /mcp", () => {
             .send(mcpRequest("resources/list", 2));
         const resource = await request(app).post("/mcp")
             .set(mcpHeaders)
-            .send(mcpRequest("resources/read", 3, { uri: "ui://image/audio-experience-v7.html" }));
+            .send(mcpRequest("resources/read", 3, { uri: AUDIO_UI_RESOURCE_URI }));
 
         expect(tools.status).toBe(200);
         expect(tools.body.result.tools[0]).toMatchObject({
@@ -87,8 +87,8 @@ describe("POST /mcp", () => {
                 required: ["audio", "text"]
             },
             _meta: {
-                ui: { resourceUri: "ui://image/audio-experience-v7.html", visibility: ["model", "app"] },
-                "openai/outputTemplate": "ui://image/audio-experience-v7.html",
+                ui: { resourceUri: AUDIO_UI_RESOURCE_URI, visibility: ["model", "app"] },
+                "openai/outputTemplate": AUDIO_UI_RESOURCE_URI,
                 "openai/fileParams": ["file"]
             }
         });
@@ -105,6 +105,7 @@ describe("POST /mcp", () => {
         });
         expect(resources.status).toBe(200);
         expect(resources.body.result.resources).toEqual(expect.arrayContaining([
+            expect.objectContaining({ uri: AUDIO_UI_RESOURCE_URI }),
             expect.objectContaining({ uri: "ui://image/audio-experience-v7.html" }),
             expect.objectContaining({ uri: "ui://image/audio-experience-v6.html" }),
             expect.objectContaining({ uri: "ui://image/audio-experience-v5.html" }),
@@ -112,10 +113,11 @@ describe("POST /mcp", () => {
         ]));
         expect(resource.status, JSON.stringify(resource.body)).toBe(200);
         expect(resource.body.result.contents[0]).toMatchObject({
-            uri: "ui://image/audio-experience-v7.html",
+            uri: AUDIO_UI_RESOURCE_URI,
             mimeType: "text/html;profile=mcp-app",
             text: expect.stringContaining("IMAGE audio experience")
         });
+        expect(resource.body.result.contents[0]._meta.ui.csp.resourceDomains).toContain("https://image.a11y.mcgill.ca");
     });
 
     it("requires the configured MCP bearer token", async () => {
@@ -136,11 +138,11 @@ describe("POST /mcp", () => {
     it("accepts ChatGPT resource reads without nonstandard method or name headers", async () => {
         const resource = await request(app).post("/mcp")
             .set(mcpHeaders)
-            .send(mcpRequest("resources/read", 3, { uri: "ui://image/audio-experience-v7.html" }));
+            .send(mcpRequest("resources/read", 3, { uri: AUDIO_UI_RESOURCE_URI }));
 
         expect(resource.status).toBe(200);
         expect(resource.body.result.contents[0]).toMatchObject({
-            uri: "ui://image/audio-experience-v7.html",
+            uri: AUDIO_UI_RESOURCE_URI,
             mimeType: "text/html;profile=mcp-app",
             text: expect.stringContaining("IMAGE audio experience")
         });

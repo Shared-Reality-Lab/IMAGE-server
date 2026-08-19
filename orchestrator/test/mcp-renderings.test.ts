@@ -25,6 +25,7 @@ describe("convertRenderings", () => {
 
         expect(result.content).toHaveLength(2);
         expect(result.content[1].text).toContain("/mcp/audio/");
+        expect(result.content[1].text).not.toContain("Segmented audio");
         expect(result.audio[0]).toMatchObject({ bytes: 8, timepoints: [{ name: "Elephant", offset: 1, duration: 2 }] });
         const artifactPath = String(result.audio[0].artifactPath).replace("/mcp/audio/", "");
         const filePath = path.join(testPath, requestUuid, "mcp-audio", artifactPath.split("/")[1]);
