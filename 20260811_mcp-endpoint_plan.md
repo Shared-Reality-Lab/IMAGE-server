@@ -445,8 +445,8 @@ an `auth` marker to the same directory, the directory and artifacts follow the e
 60-day retention instead.
 
 Native MCP `AudioContent` blocks are deferred until target-client tests establish useful
-codec and size behavior. Non-App clients receive text, a segment list with timestamps,
-and the artifact/resource link.
+codec and size behavior. Audio artifact links and segment metadata remain in structured
+App data and are not duplicated as conversation text.
 
 ### Dropped renderings
 
@@ -483,8 +483,8 @@ For audio, mirror the browser extension:
 - Segment seeking/stopping based on `offset` and `duration`.
 - A download link when supported.
 - Do not display internal audio rendering descriptions such as "Rich audio description".
-- The IMAGE logo from `https://image.a11y.mcgill.ca/images/logo.png` and the text
-  "Brought to you by the McGill IMAGE project.", with "McGill IMAGE project" linked to
+- The canonical IMAGE icon embedded in the App as a PNG data URL, and the text "Brought
+  to you by the McGill IMAGE project.", with "McGill IMAGE project" linked to
   `https://image.a11y.mcgill.ca` using `ui/open-link` when required by the host.
 
 ### Accessibility requirements

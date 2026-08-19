@@ -23,9 +23,7 @@ describe("convertRenderings", () => {
             { type_id: "ca.mcgill.a11y.image.renderer.TactileSVG", data: {} }
         ], testPath);
 
-        expect(result.content).toHaveLength(2);
-        expect(result.content[1].text).toContain("/mcp/audio/");
-        expect(result.content[1].text).not.toContain("Segmented audio");
+        expect(result.content).toEqual([{ type: "text", text: "Description" }]);
         expect(result.audio[0]).toMatchObject({ bytes: 8, timepoints: [{ name: "Elephant", offset: 1, duration: 2 }] });
         const artifactPath = String(result.audio[0].artifactPath).replace("/mcp/audio/", "");
         const filePath = path.join(testPath, requestUuid, "mcp-audio", artifactPath.split("/")[1]);
@@ -51,7 +49,7 @@ describe("convertRenderings", () => {
             }
         ], testPath, "https://image.example");
 
-        expect(result.content).toHaveLength(4);
+        expect(result.content).toEqual([{ type: "text", text: "First" }, { type: "text", text: "Second" }]);
         expect(result.audio).toHaveLength(2);
         expect(result.audio[0].artifactUrl).toMatch(/^https:\/\/image\.example\/mcp\/audio\//);
         expect(result.audio[1].timepoints).toEqual([{ name: "Valid", offset: 0, duration: 1 }]);

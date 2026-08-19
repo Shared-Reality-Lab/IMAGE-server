@@ -53,7 +53,7 @@ async function storeAudio(basePath: string, requestUuid: string, bytes: Buffer):
     return token;
 }
 
-/** Converts usable IMAGE renderings to compact MCP content without exposing base64 audio. */
+/** Converts usable IMAGE renderings without exposing base64 audio or audio links as text. */
 export async function convertRenderings(requestUuid: string, renderings: unknown, basePath = BASE_LOG_PATH, publicBase = "") {
     const content: Array<{ type: "text"; text: string }> = [];
     const audio: Array<Record<string, unknown>> = [];
@@ -77,7 +77,6 @@ export async function convertRenderings(requestUuid: string, renderings: unknown
             const artifactPath = `/mcp/audio/${requestUuid}/${token}.mp3`;
             const artifactUrl = publicBase ? `${publicBase}${artifactPath}` : artifactPath;
             audio.push({ description, mimeType: "audio/mpeg", bytes: bytes.length, artifactPath, artifactUrl, timepoints: points });
-            content.push({ type: "text", text: `Audio: ${artifactUrl}${points.length ? `\nSegments: ${points.map(point => `${point.name} (${point.offset}s, ${point.duration}s)`).join("; ")}` : ""}` });
             continue;
         }
         dropped.push(type);

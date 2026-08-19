@@ -5,9 +5,10 @@ import { runPipeline } from "./pipeline";
 import { convertRenderings } from "./mcp-renderings";
 import { AUDIO_EXPERIENCE_HTML } from "./mcp-app";
 
-export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v8.html";
+export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v9.html";
 export const AUDIO_UI_RESOURCE_URIS = [
     AUDIO_UI_RESOURCE_URI,
+    "ui://image/audio-experience-v8.html",
     "ui://image/audio-experience-v7.html",
     "ui://image/audio-experience-v6.html",
     "ui://image/audio-experience-v5.html",
@@ -96,7 +97,7 @@ export function createImageMcpServer(request: PublicRequest) {
                     console.info(`MCP dropped rendering types: ${[...new Set(converted.dropped)].join(", ")}`);
                 }
                 return {
-                    content: converted.content.length ? converted.content : [{ type: "text", text: "IMAGE did not produce a usable interpretation." }],
+                    content: converted.content.length || converted.audio.length ? converted.content : [{ type: "text", text: "IMAGE did not produce a usable interpretation." }],
                     structuredContent: { audio: converted.audio, text: converted.content.map(item => item.text) },
                     _meta: { "ca.mcgill.a11y.image/audio": converted.audio, "ca.mcgill.a11y.image/droppedRenderings": converted.dropped }
                 };
@@ -117,12 +118,12 @@ export function createImageMcpServer(request: PublicRequest) {
                     ui: {
                         prefersBorder: true,
                         csp: {
-                            resourceDomains: ["https://image.a11y.mcgill.ca", ...(process.env.IMAGE_MCP_PUBLIC_ORIGIN ? [process.env.IMAGE_MCP_PUBLIC_ORIGIN] : [])]
+                            resourceDomains: process.env.IMAGE_MCP_PUBLIC_ORIGIN ? [process.env.IMAGE_MCP_PUBLIC_ORIGIN] : []
                         }
                     },
                     "openai/widgetPrefersBorder": true,
                     "openai/widgetCSP": {
-                        resource_domains: ["https://image.a11y.mcgill.ca", ...(process.env.IMAGE_MCP_PUBLIC_ORIGIN ? [process.env.IMAGE_MCP_PUBLIC_ORIGIN] : [])]
+                        resource_domains: process.env.IMAGE_MCP_PUBLIC_ORIGIN ? [process.env.IMAGE_MCP_PUBLIC_ORIGIN] : []
                     }
                 }
             }]

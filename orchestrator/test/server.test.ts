@@ -117,7 +117,7 @@ describe("POST /mcp", () => {
             mimeType: "text/html;profile=mcp-app",
             text: expect.stringContaining("IMAGE audio experience")
         });
-        expect(resource.body.result.contents[0]._meta.ui.csp.resourceDomains).toContain("https://image.a11y.mcgill.ca");
+        expect(resource.body.result.contents[0]._meta.ui.csp.resourceDomains).toEqual([]);
     });
 
     it("requires the configured MCP bearer token", async () => {

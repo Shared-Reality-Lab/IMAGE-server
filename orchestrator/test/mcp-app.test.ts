@@ -120,7 +120,7 @@ describe("IMAGE audio MCP App", () => {
     it("uses the IMAGE branding and concise linked attribution", () => {
         const { dom, document } = loadApp();
         const logo = document.querySelector("img.logo");
-        expect(logo?.getAttribute("src")).toBe("https://image.a11y.mcgill.ca/images/logo.png");
+        expect(logo?.getAttribute("src")).toMatch(/^data:image\/png;base64,/);
         expect(document.querySelector("h1")?.textContent).toBe("IMAGE interpretation");
         expect(document.querySelector("h2")).toBeNull();
         expect(document.getElementById("project-link")?.textContent).toBe("McGill IMAGE project");
