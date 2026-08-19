@@ -76,8 +76,14 @@ services:
     profiles: [test, default]
     
   multilang-support:
-    profiles: [production, default]
     scale: 0
+    deploy:
+      resources:
+        reservations:
+            devices:
+            - driver: nvidia
+              device_ids: ['1']
+              capabilities: ["gpu", "utility", "compute"]
 
   espnet-tts:
     deploy:
