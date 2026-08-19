@@ -1,3 +1,4 @@
+import { readFileSync } from "fs";
 import { JSDOM } from "jsdom";
 import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -120,7 +121,7 @@ describe("IMAGE audio MCP App", () => {
     it("uses the IMAGE branding and concise linked attribution", () => {
         const { dom, document } = loadApp();
         const logo = document.querySelector("img.logo");
-        expect(logo?.getAttribute("src")).toMatch(/^data:image\/png;base64,/);
+        expect(logo?.getAttribute("src")).toBe(`data:image/png;base64,${readFileSync("src/image_logo.png").toString("base64")}`);
         expect(document.querySelector("h1")?.textContent).toBe("IMAGE interpretation");
         expect(document.querySelector("h2")).toBeNull();
         expect(document.getElementById("project-link")?.textContent).toBe("McGill IMAGE project");

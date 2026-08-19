@@ -5,9 +5,10 @@ import { runPipeline } from "./pipeline";
 import { convertRenderings } from "./mcp-renderings";
 import { AUDIO_EXPERIENCE_HTML } from "./mcp-app";
 
-export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v9.html";
+export const AUDIO_UI_RESOURCE_URI = "ui://image/audio-experience-v10.html";
 export const AUDIO_UI_RESOURCE_URIS = [
     AUDIO_UI_RESOURCE_URI,
+    "ui://image/audio-experience-v9.html",
     "ui://image/audio-experience-v8.html",
     "ui://image/audio-experience-v7.html",
     "ui://image/audio-experience-v6.html",
