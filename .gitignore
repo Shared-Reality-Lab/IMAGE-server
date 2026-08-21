@@ -6,4 +6,4 @@ docker-compose.override.yml
 # Ignore all files in config/ except documentation and example files
 config/*
 !config/Readme.md
-!config/*.example.env
+!config/*.env.example
