@@ -1,17 +1,15 @@
-ARG PYTORCH="2.7.1"
-ARG CUDA="12.8"
-ARG CUDNN="9"
-FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-runtime
+FROM python:3.11-slim
 
 # See README.md#docker-image for visualisation of the directory structure
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip git git-lfs curl \
+    git git-lfs curl \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Install Python dependencies (CPU-only torch build, no CUDA runtime needed)
 COPY services/multilang-support/requirements.txt /app/
 RUN pip install --upgrade pip \
+ && pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
  && pip install --no-cache-dir -r requirements.txt \
  && pip install --no-cache-dir "transformers[sentencepiece]"
 
