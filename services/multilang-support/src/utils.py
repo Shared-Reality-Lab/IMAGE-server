@@ -62,19 +62,13 @@ class Translator:
             LOGGER.debug(f"Expected model path: {model_path}")
 
     def set_model_device(self):
-        num_gpus = torch.cuda.device_count()
-        device_id = 0
-        while num_gpus > 0 and device_id < num_gpus:  # There is at least 1 GPU
-            try:
-                self.DEVICE = torch.device(f"cuda:{device_id}")
-                self.DEVICE_NAME = torch.cuda.get_device_name(device_id)
-                device_id += 1
-                self.MODEL.to(self.DEVICE)
-            except Exception as e:
-                LOGGER.warning(f'Error using {self.DEVICE_NAME}: {e}')
-                if device_id >= num_gpus:
-                    LOGGER.warning("No GPU available, using CPU.")
-                    break
+        if torch.cuda.is_available():
+            self.DEVICE = torch.device("cuda:0")
+            self.DEVICE_NAME = torch.cuda.get_device_name(0)
+        else:
+            self.DEVICE = torch.device("cpu")
+            self.DEVICE_NAME = "CPU"
+        self.MODEL.to(self.DEVICE)
 
     def tokenize_query_to_tensor(self, query: str):
         """
