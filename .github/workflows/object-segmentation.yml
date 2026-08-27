@@ -1,7 +1,7 @@
 name: Object Segmentation
 on:
   push:
-    branches: [ main, object-segmentation ]
+    branches: [ main, sam-segmentation ]
     tags: [ "preprocessor-object-segmentation-[0-9]+.[0-9]+.[0-9]+" ]
     paths: [ "preprocessors/object-segmentation/**" ]
   pull_request:
