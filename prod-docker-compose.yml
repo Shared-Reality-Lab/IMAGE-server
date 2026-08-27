@@ -70,3 +70,13 @@ services:
     environment:
       # temporary: backup server in place for NFB
       - NOMINATIM_FALLBACK_SERVER=https://nominatim.openstreetmap.org
+
+  # pegasus has GPU capacity to spare for this; unicorn does not, so it
+  # stays on the CPU-only default from docker-compose.yml.
+  object-segmentation:
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu", "utility", "compute"]

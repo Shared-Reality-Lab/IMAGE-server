@@ -203,12 +203,8 @@ services:
       ca.mcgill.a11y.image.cacheTimeout: 3600
       ca.mcgill.a11y.image.required_dependencies: "object-detection-llm"
       ca.mcgill.a11y.image.optional_dependencies: ""
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            capabilities: ["gpu", "utility", "compute"]
+    # CPU-only by default (e.g. unicorn); pegasus opts into GPU via
+    # prod-docker-compose.yml.
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - SAM_MODEL_PATH=/usr/src/app/models/sam2.1_l.pt
