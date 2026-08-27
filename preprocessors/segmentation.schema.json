@@ -68,6 +68,10 @@
             "type": "number",
             "minimum": 0,
             "maximum": 1
+          },
+          "objectID": {
+            "description": "The ID of the object (from an object detection preprocessor's output) this segment was derived from, if any. Present when this segment came from segmenting a specific detected object (e.g. via SAM) rather than from unconditioned semantic segmentation.",
+            "type": "integer"
           }
         },
         "required": [
