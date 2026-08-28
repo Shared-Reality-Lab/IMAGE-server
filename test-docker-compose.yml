@@ -93,6 +93,16 @@ services:
               device_ids: ['1']
               capabilities: ["gpu", "utility", "compute"]
 
+  multilang-support:
+    # CPU-only build (#1200): unicorn doesn't need a GPU for this service, and
+    # the -cpu image can't use one anyway, so drop the reservation inherited
+    # from docker-compose.yml (production/pegasus still gets the GPU image).
+    image: ghcr.io/shared-reality-lab/image-service-translation:${REGISTRY_TAG}-cpu
+    deploy:
+      resources:
+        reservations:
+          devices: !reset []
+
   monarch-link-app:
     labels:
       - "traefik.enable=true"
