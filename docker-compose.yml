@@ -78,6 +78,12 @@ services:
     restart: "no"
     labels:
       ca.mcgill.a11y.image.cacheTimeout: 3600
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: ["gpu", "compute", "utility"]
     environment:
       - WARMUP_ENABLED=true
 
