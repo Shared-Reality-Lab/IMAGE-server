@@ -58,9 +58,8 @@ Here is a snippet of the service from our sample `docker-compose.yml`:
 ```yaml
 orchestrator:
   image: ghcr.io/shared-reality-lab/image-orchestrator:unstable
-  env_file:
-    - ./config/express-common.env
   environment:
+    - MAX_BODY=10mb
     - STORE_IMAGE_DATA=ON
     - PARALLEL_PREPROCESORS=ON
   group_add:
@@ -70,12 +69,9 @@ orchestrator:
     - user-logs:/var/log/IMAGE
 ```
 
-The environment file loaded at `./config/express-common.env` increases the maximum body size allowed by Express.
-If this is not included, larger requests (for example, those including larger graphics) will be rejected by the orchestrator
-and not be handled by IMAGE. For consistency, this value should be used in all containers using Express.
+The environment variable section sets the options for the orchestrator. The `MAX_BODY` variable increases the maximum body size allowed by Express. If this is not included, larger requests (for example, those including larger graphics) will be rejected by the orchestrator and not be handled by IMAGE. For consistency, this value should be used in all containers using Express.
 
-The environment variable section sets the options for the orchestrator. These may be set another way, or the section can just
-be omitted if the default behavior is desired.
+Other variables may be set another way, or just omitted if the default behavior is desired.
 
 The orchestrator runs as a non-root user. As such, the container must be run with permissions of the `docker` group on the host
 in order to access the socket. The socket must also be mounted into the container (the bind mount `/var/run/docker.sock:/var/run/docker.sock:ro`).

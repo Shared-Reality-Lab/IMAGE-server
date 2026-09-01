@@ -103,11 +103,11 @@ Docker Compose uses environment files to configure how services run. In IMAGE, y
     b) Component-specific envs: These configure runtime services (preprocessors, handlers, or standalone services) which are loaded by containers at runtime. They often hold API keys, model names, or URLs that you don't want to check into git. Filenames are specified in docker-compose.
     For example, ensure the following files exist in the config/ folder and are populated with appropriate credentials:
 
-    `apis-and-selection.env, azure-api.env, llm.env, maps.env`
+    `cloud-ocr.env, azure-api.env, llm.env, maps.env`
     
     If a service is not in use, simply create an empty file with the same name to avoid startup errors.
     Here is a command to create them all:
-    `touch config/{maps.env,express-common.env,llm.env,azure-api.env}`
+    `touch config/{maps.env,llm.env,azure-api.env}`
 
     TIP: once completed, these files include credentials that should not be committed in Git!
 
@@ -199,9 +199,11 @@ networks:
 ```
 
 # Connecting to, or running your own, visual LLM
-Since multiple IMAGE preprocessors us a visual LLM (currently qwen), you need to either specify a cloud endpoint, or run your own LLM locally on your server.
+Since multiple IMAGE preprocessors use a visual LLM (currently gemma), you need to either specify a cloud endpoint, or run your own LLM locally on your server.
+
 Our production reference server uses vLLM as the runtime for LLM models.
 Like Traefik, it runs with its own docker-compose in its own directory on our server (e.g., `/var/docker/ollama`).
+
 It’s not a preprocessor itself; instead, several preprocessors in IMAGE-server call out to whatever LLM endpoint you configure (Ollama/vLLM locally, or a remote API if you set one). For example, the following preprocessors connect to the LLM via env_file `/var/docker/image/config/llm.env`: content-categoriser, graphic-caption, text-followup, and multistage-diagram-segmentation.
 Key features:
 - Accepts multimodal graphic and text prompots
@@ -217,8 +219,30 @@ You must specifiy services such as:
 - vllm: runs `vllm/vllm-openai:latest`, reserves a GPU, serves an OpenAI-style API at port 8000.
 - open-webui: optional WebUI that connects to Ollama or vLLM and is exposed via Traefik with a hostname like `ollama.unicorn.cim.mcgill.ca`.
 
+## Using a different model per preprocessor
+By default, `config/llm.env` sets the LLM endpoint and model used by every preprocessor that calls out to a vision LLM. If you want a specific preprocessor to use a different endpoint or model than this default, you can add a preprocessor-specific override.
 
-GPU Notes:
+In `docker-compose.yml`, preprocessors that support this list two `env_file` entries:
+```yaml
+env_file:
+  - path: ./config/llm.env
+    required: true
+  - path: ./config/<preprocessor-name>.env
+    required: false
+```
+The global `config/llm.env` is always loaded first; the preprocessor-specific file is loaded second **only if it exists**, and any variable it sets overrides the global value for that preprocessor alone. If the file doesn't exist, the preprocessor simply falls back to the global configuration. No extra setup is required unless you actually want an override.
+
+To set one up, create a `.env` file within the existing `config/` directory using the naming convention `<preprocessor-name>.env`. Set `LLM_API_KEY`, `LLM_URL`, and `LLM_MODEL`. Add this path to the `docker-compose.yml` file's `env_file` entry for that service (if it does not exist) and set the `required` flag to `False`.
+
+**If you override any one of these three, set all three**: they describe a single endpoint together, and partially overriding them will send incorrect credentials to the new endpoint and fail the request.
+
+Preprocessors currently supporting this override pattern (check 
+`docker-compose.yml` for the current list, as this may grow): 
+`content-categoriser`, `graphic-caption`, `text-followup`, `object-detection-llm`, `multistage-diagram-segmentation`.
+
+The same layered `env_file` override functionality can be used for other service configurations as well.
+
+## GPU Notes:
 Some containers that require GPU (and don't use a cloud endpoint or the LLM) include espnet-tts, text-followup, semantic-segmentation,object-detection, action-recognition, and so on. You can see which ones need GPU directly in docker-compose.yml since they include a `deploy.resources.reservations.devices` stanza with `driver: nvidia`. 
 
 TIP: if you run into `Cannot start service ...: could not select device driver "nvidia"`, you can use this checklist to guide you:
