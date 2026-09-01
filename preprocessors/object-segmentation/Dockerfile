@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM ultralytics/ultralytics:8.3.119-python
 
 # Set the working directory inside the container
@@ -9,10 +10,10 @@ RUN adduser --disabled-password python
 # Update PATH to include local bin for the python user
 ENV PATH="/usr/src/app/.local/bin:${PATH}"
 
-# Install system dependencies required for healthcheck (curl) and model downloads (wget)
+# Install system dependencies required for healthcheck
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-    curl wget && \
+    curl && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
@@ -30,8 +31,15 @@ COPY /utils /usr/src/app/utils
 # Create model directory
 RUN mkdir -p /usr/src/app/models
 
-# Download SAM 2.1 Large model
-RUN wget -O /usr/src/app/models/sam2.1_l.pt https://image.a11y.mcgill.ca/models/semanticSegmentation/sam2.1_l.pt
+# Download SAM 3 (gated on Hugging Face: facebook/sam3). Requires an
+# HF_TOKEN build secret from an account with approved access, passed via
+# BuildKit's --secret (never a plain ARG, which would bake the token into
+# the image's layer history).
+RUN --mount=type=secret,id=HF_TOKEN \
+    pip3 install --no-cache-dir huggingface_hub && \
+    huggingface-cli download facebook/sam3 sam3.pt \
+        --local-dir /usr/src/app/models \
+        --token "$(cat /run/secrets/HF_TOKEN)"
 
 # Copy the preprocessor application code
 COPY /preprocessors/object-segmentation /usr/src/app

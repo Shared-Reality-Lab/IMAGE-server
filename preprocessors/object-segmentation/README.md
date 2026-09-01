@@ -2,7 +2,9 @@
 
 Alpha quality: not yet ready for use by end-users.
 
-This preprocessor segments objects already found by `object-detection-llm` using SAM (Segment Anything Model), producing precise per-object polygon outlines rather than just bounding boxes. It does not run its own LLM inference - it consumes `object-detection-llm`'s existing bounding boxes as SAM prompts.
+This preprocessor segments objects already found by `object-detection-llm` using SAM 3 (Segment Anything Model), producing precise per-object polygon outlines rather than just bounding boxes. It does not run its own LLM inference - it consumes `object-detection-llm`'s existing bounding boxes as SAM prompts.
+
+SAM 3's weights (`facebook/sam3` on Hugging Face) are gated: building this image requires an `HF_TOKEN` build secret from an account with approved access, passed via BuildKit's `--secret` (see the `Dockerfile` and `.github/workflows/object-segmentation.yml`). Never bake the token into an `ARG` - that would persist it in the image's layer history.
 
 Output is shaped identically to the existing `semanticSegmentation` preprocessor's `segments` output (`schemas/preprocessors/segmentation.schema.json`), with an additional `objectID` field on each segment that ties it back to the detected object it came from.
 
