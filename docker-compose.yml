@@ -524,7 +524,7 @@ services:
       ca.mcgill.a11y.image.required_dependencies: ""
       ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm"
     environment:
-      - CLOUD_SERVICE="AZURE_READ"
+      - CLOUD_SERVICE=AZURE_READ
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   object-depth-calculator:
@@ -562,7 +562,6 @@ services:
       ca.mcgill.a11y.image.required_dependencies: "ocr-clouds-preprocessor,object-detection"
       ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
-      - CLOUD_SERVICE="AZURE_READ"
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   osm-streets-handler:

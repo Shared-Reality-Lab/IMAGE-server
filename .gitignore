@@ -3,7 +3,5 @@ __pycache__/
 *.swp
 *.sh
 docker-compose.override.yml
-# Ignore all files in config/ except documentation and example files
-config/*
-!config/Readme.md
-!config/*.env.example
+# Ignore all .env files in config/
+config/**/*.env
