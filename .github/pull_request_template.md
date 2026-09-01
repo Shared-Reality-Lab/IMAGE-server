@@ -28,3 +28,7 @@ Don't delete below this line.
 
 OR
 * [ ] I have not added a new component in this PR.
+
+## Tracking issue
+
+Closes Shared-Reality-Lab/IMAGE-server#000
