@@ -103,11 +103,11 @@ Docker Compose uses environment files to configure how services run. In IMAGE, y
     b) Component-specific envs: These configure runtime services (preprocessors, handlers, or standalone services) which are loaded by containers at runtime. They often hold API keys, model names, or URLs that you don't want to check into git. Filenames are specified in docker-compose.
     For example, ensure the following files exist in the config/ folder and are populated with appropriate credentials:
 
-    `apis-and-selection.env, azure-api.env, llm.env, maps.env`
+    `cloud-ocr.env, azure-api.env, llm.env, maps.env`
     
     If a service is not in use, simply create an empty file with the same name to avoid startup errors.
     Here is a command to create them all:
-    `touch config/{maps.env,express-common.env,llm.env,azure-api.env}`
+    `touch config/{maps.env,llm.env,azure-api.env}`
 
     TIP: once completed, these files include credentials that should not be committed in Git!
 

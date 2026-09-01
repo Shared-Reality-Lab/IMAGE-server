@@ -13,19 +13,21 @@ This file contains the API key used to call Google Places API. [Here](https://de
 
 Check [`maps.env.example`](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/config/maps.env.example) for format specifications.
 
-### apis-and-selection.env
+### cloud-ocr.env
 Entries in this env file are required by the following preprocessors:
 * [ocr-clouds-preprocessor](https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/ocr)
 
-Check [`apis-and-selection.env.example`](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/config/apis-and-selection.env.example) for format specifications.
+Check [`cloud-ocr.env.example`](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/config/cloud-ocr.env.example) for format specifications.
 
 #### Note:
+`CLOUD_SERVICE` is set within the [docker-compose](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/docker-compose.yml) file.
 
 * `CLOUD_SERVICE` determines the desired cloud service to be used. Its possible values are:
     * `AZURE_OCR` (for [Microsoft Azure OCR API](https://westus.dev.cognitive.microsoft.com/docs/services/computer-vision-v3-2/operations/56f91f2e778daf14a499f20d))
     * `AZURE_READ` (for [Microsoft Azure Read API](https://learn.microsoft.com/en-us/azure/cognitive-services/computer-vision/how-to/call-read-api))
     * `GOOGLE_VISION` (for [Google Cloud Vision API](https://cloud.google.com/vision/docs/ocr))
     * `FREE_OCR` (for [Free OCR API](https://ocr.space/OCRAPI))
+
 * `AZURE_API_KEY` is found in your [Azure portal](https://portal.azure.com)
 * `FREEOCR_API_KEY` can be obtained at [OCR API portal](https://ocr.space/ocrapi)
 * `GOOGLE_APPLICATION_CREDENTIALS` contains path to credentials file. Refer [documentation](https://cloud.google.com/docs/authentication/application-default-credentials#GAC) for details.

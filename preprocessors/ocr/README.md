@@ -23,16 +23,10 @@ The desired cloud service is determined by an environment variable called `CLOUD
 
 The path to an environment file containing this variable should be provided in the `docker-compose.yml`, right in the `env_file` field of the `ocr-clouds-preprocessor` service.
 ## Environment setup
-The environment file (apis-and-selection.env) should contain the desired cloud service to be used, and the corresponding api keys.
+The environment file (cloud-ocr.env) should contain the desired cloud service to be used, and the corresponding api keys.
 
-Following is the sample format of apis-and-selection.env file:
+Check [`cloud-ocr.env.example`](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/config/cloud-ocr.env.example) for format specifications.
 
-```
-AZURE_API_KEY = [INSERT KEY STRING]
-FREEOCR_API_KEY = [INSERT KEY STRING]
-GOOGLE_APPLICATION_CREDENTIALS = [INSERT KEY FILE PATH AS STRING]
-CLOUD_SERVICE = [INSERT OPTION STRING (see options below)]
-```
 * `CLOUD_SERVICE` determines the desired cloud service to be used. Its possible values are:
     * `AZURE_OCR` (for [Microsoft Azure OCR API](https://westus.dev.cognitive.microsoft.com/docs/services/computer-vision-v3-2/operations/56f91f2e778daf14a499f20d))
     * `AZURE_READ` (for [Microsoft Azure Read API](https://learn.microsoft.com/en-us/azure/cognitive-services/computer-vision/how-to/call-read-api))

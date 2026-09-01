@@ -5,13 +5,12 @@ services:
     image: ghcr.io/shared-reality-lab/image-orchestrator:${REGISTRY_TAG}
     restart: "no"
     environment:
+      - MAX_BODY=10mb
       - PARALLEL_PREPROCESSORS=ON
       - STORE_IMAGE_DATA=ON
       - MEMCACHE_SERVERS=memcached:11211
       - PREPROCESSOR_TIMEOUT=90000
       - CACHE_OVERRIDE=/var/cache/IMAGE
-    env_file:
-      - ./config/express-common.env
     group_add:
       # This should be set in an environment variable or .env
       - ${DOCKER_GID}
@@ -315,8 +314,6 @@ services:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-audio:${REGISTRY_TAG}
     restart: "no"
-    env_file:
-      - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
       ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation,object-grouping,object-detection,graphic-caption"
@@ -324,14 +321,13 @@ services:
     volumes:
       - sc-store:/tmp/sc-store
     environment:
+      - MAX_BODY=10mb
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   autour-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-autour:${REGISTRY_TAG}
     restart: "no"
-    env_file:
-      - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
       ca.mcgill.a11y.image.required_dependencies: "autour-preprocessor"
@@ -339,14 +335,13 @@ services:
     volumes:
       - sc-store:/tmp/sc-store
     environment:
+      - MAX_BODY=10mb
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   photo-audio-haptics-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-photo-audio-haptics:${REGISTRY_TAG}
     restart: "no"
-    env_file:
-      - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
       ca.mcgill.a11y.image.required_dependencies: "semantic-segmentation,object-grouping,object-detection"
@@ -354,14 +349,13 @@ services:
     volumes:
       - sc-store:/tmp/sc-store
     environment:
+      - MAX_BODY=10mb
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   high-charts-handler:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-handler-high-charts:${REGISTRY_TAG}
     restart: "no"
-    env_file:
-      - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
       ca.mcgill.a11y.image.required_dependencies: ""
@@ -369,6 +363,7 @@ services:
     volumes:
       - sc-store:/tmp/sc-store
     environment:
+      - MAX_BODY=10mb
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   svg-od-handler:
@@ -428,14 +423,13 @@ services:
     profiles: [production, test, default]
     image: ghcr.io/shared-reality-lab/image-preprocessor-nominatim:${REGISTRY_TAG}
     restart: "no"
-    env_file:
-        - ./config/express-common.env
     labels:
         ca.mcgill.a11y.image.preprocessor: 2
         ca.mcgill.a11y.image.cacheTimeout: 3600
         ca.mcgill.a11y.image.required_dependencies: ""
         ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
+      - MAX_BODY=10mb
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
       - NOMINATIM_SERVER=https://pegasus.cim.mcgill.ca/nominatim
       # Optional fallback if Pegasus is unreachable
@@ -494,9 +488,8 @@ services:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-motd:${REGISTRY_TAG}
     restart: "no"
-    env_file:
-      - ./config/express-common.env
     environment:
+      - MAX_BODY=10mb
       - MOTD=Hello, world!
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
     labels:
@@ -508,13 +501,12 @@ services:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-hello-haptics:${REGISTRY_TAG}
     restart: "no"
-    env_file:
-      - ./config/express-common.env
     labels:
       ca.mcgill.a11y.image.handler: enable
       ca.mcgill.a11y.image.required_dependencies: "object-detection-llm"
       ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
+      - MAX_BODY=10mb
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   # For environment setup refer to https://github.com/Shared-Reality-Lab/IMAGE-server/tree/main/preprocessors/ocr
@@ -523,10 +515,8 @@ services:
     image: ghcr.io/shared-reality-lab/image-preprocessor-ocr-clouds:${REGISTRY_TAG}
     restart: "no"
     env_file:
-      - path: ./config/apis-and-selection.env
+      - path: ./config/cloud-ocr.env
         required: true
-      - path: ./config/ocr.env
-        required: false
     labels:
       ca.mcgill.a11y.image.preprocessor: 4
       ca.mcgill.a11y.image.port: 5000
@@ -534,6 +524,7 @@ services:
       ca.mcgill.a11y.image.required_dependencies: ""
       ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm"
     environment:
+      - CLOUD_SERVICE="AZURE_READ"
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   object-depth-calculator:
@@ -571,14 +562,13 @@ services:
       ca.mcgill.a11y.image.required_dependencies: "ocr-clouds-preprocessor,object-detection"
       ca.mcgill.a11y.image.optional_dependencies: ""
     environment:
+      - CLOUD_SERVICE="AZURE_READ"
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   osm-streets-handler:
     profiles: [test, default]
     image: ghcr.io/shared-reality-lab/image-handler-osm-streets:${REGISTRY_TAG}
     restart: "no"
-    env_file:
-        - ./config/express-common.env
     depends_on:
         - supercollider
         - espnet-tts
@@ -589,6 +579,7 @@ services:
     volumes:
         - sc-store:/tmp/sc-store
     environment:
+      - MAX_BODY=10mb
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
   svg-open-street-map-handler:
