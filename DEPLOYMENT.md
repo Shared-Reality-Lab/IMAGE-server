@@ -240,7 +240,7 @@ Preprocessors currently supporting this override pattern (check
 `docker-compose.yml` for the current list, as this may grow): 
 `content-categoriser`, `graphic-caption`, `text-followup`, `object-detection-llm`, `multistage-diagram-segmentation`.
 
-The override functionality is applicable for any of the preprocessors. Check the preprocessor-specific `.env.example` file for setting env variables.
+The same layered `env_file` override functionality can be used for other service configurations as well.
 
 ## GPU Notes:
 Some containers that require GPU (and don't use a cloud endpoint or the LLM) include espnet-tts, text-followup, semantic-segmentation,object-detection, action-recognition, and so on. You can see which ones need GPU directly in docker-compose.yml since they include a `deploy.resources.reservations.devices` stanza with `driver: nvidia`. 

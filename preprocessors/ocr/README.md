@@ -22,8 +22,12 @@ The desired cloud service is determined by an environment variable called `CLOUD
 * `CLOUD_SERVICE="FREE_OCR"`
 
 The path to an environment file containing this variable should be provided in the `docker-compose.yml`, right in the `env_file` field of the `ocr-clouds-preprocessor` service.
+
 ## Environment setup
-The environment file (cloud-ocr.env) should contain the desired cloud service to be used, and the corresponding api keys.
+
+The [docker-compose](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/docker-compose.yml) file should set the desired cloud service to be used under its environment variables.
+
+The environment file (cloud-ocr.env) should contain the corresponding api keys for the selected service.
 
 Check [`cloud-ocr.env.example`](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/config/cloud-ocr.env.example) for format specifications.
 
