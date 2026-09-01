@@ -1,0 +1,123 @@
+name: PR policy
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  linked-issue:
+    name: Linked issue
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Require exactly one open IMAGE-server issue
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pullRequestNumber = context.issue.number;
+            const expectedRepository = "Shared-Reality-Lab/IMAGE-server";
+
+            const query = `
+              query LinkedIssues(
+                $owner: String!
+                $repo: String!
+                $pullRequestNumber: Int!
+              ) {
+                repository(owner: $owner, name: $repo) {
+                  pullRequest(number: $pullRequestNumber) {
+                    baseRefName
+                    closingIssuesReferences(first: 10) {
+                      nodes {
+                        number
+                        state
+                        url
+                        repository {
+                          nameWithOwner
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+
+            const result = await github.graphql(query, {
+              owner,
+              repo,
+              pullRequestNumber,
+            });
+
+            const pullRequest = result.repository.pullRequest;
+
+            if (!pullRequest) {
+              core.setFailed(
+                `Could not find pull request #${pullRequestNumber}.`
+              );
+              return;
+            }
+
+            const linkedIssues =
+              pullRequest.closingIssuesReferences.nodes;
+
+            if (linkedIssues.length === 0) {
+              core.setFailed(
+                [
+                  "This pull request does not close a tracking issue.",
+                  "",
+                  "Add exactly one closing reference to the PR description:",
+                  "",
+                  "Closes Shared-Reality-Lab/IMAGE-server#123",
+                ].join("\n")
+              );
+              return;
+            }
+
+            if (linkedIssues.length > 1) {
+              const references = linkedIssues
+                .map(
+                  (issue) =>
+                    `${issue.repository.nameWithOwner}#${issue.number}`
+                )
+                .join(", ");
+
+              core.setFailed(
+                `This pull request closes more than one issue: ${references}. ` +
+                "Specify exactly one primary tracking issue."
+              );
+              return;
+            }
+
+            const issue = linkedIssues[0];
+
+            if (issue.repository.nameWithOwner !== expectedRepository) {
+              core.setFailed(
+                `The tracking issue must belong to ${expectedRepository}. ` +
+                `Found ${issue.repository.nameWithOwner}#${issue.number}.`
+              );
+              return;
+            }
+
+            if (issue.state !== "OPEN") {
+              core.setFailed(
+                `The tracking issue ${expectedRepository}#${issue.number} ` +
+                "is already closed."
+              );
+              return;
+            }
+
+            core.info(
+              `Validated tracking issue: ` +
+              `${expectedRepository}#${issue.number}`
+            );
