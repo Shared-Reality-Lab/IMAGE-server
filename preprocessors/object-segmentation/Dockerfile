@@ -37,7 +37,7 @@ RUN mkdir -p /usr/src/app/models
 # the image's layer history).
 RUN --mount=type=secret,id=HF_TOKEN \
     pip3 install --no-cache-dir huggingface_hub && \
-    huggingface-cli download facebook/sam3 sam3.pt \
+    hf download facebook/sam3 sam3.pt \
         --local-dir /usr/src/app/models \
         --token "$(cat /run/secrets/HF_TOKEN)"
 
