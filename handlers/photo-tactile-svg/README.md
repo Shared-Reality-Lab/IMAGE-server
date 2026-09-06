@@ -10,3 +10,5 @@ This is a [handler](https://github.com/Shared-Reality-Lab/IMAGE-server/wiki/2.-H
 
 Data from object detection and semantic segmentation are used to create a SVG.
 This SVG will be as per a specified [format](https://github.com/Shared-Reality-Lab/IMAGE-Monarch/tree/main#tactile-graphics) and might contain multiple layers with the number of layers equal to the number of object classes found within the photo. The semantic segments will be available independent of the layers.
+
+When `object-segmentation` (SAM 3) output is available for a detected object, its precise polygon outline is drawn in place of that object's plain bounding-box rectangle. Semantic segmentation is otherwise scoped to background/environmental elements (sky, walls, floors, etc.) that object detection doesn't cover.

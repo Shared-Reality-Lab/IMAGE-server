@@ -2,7 +2,7 @@
 
 Beta quality: Useful enough for testing by end-users.
 
-This preprocessor is used for semantically segmenting images. The code for this preprocessor heavily relies on the [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) framework.
+This preprocessor semantically segments images using the [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) framework, but only returns "stuff"/background-type segments (e.g. sky, wall, floor, road) as classified by [ADE20K SceneParsing150](https://github.com/CSAILVision/sceneparsing/blob/master/objectInfo150.csv) - environmental elements that an object detector wouldn't catch. Foreground objects (people, furniture, vehicles, etc.) are segmented with far more precise outlines by `object-detection-llm` + `object-segmentation` (SAM 3) instead.
 
 The code to use this module as an API can be found in `segment.py`, additional functions are located in `utils.py`. This module is fully versionned, the versions of the libraries used can be found in `requirements.txt` and in the `Dockerfile`.
 

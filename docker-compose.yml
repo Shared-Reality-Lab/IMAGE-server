@@ -445,7 +445,7 @@ services:
     labels:
         ca.mcgill.a11y.image.handler: enable
         ca.mcgill.a11y.image.required_dependencies: "object-detection,object-grouping,semantic-segmentation,graphic-caption"
-        ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm"
+        ca.mcgill.a11y.image.optional_dependencies: "object-detection-llm,object-segmentation"
     environment:
       - PII_LOGGING_ENABLED=${PII_LOGGING_ENABLED}
 
