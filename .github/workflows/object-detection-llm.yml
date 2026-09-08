@@ -1,7 +1,7 @@
 name: Object Detection with LLM
 on:
   push:
-    branches: [ main, object-detection-llm ]
+    branches: [ main, object-detection-llm, sam-segmentation ]
     tags: [ "preprocessor-object-detection-llm-[0-9]+.[0-9]+.[0-9]+" ]
     paths: [ "preprocessors/object-detection-llm/**" ]
   pull_request:
