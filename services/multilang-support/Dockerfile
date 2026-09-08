@@ -1,36 +1,17 @@
-# Build with --build-arg DEVICE=cuda for a GPU-enabled image (e.g. pegasus/production),
-# or --build-arg DEVICE=cpu for a CPU-only image with no CUDA runtime (e.g. unicorn/test).
-# Defaults to cuda to match the original production image if DEVICE is not specified.
-ARG DEVICE=cuda
 ARG PYTORCH="2.7.1"
 ARG CUDA="12.8"
 ARG CUDNN="9"
+FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-runtime
 
-FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-runtime AS base-cuda
+# See README.md#docker-image for visualisation of the directory structure
+WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip git git-lfs curl \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-FROM python:3.11-slim AS base-cpu
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git git-lfs curl \
- && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-FROM base-${DEVICE} AS base
-
-# See README.md#docker-image for visualisation of the directory structure
-WORKDIR /app
-
-# Install Python dependencies. The cuda base image already ships a CUDA-matched
-# torch build; the cpu base image needs the CPU-only wheel installed explicitly.
-ARG DEVICE
+# Install Python dependencies
 COPY services/multilang-support/requirements.txt /app/
 RUN pip install --upgrade pip \
- && if [ "$DEVICE" = "cpu" ]; then \
-      pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu; \
-    else \
-      pip install --no-cache-dir "torch>=2.6.0"; \
-    fi \
  && pip install --no-cache-dir -r requirements.txt \
  && pip install --no-cache-dir "transformers[sentencepiece]"
 
