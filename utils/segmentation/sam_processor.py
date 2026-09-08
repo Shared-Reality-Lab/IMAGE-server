@@ -68,7 +68,8 @@ class SAMClient:
         use_prompts: bool = False,
         aggregate_by_label: bool = True,
         return_structured: bool = False,
-        base_data: Optional[Dict[str, Any]] = None
+        base_data: Optional[Dict[str, Any]] = None,
+        coord_scale: float = 1000.0
     ) -> Dict[str, Any]:
         """
         Segment image regions using bounding boxes.
@@ -83,6 +84,13 @@ class SAMClient:
                              update_data_with_contours (for schema validation)
             base_data: Base data structure to update
                     (required if return_structured=True)
+            coord_scale: Divisor to convert incoming bbox coordinates to
+                    pixel space. Use 1000.0 (default) for LLM-native
+                    0-1000 grids (e.g. Qwen's raw output, the existing
+                    multistage-diagram-segmentation caller). Use 1.0 if
+                    bounding_boxes are already normalized to 0-1 (e.g.
+                    the shared object-detection.schema.json format used
+                    by object-detection-llm/yolo/azure).
 
         Returns:
             If return_structured=False: Dictionary mapping labels to lists
@@ -141,13 +149,14 @@ class SAMClient:
                 f"(normalized coords: {bbox})"
             )
 
-            # Convert normalized coordinates (0-1000) received from Qwen 3
-            # to pixel coordinates
+            # Convert normalized coordinates to pixel coordinates using
+            # coord_scale (1000.0 for LLM-native grids, 1.0 if already
+            # normalized to 0-1)
             bbox_pixels = [
-                (bbox[0] / 1000.0) * width,
-                (bbox[1] / 1000.0) * height,
-                (bbox[2] / 1000.0) * width,
-                (bbox[3] / 1000.0) * height
+                (bbox[0] / coord_scale) * width,
+                (bbox[1] / coord_scale) * height,
+                (bbox[2] / coord_scale) * width,
+                (bbox[3] / coord_scale) * height
             ]
 
             logging.pii(

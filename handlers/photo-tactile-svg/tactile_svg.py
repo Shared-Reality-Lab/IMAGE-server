@@ -24,10 +24,32 @@ import drawSvg as draw
 import inflect
 from config.logging_utils import configure_logging
 from datetime import datetime
+from utils.object_detection import get_object_detection_data
 
 configure_logging()
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
+
+
+def object_contour_path(contours, dimensions, aria_label, **extra):
+    """Draw a SAM-precise polygon outline for a single object, in the
+    same style/coordinate space as the semantic segmentation contours
+    below, for use in place of a plain bounding-box rectangle."""
+    try:
+        p = draw.Path(stroke="#ff4477", stroke_width=2.5,
+                      fill='none', aria_label=aria_label, **extra)
+    except BaseException:
+        p = draw.Path(stroke="red", stroke_width=2.5,
+                      fill='none', aria_label=aria_label, **extra)
+    for c in contours:
+        coords = c["coordinates"]
+        for i in range(1, len(coords), 5):
+            if (i == 1):
+                p.M(coords[i][0] * dimensions[0],
+                    -coords[i][1] * dimensions[1])
+            p.L(coords[i][0] * dimensions[0],
+                -coords[i][1] * dimensions[1])
+    return p
 
 
 @app.route("/handler", methods=["POST"])
@@ -99,9 +121,8 @@ def handle():
                   "and/ or semantic segmentation responses")
     if not (("ca.mcgill.a11y.image.preprocessor.semanticSegmentation"
              in preprocessors) or
-            all(x in preprocessors for x in
-                ["ca.mcgill.a11y.image.preprocessor.objectDetection",
-                 "ca.mcgill.a11y.image.preprocessor.grouping"])):
+            (get_object_detection_data(preprocessors) is not None and
+             "ca.mcgill.a11y.image.preprocessor.grouping" in preprocessors)):
         logging.debug("No Object Detector and Semantic Segmentation found")
         response = {
             "request_uuid": contents["request_uuid"],
@@ -152,21 +173,27 @@ def handle():
     form = inflect.engine()
     caption = ""
 
-    if "ca.mcgill.a11y.image.preprocessor.objectDetection"\
-        in preprocessors\
+    if get_object_detection_data(preprocessors) is not None\
             and "ca.mcgill.a11y.image.preprocessor.grouping" in preprocessors:
         logging.debug("Object detector and grouping preprocessor found. "
                       "Adding data to response...")
         caption = "This photo contains "
         obj_list = []
         preprocessor_names.append('Things and people')
-        o = preprocessors[
-            "ca.mcgill.a11y.image.preprocessor.objectDetection"
-            ]
+        o = get_object_detection_data(preprocessors)
         g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
         objects = o["objects"]
         grouped = g["grouped"]
         ungrouped = g["ungrouped"]
+        object_segmentation = preprocessors.get(
+            "ca.mcgill.a11y.image.preprocessor.objectSegmentation")
+        contours_by_object_id = {}
+        if object_segmentation:
+            contours_by_object_id = {
+                seg["objectID"]: seg["contours"]
+                for seg in object_segmentation["segments"]
+                if "objectID" in seg
+            }
         layer = 0
         # Loop through the object groups and generate a layer for each
         for group in grouped:
@@ -181,23 +208,28 @@ def handle():
             # Loop through the individual items
             # Draw a rectangle for each and tag objects
             for i, id in enumerate(ids):
-                x1 = objects[id]['dimensions'][0] * dimensions[0]
-                x2 = objects[id]['dimensions'][2] * dimensions[0]
-                y1 = objects[id]['dimensions'][1] * dimensions[1]
-                y2 = objects[id]['dimensions'][3] * dimensions[1]
-                width = abs(x2 - x1)
-                height = abs(y2 - y1)
-                start_y1 = -(y1 + height)
-                g.append(
-                    draw.Rectangle(
-                        x1,
-                        start_y1,
-                        width,
-                        height,
-                        stroke="#ff4477",
-                        stroke_width=2.5,
-                        fill="none",
-                        aria_label=obj_tag+" "+str(i+1)))
+                label = obj_tag+" "+str(i+1)
+                if id in contours_by_object_id:
+                    g.append(object_contour_path(
+                        contours_by_object_id[id], dimensions, label))
+                else:
+                    x1 = objects[id]['dimensions'][0] * dimensions[0]
+                    x2 = objects[id]['dimensions'][2] * dimensions[0]
+                    y1 = objects[id]['dimensions'][1] * dimensions[1]
+                    y2 = objects[id]['dimensions'][3] * dimensions[1]
+                    width = abs(x2 - x1)
+                    height = abs(y2 - y1)
+                    start_y1 = -(y1 + height)
+                    g.append(
+                        draw.Rectangle(
+                            x1,
+                            start_y1,
+                            width,
+                            height,
+                            stroke="#ff4477",
+                            stroke_width=2.5,
+                            fill="none",
+                            aria_label=label))
 
             svg.append(g)
 
@@ -207,28 +239,33 @@ def handle():
             # appending singular objects with appropriate article
             obj_list.append(form.a(category))
             layer += 1
-            x1 = (objects[val]
-                  ['dimensions'][0] * dimensions[0])
-            x2 = (objects[val]
-                  ['dimensions'][2] * dimensions[0])
-            y1 = (objects[val]
-                  ['dimensions'][1] * dimensions[1])
-            y2 = (objects[val]
-                  ['dimensions'][3] * dimensions[1])
-            width = abs(x2 - x1)
-            height = abs(y2 - y1)
-            start_y1 = -(y1 + height)
-            svg.append(
-                draw.Rectangle(
-                    x1,
-                    start_y1,
-                    width,
-                    height,
-                    stroke="#ff4477",
-                    stroke_width=2.5,
-                    fill="none",
-                    aria_label=category,
+            if val in contours_by_object_id:
+                svg.append(object_contour_path(
+                    contours_by_object_id[val], dimensions, category,
                     data_image_layer="Layer "+str(layer)))
+            else:
+                x1 = (objects[val]
+                      ['dimensions'][0] * dimensions[0])
+                x2 = (objects[val]
+                      ['dimensions'][2] * dimensions[0])
+                y1 = (objects[val]
+                      ['dimensions'][1] * dimensions[1])
+                y2 = (objects[val]
+                      ['dimensions'][3] * dimensions[1])
+                width = abs(x2 - x1)
+                height = abs(y2 - y1)
+                start_y1 = -(y1 + height)
+                svg.append(
+                    draw.Rectangle(
+                        x1,
+                        start_y1,
+                        width,
+                        height,
+                        stroke="#ff4477",
+                        stroke_width=2.5,
+                        fill="none",
+                        aria_label=category,
+                        data_image_layer="Layer "+str(layer)))
 
         if len(obj_list) > 1:
             obj_list[-1] = "and " + obj_list[-1] + "."

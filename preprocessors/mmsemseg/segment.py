@@ -51,6 +51,13 @@ BEIT_CHECKPOINT = "/app/upernet_beit-base_8x2_640x640_160k_ade20k-eead221d.pth"
 COLORS = mmseg.core.evaluation.get_palette("ade20k")
 CLASS_NAMES = mmseg.core.evaluation.get_classes("ade20k")
 
+# this preprocessor is scoped down to only the
+# background elements they can't see, e.g. sky, walls, floors.
+STUFF_CLASS_IDS = frozenset({
+    0, 1, 2, 3, 5, 6, 9, 11, 13, 16, 21, 25, 26, 28, 29, 46, 48, 51, 52,
+    54, 59, 60, 61, 68, 79, 84, 91, 94, 96, 101, 105, 109, 113, 128, 140
+})
+
 app = Flask(__name__)
 
 
@@ -96,9 +103,14 @@ def run_segmentation(url, model, dictionary):
     # extracting contours
     pred = result[0].astype(np.int32)
     predicted_classes = np.bincount(pred.flatten()).argsort()[::-1]
-    logging.info("main classes detected : {}".format(predicted_classes[:5]))
+    background_classes = [
+        c for c in predicted_classes if c in STUFF_CLASS_IDS
+    ][:5]
+    logging.info(
+        "main background classes detected : {}".format(background_classes)
+    )
 
-    for class_id in predicted_classes[:5]:
+    for class_id in background_classes:
         logging.info("extracting contours for class: {}".format(str(class_id)))
 
         pred_color, class_name = visualize_result(pred, index=class_id)

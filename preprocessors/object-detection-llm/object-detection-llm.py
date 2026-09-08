@@ -68,7 +68,7 @@ FORMATTED_PROMPT = OBJECT_DETECTION_PROMPT.format(
 )
 
 PREPROCESSOR_NAME = \
-    "ca.mcgill.a11y.image.preprocessor.objectDetection"
+    "ca.mcgill.a11y.image.preprocessor.objectDetectionLLM"
 
 DATA_SCHEMA = './schemas/preprocessors/object-detection.schema.json'
 

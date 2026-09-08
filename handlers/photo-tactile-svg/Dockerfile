@@ -14,6 +14,7 @@ RUN pip install -r requirements.txt
 
 COPY /schemas /usr/src/app/schemas
 COPY /config /usr/src/app/config
+COPY /utils /usr/src/app/utils
 COPY /handlers/photo-tactile-svg/ /usr/src/app
 
 EXPOSE 80

@@ -22,6 +22,11 @@ import jsonschema
 from flask import Flask, request, jsonify
 from datetime import datetime
 from config.logging_utils import configure_logging
+from utils.object_detection import (
+    GENERIC_OBJECT_DETECTION_NAME,
+    LLM_OBJECT_DETECTION_NAME,
+    get_object_detection_data,
+)
 
 configure_logging()
 
@@ -132,9 +137,12 @@ def render_ocr():
     text = ""
 
     # Object detection data is present
-    od = 'ca.mcgill.a11y.image.preprocessor.objectDetection'
-    if od in preprocessors and len(preprocessors[od]['objects']) > 0:
-        object_data = preprocessors[od]['objects']
+    od_data = get_object_detection_data(preprocessors)
+    if od_data is not None and len(od_data['objects']) > 0:
+        od = (GENERIC_OBJECT_DETECTION_NAME
+              if GENERIC_OBJECT_DETECTION_NAME in preprocessors
+              else LLM_OBJECT_DETECTION_NAME)
+        object_data = od_data['objects']
         text_lines = ocr_data['lines']
         text += "The following objects were detected: "
         done_once = False

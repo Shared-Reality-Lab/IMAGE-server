@@ -18,6 +18,8 @@ COPY /schemas /app/schemas
 
 COPY /config /app/config
 
+COPY /utils /app/utils
+
 COPY /handlers/ocr-handler/ /app
 
 EXPOSE 80

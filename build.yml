@@ -81,6 +81,11 @@ services:
             context: .
             dockerfile: ./preprocessors/object-detection-llm/Dockerfile
         image: "object-detection-llm:latest"
+    object-segmentation:
+        build:
+            context: .
+            dockerfile: ./preprocessors/object-segmentation/Dockerfile
+        image: "object-segmentation:latest"
     object-detection-azure:
         build:
             context: .

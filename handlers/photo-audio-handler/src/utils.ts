@@ -39,6 +39,13 @@ type ObjDet = {
     objects: Obj[];
 };
 
+const GENERIC_OBJECT_DETECTION_NAME = "ca.mcgill.a11y.image.preprocessor.objectDetection";
+const LLM_OBJECT_DETECTION_NAME = "ca.mcgill.a11y.image.preprocessor.objectDetectionLLM";
+
+export function getObjectDetectionData(preprocessors: Record<string, ObjDet>): ObjDet | undefined {
+    return preprocessors[GENERIC_OBJECT_DETECTION_NAME] ?? preprocessors[LLM_OBJECT_DETECTION_NAME];
+}
+
 type ObjGroup = {
     grouped: { IDs: number[] }[];
     ungrouped: number[];

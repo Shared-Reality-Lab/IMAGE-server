@@ -23,6 +23,7 @@ import time
 import drawSvg as draw
 from datetime import datetime
 from config.logging_utils import configure_logging
+from utils.object_detection import get_object_detection_data
 
 configure_logging()
 
@@ -95,8 +96,7 @@ def handle():
         return response
 
     # No Object Detector found
-    if "ca.mcgill.a11y.image.preprocessor.objectDetection"\
-            not in preprocessors:
+    if get_object_detection_data(preprocessors) is None:
         logging.debug("No Object Detector found")
         response = {
             "request_uuid": contents["request_uuid"],
@@ -137,7 +137,7 @@ def handle():
         logging.debug("Sending response")
         return response
 
-    o = preprocessors["ca.mcgill.a11y.image.preprocessor.objectDetection"]
+    o = get_object_detection_data(preprocessors)
     g = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
     u = preprocessors["ca.mcgill.a11y.image.preprocessor.grouping"]
     objects = o["objects"]
