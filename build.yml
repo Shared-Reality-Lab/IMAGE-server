@@ -71,11 +71,6 @@ services:
             context: .
             dockerfile: ./handlers/hello-handler/Dockerfile
         image: "hello-handler:latest"
-    object-detection:
-        build:
-            context: .
-            dockerfile: ./preprocessors/yolo/Dockerfile
-        image: "object-detection:latest"
     object-detection-llm:
         build:
             context: .
