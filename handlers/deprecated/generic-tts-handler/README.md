@@ -4,6 +4,6 @@
 
 ## What is this?
 
-This used to use the [object detection output from the YOLO preprocessor](../../preprocessors/yolo) to create spatialized
+This used to use the object detection output from the (now removed) YOLO preprocessor to create spatialized
 audio using the [ESPnet TTS service](../../services/espnet-tts) and [SuperCollider responder](../../services/supercollider-images/supercollider-service/generic.scd).
 It is very specifically written and has been succeeded by the more generic [photo audio handler](../photo-audio-handler).
