@@ -45,7 +45,7 @@ const filePrefix = "/tmp/sc-store/photo-audio-handler-";
 
 app.use(express.json({limit: process.env.MAX_BODY}));
 
-app.post("/handler", async (req, res) => {
+async function handleRequest(req: express.Request, res: express.Response) {
     console.debug("Received request");
     // Validate the request data
     if (!ajv.validate("https://image.a11y.mcgill.ca/request.schema.json", req.body)) {
@@ -317,6 +317,17 @@ app.post("/handler", async (req, res) => {
         piiLogger.pii(`Response validation error: ${JSON.stringify(ajv.errors)}`);
         res.status(500).json(ajv.errors);
     }
+}
+
+// Express 4 does not catch rejections from async routes, so an unexpected error would exit the process
+app.post("/handler", (req, res) => {
+    handleRequest(req, res).catch((e) => {
+        console.error("Unexpected error while handling request!");
+        piiLogger.pii(`Handler error: ${(e as Error).stack}`);
+        if (!res.headersSent) {
+            res.status(500).json({ "error": "Unexpected error while handling request" });
+        }
+    });
 });
 
 app.get("/health", (req, res) => {
