@@ -101,11 +101,11 @@ export function filterObjectsBySize(objDet: ObjDet, objGroup: ObjGroup) {
             }
         }
         for (const idx of groupsToDelete) {
-            for (const objId of objGroup["grouped"][idx]["IDs"]) {
-                objDet["objects"].splice(objDet["objects"].findIndex(obj => obj["ID"] === objId), 1);
-            }
-            delete objGroup["grouped"][idx];
+            const ids = objGroup["grouped"][idx]["IDs"];
+            objDet["objects"] = objDet["objects"].filter(obj => !ids.includes(obj["ID"]));
         }
+        // Rebuild rather than `delete`, which leaves undefined holes that crash later iteration
+        objGroup["grouped"] = objGroup["grouped"].filter((_, idx) => !groupsToDelete.includes(idx));
 
         const ungroupedToDelete: number[] = [];
         for (const idx of objGroup["ungrouped"]) {
