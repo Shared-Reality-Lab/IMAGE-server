@@ -1,0 +1,9 @@
+[Unit]
+Description=Check opted-in IMAGE containers and emit an actionable failure status
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 /var/docker/image/IMAGE-server/scripts/image_recovery.py status
