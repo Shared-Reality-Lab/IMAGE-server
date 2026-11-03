@@ -1,0 +1,15 @@
+[Unit]
+Description=IMAGE restart event warmup watcher (non-destructive)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /var/docker/image/IMAGE-server/scripts/image_recovery.py watch
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
